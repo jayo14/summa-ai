@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from ..config import settings
+from app.config import settings
 import logging
 from typing import Dict, List
 from fastapi import WebSocket

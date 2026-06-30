@@ -5,7 +5,7 @@ In dev/test it falls back to an in-memory store.
 import logging, uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from ..config import settings
+from app.config import settings
 logger = logging.getLogger(__name__)
 
 class CogneeService:

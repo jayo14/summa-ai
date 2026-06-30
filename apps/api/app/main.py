@@ -3,11 +3,12 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from .config import settings
-from .core.security import ConnectionManager
-from .services.cognee_service import CogneeService
-from .routes import chat, memory
-from .routes.data_routes import (artifacts_router, conv_router, timeline_router,
+from fastapi.responses import RedirectResponse
+from app.config import settings
+from app.core.security import ConnectionManager
+from app.services.cognee_service import CogneeService
+from app.routes import chat, memory
+from app.routes.data_routes import (artifacts_router, conv_router, timeline_router,
     user_router, settings_router, materials_router, concepts_router, analytics_router)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -27,7 +28,7 @@ app.add_middleware(CORSMiddleware, allow_origins=settings.BACKEND_CORS_ORIGINS, 
 for r, tag in [(chat.router,"chat"),(memory.router,"memory"),(artifacts_router,"artifacts"),(conv_router,"conversations"),(timeline_router,"timeline"),(user_router,"user"),(settings_router,"settings"),(materials_router,"materials"),(concepts_router,"concepts"),(analytics_router,"analytics")]:
     app.include_router(r, prefix=settings.API_V1_STR, tags=[tag])
 
-@app.get("/health", tags=["health"])
+@app.get("/health", tags=["health"], summary="Health check", description="Returns API health status and online connection count")
 async def health_check():
     return {"status": "healthy", "version": "1.0.0", "service": "summa-ai-api", "online_connections": manager.get_online_count()}
 
@@ -41,6 +42,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)
 
-@app.get("/", tags=["root"])
+@app.get("/", tags=["root"], summary="API root", description="Redirects to Swagger UI documentation")
 async def root():
-    return {"name": "Summa AI API", "version": "1.0.0", "docs": "/docs", "health": "/health"}
+    return RedirectResponse(url="/docs")

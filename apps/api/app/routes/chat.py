@@ -4,8 +4,8 @@ from typing import AsyncGenerator
 import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from ..models.chat import ChatRequest, ChatResponse, ArtifactRef
-from ..services.cognee_service import CogneeService
+from app.models.chat import ChatRequest, ChatResponse, ArtifactRef
+from app.services.cognee_service import CogneeService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -59,14 +59,14 @@ async def _stream_zai(messages: list[dict], enable_thinking: bool = True) -> Asy
             yield f"data: {json.dumps({'type': 'content', 'delta': word + ' '})}\n\n"
         yield "data: [DONE]\n\n"
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse, summary="Chat (non-streaming)", description="Process a chat message and return a response with detected intent artifacts")
 async def chat(request: ChatRequest):
     intent = detect_intent(request.messages[-1].content if request.messages else "")
     artifacts = [ArtifactRef(id=f"pending-{intent}", title=intent.replace("-", " ").title(), type=intent)] if intent else []
     await cognee.recall_context(request.user_id, request.messages[-1].content if request.messages else "")
     return ChatResponse(response="(Use /chat/stream for streaming)", artifacts=artifacts, conversation_id=request.conversation_id, reasoning=f"Intent: {intent or 'none'}")
 
-@router.post("/chat/stream")
+@router.post("/chat/stream", summary="Chat (streaming)", description="Stream chat response using Server-Sent Events with optional thinking blocks")
 async def chat_stream(request: ChatRequest):
     messages = [{"role": m.role, "content": m.content} for m in request.messages]
     intent = detect_intent(request.messages[-1].content if request.messages else "")
