@@ -1,0 +1,48 @@
+{
+  "keyframes": {
+    "typing": {
+      "0%, 100%": {
+        "transform": "translateY(0)",
+        "opacity": "0.5"
+      },
+      "50%": {
+        "transform": "translateY(-2px)",
+        "opacity": "1"
+      }
+    },
+    "loading-dots": {
+      "0%, 100%": {
+        "opacity": "0"
+      },
+      "50%": {
+        "opacity": "1"
+      }
+    },
+    "wave": {
+      "0%, 100%": {
+        "transform": "scaleY(1)"
+      },
+      "50%": {
+        "transform": "scaleY(0.6)"
+      }
+    },
+    "blink": {
+      "0%, 100%": {
+        "opacity": "1"
+      },
+      "50%": {
+        "opacity": "0"
+      }
+    },
+    "shimmer": {
+      "0%": {
+        "backgroundPosition": "200% 50%"
+      },
+      "100%": {
+        "backgroundPosition": "-200% 50%"
+      }
+    }
+  },
+  "cssVarsLight": {},
+  "cssVarsDark": {}
+}

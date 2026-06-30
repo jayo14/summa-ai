@@ -1,0 +1,197 @@
+"""Artifacts, Conversations, Timeline, User, Settings, Materials, Concepts, Analytics routes."""
+import uuid
+from datetime import datetime, timedelta
+from typing import Optional
+from fastapi import APIRouter, HTTPException, Query
+from ..models.artifact import ArtifactCreate, ArtifactUpdate, ArtifactVersionRestore
+from ..models.chat import ConversationCreate, MessageCreate
+from ..models.timeline import TimelineEventCreate, MaterialCreate, ConceptCreate
+
+# ========== ARTIFACTS ==========
+artifacts_router = APIRouter()
+_art_store: dict = {}
+
+def _new_artifact(user_id: str, data: ArtifactCreate) -> dict:
+    now = datetime.utcnow()
+    aid = f"art-{uuid.uuid4().hex[:16]}"
+    return {"id": aid, "user_id": user_id, "conversation_id": data.conversation_id, "title": data.title, "type": data.type, "source": data.source, "source_label": data.source_label, "parent_artifact_id": data.parent_artifact_id, "current_version": 1, "archived": False, "pinned": False, "created_at": now, "updated_at": now, "versions": [{"id": f"ver-{uuid.uuid4().hex[:8]}", "artifact_id": aid, "version": 1, "component": data.component, "change_note": data.change_note, "created_at": now}]}
+
+@artifacts_router.get("/artifacts")
+async def get_artifacts(user_id: str = Query(default="demo"), type: Optional[str] = None, pinned: Optional[bool] = None, archived: bool = False):
+    items = [a for a in _art_store.values() if a["user_id"] == user_id and a["archived"] == archived]
+    if type: items = [a for a in items if a["type"] == type]
+    if pinned is not None: items = [a for a in items if a["pinned"] == pinned]
+    return sorted(items, key=lambda a: a["updated_at"], reverse=True)
+
+@artifacts_router.post("/artifacts", status_code=201)
+async def create_artifact(data: ArtifactCreate, user_id: str = Query(default="demo")):
+    a = _new_artifact(user_id, data); _art_store[a["id"]] = a; return a
+
+@artifacts_router.get("/artifacts/{aid}")
+async def get_artifact(aid: str):
+    if aid not in _art_store: raise HTTPException(404, "Not found")
+    return _art_store[aid]
+
+@artifacts_router.patch("/artifacts/{aid}")
+async def update_artifact(aid: str, data: ArtifactUpdate):
+    if aid not in _art_store: raise HTTPException(404, "Not found")
+    a = _art_store[aid]
+    if data.component:
+        nv = a["current_version"] + 1
+        a["versions"].append({"id": f"ver-{uuid.uuid4().hex[:8]}", "artifact_id": aid, "version": nv, "component": data.component, "change_note": data.change_note, "created_at": datetime.utcnow()})
+        a["current_version"] = nv; a["type"] = data.component.get("type", a["type"])
+    if data.title is not None: a["title"] = data.title
+    if data.archived is not None: a["archived"] = data.archived
+    if data.pinned is not None: a["pinned"] = data.pinned
+    a["updated_at"] = datetime.utcnow(); return a
+
+@artifacts_router.delete("/artifacts/{aid}")
+async def delete_artifact(aid: str):
+    if aid not in _art_store: raise HTTPException(404, "Not found")
+    del _art_store[aid]; return {"status": "success"}
+
+@artifacts_router.post("/artifacts/{aid}/pin")
+async def pin_artifact(aid: str):
+    if aid not in _art_store: raise HTTPException(404, "Not found")
+    _art_store[aid]["pinned"] = not _art_store[aid]["pinned"]; _art_store[aid]["updated_at"] = datetime.utcnow(); return _art_store[aid]
+
+@artifacts_router.post("/artifacts/{aid}/versions")
+async def restore_version(aid: str, data: ArtifactVersionRestore):
+    if aid not in _art_store: raise HTTPException(404, "Not found")
+    a = _art_store[aid]
+    old = next((v for v in a["versions"] if v["version"] == data.version), None)
+    if not old: raise HTTPException(404, "Version not found")
+    nv = a["current_version"] + 1
+    a["versions"].append({"id": f"ver-{uuid.uuid4().hex[:8]}", "artifact_id": aid, "version": nv, "component": old["component"], "change_note": f"Restored from v{data.version}", "created_at": datetime.utcnow()})
+    a["current_version"] = nv; a["updated_at"] = datetime.utcnow(); return a
+
+# ========== CONVERSATIONS ==========
+conv_router = APIRouter()
+_convs: dict = {}; _msgs: dict = {}
+
+@conv_router.get("/conversations")
+async def get_conversations(user_id: str = Query(default="demo")):
+    return sorted([c for c in _convs.values() if c["user_id"] == user_id and not c.get("archived")], key=lambda c: c["updated_at"], reverse=True)
+
+@conv_router.post("/conversations", status_code=201)
+async def create_conversation(data: ConversationCreate, user_id: str = Query(default="demo")):
+    now = datetime.utcnow()
+    c = {"id": f"conv-{uuid.uuid4().hex[:16]}", "user_id": user_id, "title": data.title, "snippet": data.snippet, "archived": False, "created_at": now, "updated_at": now}
+    _convs[c["id"]] = c; _msgs[c["id"]] = []; return c
+
+@conv_router.get("/conversations/{cid}")
+async def get_conversation(cid: str):
+    if cid not in _convs: raise HTTPException(404, "Not found")
+    return _convs[cid]
+
+@conv_router.get("/conversations/{cid}/messages")
+async def get_messages(cid: str):
+    if cid not in _convs: raise HTTPException(404, "Not found")
+    return _msgs.get(cid, [])
+
+@conv_router.post("/conversations/{cid}/messages", status_code=201)
+async def add_message(cid: str, data: MessageCreate):
+    if cid not in _convs: raise HTTPException(404, "Not found")
+    msg = {"id": f"msg-{uuid.uuid4().hex[:16]}", "conversation_id": cid, "role": data.role, "content": data.content, "reasoning": data.reasoning, "components": data.components, "created_at": datetime.utcnow()}
+    _msgs.setdefault(cid, []).append(msg)
+    _convs[cid]["snippet"] = data.content[:100]; _convs[cid]["updated_at"] = datetime.utcnow(); return msg
+
+@conv_router.delete("/conversations/{cid}")
+async def delete_conversation(cid: str):
+    if cid not in _convs: raise HTTPException(404, "Not found")
+    del _convs[cid]; _msgs.pop(cid, None); return {"status": "success"}
+
+# ========== TIMELINE ==========
+timeline_router = APIRouter()
+_events: dict = {}
+def _seed_timeline():
+    for i, (t, title, desc) in enumerate([("streak","7-day study streak!","You studied every day for a week."),("quiz-completed","Completed: NLP Quiz","Scored 85%."),("artifact-generated","Generated: Flashcards","12 cards created."),("study-session","Study session: NLP","45 minutes."),("resource-uploaded","Uploaded: Paper","PDF processed."),("milestone","Milestone: 100 concepts","Incredible!"),("recommendation","AI Recommendation","Review Attention."),("reminder","Exam reminder","NLP Final in 14 days.")]):
+        _events[f"evt-{i}"] = {"id": f"evt-{i}", "user_id": "demo", "type": t, "title": title, "description": desc, "metadata": None, "created_at": datetime.utcnow() - timedelta(hours=i*6)}
+_seed_timeline()
+
+@timeline_router.get("/timeline")
+async def get_timeline(user_id: str = Query(default="demo"), limit: int = Query(default=50, le=200)):
+    return sorted([e for e in _events.values() if e["user_id"] == user_id], key=lambda e: e["created_at"], reverse=True)[:limit]
+
+@timeline_router.post("/timeline", status_code=201)
+async def create_timeline_event(data: TimelineEventCreate, user_id: str = Query(default="demo")):
+    eid = f"evt-{uuid.uuid4().hex[:16]}"
+    _events[eid] = {"id": eid, "user_id": user_id, "type": data.type, "title": data.title, "description": data.description, "metadata": data.metadata, "created_at": datetime.utcnow()}; return _events[eid]
+
+# ========== USER ==========
+user_router = APIRouter()
+_user = {"id": "demo", "email": "alex@summa.ai", "name": "Alex Johnson", "avatar": None, "bio": "Master's CS student.", "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
+
+@user_router.get("/user")
+async def get_user(): return _user
+
+@user_router.patch("/user")
+async def update_user(data: dict):
+    for k, v in data.items():
+        if k in _user: _user[k] = v
+    _user["updated_at"] = datetime.utcnow(); return _user
+
+# ========== SETTINGS ==========
+settings_router = APIRouter()
+_s = {"user_id": "demo"}
+
+@settings_router.get("/settings")
+async def get_settings(): return _s
+
+@settings_router.patch("/settings")
+async def update_settings(data: dict):
+    for k, v in data.items(): _s[k] = v
+    return _s
+
+# ========== MATERIALS ==========
+materials_router = APIRouter()
+_mats: dict = {}
+for i, (t, title, src) in enumerate([("pdf","Speech and Language Processing","Jurafsky"),("video","CS224N Lecture 8","YouTube"),("pdf","Attention is All You Need","arxiv"),("webpage","Illustrated Transformer","jalammar"),("notes","Calculus II Notes","Manual")]):
+    _mats[f"mat-{i}"] = {"id": f"mat-{i}", "user_id": "demo", "type": t, "title": title, "source": src, "size": None, "duration": None, "concepts_extracted": 10+i*5, "status": "processed", "created_at": datetime.utcnow()}
+
+@materials_router.get("/materials")
+async def get_materials(): return list(_mats.values())
+
+@materials_router.post("/materials", status_code=201)
+async def create_material(data: MaterialCreate):
+    mid = f"mat-{uuid.uuid4().hex[:16]}"
+    _mats[mid] = {"id": mid, "user_id": "demo", "type": data.type, "title": data.title, "source": data.source, "size": data.size, "duration": data.duration, "concepts_extracted": 0, "status": "processing", "created_at": datetime.utcnow()}; return _mats[mid]
+
+@materials_router.delete("/materials/{mid}")
+async def delete_material(mid: str):
+    if mid not in _mats: raise HTTPException(404, "Not found")
+    del _mats[mid]; return {"status": "success"}
+
+# ========== CONCEPTS ==========
+concepts_router = APIRouter()
+_concepts: dict = {}
+for i, (name, cat, mas, rel) in enumerate([("Self-Attention","NLP","learning",6),("Word2Vec","NLP","mastered",4),("GloVe","NLP","struggling",3),("Backprop","Deep Learning","mastered",8),("Transformers","NLP","gap",12),("Integration","Calculus","mastered",2),("Eigenvalues","Linear Algebra","mastered",5),("Multi-Head Attention","NLP","gap",7)]):
+    _concepts[f"cpt-{i}"] = {"id": f"cpt-{i}", "user_id": "demo", "name": name, "category": cat, "mastery": mas, "related_count": rel, "material_id": None, "created_at": datetime.utcnow()}
+
+@concepts_router.get("/concepts")
+async def get_concepts(): return list(_concepts.values())
+
+@concepts_router.post("/concepts", status_code=201)
+async def create_concept(data: ConceptCreate):
+    cid = f"cpt-{uuid.uuid4().hex[:16]}"
+    _concepts[cid] = {"id": cid, "user_id": "demo", "name": data.name, "category": data.category, "mastery": data.mastery, "material_id": data.material_id, "related_count": data.related_count, "created_at": datetime.utcnow()}; return _concepts[cid]
+
+@concepts_router.delete("/concepts/{cid}")
+async def delete_concept(cid: str):
+    if cid not in _concepts: raise HTTPException(404, "Not found")
+    del _concepts[cid]; return {"status": "success"}
+
+# ========== ANALYTICS ==========
+analytics_router = APIRouter()
+
+@analytics_router.get("/analytics")
+async def get_analytics():
+    return {
+        "hexagon_dimensions": [{"label":"Depth","score":78},{"label":"Problem-Solving","score":65},{"label":"Speed","score":42},{"label":"Consistency","score":80},{"label":"Confidence","score":55},{"label":"Creativity","score":70}],
+        "hexagon_evolution": [{"month":"Jan","Depth":45,"Problem-Solving":38,"Speed":30,"Consistency":50,"Confidence":35,"Creativity":40},{"month":"Feb","Depth":55,"Problem-Solving":45,"Speed":35,"Consistency":58,"Confidence":42,"Creativity":48},{"month":"Mar","Depth":65,"Problem-Solving":55,"Speed":38,"Consistency":65,"Confidence":50,"Creativity":55},{"month":"Apr","Depth":78,"Problem-Solving":65,"Speed":42,"Consistency":80,"Confidence":55,"Creativity":70}],
+        "quiz_scores": [{"date":"Apr 1","score":65,"topic":"LA"},{"date":"Apr 8","score":72,"topic":"Calc"},{"date":"Apr 15","score":85,"topic":"NLP"},{"date":"Apr 22","score":60,"topic":"Prob"},{"date":"Apr 29","score":88,"topic":"Embed"},{"date":"May 6","score":92,"topic":"LA"},{"date":"May 13","score":78,"topic":"Attn"}],
+        "study_time": [{"topic":"NLP","hours":12},{"topic":"Calculus","hours":6},{"topic":"LA","hours":4},{"topic":"Prob","hours":3},{"topic":"Music","hours":2}],
+        "topic_mastery": [{"topic":"LA","mastery":92,"trend":"up"},{"topic":"Prob","mastery":85,"trend":"up"},{"topic":"Embed","mastery":75,"trend":"up"},{"topic":"RNN","mastery":60,"trend":"up"},{"topic":"Attention","mastery":45,"trend":"up"},{"topic":"Transformers","mastery":20,"trend":"down"}],
+        "exam_readiness": [{"exam":"NLP Final","readiness":62,"daysLeft":14},{"exam":"DL Final","readiness":78,"daysLeft":17},{"exam":"Calc II","readiness":88,"daysLeft":21}],
+        "summary": {"avg_quiz_score":77,"total_study_hours":27,"avg_exam_readiness":76,"quizzes_taken":7,"insight":"Your Speed is lagging (42 vs avg 65). Add timed quizzes. NLP Final in 14 days."},
+    }
