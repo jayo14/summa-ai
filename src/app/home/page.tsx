@@ -25,7 +25,7 @@ export default function HomePage() {
 
   return (
     <LandingPage
-      onGetStarted={() => router.push('/')}
+      onGetStarted={() => router.push('/chat')}
       isDark={isDark}
       onToggleTheme={toggleTheme}
     />
