@@ -89,17 +89,22 @@ const TOTAL_STEPS = 5
 
 export interface OnboardingFlowProps {
   onComplete: (data: OnboardingData) => void
-  onSkip?: () => void
+  onSkip?: (data: OnboardingData) => void
   initialData?: Partial<OnboardingData>
+  onDataChange?: (data: OnboardingData) => void
 }
 
-export function OnboardingFlow({ onComplete, onSkip, initialData }: OnboardingFlowProps) {
+export function OnboardingFlow({ onComplete, onSkip, initialData, onDataChange }: OnboardingFlowProps) {
   const [step, setStep] = React.useState(0) // 0..4 are steps, 5 is completion
   const [direction, setDirection] = React.useState<1 | -1>(1)
   const [data, setData] = React.useState<OnboardingData>({ ...INITIAL_DATA, ...initialData })
 
   const update = (patch: Partial<OnboardingData>) =>
     setData((prev) => ({ ...prev, ...patch }))
+
+  React.useEffect(() => {
+    onDataChange?.(data)
+  }, [data, onDataChange])
 
   const goNext = () => {
     setDirection(1)
@@ -182,7 +187,7 @@ export function OnboardingFlow({ onComplete, onSkip, initialData }: OnboardingFl
           <Progress value={progressValue} className="h-1.5" />
         </div>
         {onSkip && step < TOTAL_STEPS && (
-          <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs">
+          <Button variant="ghost" size="sm" onClick={() => onSkip(data)} className="text-xs">
             Skip
           </Button>
         )}
