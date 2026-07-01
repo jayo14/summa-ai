@@ -17,6 +17,9 @@ export interface UseChatMessage {
 export interface UseChatOptions {
   api?: string
   enableThinking?: boolean
+  userId?: string
+  conversationId?: string
+  onDone?: (messages: UseChatMessage[]) => void
   onError?: (err: string) => void
 }
 
@@ -24,8 +27,8 @@ export interface UseChatReturn {
   messages: UseChatMessage[]
   status: 'ready' | 'submitted' | 'streaming' | 'error'
   isLoading: boolean
-  send: (text: string, components?: ChatComponentData[]) => void
-  sendWithComponent: (text: string, component: ChatComponentData) => void
+  send: (text: string, components?: ChatComponentData[], conversationId?: string | null) => void
+  sendWithComponent: (text: string, component: ChatComponentData, conversationId?: string | null) => void
   stop: () => void
   regenerate: () => void
   reset: () => void
@@ -37,7 +40,7 @@ export interface UseChatReturn {
  * Designed to plug into prompt-kit components.
  */
 export function useChat(opts: UseChatOptions = {}): UseChatReturn {
-  const { api = '/api/chat', enableThinking = true, onError } = opts
+  const { api = '/api/chat', enableThinking = true, userId, conversationId, onDone, onError } = opts
   const [messages, setMessages] = React.useState<UseChatMessage[]>([])
   const [status, setStatus] = React.useState<'ready' | 'submitted' | 'streaming' | 'error'>('ready')
   const abortRef = React.useRef<AbortController | null>(null)
@@ -57,12 +60,14 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
   }, [])
 
   const runStream = React.useCallback(
-    async (history: UseChatMessage[], components?: ChatComponentData[]) => {
+    async (history: UseChatMessage[], components?: ChatComponentData[], requestConversationId?: string | null) => {
       const controller = new AbortController()
       abortRef.current = controller
       setStatus('submitted')
 
       const assistantIndex = history.length
+      let assistantContent = ''
+      let assistantReasoning = ''
       setMessages([
         ...history,
         {
@@ -80,6 +85,8 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
+            user_id: userId ?? 'anonymous',
+            conversation_id: requestConversationId ?? conversationId ?? null,
             enableThinking,
             messages: history.map((m) => ({ role: m.role, content: m.content })),
           }),
@@ -122,10 +129,11 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
               continue
             }
             if (event.type === 'thinking' && event.delta) {
+              assistantReasoning += event.delta
               setMessages((prev) =>
                 prev.map((m, i) =>
                   i === assistantIndex
-                    ? { ...m, reasoningActive: true, reasoning: (m.reasoning || '') + event.delta! }
+                    ? { ...m, reasoningActive: true, reasoning: assistantReasoning }
                     : m,
                 ),
               )
@@ -134,10 +142,11 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
                 sawFirstContent = true
                 update({ reasoningActive: false })
               }
+              assistantContent += event.delta
               setMessages((prev) =>
                 prev.map((m, i) =>
                   i === assistantIndex
-                    ? { ...m, content: m.content + event.delta! }
+                    ? { ...m, content: assistantContent }
                     : m,
                 ),
               )
@@ -150,6 +159,17 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
         }
 
         update({ streaming: false, reasoningActive: false })
+        onDone?.([
+          ...history,
+          {
+            role: 'assistant',
+            content: assistantContent,
+            reasoning: assistantReasoning || undefined,
+            reasoningActive: false,
+            streaming: false,
+            components,
+          },
+        ])
         setStatus('ready')
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Stream failed'
@@ -176,24 +196,25 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
         abortRef.current = null
       }
     },
-    [api, enableThinking, onError],
+    [api, conversationId, enableThinking, onDone, onError, userId],
   )
 
   const send = React.useCallback(
-    (text: string, components?: ChatComponentData[]) => {
+    (text: string, components?: ChatComponentData[], requestConversationId?: string | null) => {
       const trimmed = text.trim()
       if (!trimmed) return
       if (status === 'submitted' || status === 'streaming') return
       const next: UseChatMessage[] = [...messages, { role: 'user', content: trimmed }]
       setMessages(next)
-      void runStream(next, components)
+      void runStream(next, components, requestConversationId)
     },
     [messages, runStream, status],
   )
 
   /** Convenience: send a message that triggers a specific UI component. */
   const sendWithComponent = React.useCallback(
-    (text: string, component: ChatComponentData) => send(text, [component]),
+    (text: string, component: ChatComponentData, requestConversationId?: string | null) =>
+      send(text, [component], requestConversationId),
     [send],
   )
 
