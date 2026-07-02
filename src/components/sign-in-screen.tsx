@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Loader } from "@/components/prompt-kit/loader"
 import { SummaLogo } from "@/components/prompt-kit/summa-logo"
-import { isOnboarded } from "@/lib/onboarding"
+import { fetchCurrentUserProfile } from "@/lib/onboarding"
 
 export function SignInScreen() {
   const router = useRouter()
@@ -23,10 +23,31 @@ export function SignInScreen() {
 
   React.useEffect(() => {
     if (status !== "authenticated") return
-    const userId = session?.user?.id || session?.user?.email || ""
-    if (!userId) return
-    router.replace(isOnboarded(userId) ? "/chat" : "/onboarding")
-  }, [router, session?.user?.email, session?.user?.id, status])
+    const accessToken = session?.accessToken
+    let cancelled = false
+
+    const run = async () => {
+      if (!accessToken) {
+        router.replace(session?.user?.onboarded ? "/chat" : "/onboarding")
+        return
+      }
+
+      try {
+        const profile = await fetchCurrentUserProfile(accessToken)
+        if (cancelled) return
+        router.replace(profile.onboarded ? "/chat" : "/onboarding")
+      } catch {
+        if (!cancelled) {
+          router.replace(session?.user?.onboarded ? "/chat" : "/onboarding")
+        }
+      }
+    }
+
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [router, session?.accessToken, session?.user?.onboarded, status])
 
   const startOnboarding = React.useCallback(() => {
     router.push("/onboarding")

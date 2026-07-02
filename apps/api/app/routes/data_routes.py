@@ -6,6 +6,8 @@ from fastapi import APIRouter, HTTPException, Query
 from app.models.artifact import ArtifactCreate, ArtifactUpdate, ArtifactVersionRestore
 from app.models.chat import ConversationCreate, MessageCreate
 from app.models.timeline import TimelineEventCreate, MaterialCreate, ConceptCreate
+from app.core.security import resolve_user_id
+from app.services.user_store import UserStore
 
 # ========== ARTIFACTS ==========
 artifacts_router = APIRouter()
@@ -18,6 +20,7 @@ def _new_artifact(user_id: str, data: ArtifactCreate) -> dict:
 
 @artifacts_router.get("/artifacts", summary="List artifacts", description="Get artifacts for a user, filterable by type and pinned status")
 async def get_artifacts(user_id: str = Query(default="demo"), type: Optional[str] = None, pinned: Optional[bool] = None, archived: bool = False):
+    user_id = resolve_user_id()
     items = [a for a in _art_store.values() if a["user_id"] == user_id and a["archived"] == archived]
     if type: items = [a for a in items if a["type"] == type]
     if pinned is not None: items = [a for a in items if a["pinned"] == pinned]
@@ -25,15 +28,18 @@ async def get_artifacts(user_id: str = Query(default="demo"), type: Optional[str
 
 @artifacts_router.post("/artifacts", status_code=201, summary="Create artifact", description="Create a new artifact for a user")
 async def create_artifact(data: ArtifactCreate, user_id: str = Query(default="demo")):
+    user_id = resolve_user_id()
     a = _new_artifact(user_id, data); _art_store[a["id"]] = a; return a
 
 @artifacts_router.get("/artifacts/{aid}", summary="Get artifact", description="Get a specific artifact by ID")
 async def get_artifact(aid: str):
+    resolve_user_id()
     if aid not in _art_store: raise HTTPException(404, "Not found")
     return _art_store[aid]
 
 @artifacts_router.patch("/artifacts/{aid}", summary="Update artifact", description="Update an artifact's metadata, pin status, archive status, or component")
 async def update_artifact(aid: str, data: ArtifactUpdate):
+    resolve_user_id()
     if aid not in _art_store: raise HTTPException(404, "Not found")
     a = _art_store[aid]
     if data.component:
@@ -47,16 +53,19 @@ async def update_artifact(aid: str, data: ArtifactUpdate):
 
 @artifacts_router.delete("/artifacts/{aid}", summary="Delete artifact", description="Permanently delete an artifact by ID")
 async def delete_artifact(aid: str):
+    resolve_user_id()
     if aid not in _art_store: raise HTTPException(404, "Not found")
     del _art_store[aid]; return {"status": "success"}
 
 @artifacts_router.post("/artifacts/{aid}/pin", summary="Toggle artifact pin", description="Toggle the pinned state of an artifact")
 async def pin_artifact(aid: str):
+    resolve_user_id()
     if aid not in _art_store: raise HTTPException(404, "Not found")
     _art_store[aid]["pinned"] = not _art_store[aid]["pinned"]; _art_store[aid]["updated_at"] = datetime.utcnow(); return _art_store[aid]
 
 @artifacts_router.post("/artifacts/{aid}/versions", summary="Restore version", description="Restore a previous version of an artifact, creating a new version entry")
 async def restore_version(aid: str, data: ArtifactVersionRestore):
+    resolve_user_id()
     if aid not in _art_store: raise HTTPException(404, "Not found")
     a = _art_store[aid]
     old = next((v for v in a["versions"] if v["version"] == data.version), None)
@@ -71,26 +80,31 @@ _convs: dict = {}; _msgs: dict = {}
 
 @conv_router.get("/conversations", summary="List conversations", description="Get all non-archived conversations for a user")
 async def get_conversations(user_id: str = Query(default="demo")):
+    user_id = resolve_user_id()
     return sorted([c for c in _convs.values() if c["user_id"] == user_id and not c.get("archived")], key=lambda c: c["updated_at"], reverse=True)
 
 @conv_router.post("/conversations", status_code=201, summary="Create conversation", description="Create a new conversation for a user")
 async def create_conversation(data: ConversationCreate, user_id: str = Query(default="demo")):
+    user_id = resolve_user_id()
     now = datetime.utcnow()
     c = {"id": f"conv-{uuid.uuid4().hex[:16]}", "user_id": user_id, "title": data.title, "snippet": data.snippet, "archived": False, "created_at": now, "updated_at": now}
     _convs[c["id"]] = c; _msgs[c["id"]] = []; return c
 
 @conv_router.get("/conversations/{cid}", summary="Get conversation", description="Get a specific conversation by ID")
 async def get_conversation(cid: str):
+    resolve_user_id()
     if cid not in _convs: raise HTTPException(404, "Not found")
     return _convs[cid]
 
 @conv_router.get("/conversations/{cid}/messages", summary="Get messages", description="Get all messages for a specific conversation")
 async def get_messages(cid: str):
+    resolve_user_id()
     if cid not in _convs: raise HTTPException(404, "Not found")
     return _msgs.get(cid, [])
 
 @conv_router.post("/conversations/{cid}/messages", status_code=201, summary="Add message", description="Add a message to a conversation")
 async def add_message(cid: str, data: MessageCreate):
+    resolve_user_id()
     if cid not in _convs: raise HTTPException(404, "Not found")
     msg = {"id": f"msg-{uuid.uuid4().hex[:16]}", "conversation_id": cid, "role": data.role, "content": data.content, "reasoning": data.reasoning, "components": data.components, "created_at": datetime.utcnow()}
     _msgs.setdefault(cid, []).append(msg)
@@ -98,6 +112,7 @@ async def add_message(cid: str, data: MessageCreate):
 
 @conv_router.delete("/conversations/{cid}", summary="Delete conversation", description="Permanently delete a conversation and its messages")
 async def delete_conversation(cid: str):
+    resolve_user_id()
     if cid not in _convs: raise HTTPException(404, "Not found")
     del _convs[cid]; _msgs.pop(cid, None); return {"status": "success"}
 
@@ -111,37 +126,49 @@ _seed_timeline()
 
 @timeline_router.get("/timeline", summary="Get timeline", description="Get timeline events for a user, up to a limit of 200")
 async def get_timeline(user_id: str = Query(default="demo"), limit: int = Query(default=50, le=200)):
+    user_id = resolve_user_id()
     return sorted([e for e in _events.values() if e["user_id"] == user_id], key=lambda e: e["created_at"], reverse=True)[:limit]
 
 @timeline_router.post("/timeline", status_code=201, summary="Create timeline event", description="Create a new timeline event for a user")
 async def create_timeline_event(data: TimelineEventCreate, user_id: str = Query(default="demo")):
+    user_id = resolve_user_id()
     eid = f"evt-{uuid.uuid4().hex[:16]}"
     _events[eid] = {"id": eid, "user_id": user_id, "type": data.type, "title": data.title, "description": data.description, "metadata": data.metadata, "created_at": datetime.utcnow()}; return _events[eid]
 
 # ========== USER ==========
 user_router = APIRouter()
-_user = {"id": "demo", "email": "alex@summa.ai", "name": "Alex Johnson", "avatar": None, "bio": "Master's CS student.", "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
+store = UserStore()
 
 @user_router.get("/user", summary="Get user profile", description="Get the current user's profile information")
-async def get_user(): return _user
+async def get_user():
+    user_id = resolve_user_id()
+    current = store.get_user_by_id(user_id)
+    if current is None:
+        raise HTTPException(404, "Not found")
+    return store.serialize_user(current)
 
 @user_router.patch("/user", summary="Update user profile", description="Update the current user's profile information")
 async def update_user(data: dict):
-    for k, v in data.items():
-        if k in _user: _user[k] = v
-    _user["updated_at"] = datetime.utcnow(); return _user
+    user_id = resolve_user_id()
+    updated = store.update_user(user_id, data)
+    return store.serialize_user(updated)
 
 # ========== SETTINGS ==========
 settings_router = APIRouter()
-_s = {"user_id": "demo"}
+_settings_store: dict = {}
 
 @settings_router.get("/settings", summary="Get settings", description="Get the current user's application settings")
-async def get_settings(): return _s
+async def get_settings():
+    user_id = resolve_user_id()
+    return _settings_store.get(user_id, {"user_id": user_id})
 
 @settings_router.patch("/settings", summary="Update settings", description="Update the current user's application settings")
 async def update_settings(data: dict):
-    for k, v in data.items(): _s[k] = v
-    return _s
+    user_id = resolve_user_id()
+    current = _settings_store.get(user_id, {"user_id": user_id})
+    current.update(data)
+    _settings_store[user_id] = current
+    return current
 
 # ========== MATERIALS ==========
 materials_router = APIRouter()
@@ -150,15 +177,19 @@ for i, (t, title, src) in enumerate([("pdf","Speech and Language Processing","Ju
     _mats[f"mat-{i}"] = {"id": f"mat-{i}", "user_id": "demo", "type": t, "title": title, "source": src, "size": None, "duration": None, "concepts_extracted": 10+i*5, "status": "processed", "created_at": datetime.utcnow()}
 
 @materials_router.get("/materials", summary="List materials", description="Get all learning materials for the user")
-async def get_materials(): return list(_mats.values())
+async def get_materials():
+    resolve_user_id()
+    return list(_mats.values())
 
 @materials_router.post("/materials", status_code=201, summary="Create material", description="Upload/create a new learning material")
 async def create_material(data: MaterialCreate):
+    resolve_user_id()
     mid = f"mat-{uuid.uuid4().hex[:16]}"
     _mats[mid] = {"id": mid, "user_id": "demo", "type": data.type, "title": data.title, "source": data.source, "size": data.size, "duration": data.duration, "concepts_extracted": 0, "status": "processing", "created_at": datetime.utcnow()}; return _mats[mid]
 
 @materials_router.delete("/materials/{mid}", summary="Delete material", description="Permanently delete a learning material by ID")
 async def delete_material(mid: str):
+    resolve_user_id()
     if mid not in _mats: raise HTTPException(404, "Not found")
     del _mats[mid]; return {"status": "success"}
 
@@ -169,15 +200,19 @@ for i, (name, cat, mas, rel) in enumerate([("Self-Attention","NLP","learning",6)
     _concepts[f"cpt-{i}"] = {"id": f"cpt-{i}", "user_id": "demo", "name": name, "category": cat, "mastery": mas, "related_count": rel, "material_id": None, "created_at": datetime.utcnow()}
 
 @concepts_router.get("/concepts", summary="List concepts", description="Get all learning concepts for the user")
-async def get_concepts(): return list(_concepts.values())
+async def get_concepts():
+    resolve_user_id()
+    return list(_concepts.values())
 
 @concepts_router.post("/concepts", status_code=201, summary="Create concept", description="Create a new learning concept for the user")
 async def create_concept(data: ConceptCreate):
+    resolve_user_id()
     cid = f"cpt-{uuid.uuid4().hex[:16]}"
     _concepts[cid] = {"id": cid, "user_id": "demo", "name": data.name, "category": data.category, "mastery": data.mastery, "material_id": data.material_id, "related_count": data.related_count, "created_at": datetime.utcnow()}; return _concepts[cid]
 
 @concepts_router.delete("/concepts/{cid}", summary="Delete concept", description="Permanently delete a learning concept by ID")
 async def delete_concept(cid: str):
+    resolve_user_id()
     if cid not in _concepts: raise HTTPException(404, "Not found")
     del _concepts[cid]; return {"status": "success"}
 
@@ -186,6 +221,7 @@ analytics_router = APIRouter()
 
 @analytics_router.get("/analytics", summary="Get analytics", description="Get aggregated learning analytics and insights for the user")
 async def get_analytics():
+    resolve_user_id()
     return {
         "hexagon_dimensions": [{"label":"Depth","score":78},{"label":"Problem-Solving","score":65},{"label":"Speed","score":42},{"label":"Consistency","score":80},{"label":"Confidence","score":55},{"label":"Creativity","score":70}],
         "hexagon_evolution": [{"month":"Jan","Depth":45,"Problem-Solving":38,"Speed":30,"Consistency":50,"Confidence":35,"Creativity":40},{"month":"Feb","Depth":55,"Problem-Solving":45,"Speed":35,"Consistency":58,"Confidence":42,"Creativity":48},{"month":"Mar","Depth":65,"Problem-Solving":55,"Speed":38,"Consistency":65,"Confidence":50,"Creativity":55},{"month":"Apr","Depth":78,"Problem-Solving":65,"Speed":42,"Consistency":80,"Confidence":55,"Creativity":70}],

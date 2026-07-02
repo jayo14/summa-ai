@@ -4,6 +4,11 @@ export type FastapiUser = {
   name?: string | null
   avatar?: string | null
   bio?: string | null
+  provider?: string | null
+  onboarded?: boolean
+  onboarding_data?: unknown
+  created_at?: string
+  updated_at?: string
 }
 
 export type FastapiConversation = {
@@ -36,11 +41,13 @@ export function fastapiUrl(path: string) {
 export async function fastapiFetch<T>(
   path: string,
   init?: RequestInit,
+  accessToken?: string,
 ): Promise<T> {
   const response = await fetch(fastapiUrl(path), {
     ...init,
     headers: {
       "content-type": "application/json",
+      ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
       ...(init?.headers ?? {}),
     },
   })
@@ -56,4 +63,3 @@ export async function fastapiFetch<T>(
 
   return (await response.json()) as T
 }
-
