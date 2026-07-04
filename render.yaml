@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: summa-ai-backend
+    runtime: python3
+    buildCommand: pip install -r requirements.txt
+    startCommand: ./start.sh
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: apps/api
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: COGNEE_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: OPENAI_API_KEY  
+        sync: false  # Set this manually in Render dashboard
+      - key: LLM_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: DATABASE_URL
+        value: sqlite:///./db/custom.db
+      - key: BACKEND_CORS_ORIGINS
+        value: '["https://your-frontend-domain.com"]'  # Update with your frontend URL
+      - key: SCHEDULER_ENABLED
+        value: true
+      - key: DEMO_USER_EMAIL
+        value: alex@summa.ai

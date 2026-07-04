@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     logger.info("👋 Summa AI API Shutting Down")
 
 app = FastAPI(title="Summa AI API", version="1.0.0", description="AI-Native Learning Workspace API", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=settings.BACKEND_CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=settings.get_cors_origins(), allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc", f"{settings.API_V1_STR}/auth/login"}
 
