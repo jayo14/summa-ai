@@ -18,6 +18,8 @@ Set these in your Render dashboard (Environment tab):
 - `JWT_SECRET_KEY` - Generate a secure random string (use Render's "Generate Value")
 - `COGNEE_API_KEY` - Your Cognee API key from https://app.cognee.ai
 - `OPENAI_API_KEY` - Your OpenAI API key from https://platform.openai.com/api-keys
+- `QDRANT_API_KEY` - Your Qdrant Cloud API key, if you are using a remote cluster
+- `QDRANT_CLUSTER_ENDPOINT` - Your Qdrant cluster endpoint, such as `https://<cluster>.qdrant.cloud`
 
 ### Frontend Integration
 - `BACKEND_CORS_ORIGINS=["https://your-frontend-domain.com"]`
@@ -39,7 +41,8 @@ The service includes a health check endpoint at `/health` that Render will use t
 
 If you want persistent memory across deployments:
 1. Set `COGNEE_API_KEY` to use Cognee Cloud
-2. Or configure external vector/graph databases for self-hosted Cognee
+2. Set `QDRANT_API_KEY` and `QDRANT_CLUSTER_ENDPOINT` to use Qdrant Cloud or another remote cluster
+3. Or configure external vector/graph databases for self-hosted Cognee
 
 ## Database Options
 

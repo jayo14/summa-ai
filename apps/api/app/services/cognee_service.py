@@ -8,7 +8,7 @@ Cognee v1.0 API mapping used here:
   forget    → cognee.forget(dataset=...) / cognee.forget(dataset=..., memory_only=True)
 
 Configuration is driven entirely by environment variables read by Cognee on
-import (LLM_API_KEY, LLM_PROVIDER, VECTOR_DB_PROVIDER, GRAPH_DATABASE_PROVIDER,
+import (LLM_API_KEY, LLM_PROVIDER, GRAPH_DATABASE_PROVIDER,
 etc.).  We use cognee.config.set() for any runtime overrides we need.
 
 Falls back to an in-memory store when COGNEE_API_KEY is absent AND no LLM key
@@ -46,11 +46,7 @@ class CogneeService:
 
         # Decide whether we can run a real Cognee pipeline.
         # We need at least an LLM key; a Cognee Cloud key is optional.
-        has_llm_key = bool(
-            settings.OPENAI_API_KEY
-            or os.environ.get("LLM_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-        )
+        has_llm_key = bool(settings.OPENAI_API_KEY or settings.LLM_API_KEY)
 
         if has_llm_key:
             try:
@@ -63,17 +59,36 @@ class CogneeService:
                 if settings.OPENAI_API_KEY:
                     cognee.config.set("llm_api_key", settings.OPENAI_API_KEY)
                     cognee.config.set("embedding_api_key", settings.OPENAI_API_KEY)
+                elif settings.LLM_API_KEY:
+                    cognee.config.set("llm_api_key", settings.LLM_API_KEY)
+                    cognee.config.set(
+                        "embedding_api_key",
+                        settings.EMBEDDING_API_KEY or settings.LLM_API_KEY,
+                    )
 
-                if settings.OPENAI_MODEL:
+                if settings.OPENAI_MODEL or settings.LLM_MODEL:
                     # Cognee model format is "provider/model-name"
-                    model = settings.OPENAI_MODEL
+                    model = settings.OPENAI_MODEL or settings.LLM_MODEL
                     if not model.startswith("openai/"):
                         model = f"openai/{model}"
                     cognee.config.set("llm_model", model)
 
-                # Register the Qdrant community vector adapter if the provider
-                # is set to qdrant (driven by VECTOR_DB_PROVIDER env var).
-                if os.environ.get("VECTOR_DB_PROVIDER", "").lower() == "qdrant":
+                qdrant_endpoint = settings.QDRANT_CLUSTER_ENDPOINT or settings.VECTOR_DB_URL
+                qdrant_api_key = settings.QDRANT_API_KEY or settings.VECTOR_DB_KEY
+                qdrant_enabled = bool(
+                    qdrant_endpoint
+                    or qdrant_api_key
+                    or settings.VECTOR_DB_PROVIDER.lower() == "qdrant"
+                )
+
+                # Register the Qdrant community vector adapter when Qdrant is configured.
+                if qdrant_enabled:
+                    if qdrant_endpoint:
+                        os.environ["QDRANT_CLUSTER_ENDPOINT"] = qdrant_endpoint
+                        os.environ.setdefault("VECTOR_DB_URL", qdrant_endpoint)
+                    if qdrant_api_key:
+                        os.environ["QDRANT_API_KEY"] = qdrant_api_key
+                        os.environ.setdefault("VECTOR_DB_KEY", qdrant_api_key)
                     try:
                         from cognee_community_vector_adapter_qdrant import register  # noqa: PLC0415
                         register()

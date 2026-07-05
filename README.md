@@ -50,6 +50,8 @@ These are the settings defined in `apps/api/app/config.py`:
 | `COGNEE_API_URL` | `https://api.cognee.ai` | Cognee API endpoint. |
 | `OPENAI_API_KEY` | `""` | Required when you want Cognee to use OpenAI for memory operations. |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Model used by the backend integration. |
+| `QDRANT_API_KEY` | `""` | Qdrant Cloud API key for the vector store. |
+| `QDRANT_CLUSTER_ENDPOINT` | `""` | Qdrant cluster endpoint, such as your local Qdrant URL or Qdrant Cloud endpoint. |
 | `DATABASE_URL` | `sqlite:///./db/custom.db` | Local database URL used by the backend. |
 | `JWT_SECRET_KEY` | `change-me-in-production` | Change this before any real deployment. |
 | `JWT_ALGORITHM` | `HS256` | JWT signing algorithm. |

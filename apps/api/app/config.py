@@ -17,11 +17,24 @@ class Settings(BaseSettings):
     # Cognee configuration
     COGNEE_API_KEY: str = ""
     COGNEE_API_URL: str = "https://api.cognee.ai"
-    
+    LLM_API_KEY: str = ""
+    LLM_PROVIDER: str = "openai"
+    LLM_MODEL: str = "openai/gpt-4o-mini"
+    EMBEDDING_PROVIDER: str = "openai"
+    EMBEDDING_MODEL: str = "openai/text-embedding-3-large"
+    EMBEDDING_API_KEY: str = ""
+
     # OpenAI configuration
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
-    
+
+    # Qdrant configuration
+    QDRANT_API_KEY: str = ""
+    QDRANT_CLUSTER_ENDPOINT: str = ""
+    VECTOR_DB_URL: str = ""
+    VECTOR_DB_KEY: str = ""
+    VECTOR_DB_PROVIDER: str = ""
+
     # Database
     DATABASE_URL: str = "sqlite:///./db/custom.db"
     

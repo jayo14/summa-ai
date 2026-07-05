@@ -20,6 +20,10 @@ services:
         sync: false  # Set this manually in Render dashboard
       - key: LLM_API_KEY
         sync: false  # Set this manually in Render dashboard
+      - key: QDRANT_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: QDRANT_CLUSTER_ENDPOINT
+        sync: false  # Set this manually in Render dashboard
       - key: DATABASE_URL
         value: sqlite:///./db/custom.db
       - key: BACKEND_CORS_ORIGINS
