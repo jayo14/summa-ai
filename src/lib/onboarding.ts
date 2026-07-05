@@ -1,6 +1,17 @@
 import type { OnboardingData } from "@/components/prompt-kit/onboarding-flow"
 import { fastapiFetch, type FastapiUser } from "@/lib/fastapi"
 
+const ONBOARDING_DATA_KEY = "summa-onboarding-data"
+const ONBOARDED_KEY = "summa-onboarded"
+
+function canUseStorage() {
+  return typeof window !== "undefined" && typeof window.localStorage !== "undefined"
+}
+
+function storageKey(prefix: string, userId: string) {
+  return `${prefix}:${userId}`
+}
+
 export function normalizeOnboardingData(raw: unknown): Partial<OnboardingData> {
   if (!raw || typeof raw !== "object") return {}
 
@@ -38,6 +49,34 @@ export function normalizeOnboardingData(raw: unknown): Partial<OnboardingData> {
         ? (data.personality as OnboardingData["personality"])
         : undefined,
   }
+}
+
+export function getOnboardingData(userId: string): Partial<OnboardingData> | undefined {
+  if (!canUseStorage() || !userId) return undefined
+
+  const raw = window.localStorage.getItem(storageKey(ONBOARDING_DATA_KEY, userId))
+  if (!raw) return undefined
+
+  try {
+    return normalizeOnboardingData(JSON.parse(raw))
+  } catch {
+    return undefined
+  }
+}
+
+export function setOnboardingData(userId: string, data: Partial<OnboardingData>) {
+  if (!canUseStorage() || !userId) return
+  window.localStorage.setItem(storageKey(ONBOARDING_DATA_KEY, userId), JSON.stringify(data))
+}
+
+export function isOnboarded(userId: string) {
+  if (!canUseStorage() || !userId) return false
+  return window.localStorage.getItem(storageKey(ONBOARDED_KEY, userId)) === "true"
+}
+
+export function setOnboarded(userId: string, value: boolean) {
+  if (!canUseStorage() || !userId) return
+  window.localStorage.setItem(storageKey(ONBOARDED_KEY, userId), value ? "true" : "false")
 }
 
 export function buildOnboardingProfile(user: FastapiUser | null | undefined): Partial<OnboardingData> {

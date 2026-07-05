@@ -8,6 +8,8 @@ import { Loader } from "@/components/prompt-kit/loader"
 import { OnboardingFlow, type OnboardingData } from "@/components/prompt-kit/onboarding-flow"
 import { getOnboardingData, isOnboarded, setOnboarded, setOnboardingData } from "@/lib/onboarding"
 
+export const dynamic = "force-dynamic"
+
 export default function OnboardingPage() {
   const router = useRouter()
   const { data: session, status } = useSession()

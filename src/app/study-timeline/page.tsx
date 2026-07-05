@@ -1,6 +1,8 @@
 import { DashboardPageShell } from "@/components/dashboard-page-shell"
 import { TimelineView } from "@/components/prompt-kit/timeline-view"
 
+export const dynamic = "force-dynamic"
+
 export default function StudyTimelinePage() {
   return (
     <DashboardPageShell

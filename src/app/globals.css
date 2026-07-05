@@ -104,6 +104,8 @@
 
 :root {
   --radius: 0.625rem;
+  --font-figtree: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-instrument-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
