@@ -4,13 +4,14 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { signIn, useSession } from "next-auth/react"
 import { motion } from "framer-motion"
-import { ArrowRight, BookOpen, CheckCircle2, Sparkles } from "lucide-react"
+import { ArrowRight, BookOpen, CheckCircle2, Sparkles, Sun, Moon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Loader } from "@/components/prompt-kit/loader"
 import { SummaLogo } from "@/components/prompt-kit/summa-logo"
+import { FocusRing } from "@/components/focus-ring"
 import { fetchCurrentUserProfile } from "@/lib/onboarding"
 
 export function SignInScreen() {
@@ -100,6 +101,9 @@ export function SignInScreen() {
             "radial-gradient(60% 50% at 50% 0%, hsl(var(--primary) / 0.14), transparent 68%)",
         }}
       />
+      <div aria-hidden className="pointer-events-none absolute right-[10%] top-[15%] opacity-20">
+        <FocusRing value={75} size="lg" state="active" aria-label="Progress" />
+      </div>
 
       <div className="relative mx-auto flex min-h-dvh w-full max-w-6xl items-center px-4 py-10 sm:px-6">
         <div className="grid w-full gap-8 lg:grid-cols-[1.1fr_0.9fr]">
@@ -110,7 +114,9 @@ export function SignInScreen() {
             className="flex flex-col justify-center"
           >
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/80 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
-              <Sparkles className="size-3.5" />
+              <FocusRing value={100} size="sm" state="complete" aria-label="Ready">
+                <span className="text-[8px] font-bold tabular-nums text-foreground">AI</span>
+              </FocusRing>
               Start with a profile that remembers your goals
             </div>
 

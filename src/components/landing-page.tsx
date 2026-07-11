@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import {
   Sparkles, Brain, Layers, Target, Network, Calendar, AlertTriangle,
   ArrowRight, ChevronDown, Play, CheckCircle2, GitBranch, Hexagon as HexagonIcon,
+  Sun, Moon, LogOut, Settings, BookOpen,
 } from 'lucide-react'
 import { FocusRing } from '@/components/focus-ring'
 
@@ -58,7 +59,9 @@ function NavBar({ onGetStarted, isDark, onToggleTheme }: any) {
           <a href="#workspace" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Workspace</a>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={onToggleTheme} className="rounded-full p-2 text-muted-foreground hover:bg-secondary transition-colors">{isDark ? '☀️' : '🌙'}</button>
+          <button onClick={onToggleTheme} className="rounded-full p-2 text-muted-foreground hover:bg-secondary transition-colors" aria-label="Toggle theme">
+            {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          </button>
           <Button onClick={onGetStarted} className="rounded-full h-9 px-5 text-sm font-medium">Get Started</Button>
         </div>
       </div>
@@ -77,7 +80,9 @@ function HeroSection({ onGetStarted, heroY, heroOpacity }: any) {
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)', backgroundSize: '60px 60px', maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 70%)' }} />
       <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 mx-auto max-w-4xl px-6 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm">
-          <span className="relative flex size-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground opacity-30" /><span className="relative inline-flex size-2 rounded-full bg-foreground" /></span>
+          <FocusRing value={100} size="sm" state="complete" aria-label="Ready">
+            <span className="text-[8px] font-bold tabular-nums text-foreground">AI</span>
+          </FocusRing>
           The AI-native learning workspace
         </motion.div>
         <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8 }} className="text-5xl leading-[1.1] tracking-tight sm:text-6xl md:text-7xl" style={{ fontFamily: 'var(--font-instrument-serif), Georgia, serif', fontWeight: 400 }}>
