@@ -15,6 +15,7 @@ export type ArtifactSource =
   | 'youtube-video'
   | 'previous-artifact'
   | 'knowledge-base'
+  | 'library'
   | 'manual-input'
 
 export interface ArtifactVersion {
@@ -315,6 +316,7 @@ export const SOURCE_LABELS: Record<ArtifactSource, string> = {
   'youtube-video': 'YouTube Video',
   'previous-artifact': 'Previous Artifact',
   'knowledge-base': 'Knowledge Base',
+  'library': 'Library',
   'manual-input': 'Manual Input',
 }
 
@@ -325,5 +327,6 @@ export const SOURCE_ICONS: Record<ArtifactSource, string> = {
   'youtube-video': '🎥',
   'previous-artifact': '🔗',
   'knowledge-base': '🧠',
+  'library': '📚',
   'manual-input': '✍️',
 }

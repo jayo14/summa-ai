@@ -19,6 +19,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { FocusRing } from '@/components/focus-ring'
 import {
   useWorkspaceStore,
   useActiveArtifact,
@@ -61,7 +62,7 @@ import {
 /* Workspace panel                                                     */
 /* ------------------------------------------------------------------ */
 
-export function WorkspacePanel() {
+export function WorkspacePanel({ onClose }: { onClose?: () => void }) {
   const activeArtifact = useActiveArtifact()
   const { suggestions } = useWorkspaceStore()
   const [showHistory, setShowHistory] = React.useState(false)
@@ -69,7 +70,7 @@ export function WorkspacePanel() {
   return (
     <div className="flex h-full flex-col bg-background">
       {/* Workspace header */}
-      <WorkspaceHeader onToggleHistory={() => setShowHistory((v) => !v)} showHistory={showHistory} />
+      <WorkspaceHeader onToggleHistory={() => setShowHistory((v) => !v)} showHistory={showHistory} onClose={onClose} />
 
       {/* Body: artifact view + optional history sidebar */}
       <div className="flex min-h-0 flex-1">
@@ -110,9 +111,11 @@ export function WorkspacePanel() {
 function WorkspaceHeader({
   onToggleHistory,
   showHistory,
+  onClose,
 }: {
   onToggleHistory: () => void
   showHistory: boolean
+  onClose?: () => void
 }) {
   const activeArtifact = useActiveArtifact()
   const { togglePin } = useWorkspaceStore()
@@ -124,6 +127,11 @@ function WorkspaceHeader({
           <PanelRight className="size-4 text-primary" />
           <p className="text-sm font-semibold">Workspace</p>
         </div>
+        {onClose && (
+          <Button variant="ghost" size="icon" className="size-7 md:hidden" onClick={onClose} aria-label="Close workspace">
+            <X className="size-4" />
+          </Button>
+        )}
       </div>
     )
   }
@@ -131,6 +139,11 @@ function WorkspaceHeader({
   return (
     <div className="flex items-center justify-between gap-2 border-b px-4 py-2">
       <div className="flex min-w-0 items-center gap-2">
+        {onClose && (
+          <Button variant="ghost" size="icon" className="size-7 md:hidden" onClick={onClose} aria-label="Close workspace">
+            <ChevronLeft className="size-4" />
+          </Button>
+        )}
         <Badge variant="secondary" className="shrink-0 text-[10px] capitalize">
           {activeArtifact.type.replace('-', ' ')}
         </Badge>
@@ -234,15 +247,21 @@ function ArtifactMenu({ artifact }: { artifact: Artifact }) {
 function ActiveArtifactView({ artifact }: { artifact: Artifact }) {
   const currentVersion = artifact.versions.find((v) => v.version === artifact.currentVersion)
   if (!currentVersion) return null
+  const isLibrary = artifact.source === 'library'
 
   return (
-    <div className="space-y-4">
+    <div className={cn('space-y-4', isLibrary && 'rounded-2xl bg-summa-cream p-4')}>
       {/* Source metadata */}
       <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
           <span>{SOURCE_ICONS[artifact.source]}</span>
           Generated from <strong className="text-foreground">{artifact.sourceLabel ?? SOURCE_LABELS[artifact.source]}</strong>
         </span>
+        {isLibrary && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-summa-library px-2 py-0.5 text-[10px] font-medium text-summa-library-foreground">
+            Library
+          </span>
+        )}
         {artifact.parentArtifactId && (
           <>
             <ChevronRight className="size-3" />
@@ -409,13 +428,32 @@ function WorkspaceEmptyState() {
   ]
 
   return (
-    <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center">
-      <div className="mb-4 inline-flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-        <PanelRight className="size-7" />
+    <div className="flex h-full flex-col items-center px-4 py-8 text-center">
+      {/* Momentum cues */}
+      <div className="mb-6 flex items-center gap-6">
+        <div className="flex flex-col items-center gap-1">
+          <FocusRing value={15} size="sm" state="active" aria-label="Streak progress">
+            <span className="text-[10px] font-bold tabular-nums text-foreground">1</span>
+          </FocusRing>
+          <span className="text-[10px] text-muted-foreground">Day streak</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <FocusRing value={0} size="sm" state="idle" aria-label="Topics mastered">
+            <span className="text-[10px] font-bold tabular-nums text-foreground">0</span>
+          </FocusRing>
+          <span className="text-[10px] text-muted-foreground">Mastered</span>
+        </div>
       </div>
-      <h2 className="text-lg font-semibold">Workspace</h2>
+
+      {/* Focus Ring — idle / inviting */}
+      <FocusRing size="lg" state="idle" aria-label="Hi, I'm Summa AI">
+        <span className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+          Hi
+        </span>
+      </FocusRing>
+      <h2 className="mt-4 text-lg font-semibold">Your workspace is ready</h2>
       <p className="mt-1.5 max-w-xs text-sm text-muted-foreground">
-        Your active artifact appears here. Ask Summa AI to generate a quiz, flashcards, study plan, and more —
+        Ask Summa AI to generate a quiz, flashcards, study plan, and more —
         each one is saved automatically to your Resources.
       </p>
 

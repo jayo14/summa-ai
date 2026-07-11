@@ -81,7 +81,7 @@ const INITIAL_DATA: OnboardingData = {
   personality: {},
 }
 
-const TOTAL_STEPS = 5
+const TOTAL_STEPS = 6
 
 /* ------------------------------------------------------------------ */
 /* Main flow                                                           */
@@ -95,9 +95,10 @@ export interface OnboardingFlowProps {
 }
 
 export function OnboardingFlow({ onComplete, onSkip, initialData, onDataChange }: OnboardingFlowProps) {
-  const [step, setStep] = React.useState(0) // 0..4 are steps, 5 is completion
+  const [step, setStep] = React.useState(0) // 0..6 (6 is completion)
   const [direction, setDirection] = React.useState<1 | -1>(1)
   const [data, setData] = React.useState<OnboardingData>({ ...INITIAL_DATA, ...initialData })
+  const stuckTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const update = (patch: Partial<OnboardingData>) =>
     setData((prev) => ({ ...prev, ...patch }))
@@ -105,6 +106,16 @@ export function OnboardingFlow({ onComplete, onSkip, initialData, onDataChange }
   React.useEffect(() => {
     onDataChange?.(data)
   }, [data, onDataChange])
+
+  // Stuck detection — warn after 30s inactivity on a step
+  React.useEffect(() => {
+    stuckTimerRef.current = setTimeout(() => {
+      console.info(`[onboarding] User may be stuck on step ${step} (${getStepName(step)})`)
+    }, 30000)
+    return () => {
+      if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current)
+    }
+  }, [step])
 
   const goNext = () => {
     setDirection(1)
@@ -114,6 +125,18 @@ export function OnboardingFlow({ onComplete, onSkip, initialData, onDataChange }
     setDirection(-1)
     if (step > 0) setStep((s) => s - 1)
   }
+
+function getStepName(s: number): string {
+  switch (s) {
+    case 0: return 'Welcome'
+    case 1: return 'How it works'
+    case 2: return 'Academic Profile'
+    case 3: return 'Learning Style'
+    case 4: return 'Goals & Exams'
+    case 5: return 'Personality Quiz'
+    default: return 'Unknown'
+  }
+}
 
   const handleFinish = () => {
     // Confetti burst!
@@ -211,15 +234,18 @@ export function OnboardingFlow({ onComplete, onSkip, initialData, onDataChange }
                 <Step1Welcome data={data} update={update} onNext={goNext} />
               )}
               {step === 1 && (
-                <Step2Academic data={data} update={update} onNext={goNext} onBack={goBack} />
+                <IntroStep onNext={goNext} onBack={goBack} />
               )}
               {step === 2 && (
-                <Step3LearningStyle data={data} update={update} onNext={goNext} onBack={goBack} />
+                <Step2Academic data={data} update={update} onNext={goNext} onBack={goBack} />
               )}
               {step === 3 && (
-                <Step4GoalsExams data={data} update={update} onNext={goNext} onBack={goBack} />
+                <Step3LearningStyle data={data} update={update} onNext={goNext} onBack={goBack} />
               )}
               {step === 4 && (
+                <Step4GoalsExams data={data} update={update} onNext={goNext} onBack={goBack} />
+              )}
+              {step === 5 && (
                 <Step5Personality data={data} update={update} onFinish={handleFinish} onBack={goBack} />
               )}
               {step === TOTAL_STEPS && (
@@ -350,6 +376,7 @@ function Step1Welcome({
               onChange={(e) => update({ name: e.target.value })}
               autoFocus
             />
+            <p className="text-xs text-muted-foreground">Used for personalisation across devices. No account required to start.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="onb-email">Email</Label>
@@ -360,9 +387,64 @@ function Step1Welcome({
               value={data.email}
               onChange={(e) => update({ email: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">Stays private. Used only for account recovery and cross-device sync.</p>
           </div>
         </div>
       </div>
+    </StepShell>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* Step 1b: Intro — what happens next                                  */
+/* ------------------------------------------------------------------ */
+
+function IntroStep({
+  onNext,
+  onBack,
+}: {
+  onNext: () => void
+  onBack: () => void
+}) {
+  const steps = [
+    { icon: <GraduationCap className="size-5" />, title: 'Your background', desc: 'Degree, field, and level so explanations match your stage.' },
+    { icon: <Brain className="size-5" />, title: 'Learning style', desc: 'Visual, auditory, or kinesthetic — we adapt how we present content.' },
+    { icon: <Target className="size-5" />, title: 'Goals & exams', desc: 'Tell us what matters so we build a focused study plan.' },
+    { icon: <Sparkles className="size-5" />, title: 'Quick personality quiz', desc: '5 fun questions to make Summa AI feel more like you.' },
+  ]
+
+  return (
+    <StepShell
+      title="Here's what happens next"
+      subtitle="Four short steps to personalize your experience. You can skip any time."
+      footer={
+        <>
+          <Button variant="ghost" onClick={onBack} className="gap-2">
+            <ArrowLeft className="size-4" /> Back
+          </Button>
+          <Button onClick={onNext} size="lg" className="gap-2">
+            Got it, let's go! <ArrowRight className="size-4" />
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        {steps.map((s, i) => (
+          <div key={i} className="flex items-start gap-4 rounded-2xl border bg-card p-4">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              {s.icon}
+            </span>
+            <div className="min-w-0">
+              <p className="font-semibold">{s.title}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{s.desc}</p>
+            </div>
+            <span className="ml-auto shrink-0 text-xs text-muted-foreground">Step {i + 1}</span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        This takes about 2 minutes. Your answers are stored locally and never shared.
+      </p>
     </StepShell>
   )
 }
@@ -416,6 +498,9 @@ function Step2Academic({
         </>
       }
     >
+      <p className="-mt-2 text-xs text-muted-foreground italic">
+        Why we ask: your degree level and field calibrate the depth and vocabulary of explanations. A Year-1 undergrad gets different material than a Master's student.
+      </p>
       <div className="space-y-4">
         <div className="space-y-2">
           <Label>Degree level</Label>
@@ -476,6 +561,7 @@ function Step2Academic({
               </button>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground">Not sure? Pick the closest option — you can change it anytime in Settings.</p>
         </div>
       </div>
     </StepShell>
@@ -533,6 +619,9 @@ function Step3LearningStyle({
         </>
       }
     >
+      <p className="-mt-2 text-xs text-muted-foreground italic">
+        Why we ask: matching content format to your learning style makes information stick 2-3x better. We'll use this to recommend diagrams, discussions, or hands-on practice.
+      </p>
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {STYLE_CARDS.map((c) => {
@@ -573,6 +662,7 @@ function Step3LearningStyle({
           <p className="text-xs font-medium text-muted-foreground">
             Fine-tune your preferences (0 = not me, 100 = totally me)
           </p>
+          <p className="text-[10px] text-muted-foreground/70">Already set based on your choice above. Adjust if you like — or leave as-is.</p>
           {(['visual', 'auditory', 'kinesthetic'] as const).map((s) => (
             <div key={s} className="space-y-2">
               <div className="flex items-center justify-between text-sm">
@@ -640,6 +730,9 @@ function Step4GoalsExams({
         </>
       }
     >
+      <p className="-mt-2 text-xs text-muted-foreground italic">
+        Why we ask: knowing your goals and exam dates lets Summa AI build a reverse-calendar study plan, prioritize topics, and send timely reminders.
+      </p>
       <div className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="onb-goals" className="flex items-center gap-2">
@@ -663,10 +756,11 @@ function Step4GoalsExams({
             </Button>
           </div>
 
+          <p className="text-xs text-muted-foreground">Both fields are optional — you can skip this and fill later.</p>
           {data.exams.length === 0 ? (
             <div className="rounded-2xl border border-dashed bg-muted/30 p-6 text-center">
               <p className="text-sm text-muted-foreground">
-                No exams yet. Click <strong>Add exam</strong> to add one.
+                No exams yet. Click <strong>Add exam</strong> to add one, or just Continue.
               </p>
             </div>
           ) : (
@@ -825,6 +919,9 @@ function Step5Personality({
         </>
       }
     >
+      <p className="-mt-2 text-xs text-muted-foreground italic">
+        Why we ask: small preferences — study time, pace, motivation — help us adjust tone, example style, and encouragement frequency. You'll barely notice it, but it makes Summa AI feel more human.
+      </p>
       <div className="space-y-5">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>

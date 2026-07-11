@@ -17,10 +17,18 @@ import {
   Sparkles,
   Sun,
   Workflow,
+  X,
 } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Sidebar,
   SidebarContent,
@@ -44,8 +52,12 @@ import { Message, MessageActions, MessageAction, MessageContent } from "@/compon
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/prompt-kit/reasoning"
 import { SummaLogo } from "@/components/prompt-kit/summa-logo"
 import { SettingsDialog } from "@/components/prompt-kit/settings-dialog"
+import { WorkspacePanel } from "@/components/prompt-kit/workspace-panel"
+import { FocusRing } from "@/components/focus-ring"
 import type { OnboardingData } from "@/components/prompt-kit/onboarding-flow"
 import { useChat, type UseChatMessage } from "@/hooks/use-chat"
+import { useWorkspaceStore } from "@/hooks/use-workspace"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { fastapiFetch, type FastapiConversation, type FastapiMessage } from "@/lib/fastapi"
 import { getOnboardingData, isOnboarded, setOnboardingData } from "@/lib/onboarding"
@@ -144,6 +156,9 @@ export function ChatWorkspace() {
   const activeConversationFromQuery = searchParams.get("id")
   const conversationIdRef = React.useRef<string | null>(null)
   const skipNextMessageLoadRef = React.useRef(false)
+  const isMobile = useIsMobile()
+  const workspaceOpen = useWorkspaceStore((s) => s.isOpen)
+  const closeWorkspace = useWorkspaceStore((s) => s.close)
 
   const loadConversations = React.useCallback(async () => {
     if (!userId) return
@@ -219,7 +234,7 @@ export function ChatWorkspace() {
 
   React.useEffect(() => {
     if (!userId) return
-    setOnboardingState(getOnboardingData(userId))
+    setOnboardingState(getOnboardingData(userId) as OnboardingData | null)
   }, [userId])
 
   React.useEffect(() => {
@@ -475,81 +490,125 @@ export function ChatWorkspace() {
             <span className="hidden rounded-full border border-border/70 bg-secondary/50 px-3 py-1 text-xs text-muted-foreground md:inline-flex">
               Study mode
             </span>
-            <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
-              {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8 rounded-full" aria-label="Account menu">
+                  <Avatar className="size-7">
+                    <AvatarImage src={onboardingData?.avatar ?? currentUser.image ?? undefined} alt={displayName} />
+                    <AvatarFallback className="text-[10px]">{initials(displayName, currentUser.email)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="flex items-center gap-3 px-2 py-1.5">
+                  <Avatar className="size-9">
+                    <AvatarImage src={onboardingData?.avatar ?? currentUser.image ?? undefined} alt={displayName} />
+                    <AvatarFallback>{initials(displayName, currentUser.email)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">{displayName}</div>
+                    <div className="truncate text-xs text-muted-foreground">{currentUser.email}</div>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+                  <Settings className="size-4" /> Account settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.open("https://summastudy.ai", "_blank")}>
+                  <BookOpen className="size-4" /> Switch to SummaStudy
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="flex items-center justify-between px-2 py-1">
+                  <span className="text-xs text-muted-foreground">Theme</span>
+                  <Button variant="ghost" size="icon" className="size-7" onClick={toggleTheme} aria-label="Toggle theme">
+                    {isDark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+                  </Button>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => void signOut({ callbackUrl: "/home" })}>
+                  <LogOut className="size-4" /> Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
-        <main className="flex min-h-0 flex-1 flex-col bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.08),_transparent_35%)]">
-          <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-4 md:px-6">
-            {authError ? (
-              <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                {authError}
-              </div>
-            ) : null}
+        <div className="flex min-h-0 flex-1">
+          <main className="flex min-h-0 flex-1 flex-col bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.08),_transparent_35%)]">
+            <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-4 md:px-6">
+              {authError ? (
+                <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                  {authError}
+                </div>
+              ) : null}
 
-            <div className="flex-1 overflow-hidden rounded-3xl border border-border/70 bg-card/80 shadow-sm">
-              <ChatContainerRoot className="h-full">
-                <ChatContainerContent className="gap-5 p-4 md:p-6">
-                  {messages.length === 0 ? (
-                    <EmptyChatState onPick={setInput} />
-                  ) : (
-                    messages.map((message, index) => (
-                      <ChatBubble
-                        key={`${message.role}-${index}`}
-                        message={message}
-                        isLast={index === messages.length - 1}
-                      />
-                    ))
-                  )}
-                </ChatContainerContent>
-              </ChatContainerRoot>
-            </div>
-
-            <div className="pt-4">
-              <PromptInput
-                value={input}
-                onValueChange={setInput}
-                onSubmit={() => void handleSubmit()}
-                isLoading={isLoading}
-                className="border-border/70 bg-card/95 shadow-lg"
-              >
-                <PromptInputTextarea
-                  placeholder="Ask Summa AI anything about your studies..."
-                  disabled={isLoading}
-                />
-                <PromptInputActions className="mt-2 justify-between">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2 rounded-full"
-                      onClick={() => {
-                        setInput(STARTER_PROMPTS[0])
-                      }}
-                    >
-                      <Sparkles className="size-4" />
-                      Suggestion
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isLoading ? (
-                      <Button variant="outline" size="sm" onClick={stop}>
-                        Stop
-                      </Button>
+              <div className="flex-1 overflow-hidden rounded-3xl border border-border/70 bg-card/80 shadow-sm">
+                <ChatContainerRoot className="h-full">
+                  <ChatContainerContent className="gap-5 p-4 md:p-6">
+                    {messages.length === 0 ? (
+                      <EmptyChatState onPick={setInput} />
                     ) : (
-                      <Button size="sm" className="gap-2 rounded-full px-4" onClick={() => void handleSubmit()} disabled={!input.trim()}>
-                        <ArrowUp className="size-4" />
-                        Send
-                      </Button>
+                      messages.map((message, index) => (
+                        <ChatBubble
+                          key={`${message.role}-${index}`}
+                          message={message}
+                          isLast={index === messages.length - 1}
+                        />
+                      ))
                     )}
-                  </div>
-                </PromptInputActions>
-              </PromptInput>
+                  </ChatContainerContent>
+                </ChatContainerRoot>
+              </div>
+
+              <div className="pt-4">
+                <PromptInput
+                  value={input}
+                  onValueChange={setInput}
+                  onSubmit={() => void handleSubmit()}
+                  isLoading={isLoading}
+                  className="border-border/70 bg-card/95 shadow-lg"
+                >
+                  <PromptInputTextarea
+                    placeholder="Ask Summa AI anything about your studies..."
+                    disabled={isLoading}
+                  />
+                  <PromptInputActions className="mt-2 justify-between">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2 rounded-full"
+                        onClick={() => {
+                          setInput(STARTER_PROMPTS[0])
+                        }}
+                      >
+                        <Sparkles className="size-4" />
+                        Suggestion
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isLoading ? (
+                        <Button variant="outline" size="sm" onClick={stop}>
+                          Stop
+                        </Button>
+                      ) : (
+                        <Button size="sm" className="gap-2 rounded-full px-4" onClick={() => void handleSubmit()} disabled={!input.trim()}>
+                          <ArrowUp className="size-4" />
+                          Send
+                        </Button>
+                      )}
+                    </div>
+                  </PromptInputActions>
+                </PromptInput>
+              </div>
             </div>
-          </div>
-        </main>
+          </main>
+
+          {/* Desktop workspace panel */}
+          <aside className="hidden w-[420px] shrink-0 border-l md:block">
+            <WorkspacePanel />
+          </aside>
+        </div>
       </SidebarInset>
 
       <SettingsDialog
@@ -593,6 +652,13 @@ export function ChatWorkspace() {
         }}
         onLogout={() => void signOut({ callbackUrl: "/home" })}
       />
+
+      {/* Mobile workspace full-screen overlay */}
+      {isMobile && workspaceOpen && (
+        <div className="fixed inset-0 z-50 bg-background md:hidden">
+          <WorkspacePanel onClose={closeWorkspace} />
+        </div>
+      )}
     </SidebarProvider>
   )
 }
@@ -676,9 +742,24 @@ function CopyAction({ text }: { text: string }) {
 function EmptyChatState({ onPick }: { onPick: (value: string) => void }) {
   return (
     <div className="flex min-h-[420px] flex-col items-center justify-center px-4 text-center">
-      <div className="inline-flex size-16 items-center justify-center rounded-3xl bg-primary/10 text-primary ring-1 ring-primary/20">
-        <Sparkles className="size-8" />
+      <div className="flex items-center gap-5">
+        <div className="flex flex-col items-center gap-1">
+          <FocusRing value={15} size="sm" state="active" aria-label="Streak progress">
+            <span className="text-[10px] font-bold tabular-nums text-foreground">1</span>
+          </FocusRing>
+          <span className="text-[10px] text-muted-foreground">Day streak</span>
+        </div>
+        <FocusRing size="lg" state="idle" aria-label="Hi, I'm Summa AI">
+          <Sparkles className="size-6 text-primary" />
+        </FocusRing>
+        <div className="flex flex-col items-center gap-1">
+          <FocusRing value={0} size="sm" state="idle" aria-label="Topics mastered">
+            <span className="text-[10px] font-bold tabular-nums text-foreground">0</span>
+          </FocusRing>
+          <span className="text-[10px] text-muted-foreground">Mastered</span>
+        </div>
       </div>
+
       <motion.h1
         className="mt-6 text-3xl tracking-tight md:text-4xl"
         style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif" }}
