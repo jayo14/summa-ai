@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { FocusRing } from '@/components/focus-ring'
 import { cn } from '@/lib/utils'
 import {
   FileText,
@@ -220,7 +220,7 @@ export function KnowledgeBaseView() {
                         </p>
                         {m.status === 'processing' ? (
                           <div className="mt-1.5 flex items-center gap-2">
-                            <Progress value={45} className="h-1 flex-1" />
+                            <FocusRing value={45} size="sm" state="active" aria-label="Processing material" />
                             <span className="text-[10px] text-muted-foreground">Processing…</span>
                           </div>
                         ) : (

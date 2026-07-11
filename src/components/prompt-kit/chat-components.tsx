@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { FocusRing } from '@/components/focus-ring'
 import {
   Hexagon as HexagonIcon,
   Brain,
@@ -245,18 +245,11 @@ function Hexagon({ data }: { data: HexagonComponent }) {
             )
           })}
         </svg>
-        <div className="w-full flex-1 space-y-1.5">
+        <div className="w-full flex-1 space-y-3">
           {data.dimensions.map((d) => (
-            <div key={d.label} className="flex items-center gap-2 text-xs">
+            <div key={d.label} className="flex items-center gap-3 text-xs">
               <span className="w-24 truncate text-muted-foreground">{d.label}</span>
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${d.score}%` }}
-                  transition={{ duration: 0.5 }}
-                  className="h-full rounded-full bg-primary"
-                />
-              </div>
+              <FocusRing value={d.score} size="sm" state={d.score >= 80 ? 'complete' : 'active'} aria-label={`${d.label}: ${d.score}%`} />
               <span className="w-8 text-right tabular-nums">{d.score}</span>
             </div>
           ))}
@@ -351,14 +344,10 @@ function Quiz({ data }: { data: QuizComponent }) {
             <Brain className="size-4 text-primary" />
             {data.title ?? 'Quiz'}
           </CardTitle>
-          <Badge variant="secondary" className="text-xs">
-            {current + 1} / {data.questions.length}
-          </Badge>
-        </div>
-        <Progress value={(answeredCount / data.questions.length) * 100} className="h-1" />
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm font-medium">{q.question}</p>
+          <FocusRing value={(answeredCount / data.questions.length) * 100} size="md" state="active" aria-label={`Question ${current + 1} of ${data.questions.length}`} />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
         <div className="space-y-2">
           {q.options.map((opt, idx) => {
             const isAnswered = revealed[q.id]
@@ -449,21 +438,12 @@ function Flashcards({ data }: { data: FlashcardsComponent }) {
             <Layers className="size-4 text-primary" />
             {data.title ?? 'Flashcards'}
           </CardTitle>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
-              <Check className="size-3" /> {knownCount}
-            </span>
-            <span className="inline-flex items-center gap-1 text-orange-600 dark:text-orange-400">
-              <AlertTriangle className="size-3" /> {strugglingCount}
-            </span>
-            <span className="text-muted-foreground">
-              {idx + 1} / {data.cards.length}
-            </span>
+          <div className="flex items-center gap-2">
+            <FocusRing value={((knownCount + strugglingCount) / data.cards.length) * 100} size="md" state="active" aria-label={`Flashcard ${idx + 1} of ${data.cards.length}`} />
           </div>
-        </div>
-        <Progress value={((knownCount + strugglingCount) / data.cards.length) * 100} className="h-1" />
-      </CardHeader>
-      <CardContent>
+          </div>
+        </CardHeader>
+        <CardContent>
         <div
           className="relative h-44 cursor-pointer [perspective:1000px]"
           onClick={() => setFlipped((f) => !f)}
@@ -565,7 +545,9 @@ function StudyPlan({ data }: { data: StudyPlanComponent }) {
           <span>{doneTasks} of {totalTasks} tasks complete</span>
           <span className="tabular-nums">{pct}%</span>
         </CardDescription>
-        <Progress value={pct} className="h-1.5" />
+        <div className="flex justify-center py-1">
+          <FocusRing value={pct} size="sm" state={pct >= 100 ? 'complete' : 'active'} aria-label={`${pct}% complete`} />
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {days.map((day) => {

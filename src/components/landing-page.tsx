@@ -8,6 +8,7 @@ import {
   Sparkles, Brain, Layers, Target, Network, Calendar, AlertTriangle,
   ArrowRight, ChevronDown, Play, CheckCircle2, GitBranch, Hexagon as HexagonIcon,
 } from 'lucide-react'
+import { FocusRing } from '@/components/focus-ring'
 
 export interface LandingPageProps {
   onGetStarted: () => void
@@ -267,18 +268,22 @@ function ArtifactIllust() {
 }
 
 function ExamIllust() {
+  const weeks = ['Word Embeddings', 'RNNs & LSTMs', 'Attention', 'Transformers', 'Practice', 'Review']
+  const progressValues = [100, 85, 70, 60, 45, 30]
   return (
     <div className="flex h-72 flex-col justify-center gap-3">
       <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground"><Calendar className="size-4" /> NLP Final — Dec 15</div>
-      {['Word Embeddings', 'RNNs & LSTMs', 'Attention', 'Transformers', 'Practice', 'Review'].map((w, i) => (
-        <motion.div key={w} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex items-center gap-3">
-          <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }} className={cn('flex size-6 items-center justify-center rounded-full text-xs', i < 3 ? 'bg-foreground text-background' : 'border border-border bg-secondary')}>{i < 3 ? <CheckCircle2 className="size-3.5" /> : i + 1}</motion.div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between"><span className={cn('text-sm', i < 3 ? 'text-muted-foreground line-through' : 'font-medium')}>Week {i + 1}: {w}</span><span className="text-xs text-muted-foreground">{i < 3 ? 'Done' : 'Upcoming'}</span></div>
-            <div className="mt-1 h-1 rounded-full bg-secondary"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.max(20, 100 - i * 15)}%` }} transition={{ delay: i * 0.1 + 0.3 }} className="h-full rounded-full bg-foreground" /></div>
-          </div>
-        </motion.div>
-      ))}
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        {weeks.map((w, i) => {
+          const isDone = i < 3
+          return (
+            <motion.div key={w} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} className="flex flex-col items-center gap-1.5">
+              <FocusRing value={progressValues[i]} size="sm" state={isDone ? 'complete' : 'active'} aria-label={`Week ${i + 1}: ${w} — ${progressValues[i]}%`} />
+              <span className={cn('text-[10px] font-medium', isDone ? 'text-muted-foreground line-through' : 'text-foreground')}>Week {i + 1}</span>
+            </motion.div>
+          )
+        })}
+      </div>
     </div>
   )
 }

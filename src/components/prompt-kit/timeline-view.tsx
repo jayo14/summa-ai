@@ -19,6 +19,7 @@ import {
   TrendingUp,
   ChevronRight,
 } from 'lucide-react'
+import { FocusRing } from '@/components/focus-ring'
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -156,7 +157,9 @@ export function TimelineView() {
 
         {/* Stats */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard label="Day streak" value="7" icon={<Flame className="size-4" />} color="text-orange-500" />
+          <div className="flex items-center justify-center">
+            <FocusRing value={70} size="sm" state="active" aria-label="7-day streak, 70%" />
+          </div>
           <StatCard label="Artifacts" value="14" icon={<Sparkles className="size-4" />} color="text-primary" />
           <StatCard label="Quizzes taken" value="6" icon={<Brain className="size-4" />} color="text-purple-500" />
           <StatCard label="Study hours" value="23h" icon={<Clock className="size-4" />} color="text-blue-500" />

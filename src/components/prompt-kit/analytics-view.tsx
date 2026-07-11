@@ -18,6 +18,7 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart'
 import { cn } from '@/lib/utils'
+import { FocusRing } from '@/components/focus-ring'
 import {
   Area,
   AreaChart,
@@ -357,14 +358,8 @@ export function AnalyticsView() {
                       {t.mastery}%
                     </span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={cn(
-                        'h-full rounded-full',
-                        t.mastery >= 80 ? 'bg-green-500' : t.mastery >= 60 ? 'bg-yellow-500' : t.mastery >= 40 ? 'bg-orange-500' : 'bg-red-500',
-                      )}
-                      style={{ width: `${t.mastery}%` }}
-                    />
+                  <div className="flex justify-center py-0.5">
+                    <FocusRing value={t.mastery} size="sm" state={t.mastery >= 80 ? 'complete' : t.mastery >= 60 ? 'active' : 'active'} aria-label={`${t.topic} mastery: ${t.mastery}%`} />
                   </div>
                 </div>
               ))}
@@ -384,32 +379,12 @@ export function AnalyticsView() {
             <CardContent className="space-y-3 pt-2">
               {examReadiness.map((e) => (
                 <div key={e.exam} className="rounded-xl border bg-card p-3">
-                  <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">{e.exam}</p>
                       <p className="text-xs text-muted-foreground">{e.daysLeft} days left</p>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        e.readiness >= 80
-                          ? 'border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-400'
-                          : e.readiness >= 60
-                            ? 'border-yellow-500/40 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400'
-                            : 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400',
-                      )}
-                    >
-                      {e.readiness}% ready
-                    </Badge>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={cn(
-                        'h-full rounded-full',
-                        e.readiness >= 80 ? 'bg-green-500' : e.readiness >= 60 ? 'bg-yellow-500' : 'bg-red-500',
-                      )}
-                      style={{ width: `${e.readiness}%` }}
-                    />
+                    <FocusRing value={e.readiness} size="sm" state={e.readiness >= 80 ? 'complete' : 'active'} aria-label={`${e.exam}: ${e.readiness}% ready`} />
                   </div>
                 </div>
               ))}

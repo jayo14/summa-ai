@@ -19,7 +19,7 @@ import {
 import { Slider } from '@/components/ui/slider'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Progress } from '@/components/ui/progress'
+import { FocusRing } from '@/components/focus-ring'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import {
@@ -175,17 +175,19 @@ export function OnboardingFlow({ onComplete, onSkip, initialData, onDataChange }
           </div>
           <span className="text-sm font-semibold">Summa AI</span>
         </div>
-        <div className="flex-1">
-          <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              {step >= TOTAL_STEPS
-                ? 'All set!'
-                : `Step ${step + 1} of ${TOTAL_STEPS}`}
-            </span>
-            <span>{Math.round(progressValue)}%</span>
+          <div className="flex-1">
+            <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {step >= TOTAL_STEPS
+                  ? 'All set!'
+                  : `Step ${step + 1} of ${TOTAL_STEPS}`}
+              </span>
+              <span>{Math.round(progressValue)}%</span>
+            </div>
+            <div className="flex justify-center">
+              <FocusRing value={progressValue} size="sm" state={step >= TOTAL_STEPS ? 'complete' : 'active'} aria-label={`${Math.round(progressValue)}%`} />
+            </div>
           </div>
-          <Progress value={progressValue} className="h-1.5" />
-        </div>
         {onSkip && step < TOTAL_STEPS && (
           <Button variant="ghost" size="sm" onClick={() => onSkip(data)} className="text-xs">
             Skip
