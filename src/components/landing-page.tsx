@@ -31,7 +31,7 @@ export function LandingPage({ onGetStarted, isDark, onToggleTheme }: LandingPage
   return (
     <div ref={containerRef} className="relative min-h-dvh overflow-hidden bg-background">
       <motion.div
-        className="fixed top-0 left-0 right-0 z-50 h-0.5 origin-left bg-foreground"
+        className="fixed top-0 left-0 right-0 z-50 h-0.5 origin-left bg-summa-accent"
         style={{ scaleX }}
       />
       <NavBar
@@ -109,7 +109,7 @@ function NavBar({ onGetStarted, isDark, onToggleTheme, mobileMenu, setMobileMenu
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <a href="#" className="flex items-center gap-2.5 group">
-          <div className="inline-flex size-9 items-center justify-center rounded-xl bg-foreground text-background transition-transform group-hover:scale-105">
+          <div className="inline-flex size-9 items-center justify-center rounded-xl bg-summa-accent text-summa-accent-foreground transition-transform group-hover:scale-105">
             <Sparkles className="size-4" />
           </div>
           <span className="text-lg font-bold tracking-tight">Summa AI</span>
@@ -120,7 +120,7 @@ function NavBar({ onGetStarted, isDark, onToggleTheme, mobileMenu, setMobileMenu
             <a
               key={item}
               href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
-              className="text-sm font-medium text-muted-foreground transition-all hover:text-foreground relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-foreground after:transition-all hover:after:w-full"
+              className="text-sm font-medium text-muted-foreground transition-all hover:text-summa-accent relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-summa-accent after:transition-all hover:after:w-full"
             >
               {item}
             </a>
@@ -252,7 +252,7 @@ function HeroSection({ onGetStarted, scrollYProgress }: any) {
             Start learning free
             <ArrowRight className="ml-1.5 size-4" />
           </Button>
-          <button className="inline-flex h-13 items-center gap-2.5 rounded-full border border-border/60 px-6 text-sm font-medium transition-all hover:bg-secondary/50 hover:border-foreground/20">
+          <button className="inline-flex h-13 items-center gap-2.5 rounded-full border border-border/60 px-6 text-sm font-medium transition-all hover:bg-secondary/50 hover:border-summa-accent/20">
             <Play className="size-4" />
             Watch demo
             <span className="hidden sm:inline text-muted-foreground">· 2 min</span>
@@ -301,7 +301,7 @@ function HeroSection({ onGetStarted, scrollYProgress }: any) {
                         className={cn(
                           'max-w-[90%] rounded-2xl px-3.5 py-2.5 text-xs',
                           msg.role === 'user'
-                            ? 'rounded-tr-md bg-foreground text-background'
+                            ? 'rounded-tr-md bg-summa-accent text-summa-accent-foreground'
                             : 'rounded-tl-md bg-secondary/80',
                         )}
                       >
@@ -322,7 +322,7 @@ function HeroSection({ onGetStarted, scrollYProgress }: any) {
                         key={opt}
                         className={cn(
                           'flex items-center justify-between rounded-lg border px-3 py-1.5 text-[11px]',
-                          i === 0 ? 'border-foreground/20 bg-foreground/5' : 'border-border/40',
+                          i === 0 ? 'border-summa-accent/20 bg-summa-accent/5' : 'border-border/40',
                         )}
                       >
                         {opt}
@@ -419,11 +419,11 @@ function StatsBar() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/50 p-6 text-center transition-all hover:border-foreground/20 hover:shadow-lg hover:-translate-y-0.5"
+              className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/50 p-6 text-center transition-all hover:border-summa-accent/20 hover:shadow-lg hover:-translate-y-0.5"
             >
               <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.02] to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
               <div className="relative">
-                <div className="mb-3 inline-flex size-10 items-center justify-center rounded-xl bg-foreground/5 text-foreground/60">
+                <div className="mb-3 inline-flex size-10 items-center justify-center rounded-xl bg-summa-accent/10 text-summa-accent">
                   {s.icon}
                 </div>
                 <div
@@ -501,7 +501,7 @@ function HowItWorks() {
               transition={{ delay: i * 0.15, duration: 0.5 }}
               className="relative flex flex-col items-center text-center"
             >
-              <div className="relative mb-6 inline-flex size-20 items-center justify-center rounded-2xl bg-foreground text-background shadow-lg">
+              <div className="relative mb-6 inline-flex size-20 items-center justify-center rounded-2xl bg-summa-accent text-summa-accent-foreground shadow-lg">
                 {step.icon}
                 <div className="absolute -top-2 -right-2 inline-flex size-6 items-center justify-center rounded-full bg-background text-[10px] font-bold text-foreground border border-border/50 shadow-sm">
                   {i + 1}
@@ -663,7 +663,7 @@ function FeatureCard({
       onMouseLeave={() => setHovered(false)}
       className={cn(
         'group relative overflow-hidden rounded-2xl border border-border/50 bg-card/30 p-6 transition-all duration-300',
-        'hover:border-foreground/15 hover:shadow-xl hover:-translate-y-0.5',
+        'hover:border-summa-accent/20 hover:shadow-xl hover:-translate-y-0.5',
         feature.span === 'tall' ? 'flex flex-col' : '',
         className,
       )}
@@ -677,14 +677,14 @@ function FeatureCard({
         )}
       />
       <div className="relative z-10">
-        <div className="mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-foreground/5 text-foreground/70 ring-1 ring-foreground/5 group-hover:bg-foreground/10 group-hover:ring-foreground/10 transition-all">
+        <div className="mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-summa-accent/10 text-summa-accent ring-1 ring-summa-accent/10 group-hover:bg-summa-accent/15 group-hover:ring-summa-accent/20 transition-all">
           {feature.icon}
         </div>
         <h3 className="text-base font-semibold mb-1.5">{feature.title}</h3>
         <p className="text-sm text-muted-foreground leading-relaxed mb-4">{feature.desc}</p>
       </div>
       <div className={cn('relative z-10 mt-auto', feature.span === 'tall' ? 'flex-1 flex items-end' : '')}>
-        <div className="w-full rounded-xl bg-secondary/20 border border-border/30 overflow-hidden p-3 transition-all group-hover:border-foreground/10 group-hover:bg-secondary/30">
+        <div className="w-full rounded-xl bg-secondary/20 border border-border/30 overflow-hidden p-3 transition-all group-hover:border-summa-accent/15 group-hover:bg-secondary/30">
           {feature.illustration}
         </div>
       </div>
@@ -717,7 +717,7 @@ function AdaptiveIllust() {
           <div
             className={cn(
               'rounded-xl px-3 py-1.5 text-[11px] leading-relaxed',
-              m.me ? 'rounded-tr-sm bg-foreground text-background' : 'rounded-tl-sm bg-secondary',
+              m.me ? 'rounded-tr-sm bg-summa-accent text-summa-accent-foreground' : 'rounded-tl-sm bg-secondary',
             )}
           >
             {m.meta && (
@@ -733,7 +733,7 @@ function AdaptiveIllust() {
 
 function ArtifactIllust() {
   const cards = [
-    { l: 'Quiz', i: <Brain className="size-2.5" />, c: 'bg-foreground text-background' },
+    { l: 'Quiz', i: <Brain className="size-2.5" />, c: 'bg-summa-accent text-summa-accent-foreground' },
     { l: 'Cards', i: <Layers className="size-2.5" />, c: 'bg-secondary text-foreground' },
     { l: 'Plan', i: <Target className="size-2.5" />, c: 'bg-secondary text-foreground' },
   ]
@@ -893,13 +893,13 @@ function VersionIllust() {
           key={ver.v}
           className={cn(
             'flex items-center gap-2 rounded-lg border px-2.5 py-1.5',
-            ver.a ? 'border-foreground/15 bg-foreground/5' : 'border-border/40 bg-secondary/20',
+            ver.a ? 'border-summa-accent/15 bg-summa-accent/5' : 'border-border/40 bg-secondary/20',
           )}
         >
           <div
             className={cn(
               'flex size-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-medium',
-              ver.a ? 'bg-foreground text-background' : 'bg-secondary text-muted-foreground',
+              ver.a ? 'bg-summa-accent text-summa-accent-foreground' : 'bg-secondary text-muted-foreground',
             )}
           >
             {ver.v}
@@ -956,7 +956,7 @@ function GapIllust() {
               <div
                 className={cn(
                   'h-full rounded-full transition-all',
-                  i === 0 ? 'bg-foreground' : 'bg-muted-foreground/40',
+                  i === 0 ? 'bg-summa-accent' : 'bg-muted-foreground/40',
                 )}
                 style={{ width: g.w }}
               />
@@ -1022,7 +1022,7 @@ function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="group relative rounded-2xl border border-border/50 bg-card/40 p-6 transition-all hover:border-foreground/20 hover:shadow-lg hover:-translate-y-1"
+              className="group relative rounded-2xl border border-border/50 bg-card/40 p-6 transition-all hover:border-summa-accent/20 hover:shadow-lg hover:-translate-y-1"
             >
               <div className="flex gap-0.5 mb-4">
                 {Array.from({ length: t.stars }).map((_, j) => (
@@ -1113,12 +1113,12 @@ function PricingSection({ onGetStarted }: any) {
               className={cn(
                 'relative rounded-2xl border p-6 transition-all hover:-translate-y-1 hover:shadow-xl',
                 plan.popular
-                  ? 'border-foreground/20 bg-card shadow-lg'
+                  ? 'border-summa-accent/30 bg-card shadow-lg'
                   : 'border-border/50 bg-card/50',
               )}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-foreground px-4 py-0.5 text-[10px] font-medium text-background">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-summa-accent px-4 py-0.5 text-[10px] font-medium text-summa-accent-foreground">
                   Most popular
                 </div>
               )}
@@ -1195,7 +1195,7 @@ function FAQSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
-              className="rounded-2xl border border-border/50 bg-card/40 overflow-hidden transition-all hover:border-foreground/10"
+              className="rounded-2xl border border-border/50 bg-card/40 overflow-hidden transition-all hover:border-summa-accent/15"
             >
               <button
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
@@ -1240,8 +1240,8 @@ function CTASection({ onGetStarted }: any) {
   return (
     <section className="relative overflow-hidden py-24 md:py-32">
       {/* Background with gradient */}
-      <div className="absolute inset-0 bg-foreground" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-foreground via-foreground/95 to-foreground/90" />
+      <div className="absolute inset-0 bg-summa-accent" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-summa-accent via-summa-accent/95 to-summa-accent/90" />
       <div className="absolute inset-0 opacity-10" style={{
         backgroundImage: 'radial-gradient(circle at 20% 50%, white 0%, transparent 50%), radial-gradient(circle at 80% 50%, white 0%, transparent 50%)',
       }} />
@@ -1306,7 +1306,7 @@ function Footer() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
           <div className="flex items-center gap-2.5">
-            <div className="inline-flex size-8 items-center justify-center rounded-lg bg-foreground text-background">
+            <div className="inline-flex size-8 items-center justify-center rounded-lg bg-summa-accent text-summa-accent-foreground">
               <Sparkles className="size-3.5" />
             </div>
             <span className="text-sm font-bold">Summa AI</span>
@@ -1317,7 +1317,7 @@ function Footer() {
               <a
                 key={link.label}
                 href={link.href}
-                className="transition-colors hover:text-foreground"
+                className="transition-colors hover:text-summa-accent"
               >
                 {link.label}
               </a>
