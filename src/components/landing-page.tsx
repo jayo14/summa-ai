@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils'
 import {
   Sparkles, Brain, Layers, Target, Network, Calendar, AlertTriangle,
   ArrowRight, ChevronDown, Play, CheckCircle2, GitBranch, Hexagon as HexagonIcon,
-  Sun, Moon, BookOpen, Zap, BarChart3, Shield, MessageSquare,
-  ChevronRight, Menu, X, Trophy, Clock, Star, Quote,
+  Sun, Moon, Zap, BarChart3, Shield, MessageSquare,
+  ChevronRight, Menu, X, Trophy, Quote,
 } from 'lucide-react'
 import { FocusRing } from '@/components/focus-ring'
 
@@ -17,10 +17,6 @@ export interface LandingPageProps {
   isDark: boolean
   onToggleTheme: () => void
 }
-
-/* ────────────────────────────────────────────────────────── */
-/*  MAIN                                                      */
-/* ────────────────────────────────────────────────────────── */
 
 export function LandingPage({ onGetStarted, isDark, onToggleTheme }: LandingPageProps) {
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -77,9 +73,9 @@ export function LandingPage({ onGetStarted, isDark, onToggleTheme }: LandingPage
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  NAV                                                       */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  NAV                                            */
+/* ─────────────────────────────────────────────── */
 
 function NavBar({ onGetStarted, isDark, onToggleTheme, mobileMenu, setMobileMenu }: any) {
   const [scrolled, setScrolled] = React.useState(false)
@@ -148,9 +144,9 @@ function NavBar({ onGetStarted, isDark, onToggleTheme, mobileMenu, setMobileMenu
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  HERO                                                      */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  HERO — cinematic gradient + floating preview   */
+/* ─────────────────────────────────────────────── */
 
 function HeroSection({ onGetStarted, scrollYProgress }: any) {
   const heroY = useTransform(scrollYProgress, [0, 0.15], [0, -60])
@@ -249,7 +245,7 @@ function HeroSection({ onGetStarted, scrollYProgress }: any) {
           </button>
         </motion.div>
 
-        {/* Floating glass preview */}
+        {/* Floating glass preview — 21st.dev style cinematic app mockup */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -307,7 +303,6 @@ function HeroSection({ onGetStarted, scrollYProgress }: any) {
                       </div>
                     </motion.div>
                   ))}
-                  {/* Input bar */}
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -374,9 +369,9 @@ function HeroSection({ onGetStarted, scrollYProgress }: any) {
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  TRUST BAR                                                 */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  TRUST BAR — marquee tagging row                */
+/* ─────────────────────────────────────────────── */
 
 function TrustBar() {
   const items = [
@@ -413,9 +408,9 @@ function TrustBar() {
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  METRICS                                                   */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  METRICS — animated counters                    */
+/* ─────────────────────────────────────────────── */
 
 function MetricsSection() {
   const metrics = [
@@ -494,9 +489,9 @@ function CountUp({ target }: { target: number }) {
   return <span ref={ref}>{count}</span>
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  HOW IT WORKS — animated connecting path                  */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  HOW IT WORKS — timeline stepper                */
+/* ─────────────────────────────────────────────── */
 
 function HowItWorks() {
   const steps = [
@@ -565,9 +560,9 @@ function HowItWorks() {
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  FEATURES SHOWCASE — glass bento                          */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  FEATURES — bento grid with glass cards         */
+/* ─────────────────────────────────────────────── */
 
 const FEATURES = [
   {
@@ -685,9 +680,9 @@ function FeatureCard({ feature, index, className }: any) {
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  PROBLEM / SOLUTION                                       */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  PROBLEM / SOLUTION — comparison rows           */
+/* ─────────────────────────────────────────────── */
 
 function ProblemSolution() {
   const pairs = [
@@ -742,9 +737,9 @@ function ProblemSolution() {
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  TESTIMONIALS                                              */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  TESTIMONIALS — card grid with quotes           */
+/* ─────────────────────────────────────────────── */
 
 function TestimonialsSection() {
   const testimonials = [
@@ -809,9 +804,9 @@ function TestimonialsSection() {
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  PRICING                                                   */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  PRICING — toggle + tier cards                  */
+/* ─────────────────────────────────────────────── */
 
 function PricingSection({ onGetStarted }: any) {
   const [yearly, setYearly] = React.useState(false)
@@ -925,9 +920,9 @@ function PricingSection({ onGetStarted }: any) {
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  FAQ                                                       */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  FAQ — accordion                                */
+/* ─────────────────────────────────────────────── */
 
 function FAQSection() {
   const faqs = [
@@ -1000,9 +995,9 @@ function FAQSection() {
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  CTA                                                       */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  CTA — gradient banner                          */
+/* ─────────────────────────────────────────────── */
 
 function CTASection({ onGetStarted }: any) {
   return (
@@ -1011,7 +1006,6 @@ function CTASection({ onGetStarted }: any) {
       <div className="absolute inset-0 opacity-[0.08]" style={{
         backgroundImage: 'radial-gradient(circle at 20% 30%, white 0%, transparent 50%), radial-gradient(circle at 80% 70%, white 0%, transparent 50%)',
       }} />
-      {/* Floating orbs */}
       <motion.div
         animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
         transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
@@ -1055,9 +1049,9 @@ function CTASection({ onGetStarted }: any) {
   )
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  FOOTER                                                    */
-/* ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── */
+/*  FOOTER                                         */
+/* ─────────────────────────────────────────────── */
 
 function Footer() {
   const links = [
