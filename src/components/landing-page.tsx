@@ -462,7 +462,7 @@ function ExperienceShowcase() {
 
 const TESTIMONIALS = [
   {
-    quote: 'Summa AI remembers what I\'ve studied and surfaces exactly what I need to review. It\'s like having a tutor who never sleeps.',
+    quote: 'Summa AI remembers everything I study and shows me what to review. Like a tutor that never sleeps.',
     name: 'Alex Chen', role: 'CS Master\'s Student', initials: 'AC',
   },
   {
@@ -558,7 +558,7 @@ function PricingSection({ onGetStarted }: any) {
         <h2 className="text-[28px] leading-[34px] tracking-tight sm:text-[34px] sm:leading-[40px] lg:text-[46px] lg:leading-[52px] font-serif font-medium text-foreground">
           Pricing that scales with your learning
         </h2>
-        <p className="text-base text-muted-foreground leading-relaxed">Start free while you explore. Upgrade once you rely on it.</p>
+        <p className="text-base text-muted-foreground leading-relaxed">Start free. Upgrade when you outgrow us.</p>
       </div>
 
       <div className="reveal mt-10 flex items-center justify-center gap-x-2">
