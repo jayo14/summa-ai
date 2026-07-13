@@ -90,6 +90,30 @@ async def get_session_context(request: SessionContextRequest, user_id: str = Que
     user_id = resolve_user_id()
     return await cognee.get_session_context(user_id, request.session_id, request.query)
 
+@router.post("/memory/consolidate", summary="Consolidate all", description="Trigger improvement across all datasets for the current user to strengthen cross-session context")
+async def consolidate_all(user_id: str = Query(default="demo")):
+    user_id = resolve_user_id()
+    results = {}
+    for ds in ["main", "conversations", "exams", "artifacts", "progress", "sessions"]:
+        try:
+            r = await cognee.improve_memory(user_id, ds)
+            results[ds] = r.get("status", "skipped")
+        except Exception as exc:
+            results[ds] = f"error: {exc}"
+    return {"status": "success", "datasets": results}
+
+@router.get("/memory/context", summary="Get full context", description="Aggregate all memory — progress, exams, artifacts, conversations — for a user into a single rich context object")
+async def get_full_context(query: str = "", limit: int = 5, user_id: str = Query(default="demo")):
+    user_id = resolve_user_id()
+    q = query or "latest activity"
+    context = {
+        "memories": (await cognee.recall_context(user_id, q, limit=limit)).get("results", []),
+        "exams": (await cognee.recall_exams(user_id)).get("exams", []),
+        "progress": (await cognee.recall_learning_progress(user_id)).get("progress", []),
+        "artifacts": (await cognee.recall_artifacts(user_id, limit=limit)).get("artifacts", []),
+    }
+    return {"status": "success", "user_id": user_id, "context": context}
+
 @router.get("/memory/{user_id}", summary="List memories", description="List all memories for a specific user dataset")
 async def list_memories(user_id: str):
     user_id = resolve_user_id()
