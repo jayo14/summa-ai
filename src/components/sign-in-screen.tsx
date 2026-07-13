@@ -227,8 +227,10 @@ export function SignInScreen() {
 
                 <div className="mt-6 rounded-[10px] border border-border/30 bg-muted/30 p-4 text-sm text-muted-foreground leading-relaxed">
                   <p>
-                    Sign in once, complete your quick onboarding, and jump straight into
-                    your study workspace.
+                    New around here?{' '}
+                    <Link href="/sign-up" className="font-medium text-foreground hover:text-summa-accent transition-colors">
+                      Create an account
+                    </Link>
                   </p>
                 </div>
               </CardContent>
