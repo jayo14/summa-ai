@@ -1,6 +1,7 @@
-"""Chat route — streams from Z.ai GLM + intent detection."""
+"""Chat route — streams from Z.ai GLM + intent detection + memory-augmented orchestration."""
 import json, logging, re
-from typing import AsyncGenerator
+from datetime import datetime
+from typing import AsyncGenerator, Optional
 import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -27,32 +28,119 @@ INTENT_PATTERNS = {
     "gap-analysis": [re.compile(r"\b(gap|missing|need to learn)\b", re.I)],
 }
 
+WEAK_SCORE_THRESHOLD = 40.0
+PROACTIVE_GAP_CHECK_INTERVAL = 5
+
+
 def detect_intent(text: str) -> str | None:
     for ct, patterns in INTENT_PATTERNS.items():
-        if any(p.search(text) for p in patterns): return ct
+        if any(p.search(text) for p in patterns):
+            return ct
     return None
+
+
+async def detect_knowledge_gaps(user_id: str) -> Optional[dict]:
+    try:
+        progress_data = await cognee.recall_learning_progress(user_id)
+        entries = progress_data.get("progress", [])
+        gaps = []
+        for entry in entries:
+            score = entry.get("score", 100)
+            topic = entry.get("metadata", {}).get("topic") or entry.get("text", "")
+            if isinstance(score, (int, float)) and score < WEAK_SCORE_THRESHOLD:
+                gaps.append({"topic": topic, "score": score})
+        if gaps:
+            return {
+                "type": "gap-analysis",
+                "gaps": sorted(gaps, key=lambda g: g["score"])[:5],
+                "title": "Knowledge gaps detected",
+            }
+    except Exception as exc:
+        logger.debug("Gap detection skipped: %s", exc)
+    return None
+
+
+async def build_orchestrator_prompt(user_id: str, query: str, messages: list[dict]) -> str:
+    memory_context = await cognee.recall_context(user_id, query)
+    exams_context = await cognee.recall_exams(user_id)
+    progress_context = await cognee.recall_learning_progress(user_id)
+    gaps = await detect_knowledge_gaps(user_id)
+
+    parts = [
+        "You are Summa AI, an adaptive learning companion. "
+        "Keep explanations concise, friendly, and well-structured with Markdown.",
+    ]
+    memories = memory_context.get("results", [])
+    if memories:
+        parts.append(
+            f"\nRECALLED CONTEXT FROM MEMORY:\n{json.dumps(memories, indent=2)}"
+        )
+    exams = exams_context.get("exams", [])
+    if exams:
+        parts.append(f"\nUPCOMING EXAMS:\n{json.dumps(exams, indent=2)}")
+    progress = progress_context.get("progress", [])
+    if progress:
+        parts.append(f"\nLEARNING PROGRESS:\n{json.dumps(progress, indent=2)}")
+    if gaps:
+        parts.append(
+            f"\nKNOWLEDGE GAPS DETECTED:\n{json.dumps(gaps, indent=2)}\n"
+            "The student is struggling with these topics. "
+            "Prioritise explanations and suggest resources."
+        )
+    parts.append(
+        "\nIf the user asks about a concept, first explain it clearly, "
+        "then check their understanding. "
+        "When you spot a prerequisite they might be missing, flag it gently. "
+        "If they mention an exam, help them build a study schedule and recall key topics."
+    )
+    return "\n".join(parts)
+
 
 async def _stream_zai(messages: list[dict], enable_thinking: bool = True, context: str = "") -> AsyncGenerator[str, None]:
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0)) as client:
-            async with client.stream("POST", f"{ZAI_API_BASE}/chat/completions",
-                headers={"Content-Type": "application/json", "Authorization": f"Bearer {ZAI_API_KEY}", "X-Z-AI-From": "Z", "X-Token": ZAI_TOKEN, "X-User-Id": ZAI_USER_ID},
-                json={"model": "glm-4.5", "messages": [{"role": "system", "content": f"You are Summa AI, an adaptive learning companion. Keep explanations concise, friendly, and well-structured with Markdown.\n\nRECALLED CONTEXT FROM MEMORY:\n{context}"}, *messages],
-                      "stream": True, "thinking": {"type": "enabled" if enable_thinking else "disabled"}},
+            async with client.stream(
+                "POST",
+                f"{ZAI_API_BASE}/chat/completions",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {ZAI_API_KEY}",
+                    "X-Z-AI-From": "Z",
+                    "X-Token": ZAI_TOKEN,
+                    "X-User-Id": ZAI_USER_ID,
+                },
+                json={
+                    "model": "glm-4.5",
+                    "messages": [
+                        {"role": "system", "content": context},
+                        *messages,
+                    ],
+                    "stream": True,
+                    "thinking": {"type": "enabled" if enable_thinking else "disabled"},
+                },
             ) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
-                    if not line.startswith("data: "): continue
+                    if not line.startswith("data: "):
+                        continue
                     payload = line[6:].strip()
-                    if not payload or payload == "[DONE]": continue
+                    if not payload or payload == "[DONE]":
+                        continue
                     try:
                         chunk = json.loads(payload)
                         delta = chunk.get("choices", [{}])[0].get("delta", {})
-                        reasoning = delta.get("reasoning_content") or delta.get("reasoning") or delta.get("thinking")
+                        reasoning = (
+                            delta.get("reasoning_content")
+                            or delta.get("reasoning")
+                            or delta.get("thinking")
+                        )
                         content = delta.get("content")
-                        if reasoning: yield f"data: {json.dumps({'type': 'thinking', 'delta': reasoning})}\n\n"
-                        if content: yield f"data: {json.dumps({'type': 'content', 'delta': content})}\n\n"
-                    except json.JSONDecodeError: continue
+                        if reasoning:
+                            yield f"data: {json.dumps({'type': 'thinking', 'delta': reasoning})}\n\n"
+                        if content:
+                            yield f"data: {json.dumps({'type': 'content', 'delta': content})}\n\n"
+                    except json.JSONDecodeError:
+                        continue
         yield "data: [DONE]\n\n"
     except Exception as e:
         logger.error(f"Z.ai stream failed: {e}")
@@ -60,47 +148,59 @@ async def _stream_zai(messages: list[dict], enable_thinking: bool = True, contex
             yield f"data: {json.dumps({'type': 'content', 'delta': word + ' '})}\n\n"
         yield "data: [DONE]\n\n"
 
-@router.post("/chat/stream", summary="Chat (streaming)", description="Stream chat response using Server-Sent Events with optional thinking blocks")
+
+@router.post("/chat/stream", summary="Chat (streaming)")
 async def chat_stream(request: ChatRequest):
     user_id = resolve_user_id()
     last_query = request.messages[-1].content if request.messages else ""
     messages = [{"role": m.role, "content": m.content} for m in request.messages]
     intent = detect_intent(last_query)
-
-    # 1. Recall memory
-    memory_context = await cognee.recall_context(user_id, last_query)
-    exams_context = await cognee.recall_exams(user_id)
-    progress_context = await cognee.recall_learning_progress(user_id)
-
-    formatted_context = f"MEMORIES: {json.dumps(memory_context.get('results', []))}\nUPCOMING EXAMS: {json.dumps(exams_context.get('exams', []))}\nPROGRESS: {json.dumps(progress_context.get('progress', []))}"
+    orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages)
 
     async def generate():
         if intent:
             yield f"data: {json.dumps({'type': 'artifact', 'artifact': {'id': f'pending-{intent}', 'title': intent.replace('-', ' ').title(), 'type': intent}})}\n\n"
 
         full_response = ""
-        async for event in _stream_zai(messages, request.enable_thinking, context=formatted_context):
+        async for event in _stream_zai(messages, request.enable_thinking, context=orch_prompt):
             yield event
             if event.startswith("data: {"):
                 try:
                     data = json.loads(event[6:])
                     if data.get("type") == "content":
                         full_response += data.get("delta", "")
-                except: pass
+                except Exception:
+                    pass
 
-        # 2. Remember the turn
         if full_response:
-            await cognee.remember_conversation(user_id, last_query, full_response, session_id=request.conversation_id)
+            await cognee.remember_conversation(
+                user_id, last_query, full_response, session_id=request.conversation_id
+            )
+
+        if len(messages) % PROACTIVE_GAP_CHECK_INTERVAL == 0 and len(messages) > 0:
+            gaps = await detect_knowledge_gaps(user_id)
+            if gaps:
+                yield (
+                    f"data: {json.dumps({'type': 'artifact', 'artifact': {'id': 'gap-analysis', 'title': gaps['title'], 'type': 'gap-analysis', 'data': gaps['gaps']}})}\n\n"
+                )
 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
-@router.post("/chat", response_model=ChatResponse, summary="Chat (non-streaming)", description="Process a chat message and return a response with detected intent artifacts")
+
+@router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     user_id = resolve_user_id()
     last_query = request.messages[-1].content if request.messages else ""
     intent = detect_intent(last_query)
-    artifacts = [ArtifactRef(id=f"pending-{intent}", title=intent.replace("-", " ").title(), type=intent)] if intent else []
-
+    artifacts = (
+        [ArtifactRef(id=f"pending-{intent}", title=intent.replace("-", " ").title(), type=intent)]
+        if intent
+        else []
+    )
     memory_context = await cognee.recall_context(user_id, last_query)
-    # Note: Non-streaming also gets context but currently doesn't call LLM in this placeholder
-    return ChatResponse(response="(Use /chat/stream for streaming)", artifacts=artifacts, conversation_id=request.conversation_id, reasoning=f"Intent: {intent or 'none'}")
+    return ChatResponse(
+        response="(Use /chat/stream for streaming)",
+        artifacts=artifacts,
+        conversation_id=request.conversation_id,
+        reasoning=f"Intent: {intent or 'none'}",
+    )

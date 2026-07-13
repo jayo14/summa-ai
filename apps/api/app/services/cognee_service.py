@@ -14,6 +14,7 @@ etc.).  We use cognee.config.set() for any runtime overrides we need.
 Falls back to an in-memory store when COGNEE_API_KEY is absent AND no LLM key
 is available, so local dev works without any external services.
 """
+import asyncio
 import logging
 import os
 import uuid
@@ -113,7 +114,41 @@ class CogneeService:
 
     @classmethod
     async def initialize(cls) -> "CogneeService":
-        return cls()
+        instance = cls()
+        # Start background consolidation loop
+        cls._start_consolidation_loop(instance)
+        return instance
+
+    _consolidation_task = None
+
+    @classmethod
+    def _start_consolidation_loop(cls, instance: "CogneeService") -> None:
+        """Start a background task that periodically consolidates memory across all user datasets."""
+
+        async def _loop():
+            while True:
+                await asyncio.sleep(900)  # Every 15 minutes
+                try:
+                    # Consolidate datasets that have accumulated new entries
+                    for dataset_key in list(instance._memory.keys()):
+                        # Only consolidate if dataset has enough entries
+                        if len(instance._memory.get(dataset_key, [])) >= 5:
+                            if instance._cognee:
+                                try:
+                                    await instance._cognee.improve(dataset=dataset_key)
+                                    logger.info(
+                                        "Background consolidation: %s improved", dataset_key
+                                    )
+                                except Exception as exc:
+                                    logger.debug(
+                                        "Background consolidation skipped %s: %s",
+                                        dataset_key,
+                                        exc,
+                                    )
+                except Exception as exc:
+                    logger.warning("Consolidation loop error: %s", exc)
+
+        cls._consolidation_task = asyncio.ensure_future(_loop())
 
     def get_user_dataset(self, user_id: str) -> str:
         return f"user_{user_id}"
