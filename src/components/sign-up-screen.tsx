@@ -4,16 +4,19 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { motion } from "framer-motion"
-import { ArrowRight, CheckCircle2 } from "lucide-react"
+import { ArrowRight, BookOpen, CheckCircle2, Lock, Mail } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Loader } from "@/components/prompt-kit/loader"
 import { SummaLogo } from "@/components/prompt-kit/summa-logo"
 
 export function SignUpScreen() {
   const router = useRouter()
   const { status } = useSession()
+  const [email, setEmail] = React.useState("")
+  const [password, setPassword] = React.useState("")
 
   React.useEffect(() => {
     if (status === "authenticated") {
@@ -119,7 +122,35 @@ export function SignUpScreen() {
                     <div className="absolute inset-x-0 top-1/2 h-px bg-border/40" />
                   </div>
 
-                  <div className="space-y-3"></div>
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
+                      <Input
+                        placeholder="Email"
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
+                      <Input
+                        placeholder="Password"
+                        type="password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
+                      />
+                    </div>
+                    <Button
+                      className="w-full rounded-[10px] py-6 h-auto text-base font-medium"
+                      type="button"
+                    >
+                      <BookOpen className="size-4" />
+                      Create account
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
