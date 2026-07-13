@@ -708,7 +708,7 @@ function CTASection({ onGetStarted }: any) {
             Stop forgetting. Start learning.
           </h2>
           <p className="mt-3 max-w-[480px] text-sm text-muted-foreground leading-relaxed lg:mt-4 lg:text-base">
-            Start learning in under 2 minutes. No migration, no re-tagging, no new habits to learn.
+            Pick a subject and start learning in under 2 minutes. No setup, no config.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3 lg:mt-10">
             <Button
