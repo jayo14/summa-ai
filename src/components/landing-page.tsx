@@ -108,7 +108,7 @@ function NavBar({ onGetStarted, isDark, onToggleTheme, mobileMenu, setMobileMenu
           <span className="font-serif text-xl font-bold text-foreground tracking-tight">Summa<span className="text-summa-accent">AI</span></span>
         </a>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
           {['Features', 'How it works', 'Pricing', 'FAQ'].map((item) => (
             <a
               key={item}
@@ -279,15 +279,15 @@ function StatsBar() {
         </h2>
         <div className="flex w-full flex-wrap items-center gap-8 lg:w-fit lg:gap-14 justify-center md:justify-end">
           <div className="space-y-1 text-center md:text-left">
-            <h2 className="text-[34px] leading-[40px] sm:text-[40px] sm:leading-[44px] font-serif font-medium text-foreground">7+</h2>
+            <div className="text-[34px] leading-[40px] sm:text-[40px] sm:leading-[44px] font-serif font-medium text-foreground" role="text">7+</div>
             <p className="text-sm text-muted-foreground">Artifact types</p>
           </div>
           <div className="space-y-1 text-center md:text-left">
-            <h2 className="text-[34px] leading-[40px] sm:text-[40px] sm:leading-[44px] font-serif font-medium text-foreground">6</h2>
+            <div className="text-[34px] leading-[40px] sm:text-[40px] sm:leading-[44px] font-serif font-medium text-foreground" role="text">6</div>
             <p className="text-sm text-muted-foreground">Proficiency dimensions</p>
           </div>
           <div className="space-y-1 text-center md:text-left">
-            <h2 className="text-[34px] leading-[40px] sm:text-[40px] sm:leading-[44px] font-serif font-medium text-foreground">100%</h2>
+            <div className="text-[34px] leading-[40px] sm:text-[40px] sm:leading-[44px] font-serif font-medium text-foreground" role="text">100%</div>
             <p className="text-sm text-muted-foreground">Persistent memory</p>
           </div>
         </div>
