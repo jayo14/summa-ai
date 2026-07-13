@@ -366,7 +366,7 @@ function FeaturesBento() {
         <li className="reveal col-span-12 lg:col-span-5">
           <div className="relative flex flex-col justify-between gap-8 overflow-hidden rounded-2xl bg-card border border-border/30 p-5 md:p-7">
             <div className="space-y-3">
-              <h4 className="text-[22px] leading-[28px] font-serif font-medium text-foreground">Built for serious learners</h4>
+              <h4 className="text-[22px] leading-[28px] font-serif font-medium text-foreground">Made for how you actually learn</h4>
               <p className="text-sm text-muted-foreground leading-relaxed">Made for students who need depth — undergrad to Master&apos;s level, with proactive follow-ups and gap analysis.</p>
             </div>
             <div className="dotted-bg relative isolate flex h-[240px] w-full items-center justify-center overflow-hidden rounded-xl bg-muted/30 p-4">
