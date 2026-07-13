@@ -193,6 +193,27 @@ class UserStore:
             raise RuntimeError("Failed to update user")
         return updated
 
+    def create_user(self, email: str, password: str, name: Optional[str] = None, avatar: Optional[str] = None) -> Dict[str, Any]:
+        normalized = email.lower().strip()
+        existing = self.get_user_by_email(normalized)
+        if existing:
+            raise ValueError("User already exists")
+        user_id = f"usr-{uuid.uuid4().hex}"
+        now = self._now()
+        with self._connect() as conn:
+            conn.execute(
+                """INSERT INTO users (id, email, name, avatar, bio, provider, password_hash,
+                                      onboarded, onboarding_data, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 0, '{}', ?, ?)""",
+                (user_id, normalized, name, avatar, None, "credentials",
+                 hash_password(password), now, now),
+            )
+            conn.commit()
+        created = self.get_user_by_id(user_id)
+        if created is None:
+            raise RuntimeError("Failed to create user")
+        return created
+
     def set_onboarding_data(self, user_id: str, data: Dict[str, Any], onboarded: bool = False) -> Dict[str, Any]:
         return self.update_user(user_id, {"onboarding_data": data, "onboarded": onboarded})
 

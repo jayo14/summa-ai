@@ -17,7 +17,6 @@ type BackendAuthResponse = {
     onboarded?: boolean
     onboarding_data?: unknown
   }
-  access_token?: string
   token?: string
 }
 

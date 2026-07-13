@@ -5,13 +5,41 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useSession, signIn } from "next-auth/react"
 import { motion } from "framer-motion"
-import { ArrowRight, BookOpen, CheckCircle2, Lock, Mail, User } from "lucide-react"
+import {
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  User,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Loader } from "@/components/prompt-kit/loader"
 import { SummaLogo } from "@/components/prompt-kit/summa-logo"
+import { fastapiUrl } from "@/lib/fastapi"
+
+function passwordStrength(pw: string): { label: string; color: string; width: string } {
+  let score = 0
+  if (pw.length >= 6) score++
+  if (pw.length >= 10) score++
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++
+  if (/\d/.test(pw)) score++
+  if (/[^a-zA-Z0-9]/.test(pw)) score++
+  const map = [
+    { label: "Weak", color: "bg-red-500", width: "20%" },
+    { label: "Weak", color: "bg-red-500", width: "20%" },
+    { label: "Fair", color: "bg-orange-500", width: "40%" },
+    { label: "Good", color: "bg-yellow-500", width: "60%" },
+    { label: "Strong", color: "bg-lime-500", width: "80%" },
+    { label: "Very strong", color: "bg-green-500", width: "100%" },
+  ]
+  return map[Math.min(score, 5)]
+}
 
 export function SignUpScreen() {
   const router = useRouter()
@@ -20,8 +48,17 @@ export function SignUpScreen() {
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [confirm, setConfirm] = React.useState("")
+  const [showPw, setShowPw] = React.useState(false)
+  const [showConfirm, setShowConfirm] = React.useState(false)
   const [loading, setLoading] = React.useState<"google" | "summa" | null>(null)
   const [error, setError] = React.useState<string | null>(null)
+
+  const mounted = React.useRef(true)
+  React.useEffect(() => {
+    return () => {
+      mounted.current = false
+    }
+  }, [])
 
   React.useEffect(() => {
     if (status === "authenticated") {
@@ -29,37 +66,92 @@ export function SignUpScreen() {
     }
   }, [router, status])
 
+  const safeSetLoading = (v: typeof loading) => {
+    if (mounted.current) setLoading(v)
+  }
+  const safeSetError = (v: string | null) => {
+    if (mounted.current) setError(v)
+  }
+
   const startOnboarding = React.useCallback(() => {
     router.push("/onboarding")
     router.refresh()
   }, [router])
 
   const handleCreate = async () => {
-    setLoading("summa")
-    setError(null)
-    const result = await signIn("credentials", {
-      email,
-      password,
-      callbackUrl: "/onboarding",
-      redirect: false,
-    })
-    setLoading(null)
-
-    if (result?.error) {
-      setError("We could not create your account. Please check your details and try again.")
+    if (password !== confirm) {
+      safeSetError("Passwords do not match")
+      return
+    }
+    if (password.length < 6) {
+      safeSetError("Password must be at least 6 characters")
+      return
+    }
+    if (!name.trim()) {
+      safeSetError("Please enter your name")
       return
     }
 
-    startOnboarding()
+    safeSetLoading("summa")
+    safeSetError(null)
+
+    try {
+      // 1. Create account via dedicated backend endpoint
+      const res = await fetch(fastapiUrl("/auth/signup"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          provider: "credentials",
+        }),
+      })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        const detail = (body as { detail?: string }).detail
+        if (res.status === 409) {
+          safeSetError("An account with this email already exists. Try signing in.")
+        } else {
+          safeSetError(detail || "We could not create your account. Please try again.")
+        }
+        safeSetLoading(null)
+        return
+      }
+
+      // 2. Sign in with the new credentials
+      const result = await signIn("credentials", {
+        email,
+        password,
+        callbackUrl: "/onboarding",
+        redirect: false,
+      })
+
+      if (!mounted.current) return
+      safeSetLoading(null)
+
+      if (result?.error) {
+        safeSetError("Account created but sign-in failed. Please try signing in.")
+        return
+      }
+
+      startOnboarding()
+    } catch {
+      if (mounted.current) {
+        safeSetLoading(null)
+        safeSetError("A network error occurred. Please check your connection and try again.")
+      }
+    }
   }
 
   const handleGoogle = async () => {
-    setLoading("google")
-    setError(null)
+    safeSetLoading("google")
+    safeSetError(null)
     await signIn("google", {
       callbackUrl: "/onboarding",
     })
-    setLoading(null)
+    if (mounted.current) safeSetLoading(null)
   }
 
   if (status === "loading") {
@@ -69,6 +161,9 @@ export function SignUpScreen() {
       </div>
     )
   }
+
+  const strength = password.length > 0 ? passwordStrength(password) : null
+  const passwordsMatch = confirm.length === 0 || password === confirm
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -105,7 +200,7 @@ export function SignUpScreen() {
 
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[1216px] items-center px-4 py-10 sm:px-6">
         <div className="grid w-full gap-8 lg:grid-cols-[1fr_1fr]">
-          {/* Left: Value prop */}
+          {/* Left */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -140,7 +235,7 @@ export function SignUpScreen() {
                 <motion.div
                   key={item}
                   variants={itemVariants}
-                  whileHover={{ scale: 1.02, borderColor: "rgba(132,204,22,0.3)" }}
+                  whileHover={{ scale: 1.02 }}
                   className="flex items-center gap-2 rounded-xl border border-border/40 bg-card/50 px-4 py-3 text-sm shadow-sm transition-colors"
                 >
                   <CheckCircle2 className="size-4 text-green-500 shrink-0" />
@@ -150,7 +245,7 @@ export function SignUpScreen() {
             </motion.div>
           </motion.div>
 
-          {/* Right: Sign-up card */}
+          {/* Right: sign-up card */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -186,60 +281,118 @@ export function SignUpScreen() {
 
                   <div className="relative py-2 text-center">
                     <span className="relative z-10 bg-card px-2 text-xs text-muted-foreground/60">
-                      or sign up with your email
+                      or sign up with email
                     </span>
                     <div className="absolute inset-x-0 top-1/2 h-px bg-border/40" />
                   </div>
 
                   <div className="space-y-3">
+                    {/* Name */}
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
                       <Input
                         placeholder="Full name"
                         type="text"
                         value={name}
-                        onChange={(event) => setName(event.target.value)}
+                        onChange={(e) => setName(e.target.value)}
                         className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
                       />
                     </div>
+
+                    {/* Email */}
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
                       <Input
                         placeholder="Email"
                         type="email"
                         value={email}
-                        onChange={(event) => setEmail(event.target.value)}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
                       />
                     </div>
+
+                    {/* Password */}
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
                       <Input
                         placeholder="Password"
-                        type="password"
+                        type={showPw ? "text" : "password"}
                         value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="h-11 rounded-[10px] border-border/40 bg-background pl-10 pr-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
                       />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowPw((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        aria-label={showPw ? "Hide password" : "Show password"}
+                      >
+                        {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
                     </div>
+
+                    {/* Strength bar */}
+                    {strength && (
+                      <div className="space-y-1 -mt-1">
+                        <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-border/40">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
+                            style={{ width: strength.width }}
+                          />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground/60">
+                          Strength: {strength.label}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Confirm password */}
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
                       <Input
                         placeholder="Confirm password"
-                        type="password"
+                        type={showConfirm ? "text" : "password"}
                         value={confirm}
-                        onChange={(event) => setConfirm(event.target.value)}
-                        className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
+                        onChange={(e) => setConfirm(e.target.value)}
+                        className={`h-11 rounded-[10px] border-border/40 bg-background pl-10 pr-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20 ${
+                          confirm.length > 0 && !passwordsMatch ? "border-destructive/50" : ""
+                        }`}
                       />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowConfirm((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        aria-label={showConfirm ? "Hide confirm" : "Show confirm"}
+                      >
+                        {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
                     </div>
+                    {confirm.length > 0 && !passwordsMatch && (
+                      <p className="text-xs text-destructive -mt-1">Passwords do not match</p>
+                    )}
+
+                    {/* Error */}
                     {error ? (
-                      <p className="text-sm text-destructive bg-destructive/5 rounded-[10px] px-3 py-2">{error}</p>
+                      <p className="text-sm text-destructive bg-destructive/5 rounded-[10px] px-3 py-2">
+                        {error}
+                      </p>
                     ) : null}
+
+                    {/* Submit */}
                     <Button
                       className="w-full rounded-[10px] py-6 h-auto text-base font-medium"
                       type="button"
                       onClick={() => void handleCreate()}
-                      disabled={!name.trim() || !email.trim() || !password.trim() || !confirm.trim() || loading !== null}
+                      disabled={
+                        !name.trim() ||
+                        !email.trim() ||
+                        !password.trim() ||
+                        !confirm.trim() ||
+                        !passwordsMatch ||
+                        loading !== null
+                      }
                     >
                       {loading === "summa" ? (
                         <span className="flex items-center gap-2">
@@ -255,9 +408,13 @@ export function SignUpScreen() {
                     </Button>
                   </div>
                 </div>
+
                 <div className="mt-4 text-center text-sm text-muted-foreground">
-                  Already have an account?{' '}
-                  <Link href="/sign-in" className="font-medium text-foreground hover:text-summa-accent transition-colors">
+                  Already have an account?{" "}
+                  <Link
+                    href="/sign-in"
+                    className="font-medium text-foreground hover:text-summa-accent transition-colors"
+                  >
                     Sign in
                   </Link>
                 </div>

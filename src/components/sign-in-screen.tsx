@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { signIn, useSession } from "next-auth/react"
 import { motion } from "framer-motion"
-import { ArrowRight, BookOpen, CheckCircle2, Sparkles, Mail, Lock } from "lucide-react"
+import { ArrowRight, BookOpen, CheckCircle2, Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -19,8 +19,16 @@ export function SignInScreen() {
   const { data: session, status } = useSession()
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
+  const [showPw, setShowPw] = React.useState(false)
   const [loading, setLoading] = React.useState<"google" | "summa" | null>(null)
   const [error, setError] = React.useState<string | null>(null)
+
+  const mounted = React.useRef(true)
+  React.useEffect(() => {
+    return () => {
+      mounted.current = false
+    }
+  }, [])
 
   React.useEffect(() => {
     if (status !== "authenticated") return
@@ -50,6 +58,11 @@ export function SignInScreen() {
     }
   }, [router, session?.accessToken, session?.user?.onboarded, status])
 
+  const safe = {
+    setLoading: (v: typeof loading) => { if (mounted.current) setLoading(v) },
+    setError: (v: string | null) => { if (mounted.current) setError(v) },
+  }
+
   const startOnboarding = React.useCallback(() => {
     router.push("/onboarding")
     router.refresh()
@@ -64,18 +77,19 @@ export function SignInScreen() {
   }
 
   const handleSummaStudy = async () => {
-    setLoading("summa")
-    setError(null)
+    safe.setLoading("summa")
+    safe.setError(null)
     const result = await signIn("credentials", {
       email,
       password,
       callbackUrl: "/onboarding",
       redirect: false,
     })
-    setLoading(null)
+    if (!mounted.current) return
+    safe.setLoading(null)
 
     if (result?.error) {
-      setError("We could not start your account. Please check your details and try again.")
+      safe.setError("We could not start your account. Please check your details and try again.")
       return
     }
 
@@ -83,12 +97,12 @@ export function SignInScreen() {
   }
 
   const handleGoogle = async () => {
-    setLoading("google")
-    setError(null)
+    safe.setLoading("google")
+    safe.setError(null)
     await signIn("google", {
       callbackUrl: "/onboarding",
     })
-    setLoading(null)
+    if (mounted.current) safe.setLoading(null)
   }
 
   const containerVariants = {
@@ -126,7 +140,7 @@ export function SignInScreen() {
 
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[1216px] items-center px-4 py-10 sm:px-6">
         <div className="grid w-full gap-8 lg:grid-cols-[1fr_1fr]">
-          {/* Left: Value prop */}
+          {/* Left */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -161,7 +175,7 @@ export function SignInScreen() {
                 <motion.div
                   key={item}
                   variants={itemVariants}
-                  whileHover={{ scale: 1.02, borderColor: "rgba(132,204,22,0.3)" }}
+                  whileHover={{ scale: 1.02 }}
                   className="flex items-center gap-2 rounded-xl border border-border/40 bg-card/50 px-4 py-3 text-sm shadow-sm transition-colors"
                 >
                   <CheckCircle2 className="size-4 text-green-500 shrink-0" />
@@ -171,11 +185,11 @@ export function SignInScreen() {
             </motion.div>
           </motion.div>
 
-          {/* Right: Sign-in card */}
+          {/* Right: sign-in card */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
             className="flex items-center justify-center"
           >
             <Card className="w-full max-w-[440px] border border-border/50 bg-card/80 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.15)] backdrop-blur rounded-2xl">
@@ -184,7 +198,7 @@ export function SignInScreen() {
                   <SummaLogo size={28} />
                   <div>
                     <div className="text-lg font-semibold tracking-tight font-serif">Summa AI</div>
-                    <div className="text-sm text-muted-foreground">Start learning in minutes</div>
+                    <div className="text-sm text-muted-foreground">Welcome back</div>
                   </div>
                 </div>
 
@@ -226,11 +240,20 @@ export function SignInScreen() {
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
                       <Input
                         placeholder="Password"
-                        type="password"
+                        type={showPw ? "text" : "password"}
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
-                        className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
+                        className="h-11 rounded-[10px] border-border/40 bg-background pl-10 pr-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
                       />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowPw((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        aria-label={showPw ? "Hide password" : "Show password"}
+                      >
+                        {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
                     </div>
                     <div className="flex justify-end -mt-1 mb-1">
                       <Link
@@ -249,14 +272,18 @@ export function SignInScreen() {
                       disabled={!email.trim() || !password.trim() || loading !== null}
                     >
                       <BookOpen className="size-4" />
-                      Sign in
+                      {loading === "summa" ? (
+                        <span className="ml-2">Signing in…</span>
+                      ) : (
+                        "Sign in"
+                      )}
                     </Button>
                   </div>
                 </div>
 
                 <div className="mt-6 rounded-[10px] border border-border/30 bg-muted/30 p-4 text-sm text-muted-foreground leading-relaxed">
                   <p>
-                    New around here?{' '}
+                    New around here?{" "}
                     <Link href="/sign-up" className="font-medium text-foreground hover:text-summa-accent transition-colors">
                       Create an account
                     </Link>
