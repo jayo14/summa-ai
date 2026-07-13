@@ -202,6 +202,9 @@ export function SignUpScreen() {
                         className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
                       />
                     </div>
+                    {error ? (
+                      <p className="text-sm text-destructive bg-destructive/5 rounded-[10px] px-3 py-2">{error}</p>
+                    ) : null}
                     <Button
                       className="w-full rounded-[10px] py-6 h-auto text-base font-medium"
                       type="button"
