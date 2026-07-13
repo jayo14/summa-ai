@@ -394,7 +394,7 @@ function ExperienceShowcase() {
       <div className="mx-auto max-w-[1216px] py-14 lg:py-28">
         <div className="reveal space-y-4 px-4 text-center mx-auto max-w-[640px]">
           <h2 className="text-[28px] leading-[34px] tracking-tight sm:text-[34px] sm:leading-[40px] lg:text-[46px] lg:leading-[52px] font-serif font-medium text-foreground">
-            Learn once. Trust the memory.
+            Learn once. Remember forever.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
             A single workspace sits on top of every concept you study — and every session builds on the last.
