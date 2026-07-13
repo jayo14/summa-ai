@@ -25,7 +25,6 @@ import {
 import { Loader } from "@/components/prompt-kit/loader"
 import { SettingsDialog } from "@/components/prompt-kit/settings-dialog"
 import { isOnboarded } from "@/lib/onboarding"
-import { cn } from "@/lib/utils"
 
 type DashboardPageShellProps = {
   title: string
@@ -104,28 +103,30 @@ export function DashboardPageShell({ title, description, activePath, children }:
 
   return (
     <SidebarProvider defaultOpen>
-      <Sidebar collapsible="offcanvas" className="border-r border-border/70">
-        <SidebarHeader className="border-b border-border/70 px-4 py-4">
+      <Sidebar collapsible="offcanvas" className="border-r border-border/40">
+        <SidebarHeader className="border-b border-border/30 px-4 py-5">
           <div className="flex items-center gap-3">
-            <div className="inline-flex size-7 items-center justify-center rounded-lg bg-foreground text-background">
+            <div className="inline-flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-summa-accent to-summa-accent/80 text-white shadow-md">
               <Sparkles className="size-4" />
             </div>
             <div>
-              <div className="text-sm font-semibold tracking-tight">Summa AI</div>
-              <div className="text-xs text-muted-foreground">Your learning workspace</div>
+              <div className="text-sm font-semibold tracking-tight font-serif">Summa AI</div>
+              <div className="text-[11px] text-muted-foreground">Your learning workspace</div>
             </div>
           </div>
-          <Button className="mt-4 w-full justify-start gap-2" onClick={() => router.push("/chat")}>
+          <Button className="mt-4 w-full justify-start gap-2 rounded-[10px] h-9 text-sm font-medium" onClick={() => router.push("/chat")}>
             <Plus className="size-4" />
             New chat
           </Button>
         </SidebarHeader>
 
-        <SidebarContent className="px-2 py-3">
+        <SidebarContent className="px-3 py-4">
           <SidebarGroup>
-            <SidebarGroupLabel>Learning pages</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-2">
+              Learning pages
+            </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-1">
                 {NAV_ITEMS.map((item) => {
                   const active = activePath === item.href
                   const Icon = item.icon
@@ -135,6 +136,7 @@ export function DashboardPageShell({ title, description, activePath, children }:
                         isActive={active}
                         onClick={() => router.push(item.href)}
                         tooltip={item.label}
+                        className="rounded-[10px] text-sm h-9 data-[active=true]:bg-summa-accent/10 data-[active=true]:text-summa-accent data-[active=true]:font-medium"
                       >
                         <Icon className="size-4" />
                         <span>{item.label}</span>
@@ -147,11 +149,11 @@ export function DashboardPageShell({ title, description, activePath, children }:
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="border-t border-border/70 p-4">
-          <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-secondary/40 p-3">
-            <Avatar className="size-9">
+        <SidebarFooter className="border-t border-border/30 p-4">
+          <div className="flex items-center gap-3 rounded-[10px] border border-border/30 bg-muted/20 p-3">
+            <Avatar className="size-9 ring-2 ring-border/30">
               <AvatarImage src={currentUser.image ?? undefined} alt={currentUser.name ?? currentUser.email ?? "User"} />
-              <AvatarFallback>{initials(currentUser.name, currentUser.email)}</AvatarFallback>
+              <AvatarFallback className="text-xs font-medium">{initials(currentUser.name, currentUser.email)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium">{currentUser.name ?? currentUser.email}</div>
@@ -159,41 +161,41 @@ export function DashboardPageShell({ title, description, activePath, children }:
             </div>
           </div>
 
-          <div className="mt-3 flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1 justify-start gap-2" onClick={() => setSettingsOpen(true)}>
-              <Settings className="size-4" />
+          <div className="mt-3 flex items-center gap-1.5">
+            <Button variant="ghost" size="sm" className="flex-1 justify-start gap-2 rounded-[8px] h-8 text-xs" onClick={() => setSettingsOpen(true)}>
+              <Settings className="size-3.5" />
               Settings
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 justify-start gap-2" onClick={toggleTheme}>
-              {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            <Button variant="ghost" size="sm" className="flex-1 justify-start gap-2 rounded-[8px] h-8 text-xs" onClick={toggleTheme}>
+              {isDark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
               {isDark ? "Light" : "Dark"}
             </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => void signOut({ callbackUrl: "/home" })}>
-              <LogOut className="size-4" />
-              Sign out
+            <Button variant="ghost" size="sm" className="gap-2 rounded-[8px] h-8 text-xs" onClick={() => void signOut({ callbackUrl: "/home" })}>
+              <LogOut className="size-3.5" />
             </Button>
           </div>
         </SidebarFooter>
       </Sidebar>
 
       <SidebarInset className="flex min-h-dvh flex-col">
-        <header className="flex items-center gap-3 border-b border-border/70 bg-background/85 px-4 py-3 backdrop-blur">
-          <SidebarTrigger className="size-8" />
+        <header className="flex items-center gap-3 border-b border-border/30 bg-background/80 backdrop-blur-sm px-4 py-3">
+          <SidebarTrigger className="size-8 rounded-[8px] text-muted-foreground" />
           <div className="min-w-0">
-            <div className="text-sm font-semibold tracking-tight">{title}</div>
+            <div className="text-sm font-semibold tracking-tight font-serif">{title}</div>
             <div className="text-xs text-muted-foreground">{description}</div>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className={cn("hidden rounded-full border border-border/70 bg-secondary/50 px-3 py-1 text-xs text-muted-foreground md:inline-flex")}>
+            <span className="hidden rounded-[8px] border border-border/30 bg-muted/30 px-3 py-1 text-xs text-muted-foreground md:inline-flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-green-500"></span>
               Study mode
             </span>
-            <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+            <Button variant="ghost" size="icon" className="rounded-[8px]" onClick={toggleTheme} aria-label="Toggle theme">
               {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
             </Button>
           </div>
         </header>
 
-        <main className="flex min-h-0 flex-1 flex-col bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.08),_transparent_35%)]">
+        <main className="flex min-h-0 flex-1 flex-col">
           <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-4 md:px-6">{children}</div>
         </main>
       </SidebarInset>
@@ -211,4 +213,3 @@ export function DashboardPageShell({ title, description, activePath, children }:
     </SidebarProvider>
   )
 }
-
