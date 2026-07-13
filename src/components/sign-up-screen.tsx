@@ -205,9 +205,20 @@ export function SignUpScreen() {
                     <Button
                       className="w-full rounded-[10px] py-6 h-auto text-base font-medium"
                       type="button"
+                      onClick={() => void handleCreate()}
+                      disabled={!name.trim() || !email.trim() || !password.trim() || !confirm.trim() || loading !== null}
                     >
-                      <BookOpen className="size-4" />
-                      Create account
+                      {loading === "summa" ? (
+                        <span className="flex items-center gap-2">
+                          <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          Creating…
+                        </span>
+                      ) : (
+                        <>
+                          <BookOpen className="size-4" />
+                          Create account
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
