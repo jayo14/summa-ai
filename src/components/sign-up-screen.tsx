@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
+import { useSession, signIn } from "next-auth/react"
 import { motion } from "framer-motion"
 import { ArrowRight, BookOpen, CheckCircle2, Lock, Mail, User } from "lucide-react"
 
@@ -19,12 +19,47 @@ export function SignUpScreen() {
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [confirm, setConfirm] = React.useState("")
+  const [loading, setLoading] = React.useState<"google" | "summa" | null>(null)
+  const [error, setError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     if (status === "authenticated") {
       router.replace("/chat")
     }
   }, [router, status])
+
+  const startOnboarding = React.useCallback(() => {
+    router.push("/onboarding")
+    router.refresh()
+  }, [router])
+
+  const handleCreate = async () => {
+    setLoading("summa")
+    setError(null)
+    const result = await signIn("credentials", {
+      email,
+      password,
+      callbackUrl: "/onboarding",
+      redirect: false,
+    })
+    setLoading(null)
+
+    if (result?.error) {
+      setError("We could not create your account. Please check your details and try again.")
+      return
+    }
+
+    startOnboarding()
+  }
+
+  const handleGoogle = async () => {
+    setLoading("google")
+    setError(null)
+    await signIn("google", {
+      callbackUrl: "/onboarding",
+    })
+    setLoading(null)
+  }
 
   if (status === "loading") {
     return (
@@ -107,6 +142,8 @@ export function SignUpScreen() {
                     className="w-full justify-between rounded-[10px] px-4 py-6 h-auto text-base font-medium"
                     variant="outline"
                     type="button"
+                    onClick={handleGoogle}
+                    disabled={loading !== null}
                   >
                     <span className="flex items-center gap-3">
                       <span className="inline-flex size-9 items-center justify-center rounded-lg border border-border/40 bg-background font-bold text-foreground text-sm">
