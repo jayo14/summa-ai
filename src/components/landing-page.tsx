@@ -177,7 +177,7 @@ function HeroSection({ onGetStarted }: any) {
             The learning companion<br className="hidden md:block" /> that <span className="highlight-mark">never forgets.</span>
           </h1>
 
-          <p className="reveal text-base text-muted-foreground leading-relaxed">
+          <p className="reveal text-base text-muted-foreground leading-relaxed max-w-[520px]">
             Summa AI remembers your knowledge, tracks gaps across sessions, and generates quizzes, flashcards, and study plans — all in one persistent workspace.
           </p>
 
