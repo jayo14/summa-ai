@@ -3,12 +3,7 @@
 import * as React from 'react'
 import { FocusRing } from '@/components/focus-ring'
 
-import type { Metadata } from "next"
 
-export const metadata: Metadata = {
-  title: "Tokens — Summa AI",
-  description: "Manage your Summa AI tokens and usage.",
-}
 
 
 const colors = [

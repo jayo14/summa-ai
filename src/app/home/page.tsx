@@ -4,12 +4,7 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { LandingPage } from '@/components/landing-page'
 
-import type { Metadata } from "next"
 
-export const metadata: Metadata = {
-  title: "Summa AI — Adaptive Learning Companion",
-  description: "Summa AI remembers what you know, what you missed, when your exams are due, and how you learn best. Start learning for free.",
-}
 
 
 export default function HomePage() {

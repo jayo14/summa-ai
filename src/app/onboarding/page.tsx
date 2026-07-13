@@ -8,12 +8,7 @@ import { Loader } from "@/components/prompt-kit/loader"
 import { OnboardingFlow, type OnboardingData } from "@/components/prompt-kit/onboarding-flow"
 import { getOnboardingData, isOnboarded, setOnboarded, setOnboardingData } from "@/lib/onboarding"
 
-import type { Metadata } from "next"
 
-export const metadata: Metadata = {
-  title: "Get Started — Summa AI",
-  description: "Complete your Summa AI onboarding. Set up your learning profile, exams, and goals in minutes.",
-}
 
 
 export const dynamic = "force-dynamic"
