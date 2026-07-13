@@ -91,8 +91,30 @@ export function SignInScreen() {
     setLoading(null)
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  }
+
   return (
     <div className="relative min-h-dvh overflow-hidden bg-background text-foreground">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-40"
@@ -112,7 +134,7 @@ export function SignInScreen() {
             className="flex flex-col justify-center pb-8 lg:pb-16"
           >
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-background px-3 py-1.5 text-sm text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-green-500"></span>
+              <span className="size-1.5 rounded-full bg-green-500 animate-pulse"></span>
               Start with a profile that remembers
             </div>
 
@@ -124,22 +146,29 @@ export function SignInScreen() {
               Sign in once to create your persistent learner profile. Your knowledge graph, study plans, and progress carry across every session.
             </p>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="mt-8 grid gap-3 sm:grid-cols-2"
+            >
               {[
                 "Personalized study plans",
                 "Saved conversations",
                 "Progress that carries over",
                 "Quick quiz and review sessions",
               ].map((item) => (
-                <div
+                <motion.div
                   key={item}
-                  className="flex items-center gap-2 rounded-xl border border-border/40 bg-card/50 px-4 py-3 text-sm shadow-sm"
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.02, borderColor: "rgba(132,204,22,0.3)" }}
+                  className="flex items-center gap-2 rounded-xl border border-border/40 bg-card/50 px-4 py-3 text-sm shadow-sm transition-colors"
                 >
                   <CheckCircle2 className="size-4 text-green-500 shrink-0" />
                   <span className="text-muted-foreground">{item}</span>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </motion.div>
 
           {/* Right: Sign-in card */}
