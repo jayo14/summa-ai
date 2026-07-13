@@ -275,7 +275,7 @@ function StatsBar() {
     <section className="bg-card border-y border-border/30 py-10 md:py-14 lg:py-20">
       <div className="reveal mx-auto flex max-w-[1216px] flex-col items-center justify-between gap-10 px-4 py-4 md:flex-row">
         <h2 className="max-w-[500px] text-[28px] leading-[34px] tracking-tight sm:text-[34px] sm:leading-[40px] font-serif font-medium text-foreground text-center md:text-left">
-          Growing learners stop losing progress to scattered notes.
+          Smart learners stop losing progress to scattered notes.
         </h2>
         <div className="flex w-full flex-wrap items-center gap-8 lg:w-fit lg:gap-14 justify-center md:justify-end">
           <div className="space-y-1 text-center md:text-left">
