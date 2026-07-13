@@ -18,6 +18,8 @@ import {
   Sun,
   Workflow,
   X,
+  MessageSquare,
+  History,
 } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -351,30 +353,35 @@ export function ChatWorkspace() {
 
   return (
     <SidebarProvider defaultOpen>
-      <Sidebar collapsible="offcanvas" className="border-r border-border/70">
-        <SidebarHeader className="border-b border-border/70 px-4 py-4">
+      <Sidebar collapsible="offcanvas" className="border-r border-border/40">
+        <SidebarHeader className="border-b border-border/30 px-4 py-5">
           <div className="flex items-center gap-3">
             <SummaLogo size={28} />
             <div>
-              <div className="text-sm font-semibold tracking-tight">Summa AI</div>
-              <div className="text-xs text-muted-foreground">Your learning workspace</div>
+              <div className="text-sm font-semibold tracking-tight font-serif">Summa AI</div>
+              <div className="text-[11px] text-muted-foreground">Your learning workspace</div>
             </div>
           </div>
-          <Button className="mt-4 w-full justify-start gap-2" onClick={handleNewChat}>
+          <Button className="mt-4 w-full justify-start gap-2 rounded-[10px] h-9 text-sm font-medium" onClick={handleNewChat}>
             <Plus className="size-4" />
             New chat
           </Button>
         </SidebarHeader>
 
-        <SidebarContent className="px-2 py-3">
+        <SidebarContent className="px-3 py-4">
           <SidebarGroup>
-            <SidebarGroupLabel>Study sessions</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-2">
+              Study sessions
+            </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-1">
                 {loadingConversations ? (
                   <div className="px-2 py-3 text-xs text-muted-foreground">Loading conversations…</div>
                 ) : conversations.length === 0 ? (
-                  <div className="px-2 py-3 text-xs text-muted-foreground">No saved conversations yet.</div>
+                  <div className="px-2 py-6 text-xs text-muted-foreground text-center">
+                    <History className="size-8 mx-auto mb-2 text-muted-foreground/30" />
+                    No saved conversations yet.
+                  </div>
                 ) : (
                   conversations.map((conversation) => (
                     <SidebarMenuItem key={conversation.id}>
@@ -382,8 +389,9 @@ export function ChatWorkspace() {
                         isActive={conversation.id === activeConversationId}
                         onClick={() => router.push(`/chat?id=${encodeURIComponent(conversation.id)}`)}
                         tooltip={conversation.title}
+                        className="rounded-[10px] text-sm h-auto py-2 data-[active=true]:bg-summa-accent/10 data-[active=true]:text-summa-accent"
                       >
-                        <BookOpen className="size-4" />
+                        <MessageSquare className="size-4 shrink-0" />
                         <span className="flex min-w-0 flex-col">
                           <span className="truncate text-sm font-medium">{conversation.title}</span>
                           {conversation.snippet ? (
@@ -399,14 +407,17 @@ export function ChatWorkspace() {
           </SidebarGroup>
 
           <SidebarGroup>
-            <SidebarGroupLabel>Learning pages</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-2">
+              Learning pages
+            </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-1">
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/progress"}
                     onClick={() => goTo("/progress")}
                     tooltip="Progress"
+                    className="rounded-[10px] text-sm h-9 data-[active=true]:bg-summa-accent/10 data-[active=true]:text-summa-accent"
                   >
                     <span className="flex size-4 items-center justify-center">◌</span>
                     <span>Progress</span>
@@ -417,6 +428,7 @@ export function ChatWorkspace() {
                     isActive={pathname === "/saved-materials"}
                     onClick={() => goTo("/saved-materials")}
                     tooltip="Saved materials"
+                    className="rounded-[10px] text-sm h-9 data-[active=true]:bg-summa-accent/10 data-[active=true]:text-summa-accent"
                   >
                     <FolderOpen className="size-4" />
                     <span>Saved materials</span>
@@ -427,6 +439,7 @@ export function ChatWorkspace() {
                     isActive={pathname === "/concept-map"}
                     onClick={() => goTo("/concept-map")}
                     tooltip="Concept map"
+                    className="rounded-[10px] text-sm h-9 data-[active=true]:bg-summa-accent/10 data-[active=true]:text-summa-accent"
                   >
                     <Workflow className="size-4" />
                     <span>Concept map</span>
@@ -437,6 +450,7 @@ export function ChatWorkspace() {
                     isActive={pathname === "/study-timeline"}
                     onClick={() => goTo("/study-timeline")}
                     tooltip="Study timeline"
+                    className="rounded-[10px] text-sm h-9 data-[active=true]:bg-summa-accent/10 data-[active=true]:text-summa-accent"
                   >
                     <Calendar className="size-4" />
                     <span>Study timeline</span>
@@ -447,39 +461,38 @@ export function ChatWorkspace() {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="border-t border-border/70 p-4">
-          <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-secondary/40 p-3">
-            <Avatar className="size-9">
+        <SidebarFooter className="border-t border-border/30 p-4">
+          <div className="flex items-center gap-3 rounded-[10px] border border-border/30 bg-muted/20 p-3">
+            <Avatar className="size-9 ring-2 ring-border/30">
               <AvatarImage src={onboardingData?.avatar ?? currentUser.image ?? undefined} alt={displayName} />
-              <AvatarFallback>{initials(displayName, currentUser.email)}</AvatarFallback>
+              <AvatarFallback className="text-xs font-medium">{initials(displayName, currentUser.email)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium">{displayName}</div>
               <div className="truncate text-xs text-muted-foreground">{currentUser.email}</div>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1 justify-start gap-2" onClick={() => setSettingsOpen(true)}>
-              <Settings className="size-4" />
+          <div className="mt-3 flex items-center gap-1.5">
+            <Button variant="ghost" size="sm" className="flex-1 justify-start gap-2 rounded-[8px] h-8 text-xs" onClick={() => setSettingsOpen(true)}>
+              <Settings className="size-3.5" />
               Settings
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 justify-start gap-2" onClick={toggleTheme}>
-              {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            <Button variant="ghost" size="sm" className="flex-1 justify-start gap-2 rounded-[8px] h-8 text-xs" onClick={toggleTheme}>
+              {isDark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
               {isDark ? "Light" : "Dark"}
             </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => void signOut({ callbackUrl: "/home" })}>
-              <LogOut className="size-4" />
-              Sign out
+            <Button variant="ghost" size="sm" className="gap-2 rounded-[8px] h-8 text-xs" onClick={() => void signOut({ callbackUrl: "/home" })}>
+              <LogOut className="size-3.5" />
             </Button>
           </div>
         </SidebarFooter>
       </Sidebar>
 
       <SidebarInset className="flex min-h-dvh flex-col">
-        <header className="flex items-center gap-3 border-b border-border/70 bg-background/85 px-4 py-3 backdrop-blur">
-          <SidebarTrigger className="size-8" />
+        <header className="flex items-center gap-3 border-b border-border/30 bg-background/80 backdrop-blur-sm px-4 py-3">
+          <SidebarTrigger className="size-8 rounded-[8px] text-muted-foreground" />
           <div className="min-w-0">
-            <div className="text-sm font-semibold tracking-tight">
+            <div className="text-sm font-semibold tracking-tight font-serif">
               {activeConversation?.title ?? "New chat"}
             </div>
             <div className="text-xs text-muted-foreground">
@@ -487,7 +500,8 @@ export function ChatWorkspace() {
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="hidden rounded-full border border-border/70 bg-secondary/50 px-3 py-1 text-xs text-muted-foreground md:inline-flex">
+            <span className="hidden rounded-[8px] border border-border/30 bg-muted/30 px-3 py-1 text-xs text-muted-foreground md:inline-flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-green-500"></span>
               Study mode
             </span>
             <DropdownMenu>
@@ -534,15 +548,15 @@ export function ChatWorkspace() {
         </header>
 
         <div className="flex min-h-0 flex-1">
-          <main className="flex min-h-0 flex-1 flex-col bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.08),_transparent_35%)]">
+          <main className="flex min-h-0 flex-1 flex-col">
             <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-4 md:px-6">
               {authError ? (
-                <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                <div className="mb-4 rounded-[10px] border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
                   {authError}
                 </div>
               ) : null}
 
-              <div className="flex-1 overflow-hidden rounded-3xl border border-border/70 bg-card/80 shadow-sm">
+              <div className="flex-1 overflow-hidden rounded-2xl border border-border/30 bg-card/60 shadow-sm">
                 <ChatContainerRoot className="h-full">
                   <ChatContainerContent className="gap-5 p-4 md:p-6">
                     {messages.length === 0 ? (
@@ -566,7 +580,7 @@ export function ChatWorkspace() {
                   onValueChange={setInput}
                   onSubmit={() => void handleSubmit()}
                   isLoading={isLoading}
-                  className="border-border/70 bg-card/95 shadow-lg"
+                  className="border-border/30 bg-card/95 shadow-sm rounded-[14px]"
                 >
                   <PromptInputTextarea
                     placeholder="Ask Summa AI anything about your studies..."
@@ -577,23 +591,23 @@ export function ChatWorkspace() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="gap-2 rounded-full"
+                        className="gap-2 rounded-[8px] text-xs h-8"
                         onClick={() => {
                           setInput(STARTER_PROMPTS[0])
                         }}
                       >
-                        <Sparkles className="size-4" />
+                        <Sparkles className="size-3.5" />
                         Suggestion
                       </Button>
                     </div>
                     <div className="flex items-center gap-2">
                       {isLoading ? (
-                        <Button variant="outline" size="sm" onClick={stop}>
+                        <Button variant="outline" size="sm" className="rounded-[8px] h-8 text-xs" onClick={stop}>
                           Stop
                         </Button>
                       ) : (
-                        <Button size="sm" className="gap-2 rounded-full px-4" onClick={() => void handleSubmit()} disabled={!input.trim()}>
-                          <ArrowUp className="size-4" />
+                        <Button size="sm" className="gap-2 rounded-[8px] px-4 h-8 text-xs font-medium" onClick={() => void handleSubmit()} disabled={!input.trim()}>
+                          <ArrowUp className="size-3.5" />
                           Send
                         </Button>
                       )}
@@ -604,8 +618,7 @@ export function ChatWorkspace() {
             </div>
           </main>
 
-          {/* Desktop workspace panel */}
-          <aside className="hidden w-[420px] shrink-0 border-l md:block">
+          <aside className="hidden w-[420px] shrink-0 border-l border-border/30">
             <WorkspacePanel />
           </aside>
         </div>
@@ -653,7 +666,6 @@ export function ChatWorkspace() {
         onLogout={() => void signOut({ callbackUrl: "/home" })}
       />
 
-      {/* Mobile workspace full-screen overlay */}
       {isMobile && workspaceOpen && (
         <div className="fixed inset-0 z-50 bg-background md:hidden">
           <WorkspacePanel onClose={closeWorkspace} />
@@ -669,16 +681,16 @@ function ChatBubble({ message, isLast }: { message: UseChatMessage; isLast: bool
 
   return (
     <Message className={cn(isUser ? "flex-row-reverse" : "flex-row")}>
-      <Avatar className="size-8 shrink-0">
-        <AvatarFallback className={cn(isUser ? "bg-primary text-primary-foreground" : "bg-secondary")}>
-          {isUser ? "You" : <Sparkles className="size-4" />}
+      <Avatar className="size-8 shrink-0 ring-2 ring-border/20">
+        <AvatarFallback className={cn(isUser ? "bg-summa-accent text-white" : "bg-muted")}>
+          {isUser ? "U" : <Sparkles className="size-3.5" />}
         </AvatarFallback>
       </Avatar>
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         {hasReasoning ? (
           <Reasoning isStreaming={message.reasoningActive}>
-            <ReasoningTrigger className="text-xs">
+            <ReasoningTrigger className="text-xs text-muted-foreground">
               {message.reasoningActive ? "Thinking" : "Reasoning"}
             </ReasoningTrigger>
             <ReasoningContent markdown>{message.reasoning ?? ""}</ReasoningContent>
@@ -693,13 +705,16 @@ function ChatBubble({ message, isLast }: { message: UseChatMessage; isLast: bool
         ) : null}
 
         {message.content ? (
-          <MessageContent markdown className={cn("max-w-full", isUser ? "bg-primary text-primary-foreground" : "bg-secondary")}>
+          <MessageContent markdown className={cn(
+            "max-w-full rounded-[10px] px-4 py-2.5",
+            isUser ? "bg-summa-accent text-white" : "bg-muted/50",
+          )}>
             {message.content}
           </MessageContent>
         ) : null}
 
         {message.error ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <div className="rounded-[8px] border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
             {message.error}
           </div>
         ) : null}
@@ -750,7 +765,7 @@ function EmptyChatState({ onPick }: { onPick: (value: string) => void }) {
           <span className="text-[10px] text-muted-foreground">Day streak</span>
         </div>
         <FocusRing size="lg" state="idle" aria-label="Hi, I'm Summa AI">
-          <Sparkles className="size-6 text-primary" />
+          <Sparkles className="size-6 text-summa-accent" />
         </FocusRing>
         <div className="flex flex-col items-center gap-1">
           <FocusRing value={0} size="sm" state="idle" aria-label="Topics mastered">
@@ -761,8 +776,7 @@ function EmptyChatState({ onPick }: { onPick: (value: string) => void }) {
       </div>
 
       <motion.h1
-        className="mt-6 text-3xl tracking-tight md:text-4xl"
-        style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif" }}
+        className="mt-6 text-3xl tracking-tight md:text-4xl font-serif font-medium"
         initial="hidden"
         animate="show"
         variants={{
@@ -799,7 +813,7 @@ function EmptyChatState({ onPick }: { onPick: (value: string) => void }) {
             key={prompt}
             variant="outline"
             size="sm"
-            className="justify-start rounded-2xl px-4 py-3 text-left"
+            className="justify-start rounded-[10px] px-4 py-3 text-left border-border/30 hover:border-summa-accent/30 hover:bg-summa-accent/5 transition-all"
             onClick={() => onPick(prompt)}
           >
             {prompt}
