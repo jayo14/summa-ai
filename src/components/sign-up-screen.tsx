@@ -4,7 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { motion } from "framer-motion"
-import { ArrowRight, BookOpen, CheckCircle2, Lock, Mail } from "lucide-react"
+import { ArrowRight, BookOpen, CheckCircle2, Lock, Mail, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,8 +15,10 @@ import { SummaLogo } from "@/components/prompt-kit/summa-logo"
 export function SignUpScreen() {
   const router = useRouter()
   const { status } = useSession()
+  const [name, setName] = React.useState("")
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
+  const [confirm, setConfirm] = React.useState("")
 
   React.useEffect(() => {
     if (status === "authenticated") {
@@ -124,6 +126,16 @@ export function SignUpScreen() {
 
                   <div className="space-y-3">
                     <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
+                      <Input
+                        placeholder="Full name"
+                        type="text"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
+                      />
+                    </div>
+                    <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
                       <Input
                         placeholder="Email"
@@ -140,6 +152,16 @@ export function SignUpScreen() {
                         type="password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
+                        className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40" />
+                      <Input
+                        placeholder="Confirm password"
+                        type="password"
+                        value={confirm}
+                        onChange={(event) => setConfirm(event.target.value)}
                         className="h-11 rounded-[10px] border-border/40 bg-background pl-10 text-sm focus-visible:border-summa-accent/40 focus-visible:ring-summa-accent/20"
                       />
                     </div>
