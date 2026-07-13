@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useSession, signIn } from "next-auth/react"
 import { motion } from "framer-motion"
@@ -224,6 +225,12 @@ export function SignUpScreen() {
                       )}
                     </Button>
                   </div>
+                </div>
+                <div className="mt-4 text-center text-sm text-muted-foreground">
+                  Already have an account?{' '}
+                  <Link href="/sign-in" className="font-medium text-foreground hover:text-summa-accent transition-colors">
+                    Sign in
+                  </Link>
                 </div>
               </CardContent>
             </Card>
