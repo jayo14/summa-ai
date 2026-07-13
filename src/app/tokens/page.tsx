@@ -3,6 +3,14 @@
 import * as React from 'react'
 import { FocusRing } from '@/components/focus-ring'
 
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Tokens — Summa AI",
+  description: "Manage your Summa AI tokens and usage.",
+}
+
+
 const colors = [
   { name: 'Accent', var: '--summa-accent', value: '#0E7490', usage: 'Primary CTAs, active nav, ring fill, send control' },
   { name: 'Accent Hover', var: '--summa-accent-hover', value: '#0B5C73', usage: 'Hover / pressed states' },
