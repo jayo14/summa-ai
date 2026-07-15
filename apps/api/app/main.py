@@ -23,7 +23,6 @@ async def lifespan(app: FastAPI):
     logger.info("👋 Summa AI API Shutting Down")
 
 app = FastAPI(title="Summa AI API", version="1.0.0", description="AI-Native Learning Workspace API", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=settings.get_cors_origins(), allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc", f"{settings.API_V1_STR}/auth/login", f"{settings.API_V1_STR}/auth/signup"}
 
@@ -31,7 +30,7 @@ PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc", f"{settings.
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
-    if path in PUBLIC_PATHS or not path.startswith(settings.API_V1_STR):
+    if request.method == "OPTIONS" or path in PUBLIC_PATHS or not path.startswith(settings.API_V1_STR):
         return await call_next(request)
 
     auth_header = request.headers.get("authorization", "")
@@ -51,6 +50,8 @@ async def auth_middleware(request: Request, call_next):
         reset_current_user_id(token_state)
     return response
 
+
+app.add_middleware(CORSMiddleware, allow_origins=settings.get_cors_origins(), allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 for r, tag in [(auth.router,"auth"),(chat.router,"chat"),(memory.router,"memory"),(artifacts_router,"artifacts"),(conv_router,"conversations"),(timeline_router,"timeline"),(user_router,"user"),(settings_router,"settings"),(materials_router,"materials"),(concepts_router,"concepts"),(analytics_router,"analytics")]:
     app.include_router(r, prefix=settings.API_V1_STR, tags=[tag])
