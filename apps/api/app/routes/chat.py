@@ -26,6 +26,7 @@ INTENT_PATTERNS = {
 
 WEAK_SCORE_THRESHOLD = 40.0
 PROACTIVE_GAP_CHECK_INTERVAL = 5
+MAX_CONTEXT_SECTION_CHARS = 3000
 
 
 def detect_intent(text: str) -> str | None:
@@ -33,6 +34,12 @@ def detect_intent(text: str) -> str | None:
         if any(p.search(text) for p in patterns):
             return ct
     return None
+
+
+def _section(text: str, max_chars: int = MAX_CONTEXT_SECTION_CHARS) -> str:
+    if len(text) > max_chars:
+        text = text[:max_chars] + "\n...]"
+    return text
 
 
 async def detect_knowledge_gaps(user_id: str) -> Optional[dict]:
@@ -69,19 +76,23 @@ async def build_orchestrator_prompt(user_id: str, query: str, messages: list[dic
     memories = memory_context.get("results", [])
     if memories:
         parts.append(
-            f"\nRECALLED CONTEXT FROM MEMORY:\n{json.dumps(memories, indent=2)}"
+            _section(f"\nRECALLED CONTEXT FROM MEMORY:\n{json.dumps(memories, indent=2)}")
         )
     exams = exams_context.get("exams", [])
     if exams:
-        parts.append(f"\nUPCOMING EXAMS:\n{json.dumps(exams, indent=2)}")
+        parts.append(
+            _section(f"\nUPCOMING EXAMS:\n{json.dumps(exams, indent=2)}")
+        )
     progress = progress_context.get("progress", [])
     if progress:
-        parts.append(f"\nLEARNING PROGRESS:\n{json.dumps(progress, indent=2)}")
+        parts.append(
+            _section(f"\nLEARNING PROGRESS:\n{json.dumps(progress, indent=2)}")
+        )
     if gaps:
         parts.append(
-            f"\nKNOWLEDGE GAPS DETECTED:\n{json.dumps(gaps, indent=2)}\n"
+            _section(f"\nKNOWLEDGE GAPS DETECTED:\n{json.dumps(gaps, indent=2)}\n"
             "The student is struggling with these topics. "
-            "Prioritise explanations and suggest resources."
+            "Prioritise explanations and suggest resources.")
         )
     parts.append(
         "\nIf the user asks about a concept, first explain it clearly, "
