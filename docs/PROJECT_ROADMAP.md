@@ -17,7 +17,7 @@ Status: ✅ Complete. Chat now reads all Z.ai config (API base, model, key, toke
 ## Milestone 3 — Identity & Data Integration
 - Adopt Supabase Auth (per INTEGRATION_STRATEGY.md Decision 1)
 - Migrate relational data to Supabase Postgres, separate schema (Decision 2)
-Status: Blocked on Milestone 1-2
+Status: 🔒 Blocked — awaiting user decision on INTEGRATION_STRATEGY.md recommendation (NEXT_STEPS item 8)
 
 ## Milestone 4 — AI Quality Hardening
 - Prompt context budget cap
@@ -27,5 +27,6 @@ Status: Blocked on Milestone 1-2
 Status: Not started
 
 ## Milestone 5 — Product Boundary Resolution
-- Confirm with SummaStudy whether study_planner/spaced_repetition/memory_service are live and should be reused vs rebuilt
-Status: Awaiting cross-repo decision
+- Study_planner/spaced_repetition/memory_service/recommendation_service confirmed **live and actively used** in SummaStudy
+- Decision needed: reuse SummaStudy's existing services vs rebuild inside Summa AI
+Status: 🔒 Awaiting user decision — see PRODUCT_BOUNDARIES.md and PROGRESS.md for full import graph
