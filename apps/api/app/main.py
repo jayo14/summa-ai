@@ -27,17 +27,23 @@ manager = ConnectionManager()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if settings.is_production and not settings.SUPABASE_JWT_SECRET:
+    missing = []
+    if settings.is_production:
+        if not settings.SUPABASE_JWT_SECRET:
+            missing.append("SUPABASE_JWT_SECRET")
+        if not settings.COGNEE_API_KEY:
+            missing.append("COGNEE_API_KEY")
+        if not settings.SUPABASE_URL:
+            missing.append("SUPABASE_URL")
+        if not settings.SUPABASE_ANON_KEY:
+            missing.append("SUPABASE_ANON_KEY")
+        if not settings.DATABASE_URL or settings.DATABASE_URL == "postgresql://postgres:password@localhost:5432/postgres":
+            missing.append("DATABASE_URL")
+    if missing:
         raise RuntimeError(
-            "Refusing to start in production without SUPABASE_JWT_SECRET. "
-            "Set SUPABASE_JWT_SECRET to your Supabase project's JWT secret."
-        )
-    if settings.is_production and not settings.COGNEE_API_KEY:
-        raise RuntimeError(
-            "Refusing to start in production without COGNEE_API_KEY. "
-            "The in-memory Cognee fallback does not persist across restarts, "
-            "defeating Summa AI's persistent-memory promise. "
-            "Set COGNEE_API_KEY to your Cognee Cloud key before deploying."
+            "Refusing to start in production without required config: "
+            + ", ".join(missing)
+            + ". Set these environment variables before deploying."
         )
     await CogneeService.initialize()
     logger.info("🚀 Summa AI API Started")
