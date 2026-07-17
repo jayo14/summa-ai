@@ -13,6 +13,14 @@ from app.routes import auth, chat, memory
 from app.routes.data_routes import (artifacts_router, conv_router, timeline_router,
     user_router, settings_router, materials_router, concepts_router, analytics_router)
 
+if settings.SENTRY_DSN:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ENVIRONMENT,
+        traces_sample_rate=0.1 if settings.is_production else 1.0,
+    )
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 manager = ConnectionManager()

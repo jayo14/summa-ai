@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     SUMMASTUDY_API_BASE: str = ""
     SUMMASTUDY_ENABLED: bool = False
 
+    # Observability
+    SENTRY_DSN: str = ""
+
     # Demo account
     DEMO_USER_EMAIL: str = "alex@summa.ai"
     
