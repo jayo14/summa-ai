@@ -54,5 +54,11 @@
 - **Auth middleware** (`main.py`): Now calls `verify_supabase_jwt` instead of `verify_access_token`. Production guard checks `SUPABASE_JWT_SECRET` instead of `JWT_SECRET_KEY`.
 - **Auth routes** (`routes/auth.py`): Rewritten to proxy through Supabase Auth REST API. `/auth/signup` calls `POST /auth/v1/signup`; `/auth/login` calls `POST /auth/v1/token?grant_type=password`. Response format kept compatible with frontend's NextAuth flow.
 - **Supabase config**: Added `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_JWT_SECRET` to `Settings` class, `.env.example`, `apps/api/.env`, `apps/api/.env.production`.
-- **Schema migration**: Created `db/migrate_to_supabase.sql` — creates `summa_ai` schema with `user_profiles`, `conversations`, `messages`, `artifacts`, `timeline_events`, `settings`, `materials`, `concepts` tables plus indexes and a trigger to auto-create user profiles on first Supabase login. ⚠️ Cannot run from this server (no IPv6). Must be run via Supabase Dashboard SQL Editor.
+- **Schema migration**: Created `db/migrate_to_supabase.sql` — creates `summa_ai` schema with 8 tables, indexes, RLS policies, and an `auth.users` INSERT trigger. Run via Supabase Dashboard SQL Editor with RLS enabled.
+
+- **user_store.py rewrite**: Replaced `sqlite3` with `asyncpg` pool connecting to Supabase Postgres. Removed all password/auth methods (auth is now Supabase-only). Queries `summa_ai.user_profiles` table.
+
+- **Settings routes**: Replaced in-memory `_settings_store` dict with Postgres-backed upsert on `summa_ai.settings` table.
+
+- **asyncpg**: Added to both `requirements.txt` files; installed in venv. 19 tests pass.
 - **All 19 tests still passing** after auth changes. Test mocks were unaffected (they patch `resolve_user_id` directly).

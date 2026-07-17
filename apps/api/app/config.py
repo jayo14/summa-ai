@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     VECTOR_DB_PROVIDER: str = ""
 
     # Database
-    DATABASE_URL: str = "sqlite:///./db/custom.db"
+    DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/postgres"
     
     # Supabase Auth
     SUPABASE_URL: str = ""

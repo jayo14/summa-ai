@@ -19,7 +19,7 @@ Summa AI in its present form is a hackathon build serving what is likely a small
 ## Resolution status (2026-07-17)
 
 - ✅ **Prompt budget** — resolved in Milestone 4 (3k char cap per context section). No longer an unbounded growth risk.
-- ❌ **SQLite → Postgres** — still pending, gated on Integration Strategy decision (NEXT_STEPS item 8).
+- ✅ **SQLite → Postgres** — completed. `user_store.py` rewritten with `asyncpg`. Settings routes use Postgres upsert. In-memory dict stores in `data_routes.py` (artifacts, conversations, messages, timeline, materials, concepts) still need migration but work for demo.
 - ✅ **No caching** — resolved in Milestone 4 (60s TTL cache on `_recall()`). Redundant Cognee calls within a conversation window are now avoided.
 - ✅ **Cognee production guard** — resolved in Milestone 4 (boot-time hard failure if `COGNEE_API_KEY` missing in production). No more silent in-memory fallback risk.
 

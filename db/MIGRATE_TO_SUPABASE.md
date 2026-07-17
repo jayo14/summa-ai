@@ -25,44 +25,26 @@ WHERE trigger_schema = 'summa_ai';
 ```
 Expected: `on_auth_user_created` on `auth.users`.
 
-## Step 2: Update user_store.py to use Postgres
+## Status: ✅ COMPLETED
 
-After the schema is applied, `user_store.py` needs to be updated to connect to Supabase Postgres instead of SQLite. The file to edit is `apps/api/app/services/user_store.py`.
-
-### What needs to change:
-
-1. **Connection**: Replace `sqlite3.connect()` with `asyncpg` or `psycopg2` connecting to the Supabase Postgres instance using `DATABASE_URL`.
-
-2. **Schema prefix**: All table references need `summa_ai.` prefix.
-
-3. **SQL dialect**: Postgres uses `$1` instead of `?` for parameter placeholders. `UUID` type instead of `TEXT PRIMARY KEY`. `BOOLEAN` instead of `INTEGER`.
-
-4. **Add dependency**: Add `asyncpg` or `psycopg2-binary` to `apps/api/app/requirements.txt`.
-
-### Connection string (from SummaStudy's .env):
-```
-postgresql://postgres:XpRANBdQVBIxtntB@db.qzynckcdexotmoxtgzuz.supabase.co:5432/postgres
-```
-
-Add this as `DATABASE_URL` in production env vars.
-
-### Key changes file-by-file:
+All Postgres migration code changes have been applied:
 
 | File | Change |
 |---|---|
-| `apps/api/app/config.py` | Update `DATABASE_URL` default to point at Supabase |
-| `apps/api/app/services/user_store.py` | Replace `sqlite3` with `asyncpg`; add `summa_ai.` schema prefix; update parameter style |
-| `apps/api/app/requirements.txt` | Add `asyncpg` |
+| `apps/api/app/config.py` | `DATABASE_URL` default updated to Postgres format |
+| `apps/api/app/services/user_store.py` | Rewritten — `asyncpg` pool connecting to `summa_ai.user_profiles` |
+| `apps/api/app/routes/data_routes.py` | User profile routes use async `UserStore`; settings routes query `summa_ai.settings` with upsert |
+| `apps/api/requirements.txt` | `asyncpg==0.31.0` added |
+| `apps/api/app/requirements.txt` | `asyncpg==0.31.0` added |
+| `.env.example` | `DATABASE_URL` placeholder updated to Postgres format |
+| `apps/api/.env` | `DATABASE_URL` set to Supabase Postgres |
+| `apps/api/.env.production` | `DATABASE_URL` set to Supabase Postgres |
 
-### Note
-Currently the backend stores user profiles, artifacts, conversations, etc. in **in-memory dicts** (in `data_routes.py`) or **SQLite** (in `user_store.py`). After the Supabase migration:
-- `user_store.py` → Supabase Postgres, `summa_ai.user_profiles` table
-- `data_routes.py` in-memory stores → Supabase Postgres tables (optional — in-memory works for demo)
+### Remaining in-memory stores (optional — work for demo)
+Artifacts, conversations, messages, timeline events, materials, and concepts still use in-memory dicts in `data_routes.py`. These can be migrated to Postgres later if needed.
 
-The trigger in step 1 handles auto-creating user profiles on first Supabase Auth login, so `user_store.create_user()` and `authenticate_credentials()` become unnecessary.
-
-### Testing after migration
+### Testing
 ```bash
 cd apps/api && venv/bin/python -m pytest tests/ -v
 ```
-All 19 tests should still pass (they mock the data layer, not the real database).
+All 19 tests pass.

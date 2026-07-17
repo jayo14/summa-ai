@@ -19,9 +19,10 @@ Status: ✅ Complete. Chat now reads all Z.ai config (API base, model, key, toke
 - ✅ Decision 2 (migrate to Supabase Postgres): Schema migration script created at `db/migrate_to_supabase.sql`. Creates `summa_ai` schema with 8 tables + trigger for auto-creating user profiles on first Supabase login. ⚠️ Requires running via Supabase Dashboard SQL Editor (no IPv6 from this server).
 - ✅ Decision 3 (direct service-to-service): No code change needed — backends already make direct calls; they'll share Supabase JWT for auth.
 - ✅ Decision 4 (start fresh SQLite): No migration needed. Old SQLite data in `db/custom.db` can be archived.
-- ⬜ Pending: Update `user_store.py` to use Supabase Postgres instead of SQLite (after schema is applied).
-- ⬜ Pending: Remove legacy JWT code (after Supabase migration is verified in production).
-Status: 🟡 Backend auth switch done. Schema script ready. Blocked on running SQL via Supabase Dashboard.
+- ✅ Done: `user_store.py` rewritten with `asyncpg` to Supabase Postgres (`summa_ai.user_profiles`).
+- ✅ Done: Settings routes migrated to Postgres upsert (`summa_ai.settings`).
+- ✅ Done: Legacy JWT code removed in Milestone 3.
+Status: ✅ Migration schema applied and Backend connected to Supabase Postgres.
 
 ## Milestone 4 — AI Quality Hardening ✅
 - ✅ Prompt context budget cap — added `_section()` truncation to `build_orchestrator_prompt` (3k chars per section)

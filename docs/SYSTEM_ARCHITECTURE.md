@@ -22,7 +22,6 @@ apps/api/                     FastAPI backend
   tests/                      1 test file (test_memory_loop.py)
 
 (prisma/ removed in Milestone 2 — was unused default scaffold)
-db/custom.db                  SQLite file referenced by DATABASE_URL default
 ```
 
 ## 2. Tech Stack
@@ -31,7 +30,7 @@ db/custom.db                  SQLite file referenced by DATABASE_URL default
 |---|---|
 | Frontend | Next.js, NextAuth (`src/app/api/auth/[...nextauth]`, `src/lib/auth.ts`), Google OAuth support |
 | Backend | FastAPI, Supabase Auth JWT verification (`PyJWT`) — shares identity with SummaStudy |
-| Data | Raw `sqlite3` via `user_store.py` (`db/custom.db`) for user/auth data; Cognee datasets for memory/exams/progress/artifacts. Prisma ORM was removed in Milestone 2 (unused scaffold). |
+| Data | `asyncpg` to Supabase Postgres (`summa_ai.user_profiles` + `summa_ai.settings`) via `user_store.py`; Cognee datasets for memory/exams/progress/artifacts. In-memory dicts in `data_routes.py` for artifacts/conversations/messages/timeline/materials/concepts (demo-only). |
 | Memory | Cognee (managed memory layer), falls back to in-memory storage when `COGNEE_API_KEY` is unset |
 | Vector store | Qdrant (Cognee-managed) — config present, not directly called outside Cognee |
 | LLM (actual chat) | **Z.ai GLM-4.5**, called directly via `httpx` streaming in `routes/chat.py` — credentials and endpoint read from `Settings` (env vars), not through the `LLM_PROVIDER`/`OPENAI_API_KEY` settings declared in `config.py` |
@@ -44,8 +43,10 @@ db/custom.db                  SQLite file referenced by DATABASE_URL default
 
 ## 4. Database Architecture
 
-- `prisma/` was removed in Milestone 2. It contained exactly the default `prisma init` scaffold — generic `User`/`Post` boilerplate, not Summa AI's actual domain. The real data model lives in `app/models/*.py` (Pydantic) and `db/custom.db` persisted via raw `sqlite3` in `user_store.py`.
-- No Postgres, no Supabase — this is the central fact that determines everything in `INTEGRATION_STRATEGY.md`.
+- **Postgres (Supabase, `summa_ai` schema)**: User profiles (`summa_ai.user_profiles`) and settings (`summa_ai.settings`) are stored in Supabase Postgres, accessed via `asyncpg` pool in `user_store.py`. The schema was applied via `db/migrate_to_supabase.sql`.
+- **In-memory dicts**: Artifacts, conversations, messages, timeline events, materials, and concepts live in in-memory dicts in `data_routes.py` — sufficient for demo, not for production.
+- **Cognee datasets**: Memory, exam data, progress, and artifact embeddings are stored in Cognee Cloud.
+- The data model is defined by `app/models/*.py` (Pydantic schemas).
 
 ## 5. AI Pipelines / Memory Architecture
 

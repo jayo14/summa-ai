@@ -141,3 +141,115 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW
     EXECUTE FUNCTION summa_ai.handle_new_user();
+
+-- Step 12: Row Level Security
+-- Note: The trigger above (SECURITY DEFINER) bypasses RLS for auto-creation.
+-- These policies apply when users connect via Supabase's anon/authenticated keys.
+
+-- user_profiles: each user manages their own profile
+ALTER TABLE summa_ai.user_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY user_profiles_select ON summa_ai.user_profiles
+    FOR SELECT USING (id = auth.uid());
+
+CREATE POLICY user_profiles_insert ON summa_ai.user_profiles
+    FOR INSERT WITH CHECK (id = auth.uid());
+
+CREATE POLICY user_profiles_update ON summa_ai.user_profiles
+    FOR UPDATE USING (id = auth.uid());
+
+-- conversations: owned by user_id
+ALTER TABLE summa_ai.conversations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY conversations_select ON summa_ai.conversations
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY conversations_insert ON summa_ai.conversations
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY conversations_update ON summa_ai.conversations
+    FOR UPDATE USING (user_id = auth.uid());
+
+CREATE POLICY conversations_delete ON summa_ai.conversations
+    FOR DELETE USING (user_id = auth.uid());
+
+-- messages: inherit ownership via conversation
+ALTER TABLE summa_ai.messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY messages_select ON summa_ai.messages
+    FOR SELECT USING (
+        EXISTS (SELECT 1 FROM summa_ai.conversations WHERE id = conversation_id AND user_id = auth.uid())
+    );
+
+CREATE POLICY messages_insert ON summa_ai.messages
+    FOR INSERT WITH CHECK (
+        EXISTS (SELECT 1 FROM summa_ai.conversations WHERE id = conversation_id AND user_id = auth.uid())
+    );
+
+CREATE POLICY messages_delete ON summa_ai.messages
+    FOR DELETE USING (
+        EXISTS (SELECT 1 FROM summa_ai.conversations WHERE id = conversation_id AND user_id = auth.uid())
+    );
+
+-- artifacts: owned by user_id
+ALTER TABLE summa_ai.artifacts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY artifacts_select ON summa_ai.artifacts
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY artifacts_insert ON summa_ai.artifacts
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY artifacts_update ON summa_ai.artifacts
+    FOR UPDATE USING (user_id = auth.uid());
+
+CREATE POLICY artifacts_delete ON summa_ai.artifacts
+    FOR DELETE USING (user_id = auth.uid());
+
+-- timeline_events: owned by user_id
+ALTER TABLE summa_ai.timeline_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY timeline_events_select ON summa_ai.timeline_events
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY timeline_events_insert ON summa_ai.timeline_events
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY timeline_events_delete ON summa_ai.timeline_events
+    FOR DELETE USING (user_id = auth.uid());
+
+-- settings: one per user, keyed by user_id
+ALTER TABLE summa_ai.settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY settings_select ON summa_ai.settings
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY settings_insert ON summa_ai.settings
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY settings_update ON summa_ai.settings
+    FOR UPDATE USING (user_id = auth.uid());
+
+-- materials: owned by user_id
+ALTER TABLE summa_ai.materials ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY materials_select ON summa_ai.materials
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY materials_insert ON summa_ai.materials
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY materials_delete ON summa_ai.materials
+    FOR DELETE USING (user_id = auth.uid());
+
+-- concepts: owned by user_id
+ALTER TABLE summa_ai.concepts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY concepts_select ON summa_ai.concepts
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY concepts_insert ON summa_ai.concepts
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY concepts_delete ON summa_ai.concepts
+    FOR DELETE USING (user_id = auth.uid());

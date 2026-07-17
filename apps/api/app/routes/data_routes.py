@@ -137,38 +137,63 @@ async def create_timeline_event(data: TimelineEventCreate, user_id: str = Query(
 
 # ========== USER ==========
 user_router = APIRouter()
-store = UserStore()
+_store = UserStore()
 
 @user_router.get("/user", summary="Get user profile", description="Get the current user's profile information")
 async def get_user():
     user_id = resolve_user_id()
-    current = store.get_user_by_id(user_id)
+    current = await _store.get_user_by_id(user_id)
     if current is None:
         raise HTTPException(404, "Not found")
-    return store.serialize_user(current)
+    return _store.serialize_user(current)
 
 @user_router.patch("/user", summary="Update user profile", description="Update the current user's profile information")
 async def update_user(data: dict):
     user_id = resolve_user_id()
-    updated = store.update_user(user_id, data)
-    return store.serialize_user(updated)
+    updated = await _store.update_user(user_id, data)
+    return _store.serialize_user(updated)
 
 # ========== SETTINGS ==========
 settings_router = APIRouter()
-_settings_store: dict = {}
 
 @settings_router.get("/settings", summary="Get settings", description="Get the current user's application settings")
 async def get_settings():
     user_id = resolve_user_id()
-    return _settings_store.get(user_id, {"user_id": user_id})
+    pool = await _store._get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT * FROM summa_ai.settings WHERE user_id = $1", user_id)
+    if row:
+        return dict(row)
+    return {"user_id": user_id}
 
 @settings_router.patch("/settings", summary="Update settings", description="Update the current user's application settings")
 async def update_settings(data: dict):
     user_id = resolve_user_id()
-    current = _settings_store.get(user_id, {"user_id": user_id})
-    current.update(data)
-    _settings_store[user_id] = current
-    return current
+    pool = await _store._get_pool()
+    cols = ["updated_at"]
+    vals: list = [user_id]
+    for key in ("theme", "font_size", "density", "exam_reminders", "proactive_check_ins",
+                 "weekly_progress", "email_notifications", "thinking_mode", "response_style"):
+        if key in data:
+            cols.append(key)
+            vals.append(data[key])
+    if len(cols) == 1:
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT * FROM summa_ai.settings WHERE user_id = $1", user_id)
+        return dict(row) if row else {"user_id": user_id}
+
+    placeholders = ", ".join(f"${i + 2}" for i in range(len(cols) - 1))
+    updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in cols)
+    insert_cols = ", ".join(cols)
+    async with pool.acquire() as conn:
+        await conn.execute(
+            f"INSERT INTO summa_ai.settings (user_id, {insert_cols}) "
+            f"VALUES ($1, {placeholders}) "
+            f"ON CONFLICT (user_id) DO UPDATE SET {updates}",
+            *vals,
+        )
+        row = await conn.fetchrow("SELECT * FROM summa_ai.settings WHERE user_id = $1", user_id)
+    return dict(row) if row else {"user_id": user_id}
 
 # ========== MATERIALS ==========
 materials_router = APIRouter()
