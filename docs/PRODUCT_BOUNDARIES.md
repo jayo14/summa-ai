@@ -23,6 +23,8 @@ This isn't primarily a code-organization question — it's whether SummaStudy's 
 
 **Recommendation:** before building anything further in Summa AI's adaptive layer, spend one session confirming whether `study_planner.py`, `spaced_repetition.py`, and `memory_service.py` in SummaStudy are live, tested, and used — then decide reuse vs. rebuild with real information instead of assuming Summa AI should build these from scratch. Rebuilding a working spaced-repetition engine because it happens to live in the "wrong" repo would be optimizing for architectural purity over the "highest user value with smallest complexity" principle you've set as the actual decision standard.
 
+**Status (2026-07-17): Confirmed — all four services (including `recommendation_service.py`) are live and actively used.** See `PROGRESS.md` for the full import graph. The decision to reuse vs rebuild is now awaiting your input. `recommendation_service.py` was also found to be live (used by marketplace and tutorials endpoints), adding a fourth candidate to the reuse-vs-rebuild question.
+
 ## Going forward: how to keep the boundary from re-blurring
 
 - Any new SummaStudy feature that would need to know a student's *personal* performance history (not just "did they view this resource") is very likely a Summa AI concern, even if it's tempting to bolt on quickly.
