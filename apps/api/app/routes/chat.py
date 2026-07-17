@@ -1,4 +1,5 @@
 """Chat route — streams from Z.ai GLM + intent detection + memory-augmented orchestration."""
+import asyncio
 import json, logging, re
 from datetime import datetime
 from typing import AsyncGenerator, Optional
@@ -9,6 +10,7 @@ from app.config import settings
 from app.models.chat import ChatRequest, ChatResponse, ArtifactRef
 from app.core.security import resolve_user_id
 from app.services.cognee_service import CogneeService
+from app.services.summastudy_memory import summastudy_memory
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -94,6 +96,18 @@ async def build_orchestrator_prompt(user_id: str, query: str, messages: list[dic
             "The student is struggling with these topics. "
             "Prioritise explanations and suggest resources.")
         )
+
+    if settings.HYBRID_MEMORY_ENABLED:
+        try:
+            atomic_facts = await summastudy_memory.retrieve_relevant_memories(user_id, limit=8)
+            if atomic_facts:
+                parts.append(
+                    _section(f"\nATOMIC FACTS (from SummaStudy shared memory):\n{json.dumps(atomic_facts, indent=2)}\n"
+                    "These are persistent facts the student has told us — preferences, goals, struggles, or habits.")
+                )
+        except Exception as exc:
+            logger.debug("Hybrid memory supplement skipped: %s", exc)
+
     parts.append(
         "\nIf the user asks about a concept, first explain it clearly, "
         "then check their understanding. "
@@ -183,6 +197,11 @@ async def chat_stream(request: ChatRequest):
             await cognee.remember_conversation(
                 user_id, last_query, full_response, session_id=request.conversation_id
             )
+
+            if settings.HYBRID_MEMORY_ENABLED:
+                asyncio.ensure_future(
+                    summastudy_memory.extract_and_store_memories(user_id, last_query)
+                )
 
         if len(messages) % PROACTIVE_GAP_CHECK_INTERVAL == 0 and len(messages) > 0:
             gaps = await detect_knowledge_gaps(user_id)

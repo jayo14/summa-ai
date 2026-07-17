@@ -56,6 +56,13 @@ class Settings(BaseSettings):
     ZAI_API_BASE: str = "https://internal-api.z.ai/v1"
     ZAI_MODEL: str = "glm-4.5"
 
+    # Hybrid memory (SummaStudy integration)
+    HYBRID_MEMORY_ENABLED: bool = True
+
+    # SummaStudy service integration
+    SUMMASTUDY_API_BASE: str = ""
+    SUMMASTUDY_ENABLED: bool = False
+
     # Demo account
     DEMO_USER_EMAIL: str = "alex@summa.ai"
     

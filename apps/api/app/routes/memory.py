@@ -1,9 +1,10 @@
-"""Memory route — full Cognee remember/recall/improve/forget/session endpoints."""
-from fastapi import APIRouter, Query
+"""Memory route — full Cognee + hybrid SummaStudy memory endpoints."""
+from fastapi import APIRouter, Query, Body
 from typing import Optional
 from app.models.memory import (RememberTextRequest, RememberExamRequest, RememberArtifactRequest, RememberProgressRequest, RememberConversationRequest, RecallRequest, RecallGraphRequest, FeedbackRequest, ForgetRequest, CreateSessionRequest, SessionContextRequest)
 from app.core.security import resolve_user_id
 from app.services.cognee_service import CogneeService
+from app.services.summastudy_memory import summastudy_memory
 
 router = APIRouter()
 cognee = CogneeService()
@@ -120,3 +121,42 @@ async def list_memories(user_id: str):
     dataset = cognee.get_user_dataset(user_id)
     memories = await cognee.list_memories(dataset)
     return {"memories": memories, "count": len(memories)}
+
+# ─────────────────────────────────────────────────────────────────────────
+# Hybrid memory endpoints (SummaStudy atomic fact integration)
+# ─────────────────────────────────────────────────────────────────────────
+
+@router.post("/memory/hybrid/extract", summary="Extract atomic facts", description="Extract and store atomic facts from a message using SummaStudy-style memory extraction")
+async def hybrid_extract(message: str = Body(..., embed=True)):
+    user_id = resolve_user_id()
+    facts = await summastudy_memory.extract_and_store_memories(user_id, message)
+    return {"status": "success", "facts": facts, "count": len(facts)}
+
+@router.get("/memory/hybrid/facts", summary="Get atomic facts", description="Retrieve atomic facts from shared SummaStudy memory, optionally filtered by type")
+async def hybrid_get_facts(memory_type: Optional[str] = None, limit: int = 20):
+    user_id = resolve_user_id()
+    if memory_type:
+        facts = await summastudy_memory.get_memories_by_type(user_id, memory_type, limit)
+    else:
+        facts = await summastudy_memory.retrieve_relevant_memories(user_id, limit)
+    return {"status": "success", "facts": facts, "count": len(facts)}
+
+@router.get("/memory/hybrid/summary", summary="Memory summary", description="Get a summary of all atomic facts grouped by type")
+async def hybrid_memory_summary():
+    user_id = resolve_user_id()
+    return await summastudy_memory.get_memory_summary(user_id)
+
+@router.get("/memory/hybrid/context", summary="Get hybrid context", description="Aggregate both Cognee and SummaStudy memory into one context object")
+async def hybrid_full_context(query: str = "", limit: int = 5):
+    user_id = resolve_user_id()
+    q = query or "latest activity"
+    context = {
+        "cognee": {
+            "memories": (await cognee.recall_context(user_id, q, limit=limit)).get("results", []),
+            "exams": (await cognee.recall_exams(user_id)).get("exams", []),
+            "progress": (await cognee.recall_learning_progress(user_id)).get("progress", []),
+            "artifacts": (await cognee.recall_artifacts(user_id, limit=limit)).get("artifacts", []),
+        },
+        "atomic_facts": await summastudy_memory.retrieve_relevant_memories(user_id, limit),
+    }
+    return {"status": "success", "user_id": user_id, "context": context}

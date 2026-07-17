@@ -62,3 +62,30 @@
 
 - **asyncpg**: Added to both `requirements.txt` files; installed in venv. 19 tests pass.
 - **All 19 tests still passing** after auth changes. Test mocks were unaffected (they patch `resolve_user_id` directly).
+
+## 2026-07-17 (Milestone 5 — Product Boundary Resolution)
+- **Decision confirmed**: Reuse SummaStudy's existing services rather than rebuild.
+- **Hybrid memory layer** (`services/summastudy_memory.py`):
+  - `SummaStudyMemoryClient` singleton with asyncpg pool to shared Supabase Postgres
+  - Atomic fact extraction via Z.ai LLM using same `MEMORY_EXTRACTION_PROMPT` pattern as SummaStudy
+  - Same `_is_noise()` filtering (greeting denylist, short messages <40 chars)
+  - Writes to shared `public.user_memories` table (same schema as SummaStudy's `memory_service`)
+  - `extract_and_store_memories()` — called automatically after each chat turn in `chat.py`
+  - `retrieve_relevant_memories()` — supplements Cognee context in `build_orchestrator_prompt`
+  - `get_memories_by_type()`, `get_memory_summary()` — typed query support
+- **SummaStudy API client** (`services/summastudy_client.py`):
+  - `SummaStudyClient` with HTTP calls to SummaStudy's FastAPI backend
+  - Study planner: `generate_plan(jwt, goal)` → `POST /ai-core/generate-plan`
+  - Spaced repetition: `submit_flashcard_review()` + `get_due_flashcards()`
+  - Recommendations: `get_tutorial_recommendations()`, `get_marketplace_recommendations()`
+  - All calls gated by `SUMMASTUDY_ENABLED` + `SUMMASTUDY_API_BASE`; graceful degradation
+  - Shared Supabase JWT forwarded via new `current_jwt_token` context var
+- **Auth middleware** (`main.py`): Now stores JWT token alongside user_id via `set_current_jwt_token()` / `reset_current_jwt_token()`
+- **Memory routes** (`routes/memory.py`): Added 4 hybrid endpoints:
+  - `POST /memory/hybrid/extract` — extract facts from a message
+  - `GET /memory/hybrid/facts` — retrieve facts, optionally by type
+  - `GET /memory/hybrid/summary` — count of facts grouped by type
+  - `GET /memory/hybrid/context` — aggregated Cognee + atomic facts
+- **Config** (`config.py`): Added `HYBRID_MEMORY_ENABLED`, `SUMMASTUDY_API_BASE`, `SUMMASTUDY_ENABLED`
+- **Database migration**: Added `public.user_memories` table to `db/migrate_to_supabase.sql`
+- **All 19 tests still passing**

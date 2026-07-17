@@ -12,6 +12,7 @@ from fastapi import WebSocket
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 logger = logging.getLogger(__name__)
 current_user_id: ContextVar[Optional[str]] = ContextVar("current_user_id", default=None)
+current_jwt_token: ContextVar[Optional[str]] = ContextVar("current_jwt_token", default=None)
 
 def verify_supabase_jwt(token: str) -> Optional[str]:
     try:
@@ -35,15 +36,29 @@ def resolve_user_id() -> str:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return user_id
 
+def resolve_jwt_token() -> Optional[str]:
+    """Get the current request's JWT token for service-to-service calls."""
+    return current_jwt_token.get()
+
 def set_current_user_id(user_id: Optional[str]):
     token = None
     if user_id:
         token = current_user_id.set(user_id)
     return token
 
+def set_current_jwt_token(token_str: Optional[str]):
+    token = None
+    if token_str:
+        token = current_jwt_token.set(token_str)
+    return token
+
 def reset_current_user_id(token):
     if token is not None:
         current_user_id.reset(token)
+
+def reset_current_jwt_token(token):
+    if token is not None:
+        current_jwt_token.reset(token)
 
 def hash_password(password: str) -> str: return pwd_context.hash(password)
 def verify_password(plain: str, hashed: str) -> bool: return pwd_context.verify(plain, hashed)

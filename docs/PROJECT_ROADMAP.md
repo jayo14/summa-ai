@@ -32,7 +32,23 @@ Status: ✅ Migration schema applied and Backend connected to Supabase Postgres.
 - ✅ Bonus: Cognee production guard — `main.py` lifespan now refuses to start in production without `COGNEE_API_KEY`, preventing silent in-memory fallback
 Status: ✅ Complete
 
-## Milestone 5 — Product Boundary Resolution
-- Study_planner/spaced_repetition/memory_service/recommendation_service confirmed **live and actively used** in SummaStudy
-- Decision needed: reuse SummaStudy's existing services vs rebuild inside Summa AI
-Status: 🔒 Awaiting user decision — see PRODUCT_BOUNDARIES.md and PROGRESS.md for full import graph
+## Milestone 5 — Product Boundary Resolution ✅
+- ✅ SummaStudy services confirmed **live and actively used** (from earlier audit)
+- ✅ **Decision: reuse** — SummaStudy's existing services adopted as integration targets
+- ✅ **Hybrid memory layer** — built `SummaStudyMemoryClient` (`services/summastudy_memory.py`):
+  - Cognee remains primary memory backbone
+  - Atomic fact extraction (preference, goal, struggle, fact, habit) using Z.ai LLM
+  - Shared `public.user_memories` table (same schema as SummaStudy) for cross-product memory
+  - Automatic extraction after each chat turn via `chat.py`
+  - Supplementary facts injected into orchestrator prompt
+  - Dedicated hybrid memory API endpoints at `/memory/hybrid/*`
+- ✅ **SummaStudy API client** — built `SummaStudyClient` (`services/summastudy_client.py`):
+  - Study planner: `POST /ai-core/generate-plan`
+  - Spaced repetition: `POST /ai-core/flashcard/review`, `GET /ai-core/flashcards/due/{user_id}`
+  - Recommendations: `GET /tutorials/recommendations`, `GET /marketplace/recommendations`
+  - Gated by `SUMMASTUDY_ENABLED` + `SUMMASTUDY_API_BASE` config
+  - Passes shared Supabase JWT for auth
+- ✅ JWT token context var added (`current_jwt_token`) for service-to-service auth forwarding
+- ✅ Database migration: `public.user_memories` table added to `db/migrate_to_supabase.sql`
+- ✅ All 19 existing tests pass
+Status: ✅ Complete

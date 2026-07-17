@@ -5,7 +5,9 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from app.config import settings
-from app.core.security import ConnectionManager, current_user_id, reset_current_user_id, set_current_user_id, verify_supabase_jwt
+from app.core.security import (ConnectionManager, current_user_id, reset_current_user_id,
+    reset_current_jwt_token, set_current_jwt_token,
+    set_current_user_id, verify_supabase_jwt)
 from app.services.cognee_service import CogneeService
 from app.routes import auth, chat, memory
 from app.routes.data_routes import (artifacts_router, conv_router, timeline_router,
@@ -55,11 +57,13 @@ async def auth_middleware(request: Request, call_next):
         return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
     token_state = set_current_user_id(user_id)
+    jwt_state = set_current_jwt_token(token)
     request.state.user_id = user_id
     try:
         response = await call_next(request)
     finally:
         reset_current_user_id(token_state)
+        reset_current_jwt_token(jwt_state)
     return response
 
 

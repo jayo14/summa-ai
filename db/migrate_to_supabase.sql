@@ -112,7 +112,24 @@ CREATE TABLE IF NOT EXISTS summa_ai.concepts (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Step 10: Indexes
+-- Step 10: Hybrid memory — user_memories table (shared with SummaStudy)
+-- Stores typed atomic facts extracted from conversations.
+-- Compatible with SummaStudy's memory_service schema for cross-product memory sharing.
+CREATE TABLE IF NOT EXISTS public.user_memories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    memory_type TEXT NOT NULL DEFAULT 'fact',
+    content TEXT NOT NULL,
+    embedding vector(1536),
+    confidence FLOAT DEFAULT 1.0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_accessed_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_memories_user_id ON public.user_memories(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_memories_type ON public.user_memories(user_id, memory_type);
+
+-- Step 11: Indexes (renumbered after Step 10 insertion)
 CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON summa_ai.conversations(user_id);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON summa_ai.messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_artifacts_user_id ON summa_ai.artifacts(user_id);
@@ -120,7 +137,7 @@ CREATE INDEX IF NOT EXISTS idx_timeline_events_user_id ON summa_ai.timeline_even
 CREATE INDEX IF NOT EXISTS idx_materials_user_id ON summa_ai.materials(user_id);
 CREATE INDEX IF NOT EXISTS idx_concepts_user_id ON summa_ai.concepts(user_id);
 
--- Step 11: Auto-create user profile on first Supabase login (via trigger)
+-- Step 12: Auto-create user profile on first Supabase login (via trigger)
 CREATE OR REPLACE FUNCTION summa_ai.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -142,7 +159,7 @@ CREATE TRIGGER on_auth_user_created
     FOR EACH ROW
     EXECUTE FUNCTION summa_ai.handle_new_user();
 
--- Step 12: Row Level Security
+-- Step 13: Row Level Security
 -- Note: The trigger above (SECURITY DEFINER) bypasses RLS for auto-creation.
 -- These policies apply when users connect via Supabase's anon/authenticated keys.
 
