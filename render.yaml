@@ -25,7 +25,7 @@ services:
       - key: QDRANT_CLUSTER_ENDPOINT
         sync: false  # Set this manually in Render dashboard
       - key: DATABASE_URL
-        value: sqlite:///./db/custom.db
+        sync: false  # Set to your Supabase Postgres URL in Render dashboard
       - key: BACKEND_CORS_ORIGINS
         value: '["https://your-frontend-domain.com"]'  # Update with your frontend URL
       - key: SCHEDULER_ENABLED
