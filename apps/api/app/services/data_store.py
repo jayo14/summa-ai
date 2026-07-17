@@ -81,6 +81,12 @@ class DataStore:
                 json.dumps(data.get("component")) if data.get("component") else None,
                 data.get("change_note"),
             )
+            await conn.execute(
+                """INSERT INTO summa_ai.artifact_versions (artifact_id, version, title, component, change_note)
+                   VALUES ($1, 1, $2, $3, $4)""",
+                aid, data.get("title"), json.dumps(data.get("component")) if data.get("component") else None,
+                data.get("change_note") or "Initial version",
+            )
             row = await conn.fetchrow("SELECT * FROM summa_ai.artifacts WHERE id = $1", aid)
         return dict(row)
 
@@ -111,6 +117,14 @@ class DataStore:
                 f"UPDATE summa_ai.artifacts SET {', '.join(sets)} WHERE id = ${len(vals)}",
                 *vals,
             )
+            new_version_row = await conn.fetchrow("SELECT current_version, title, component FROM summa_ai.artifacts WHERE id = $1", aid)
+            if new_version_row:
+                await conn.execute(
+                    """INSERT INTO summa_ai.artifact_versions (artifact_id, version, title, component, change_note)
+                       VALUES ($1, $2, $3, $4, $5)""",
+                    aid, new_version_row["current_version"], new_version_row["title"],
+                    new_version_row["component"], data.get("change_note") or "Updated",
+                )
             row = await conn.fetchrow("SELECT * FROM summa_ai.artifacts WHERE id = $1", aid)
         return dict(row) if row else None
 
