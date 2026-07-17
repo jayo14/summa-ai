@@ -17,6 +17,11 @@ manager = ConnectionManager()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if settings.is_production and settings.JWT_SECRET_KEY == "change-me-in-production":
+        raise RuntimeError(
+            "Refusing to start in production with default JWT_SECRET_KEY. "
+            "Set JWT_SECRET_KEY to a secure random value before deploying."
+        )
     await CogneeService.initialize()
     logger.info("🚀 Summa AI API Started")
     yield
