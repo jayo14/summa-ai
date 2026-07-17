@@ -139,9 +139,9 @@ async def _stream_zai(messages: list[dict], enable_thinking: bool = True, contex
                         continue
         yield "data: [DONE]\n\n"
     except Exception as e:
-        logger.error(f"Z.ai stream failed: {e}")
-        for word in "I'd be happy to help! Could you tell me more?".split():
-            yield f"data: {json.dumps({'type': 'content', 'delta': word + ' '})}\n\n"
+        error_msg = str(e) or "Z.ai stream failed"
+        logger.error(f"Z.ai stream failed: {error_msg}")
+        yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
         yield "data: [DONE]\n\n"
 
 
