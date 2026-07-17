@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from app.config import settings
-from app.core.security import ConnectionManager, current_user_id, reset_current_user_id, set_current_user_id, verify_access_token
+from app.core.security import ConnectionManager, current_user_id, reset_current_user_id, set_current_user_id, verify_supabase_jwt
 from app.services.cognee_service import CogneeService
 from app.routes import auth, chat, memory
 from app.routes.data_routes import (artifacts_router, conv_router, timeline_router,
@@ -17,10 +17,10 @@ manager = ConnectionManager()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if settings.is_production and settings.JWT_SECRET_KEY == "change-me-in-production":
+    if settings.is_production and not settings.SUPABASE_JWT_SECRET:
         raise RuntimeError(
-            "Refusing to start in production with default JWT_SECRET_KEY. "
-            "Set JWT_SECRET_KEY to a secure random value before deploying."
+            "Refusing to start in production without SUPABASE_JWT_SECRET. "
+            "Set SUPABASE_JWT_SECRET to your Supabase project's JWT secret."
         )
     if settings.is_production and not settings.COGNEE_API_KEY:
         raise RuntimeError(
@@ -50,7 +50,7 @@ async def auth_middleware(request: Request, call_next):
         return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
     token = auth_header.split(" ", 1)[1].strip()
-    user_id = verify_access_token(token)
+    user_id = verify_supabase_jwt(token)
     if not user_id:
         return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
@@ -75,7 +75,7 @@ async def health_check():
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     token = websocket.query_params.get("token")
-    if not token or not verify_access_token(token):
+    if not token or not verify_supabase_jwt(token):
         await websocket.close(code=1008)
         return
 
