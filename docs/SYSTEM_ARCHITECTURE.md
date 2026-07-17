@@ -21,8 +21,7 @@ apps/api/                     FastAPI backend
   app/services/user_store.py
   tests/                      1 test file (test_memory_loop.py)
 
-prisma/schema.prisma          SQLite datasource — contains only default User/Post scaffold models,
-                               unrelated to the app's actual User/Chat/Memory/Timeline/Artifact models
+(prisma/ removed in Milestone 2 — was unused default scaffold)
 db/custom.db                  SQLite file referenced by DATABASE_URL default
 ```
 
@@ -45,7 +44,7 @@ db/custom.db                  SQLite file referenced by DATABASE_URL default
 
 ## 4. Database Architecture
 
-- `prisma/schema.prisma` contains exactly the default `prisma init` scaffold: a `User` model with `id/email/name` and a `Post` model with `title/content/published` — generic blog boilerplate, not Summa AI's actual domain (exams, artifacts, timeline, memory). This strongly suggests Prisma was scaffolded early and never adopted; the real data model lives in `app/models/*.py` (Pydantic) and whatever `db/custom.db` actually persists via `user_store.py`, separate from Prisma entirely.
+- `prisma/` was removed in Milestone 2. It contained exactly the default `prisma init` scaffold — generic `User`/`Post` boilerplate, not Summa AI's actual domain. The real data model lives in `app/models/*.py` (Pydantic) and `db/custom.db` persisted via raw `sqlite3` in `user_store.py`.
 - No Postgres, no Supabase — this is the central fact that determines everything in `INTEGRATION_STRATEGY.md`.
 
 ## 5. AI Pipelines / Memory Architecture

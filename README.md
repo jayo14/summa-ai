@@ -153,7 +153,7 @@ Used by:
 | Memory layer | Cognee, `remember()`, `recall()`, `improve()`, `forget()` |
 | Backend auth/security | `python-jose`, `passlib` |
 | Backend data/runtime | `httpx`, `python-multipart`, `SQLAlchemy` |
-| Local persistence | Prisma + SQLite (`db/custom.db`) |
+| Local persistence | SQLite (`db/custom.db`) via raw `sqlite3` in `user_store.py` |
 
 ## Project Structure
 
@@ -161,7 +161,6 @@ Used by:
 summa-ai/
 ├── src/            # Next.js frontend: routes, components, hooks, lib
 ├── apps/api/       # FastAPI backend: config, routes, services, models
-├── prisma/         # Prisma schema
 ├── db/             # Local SQLite database
 └── README.md
 ```
