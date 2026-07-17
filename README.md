@@ -59,6 +59,9 @@ These are the settings defined in `apps/api/app/config.py`:
 | `BACKEND_CORS_ORIGINS` | `["http://localhost:3000"]` | Allowed frontend origins. |
 | `SCHEDULER_ENABLED` | `True` | Turns proactive scheduling on or off. |
 | `DEMO_USER_EMAIL` | `alex@summa.ai` | Default demo account identity. |
+| `ZAI_API_KEY` | `""` | Z.ai API key for GLM-4.5 chat completions. |
+| `ZAI_TOKEN` | `""` | Z.ai session token — **must be rotated** (the old one was hardcoded in source). |
+| `ZAI_USER_ID` | `""` | Z.ai user identifier. |
 
 ### Frontend auth env vars
 

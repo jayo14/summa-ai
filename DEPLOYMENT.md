@@ -33,6 +33,12 @@ Replace `your-frontend-domain.com` with your actual frontend URL.
 - `ACCESS_TOKEN_EXPIRE_MINUTES=30`
 - `DEMO_USER_EMAIL=alex@summa.ai`
 
+### Z.ai Chat Completions
+The chat route uses Z.ai GLM-4.5. You **must rotate the old hardcoded token** at Z.ai's side first.
+- `ZAI_API_KEY=Z.ai`
+- `ZAI_TOKEN` — set to your rotated Z.ai token
+- `ZAI_USER_ID` — set to your Z.ai user ID
+
 ## Health Check
 
 The service includes a health check endpoint at `/health` that Render will use to monitor your service.
