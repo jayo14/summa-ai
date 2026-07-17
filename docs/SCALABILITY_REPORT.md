@@ -16,6 +16,13 @@ Summa AI in its present form is a hackathon build serving what is likely a small
 - WebSocket connection manager (`ConnectionManager`) is a simple in-process dict — fine until you run multiple backend instances, at which point it needs a shared store (Redis pub/sub or similar) for cross-instance delivery. Not urgent at current scale; worth flagging now so it's not a surprise later when horizontal scaling becomes necessary.
 - Regex-based intent detection has no meaningful scaling cost at any realistic message volume.
 
+## Resolution status (2026-07-17)
+
+- ✅ **Prompt budget** — resolved in Milestone 4 (3k char cap per context section). No longer an unbounded growth risk.
+- ❌ **SQLite → Postgres** — still pending, gated on Integration Strategy decision (NEXT_STEPS item 8).
+- ✅ **No caching** — resolved in Milestone 4 (60s TTL cache on `_recall()`). Redundant Cognee calls within a conversation window are now avoided.
+- ✅ **Cognee production guard** — resolved in Milestone 4 (boot-time hard failure if `COGNEE_API_KEY` missing in production). No more silent in-memory fallback risk.
+
 ## Recommendation
 
 Don't do dedicated "scalability work" as its own project. The two items that matter (SQLite → Postgres, prompt budget) are already scheduled inside `INTEGRATION_STRATEGY.md` and `AI_ARCHITECTURE.md`'s recommendations respectively. Scalability here is a side effect of doing the security and architecture fixes correctly, not a separate initiative.

@@ -41,7 +41,11 @@ NextAuth (frontend, Google OAuth) and a self-issued JWT backend with no confirme
 2. ✅ Milestone 1: JWT production guard — Done.
 3. ✅ Milestone 2: Provider config aligned with Settings — Done.
 4. ✅ **Post-Milestone-2 credential sweep**: Repo-wide grep of apps/api and src/ for additional hardcoded JWT tokens, API keys, bearer tokens, and credential-shaped strings — **No additional findings.** All credential surfaces cleaned.
-5. ⚠️ **Still requires manual action**: Rotate/revoke the old Z.ai token at https://internal-api.z.ai. The code now reads from env vars, but the old committed token may still be valid.
+5. ✅ Milestone 4: LLM error surfacing — `_stream_zai` now emits `{"type":"error"}` events instead of silent happy-path fallback.
+6. ✅ Milestone 4: Prompt budget cap — 3k char limit per context section prevents unbounded prompt growth.
+7. ✅ Milestone 4: Cognee recall caching — 60s TTL cache avoids redundant API calls.
+8. ✅ Milestone 4: Cognee production guard — boot-time hard failure if `COGNEE_API_KEY` missing in production.
+9. ⚠️ **Still requires manual action**: Rotate/revoke the old Z.ai token at https://internal-api.z.ai. The code now reads from env vars, but the old committed token may still be valid.
 
 ## Immediate action, in order
 
@@ -50,4 +54,8 @@ NextAuth (frontend, Google OAuth) and a self-issued JWT backend with no confirme
 3. ~~Add a startup check for JWT_SECRET_KEY~~ ✅ Done (Milestone 1).
 4. ~~Route chat through Settings~~ ✅ Done (Milestone 2).
 5. ~~Credential sweep~~ ✅ Done (2026-07-17).
-6. Proceed to the architecture/integration work in `INTEGRATION_STRATEGY.md` after the manual token rotation.
+6. ~~Surfaced LLM errors~~ ✅ Done (Milestone 4).
+7. ~~Prompt budget cap~~ ✅ Done (Milestone 4).
+8. ~~Cognee recall caching~~ ✅ Done (Milestone 4).
+9. ~~Cognee production guard~~ ✅ Done (Milestone 4).
+10. Proceed to identity/data integration work after token rotation and strategy confirmation.

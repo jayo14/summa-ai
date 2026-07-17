@@ -46,4 +46,17 @@
 - `docs/PROJECT_AUDIT.md`: Marked item 26 (credential sweep recommendation) as resolved.
 - `docs/TECHNICAL_DEBT.md`: Updated status for audit follow-up items.
 - `docs/SECURITY_REPORT.md`: Added post-Milestone-2 credential sweep note.
+
+## 2026-07-17 (Milestone 4 — AI Quality Hardening)
+### Changed
+- `apps/api/app/routes/chat.py`: Replaced silent LLM-failure fallback with surfaced error event (`{"type":"error","message":"..."}`); added `_section()` truncation helper and `MAX_CONTEXT_SECTION_CHARS=3000` to cap each context section in `build_orchestrator_prompt`.
+- `apps/api/app/services/cognee_service.py`: Added `_TTLCache` class (60s TTL) and wired into `_recall()` method to avoid redundant Cognee calls within the same window.
+- `apps/api/app/main.py`: Added production startup guard that refuses to boot without `COGNEE_API_KEY`, preventing silent in-memory fallback that would defeat persistent memory.
+
+### Added
+- `apps/api/tests/test_chat_utils.py`: 11 tests for `detect_intent` (all 7 intent patterns) and `_section` truncation.
+- `apps/api/tests/test_cache.py`: 7 tests for `_TTLCache` get/set/expiry/clear/multi-key.
+
+### Fixed
+- `docs/SYSTEM_ARCHITECTURE.md`: Updated outdated references to hardcoded credentials (now read from Settings) and missing JWT production guard (now present). Fixed tech stack table (Prisma removed, raw sqlite3 + Cognee).
 - `docs/SYSTEM_ARCHITECTURE.md`: No changes needed (already accurate).

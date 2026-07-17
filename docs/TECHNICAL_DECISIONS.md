@@ -43,6 +43,29 @@ Status: Awaiting your confirmation before implementation — this is a recommend
 - Impact: This confirms the PRODUCT_BOUNDARIES.md question is real — SummaStudy already ships adaptive-learning features that overlap Summa AI's domain. The reuse-vs-rebuild decision now has data to inform it.
 - Status: Awaiting your go-ahead to proceed with either path.
 
+## 2026-07-17 (Milestone 4): Surface LLM errors instead of silent fallback
+- Decision: Changed `_stream_zai` exception handler to emit a typed SSE `{"type":"error","message":"..."}` event instead of streaming a canned "I'd be happy to help!" response.
+- Why: The old behavior silently masked outages, credential expiration, and transient failures. The frontend already handled `type: "error"` events (line 153 of `use-chat.ts`) — the backend just never sent them.
+- Alternatives considered: Log-only (errors still invisible to users), generic HTTP 500 (loses streaming context). The SSE error event was the smallest change that actually surfaces failures to users.
+- Status: Executed.
+
+## 2026-07-17 (Milestone 4): Prompt context budget cap
+- Decision: Added `_section()` truncation helper with `MAX_CONTEXT_SECTION_CHARS=3000` wrapping each JSON-dumped context block (memory, exams, progress, gaps) in `build_orchestrator_prompt`.
+- Why: Without a budget, a long-term student's accumulated sessions/exams/progress entries would silently grow the prompt until it exceeds the model's context window, causing unpredictable behavior and escalating costs.
+- Alternatives considered: Per-entry truncation (more complex, less predictable), hard limit on recalled entries (simpler but loses nuance). Per-section char cap hits the right balance: keeps each section bounded while preserving structure.
+- Status: Executed.
+
+## 2026-07-17 (Milestone 4): Cognee recall caching
+- Decision: Added `_TTLCache` class (60s TTL) to `CogneeService._recall()`, avoiding redundant Cognee API calls within a short window.
+- Why: Every chat turn re-fetched memory/exams/progress fresh from Cognee. During a conversation, repeated calls for the same data (e.g., gap analysis recalling progress) returned identical results. 60s TTL covers the duration of a typical multi-turn interaction without stale-data risk.
+- Alternatives considered: `functools.lru_cache` (no TTL), Redis (premature infra dependency). In-process dict with monotonic TTL is zero-infra and matches current scale.
+- Status: Executed.
+
+## 2026-07-17 (Milestone 4): Cognee production guard
+- Decision: `main.py` lifespan now raises `RuntimeError` if `ENVIRONMENT=production` and `COGNEE_API_KEY` is unset.
+- Why: The in-memory Cognee fallback silently activates when no API key is configured, making "persistent memory" reset on every restart. This defeats the product's core promise without any user-visible signal. A hard boot-time failure ensures this cannot happen silently in production.
+- Status: Executed.
+
 ## 2026-07-17 (NEXT_STEPS items 1, 8): Skipped — require user action
 - Item 1 (token rotation): Manual step at Z.ai, cannot be done in code.
 - Item 8 (integration strategy confirmation): Requires your review and sign-off on the INTEGRATION_STRATEGY.md recommendation before any identity/data migration work begins.

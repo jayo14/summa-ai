@@ -19,12 +19,13 @@ Status: ✅ Complete. Chat now reads all Z.ai config (API base, model, key, toke
 - Migrate relational data to Supabase Postgres, separate schema (Decision 2)
 Status: 🔒 Blocked — awaiting user decision on INTEGRATION_STRATEGY.md recommendation (NEXT_STEPS item 8)
 
-## Milestone 4 — AI Quality Hardening
-- Prompt context budget cap
-- Caching layer for memory/exam/progress recall
-- Replace silent LLM-failure fallback with surfaced error state
-- Expand test coverage beyond memory_loop
-Status: Not started
+## Milestone 4 — AI Quality Hardening ✅
+- ✅ Prompt context budget cap — added `_section()` truncation to `build_orchestrator_prompt` (3k chars per section)
+- ✅ Caching layer for memory/exam/progress recall — added `_TTLCache` to `CogneeService._recall()` (60s TTL)
+- ✅ Replace silent LLM-failure fallback with surfaced error state — `_stream_zai` now sends `{"type":"error","message":"..."}` instead of a canned happy response; frontend already handled this event type
+- ✅ Expand test coverage beyond `memory_loop` — added `test_chat_utils.py` (11 tests) and `test_cache.py` (7 tests); 19 total tests, all passing
+- ✅ Bonus: Cognee production guard — `main.py` lifespan now refuses to start in production without `COGNEE_API_KEY`, preventing silent in-memory fallback
+Status: ✅ Complete
 
 ## Milestone 5 — Product Boundary Resolution
 - Study_planner/spaced_repetition/memory_service/recommendation_service confirmed **live and actively used** in SummaStudy

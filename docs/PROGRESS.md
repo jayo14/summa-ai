@@ -36,3 +36,10 @@
   - `memory_service.py` — imported in `services/agent_orchestrator.py`, `tasks/memory_tasks.py`, `agents/tools/memory_tools.py`, and has dedicated tests in `tests/test_memory_logic.py`
   - `recommendation_service.py` — imported in `api/v1/endpoints/marketplace.py` and `api/v1/endpoints/tutorials.py`
 - This finding is now documented. The decision to reuse vs rebuild these services for Summa AI's adaptive layer requires user input.
+
+## 2026-07-17 (Milestone 4 — AI Quality Hardening)
+- **Surfaced LLM errors**: Changed `_stream_zai` exception handler from streaming a canned "I'd be happy to help!" response to emitting `{"type":"error","message":"..."}` SSE event. Frontend (`use-chat.ts`) already handled this event type — errors now surface as `⚠️ <message>` in the chat UI instead of being silently swallowed.
+- **Prompt budget cap**: Added `_section()` helper (3k char limit per context section) and wrapped all JSON-dumped context blocks (memory, exams, progress, gaps) in `build_orchestrator_prompt`. Each section truncates independently to prevent unbounded prompt growth.
+- **Recall caching**: Added `_TTLCache` class (60s TTL) and wired it into `CoggeeService._recall()`. Every chat turn previously re-fetched memory/exams/progress from Cognee fresh — now repeated calls within 60s hit the in-memory cache. Cache auto-evicts on expiry and is per-user/per-query scoped.
+- **Cognee production guard**: `main.py` lifespan now raises `RuntimeError` if `ENVIRONMENT=production` and `COGNEE_API_KEY` is empty, preventing the silent in-memory fallback that would defeat "never forgets" persistence.
+- **Expanded test coverage**: Wrote `tests/test_chat_utils.py` (11 tests — `detect_intent` for all 7 intent patterns + `_section` truncation) and `tests/test_cache.py` (7 tests — get/set/expiry/clear/args). Total test count: 19, all passing.

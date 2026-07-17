@@ -39,5 +39,5 @@ None found in `apps/api`. Every chat request re-recalls memory/exams/progress fr
 
 1. ✅ Move hardcoded credentials to env vars — Done (Milestone 1).
 2. ✅ Route chat generation through `config.py`'s Settings-based config — Done (Milestone 2).
-3. Add a token/character budget cap to `build_orchestrator_prompt`, with oldest/least-relevant context dropped first.
-4. Add a startup-time hard failure if Cognee is unreachable/unconfigured in production, rather than a silent in-memory fallback.
+3. ✅ Add a token/character budget cap to `build_orchestrator_prompt` — Done (Milestone 4, `_section()` 3k char cap).
+4. ✅ Add a startup-time hard failure if Cognee is unreachable/unconfigured in production — Done (Milestone 4, `main.py` lifespan guard).
