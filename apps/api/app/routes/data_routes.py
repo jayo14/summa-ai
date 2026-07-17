@@ -55,10 +55,18 @@ async def pin_artifact(aid: str):
         raise HTTPException(404, "Not found")
     return a
 
-@artifacts_router.post("/artifacts/{aid}/versions", summary="Restore version", description="Restore a previous version of an artifact (not yet supported with Postgres backend)")
+@artifacts_router.get("/artifacts/{aid}/versions", summary="List artifact versions", description="Get version history for an artifact")
+async def list_artifact_versions(aid: str):
+    resolve_user_id()
+    return await _store.list_artifact_versions(aid)
+
+@artifacts_router.post("/artifacts/{aid}/versions", summary="Restore version", description="Restore a previous version of an artifact")
 async def restore_version(aid: str, data: ArtifactVersionRestore):
     resolve_user_id()
-    raise HTTPException(501, "Version restore not yet supported with Postgres backend")
+    restored = await _store.restore_artifact_version(aid, data.version)
+    if restored is None:
+        raise HTTPException(404, "Version not found")
+    return restored
 
 # ========== CONVERSATIONS ==========
 conv_router = APIRouter()
