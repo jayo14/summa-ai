@@ -31,7 +31,7 @@ db/custom.db                  SQLite file referenced by DATABASE_URL default
 |---|---|
 | Frontend | Next.js, NextAuth (`src/app/api/auth/[...nextauth]`, `src/lib/auth.ts`), Google OAuth support |
 | Backend | FastAPI, own JWT issuance (`python-jose`, `passlib`/bcrypt) — independent of Supabase entirely |
-| Data | Prisma ORM configured for SQLite — but schema is unused boilerplate (see below); actual persistence appears to run through `db/custom.db` and Cognee datasets rather than through Prisma models |
+| Data | Raw `sqlite3` via `user_store.py` (`db/custom.db`) for user/auth data; Cognee datasets for memory/exams/progress/artifacts. Prisma ORM was removed in Milestone 2 (unused scaffold). |
 | Memory | Cognee (managed memory layer), falls back to in-memory storage when `COGNEE_API_KEY` is unset |
 | Vector store | Qdrant (Cognee-managed) — config present, not directly called outside Cognee |
 | LLM (actual chat) | **Z.ai GLM-4.5**, called directly via `httpx` streaming in `routes/chat.py` — credentials and endpoint read from `Settings` (env vars), not through the `LLM_PROVIDER`/`OPENAI_API_KEY` settings declared in `config.py` |
