@@ -22,4 +22,4 @@
 6. ✅ Prompt budget, caching, observability — Milestone 4 done (section char cap, TTL cache, error surfacing).
 7. ✅ Cognee production guard — Milestone 4 done (boot-time COGNEE_API_KEY check).
 8. Tests — expanded in Milestones 4 (19 total). Continue growing alongside new code.
-9. Legacy JWT code removal — Milestone 3 partial (verify function replaced, create removed). Final cleanup after Supabase migration is verified in production.
+9. ✅ Legacy JWT code removal — completed in Milestone 3 (JWT_SECRET_KEY, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES removed from config.py).

@@ -45,7 +45,8 @@ NextAuth (frontend, Google OAuth) and a self-issued JWT backend with no confirme
 6. ✅ Milestone 4: Prompt budget cap — 3k char limit per context section prevents unbounded prompt growth.
 7. ✅ Milestone 4: Cognee recall caching — 60s TTL cache avoids redundant API calls.
 8. ✅ Milestone 4: Cognee production guard — boot-time hard failure if `COGNEE_API_KEY` missing in production.
-9. ⚠️ **Still requires manual action**: Rotate/revoke the old Z.ai token at https://internal-api.z.ai. The code now reads from env vars, but the old committed token may still be valid.
+9. ✅ Milestone 3: Supabase Auth adopted — self-issued JWT system removed entirely (JWT_SECRET_KEY, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES deleted from config.py, .env.example, and prod config). No more forgeable JWT surface.
+10. ⚠️ **Still requires manual action**: Rotate/revoke the old Z.ai token at https://internal-api.z.ai. The code now reads from env vars, but the old committed token may still be valid.
 
 ## Immediate action, in order
 
