@@ -100,3 +100,10 @@
 - **Connected onboarding persistence**: Onboarding completion now calls `PATCH /api/v1/user` to persist `onboarded: true` and `onboarding_data` to the backend, in addition to localStorage fallback.
 - **Fixed package.json**: Removed trailing comma that caused JSON parse error.
 - **Build passes**: `npx next build` succeeds with no errors.
+
+## 2026-07-17 (Milestone 7 — Postgres-Backed Data Routes)
+- **Created `apps/api/app/services/data_store.py`**: Singleton class with asyncpg pool providing full CRUD for all `summa_ai` schema tables (artifacts, conversations, messages, timeline_events, materials, concepts). Follows same singleton pattern as `UserStore`.
+- **Rewrote `data_routes.py`**: All 6 routers (artifacts, conversations, timeline, materials, concepts, analytics) now use `DataStore` for Postgres persistence instead of in-memory dicts. Removed all seed data (`_seed_timeline()`, demo materials/concepts).
+- **Keep-alive**: Analytics endpoint now queries real concept mastery counts and timeline event totals from Postgres alongside hardcoded hexagon/scores data.
+- **Version restore**: Returns 501 since there's no `artifact_versions` table in the migration schema yet.
+- **API shapes unchanged**: Frontend needs no changes. 31/31 tests pass. Build passes.

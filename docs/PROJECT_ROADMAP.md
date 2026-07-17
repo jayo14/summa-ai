@@ -64,3 +64,13 @@ Status: ✅ Complete
 - ✅ Fixed `package.json` JSON syntax error (trailing comma)
 - ✅ `npx next build` passes cleanly
 Status: ✅ Complete
+
+## Milestone 7 — Postgres-Backed Data Routes ✅
+- ✅ Created `DataStore` (`services/data_store.py`) — asyncpg-backed singleton with full CRUD for artifacts, conversations, messages, timeline events, materials, and concepts in the `summa_ai` schema
+- ✅ Rewrote all `data_routes.py` endpoints — artifacts, conversations/messages, timeline, materials, and concepts now persist to Supabase Postgres instead of in-memory dicts
+- ✅ Removed all seed data and in-memory stores (`_art_store`, `_convs`, `_msgs`, `_events`, `_mats`, `_concepts`)
+- ✅ Kept API shapes identical — frontend needs no changes
+- ✅ Analytics endpoint queries real concept/timeline counts from Postgres alongside hardcoded hexagon data
+- ✅ Version restore endpoint returns 501 (no versions table in schema yet — can be added later)
+- ✅ 31/31 tests pass, Next.js build passes cleanly
+Status: ✅ Complete
