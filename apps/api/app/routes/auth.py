@@ -1,68 +1,86 @@
-"""Authentication routes for the NextAuth exchange flow."""
-from typing import Optional
-
+"""Authentication routes — proxy to Supabase Auth REST API."""
+import httpx
 from fastapi import APIRouter, HTTPException
 
-from app.core.security import create_access_token
-from app.models.user import AuthLoginRequest, AuthLoginResponse, User, UserUpdate
-from app.services.user_store import UserStore
+from app.config import settings
+from app.models.user import AuthLoginRequest, AuthLoginResponse
 
 router = APIRouter()
-store = UserStore()
+SUPABASE_AUTH_URL = f"{settings.SUPABASE_URL}/auth/v1"
 
 
-@router.post("/auth/signup", response_model=AuthLoginResponse, summary="Sign up", description="Create a new account and return a backend JWT")
+@router.post("/auth/signup", response_model=AuthLoginResponse, summary="Sign up", description="Create a new account via Supabase Auth and return a JWT")
 async def signup(payload: AuthLoginRequest):
     if not payload.email or not payload.password:
         raise HTTPException(status_code=400, detail="Email and password are required")
-    
-    existing = store.get_user_by_email(payload.email)
-    if existing:
-        raise HTTPException(status_code=409, detail="An account with this email already exists")
-    
-    try:
-        user = store.create_user(
-            email=payload.email,
-            password=payload.password,
-            name=payload.name,
-            avatar=payload.avatar,
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{SUPABASE_AUTH_URL}/signup",
+            headers={"apikey": settings.SUPABASE_ANON_KEY},
+            json={"email": payload.email, "password": payload.password,
+                  "data": {"name": payload.name, "avatar": payload.avatar}},
         )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if resp.status_code != 200:
+            detail = resp.json().get("error_description") or resp.json().get("msg") or "Signup failed"
+            if resp.status_code == 422:
+                detail = "An account with this email may already exist"
+            raise HTTPException(status_code=resp.status_code, detail=detail)
 
-    access_token = create_access_token(user["id"])
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": store.serialize_user(user),
-    }
+        body = resp.json()
+        user_data = body.get("user", {})
+        return {
+            "access_token": body["access_token"],
+            "token_type": "bearer",
+            "user": {
+                "id": user_data["id"],
+                "email": user_data["email"],
+                "name": user_data.get("user_metadata", {}).get("name"),
+                "avatar": user_data.get("user_metadata", {}).get("avatar"),
+                "provider": "credentials",
+                "onboarded": False,
+                "onboarding_data": {},
+            },
+        }
 
 
-@router.post("/auth/login", response_model=AuthLoginResponse, summary="Login exchange", description="Validate the authenticated frontend session and mint a backend JWT for protected API calls")
+@router.post("/auth/login", response_model=AuthLoginResponse, summary="Login exchange", description="Authenticate via Supabase Auth and return a JWT")
 async def login(payload: AuthLoginRequest):
-    try:
+    if not payload.email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
+    async with httpx.AsyncClient() as client:
         if payload.provider == "credentials":
             if not payload.password:
-                raise ValueError("Password is required for credential sign-in")
-            user = store.authenticate_credentials(
-                email=payload.email,
-                password=payload.password,
-                name=payload.name,
-                avatar=payload.avatar,
+                raise HTTPException(status_code=400, detail="Password is required for credential sign-in")
+            resp = await client.post(
+                f"{SUPABASE_AUTH_URL}/token?grant_type=password",
+                headers={"apikey": settings.SUPABASE_ANON_KEY},
+                json={"email": payload.email, "password": payload.password},
             )
         else:
-            user = store.authenticate_oauth(
-                provider=payload.provider,
-                email=payload.email,
-                name=payload.name,
-                avatar=payload.avatar,
+            resp = await client.post(
+                f"{SUPABASE_AUTH_URL}/token?grant_type=id_token",
+                headers={"apikey": settings.SUPABASE_ANON_KEY},
+                json={"email": payload.email, "id_token": payload.password or ""},
             )
-    except ValueError as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
 
-    access_token = create_access_token(user["id"])
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": store.serialize_user(user),
-    }
+        if resp.status_code != 200:
+            detail = resp.json().get("error_description") or resp.json().get("msg") or "Authentication failed"
+            raise HTTPException(status_code=401, detail=detail)
+
+        body = resp.json()
+        user_data = body.get("user", {})
+        return {
+            "access_token": body["access_token"],
+            "token_type": "bearer",
+            "user": {
+                "id": user_data["id"],
+                "email": user_data["email"],
+                "name": user_data.get("user_metadata", {}).get("name"),
+                "avatar": user_data.get("user_metadata", {}).get("avatar"),
+                "provider": payload.provider,
+                "onboarded": False,
+                "onboarding_data": {},
+            },
+        }
