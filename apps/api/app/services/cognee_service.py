@@ -17,6 +17,7 @@ is available, so local dev works without any external services.
 import asyncio
 import logging
 import os
+import time
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -24,6 +25,36 @@ from typing import Any, Dict, List, Optional
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+_CACHE_TTL = 60
+
+
+class _TTLCache:
+    def __init__(self, ttl: int = _CACHE_TTL):
+        self._ttl = ttl
+        self._store: Dict[str, tuple[float, Any]] = {}
+
+    def _key(self, *args, **kwargs) -> str:
+        parts = [str(a) for a in args] + [f"{k}={v}" for k, v in sorted(kwargs.items())]
+        return "|".join(parts)
+
+    def get(self, *args, **kwargs) -> Optional[Any]:
+        key = self._key(*args, **kwargs)
+        entry = self._store.get(key)
+        if entry is None:
+            return None
+        ts, value = entry
+        if time.monotonic() - ts > self._ttl:
+            del self._store[key]
+            return None
+        return value
+
+    def set(self, value: Any, *args, **kwargs) -> None:
+        key = self._key(*args, **kwargs)
+        self._store[key] = (time.monotonic(), value)
+
+    def clear(self) -> None:
+        self._store.clear()
 
 
 class CogneeService:
@@ -44,6 +75,7 @@ class CogneeService:
         self._memory: Dict[str, List[Dict[str, Any]]] = {}
         self._sessions: Dict[str, Dict[str, Any]] = {}
         self._cognee = None
+        self._recall_cache = _TTLCache()
 
         # Decide whether we can run a real Cognee pipeline.
         # We need at least an LLM key; a Cognee Cloud key is optional.
@@ -279,42 +311,48 @@ class CogneeService:
     # ─────────────────────────────────────────────────────────────────────────
 
     async def _recall(self, query: str, dataset: str, limit: int = 10) -> List[Dict]:
+        cached = self._recall_cache.get(query, dataset, limit)
+        if cached is not None:
+            return cached
+
+        result: List[Dict] = []
         if self._cognee:
             try:
                 # v1.0: cognee.recall(query_text=..., datasets=[...], top_k=...)
-                results = await self._cognee.recall(
+                raw = await self._cognee.recall(
                     query_text=query,
                     datasets=[dataset],
                     top_k=limit,
                 )
-                if isinstance(results, list):
-                    # Normalise graph result objects to plain dicts
-                    normalised = []
-                    for r in results:
+                if isinstance(raw, list):
+                    for r in raw:
                         if isinstance(r, dict):
-                            normalised.append(r)
+                            result.append(r)
                         else:
                             # ResponseGraphEntry / ResponseQAEntry objects
-                            normalised.append(
+                            result.append(
                                 {
                                     "text": getattr(r, "text", str(r)),
                                     "source": getattr(r, "source", "graph"),
                                     "score": getattr(r, "score", 1.0),
                                 }
                             )
-                    return normalised
             except Exception as exc:
                 logger.warning("Cognee recall failed: %s", exc)
 
-        # In-memory fallback
-        items = self._memory.get(dataset, [])
-        q = query.lower()
-        return [
-            {**i, "score": 1.0}
-            for i in items
-            if q in i.get("text", "").lower()
-            or q in str(i.get("metadata", {})).lower()
-        ][:limit]
+        if not result:
+            # In-memory fallback
+            items = self._memory.get(dataset, [])
+            q = query.lower()
+            result = [
+                {**i, "score": 1.0}
+                for i in items
+                if q in i.get("text", "").lower()
+                or q in str(i.get("metadata", {})).lower()
+            ][:limit]
+
+        self._recall_cache.set(result, query, dataset, limit)
+        return result
 
     async def recall_context(
         self,
