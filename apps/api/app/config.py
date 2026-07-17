@@ -38,15 +38,10 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite:///./db/custom.db"
     
-    # Supabase Auth (replaces self-issued JWTs per Milestone 3)
+    # Supabase Auth
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""
     SUPABASE_JWT_SECRET: str = ""
-
-    # JWT Auth (legacy — will be removed after Supabase migration is verified)
-    JWT_SECRET_KEY: str = "change-me-in-production"
-    JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS - Allow production frontend URLs
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
