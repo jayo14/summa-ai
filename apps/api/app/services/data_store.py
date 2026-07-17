@@ -120,6 +120,33 @@ class DataStore:
             result = await conn.execute("DELETE FROM summa_ai.artifacts WHERE id = $1", aid)
         return "DELETE 1" in result
 
+    async def list_artifact_versions(self, aid: str) -> List[Dict[str, Any]]:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                "SELECT * FROM summa_ai.artifact_versions WHERE artifact_id = $1 ORDER BY version DESC",
+                aid,
+            )
+        return [dict(r) for r in rows]
+
+    async def restore_artifact_version(self, aid: str, version: int) -> Optional[Dict[str, Any]]:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT * FROM summa_ai.artifact_versions WHERE artifact_id = $1 AND version = $2",
+                aid, version,
+            )
+            if not row:
+                return None
+            snapshot = dict(row)
+            await conn.execute(
+                """UPDATE summa_ai.artifacts
+                   SET title = $1, component = $2, current_version = $3, updated_at = NOW()
+                   WHERE id = $4""",
+                snapshot["title"], snapshot["component"], snapshot["version"], aid,
+            )
+            return await self.get_artifact(aid)
+
     async def toggle_pin_artifact(self, aid: str) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()
         async with pool.acquire() as conn:
