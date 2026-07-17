@@ -14,8 +14,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 cognee = CogneeService()
 
-ZAI_API_BASE = "https://internal-api.z.ai/v1"
-
 INTENT_PATTERNS = {
     "quiz": [re.compile(r"\bquiz me\b", re.I), re.compile(r"\btest me\b", re.I)],
     "flashcards": [re.compile(r"\bflash ?cards?\b", re.I)],
@@ -99,7 +97,7 @@ async def _stream_zai(messages: list[dict], enable_thinking: bool = True, contex
         async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0)) as client:
             async with client.stream(
                 "POST",
-                f"{ZAI_API_BASE}/chat/completions",
+                f"{settings.ZAI_API_BASE}/chat/completions",
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {settings.ZAI_API_KEY}",
@@ -108,7 +106,7 @@ async def _stream_zai(messages: list[dict], enable_thinking: bool = True, contex
                     "X-User-Id": settings.ZAI_USER_ID,
                 },
                 json={
-                    "model": "glm-4.5",
+                    "model": settings.ZAI_MODEL,
                     "messages": [
                         {"role": "system", "content": context},
                         *messages,
