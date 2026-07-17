@@ -116,7 +116,8 @@ export interface Concept {
 async function apiGet<T>(path: string, token?: string): Promise<T | null> {
   try {
     return await fastapiFetch<T>(path, undefined, token)
-  } catch {
+  } catch (error) {
+    console.error(`apiGet ${path} failed:`, error)
     return null
   }
 }
@@ -124,7 +125,8 @@ async function apiGet<T>(path: string, token?: string): Promise<T | null> {
 async function apiPost<T>(path: string, body: unknown, token?: string): Promise<T | null> {
   try {
     return await fastapiFetch<T>(path, { method: "POST", body: JSON.stringify(body) }, token)
-  } catch {
+  } catch (error) {
+    console.error(`apiPost ${path} failed:`, error)
     return null
   }
 }
@@ -133,15 +135,32 @@ async function apiDelete(path: string, token?: string): Promise<boolean> {
   try {
     await fastapiFetch<unknown>(path, { method: "DELETE" }, token)
     return true
-  } catch {
+  } catch (error) {
+    console.error(`apiDelete ${path} failed:`, error)
     return false
   }
+}
+
+async function apiGetOrThrow<T>(path: string, token?: string): Promise<T> {
+  return fastapiFetch<T>(path, undefined, token)
+}
+
+async function apiPostOrThrow<T>(path: string, body: unknown, token?: string): Promise<T> {
+  return fastapiFetch<T>(path, { method: "POST", body: JSON.stringify(body) }, token)
+}
+
+async function apiDeleteOrThrow(path: string, token?: string): Promise<void> {
+  await fastapiFetch<unknown>(path, { method: "DELETE" }, token)
 }
 
 /* ── Analytics ────────────────────────────────────────────────────── */
 
 export async function fetchAnalytics(token: string): Promise<AnalyticsData | null> {
   return apiGet<AnalyticsData>("/analytics", token)
+}
+
+export async function fetchAnalyticsOrThrow(token: string): Promise<AnalyticsData> {
+  return apiGetOrThrow<AnalyticsData>("/analytics", token)
 }
 
 export async function fetchHexagon(token: string): Promise<HexagonDim[] | null> {
@@ -168,6 +187,10 @@ export async function fetchArtifacts(token: string, type?: string): Promise<Arti
 
 export async function deleteArtifact(id: string, token: string): Promise<boolean> {
   return apiDelete(`/artifacts/${id}`, token)
+}
+
+export async function deleteArtifactOrThrow(id: string, token: string): Promise<void> {
+  await apiDeleteOrThrow(`/artifacts/${id}`, token)
 }
 
 /* ── Materials & Concepts ─────────────────────────────────────────── */
