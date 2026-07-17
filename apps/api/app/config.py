@@ -49,10 +49,12 @@ class Settings(BaseSettings):
     # Feature flags
     SCHEDULER_ENABLED: bool = True
     
-    # Z.ai credentials (set via environment variables — do not hardcode)
+    # Z.ai configuration (set via environment variables — do not hardcode)
     ZAI_API_KEY: str = ""
     ZAI_TOKEN: str = ""
     ZAI_USER_ID: str = ""
+    ZAI_API_BASE: str = "https://internal-api.z.ai/v1"
+    ZAI_MODEL: str = "glm-4.5"
 
     # Demo account
     DEMO_USER_EMAIL: str = "alex@summa.ai"
