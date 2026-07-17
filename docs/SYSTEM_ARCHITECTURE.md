@@ -34,13 +34,13 @@ db/custom.db                  SQLite file referenced by DATABASE_URL default
 | Data | Prisma ORM configured for SQLite — but schema is unused boilerplate (see below); actual persistence appears to run through `db/custom.db` and Cognee datasets rather than through Prisma models |
 | Memory | Cognee (managed memory layer), falls back to in-memory storage when `COGNEE_API_KEY` is unset |
 | Vector store | Qdrant (Cognee-managed) — config present, not directly called outside Cognee |
-| LLM (actual chat) | **Z.ai GLM-4.5**, called directly via `httpx` streaming in `routes/chat.py` — not through the `LLM_PROVIDER`/`OPENAI_API_KEY` settings declared in `config.py` |
+| LLM (actual chat) | **Z.ai GLM-4.5**, called directly via `httpx` streaming in `routes/chat.py` — credentials and endpoint read from `Settings` (env vars), not through the `LLM_PROVIDER`/`OPENAI_API_KEY` settings declared in `config.py` |
 | Real-time | Native FastAPI `WebSocket` + a hand-rolled `ConnectionManager` (`core/security.py`) |
 
 ## 3. Authentication Flow
 
 - Two separate auth surfaces exist: NextAuth on the frontend (Google OAuth capable) and a self-issued JWT system on the backend (`create_access_token`/`verify_access_token` in `core/security.py`), with no visible bridge connecting the two into one identity. This needs direct tracing to confirm whether NextAuth session tokens are exchanged for backend JWTs anywhere, or whether these are two independent, currently-disconnected auth states.
-- Backend JWTs are signed with `JWT_SECRET_KEY`, which **defaults to the literal string `"change-me-in-production"`** in `config.py`, with no startup check that rejects this default when `ENVIRONMENT=production`. `is_production` exists as a property but nothing in the codebase gates on it for this specific check.
+- Backend JWTs are signed with `JWT_SECRET_KEY`. The default is `"change-me-in-production"`, but a startup guard in `main.py`'s lifespan now raises `RuntimeError` if `ENVIRONMENT=production` and the key hasn't been changed.
 
 ## 4. Database Architecture
 
@@ -50,7 +50,7 @@ db/custom.db                  SQLite file referenced by DATABASE_URL default
 ## 5. AI Pipelines / Memory Architecture
 
 - `cognee_service.py` wraps four write paths (`remember_conversation`, `remember_exam`, `remember_artifact`, `remember_learning_progress`) and a shared `recall()` read path, each scoped to a named Cognee "dataset" (conversations / exams / artifacts / progress).
-- **Chat generation itself bypasses this abstraction's declared LLM config entirely**: `routes/chat.py` calls Z.ai's GLM-4.5 directly over `httpx`, with the base URL, API key, session token, and user ID **hardcoded as literal strings in source** (see `SECURITY_REPORT.md` — this is the single most important finding in this audit). Cognee is used for memory recall/write, but the actual generation step is a separate, undocumented, hardcoded integration.
+- **Chat generation reads all credentials from Settings (env vars)**: `routes/chat.py` calls Z.ai's GLM-4.5 directly over `httpx`, with the base URL, API key, token, and user ID read from `settings` (which loads from environment variables). Cognee is used for memory recall/write, but LLM inference for chat is a separate integration — it does not use the `OPENAI_API_KEY` / `LLM_PROVIDER` settings declared in `config.py`. The credentials were moved from hardcoded source to env vars in Milestone 1; the provider config was aligned in Milestone 2.
 - Intent detection (`detect_intent`) is regex-based keyword matching against the last user message (quiz / flashcards / study-plan / hexagon / graph / timeline / gap-analysis) — lightweight, no model call, cheap. Reasonable choice for routing.
 - Knowledge-gap detection reads recalled progress entries and flags any topic scoring below a hardcoded `WEAK_SCORE_THRESHOLD = 40.0`.
 
@@ -66,7 +66,7 @@ db/custom.db                  SQLite file referenced by DATABASE_URL default
 ## 7. Caching, Model Providers, Vector Storage
 
 - No caching layer visible in `apps/api` (contrast with SummaStudy's `ai-services`, which has Upstash caching).
-- `config.py` declares a generic `LLM_PROVIDER`/`EMBEDDING_PROVIDER` abstraction (openai-flavored) that the actual chat path does not use — the abstraction and the real code have diverged.
+- `config.py` declares a generic `LLM_PROVIDER`/`EMBEDDING_PROVIDER` abstraction (openai-flavored) that the actual chat path does not use — the abstraction and the real code remain distinct (Z.ai API is not OpenAI-compatible, so routing through OpenAI-flavored settings would be misleading).
 - Vector storage is entirely delegated to Cognee/Qdrant; no direct Qdrant client calls found outside that wrapper.
 
 ## 8. External Integrations
