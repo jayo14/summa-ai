@@ -22,6 +22,13 @@ async def lifespan(app: FastAPI):
             "Refusing to start in production with default JWT_SECRET_KEY. "
             "Set JWT_SECRET_KEY to a secure random value before deploying."
         )
+    if settings.is_production and not settings.COGNEE_API_KEY:
+        raise RuntimeError(
+            "Refusing to start in production without COGNEE_API_KEY. "
+            "The in-memory Cognee fallback does not persist across restarts, "
+            "defeating Summa AI's persistent-memory promise. "
+            "Set COGNEE_API_KEY to your Cognee Cloud key before deploying."
+        )
     await CogneeService.initialize()
     logger.info("🚀 Summa AI API Started")
     yield
