@@ -17,5 +17,6 @@
 1. ✅ Security items — Milestone 1 done (credential env-var-ification, JWT production guard).
 2. ✅ Prisma removal — Milestone 2 done (removed prisma/ dir, deps, dead db.ts).
 3. ✅ LLM provider config alignment — Milestone 2 done (Z.ai API base, model, creds all via Settings).
-4. Auth unification — depends on the Integration Strategy decision being confirmed with you first, not something to build speculatively.
-5. Prompt budget, caching, observability, tests — ongoing hardening, no urgency to rush, but don't defer indefinitely either.
+4. ✅ Credential sweep — done 2026-07-17 (repo-wide grep, no additional hardcoded credentials found beyond those already fixed).
+5. Auth unification — depends on the Integration Strategy decision being confirmed with you first, not something to build speculatively.
+6. Prompt budget, caching, observability, tests — ongoing hardening, no urgency to rush, but don't defer indefinitely either.
