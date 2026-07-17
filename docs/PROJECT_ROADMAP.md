@@ -74,3 +74,20 @@ Status: ✅ Complete
 - ✅ Version restore endpoint returns 501 (no versions table in schema yet — can be added later)
 - ✅ 31/31 tests pass, Next.js build passes cleanly
 Status: ✅ Complete
+
+## Milestone 8 — Testing, Observability & Production Readiness ✅
+- ✅ **Database completeness** — added `artifact_versions` table to `db/migrate_to_supabase.sql` with version snapshots on artifact create/update; version restore endpoint now returns real data instead of 501
+- ✅ **Deployment fixes** — corrected `render.yaml` `DATABASE_URL` from SQLite to a sync-managed Postgres variable
+- ✅ **Sentry integration** — initialized `sentry-sdk` in `main.py` when `SENTRY_DSN` is set, with environment-aware trace sampling
+- ✅ **Structured logging** — added request logging middleware that logs method, path, status code, and duration for every request
+- ✅ **Environment validation** — expanded `lifespan` guards to validate `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `DATABASE_URL` in production
+- ✅ **Test expansion** — added 5 new test files:
+  - `test_data_store.py` — 21 DataStore CRUD tests
+  - `test_auth_routes.py` — 8 auth route tests (signup/login, error paths, provider branching)
+  - `test_security_main_config.py` — 18 security, app wiring, and config tests
+  - `test_services.py` — 11 SummaStudy client and user store tests
+  - `test_data_routes.py` — 16 HTTP integration tests using FastAPI TestClient
+- ✅ **Frontend resilience** — added React `ErrorBoundary` component, route-level `loading.tsx` and `error.tsx`, and wrapped `DashboardPageShell` children with error boundary
+- ✅ **API error visibility** — updated `src/lib/api.ts` with throw-variant helpers (`fetchAnalyticsOrThrow`, `deleteArtifactOrThrow`, etc.) and added error logging to existing wrappers
+- ✅ **Coverage** — 31 existing + 66 new tests = **97 total tests**, all passing
+Status: ✅ Complete

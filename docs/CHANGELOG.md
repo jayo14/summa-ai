@@ -75,3 +75,27 @@
 - `create_access_token` from `core/security.py` — no longer needed (Supabase Auth handles token creation).
 - JWT production guard (old `JWT_SECRET_KEY` check) — replaced with `SUPABASE_JWT_SECRET` check.
 - `docs/SYSTEM_ARCHITECTURE.md`: No changes needed (already accurate).
+
+## 2026-07-17 (Milestone 8 — Testing, Observability & Production Readiness)
+### Added
+- `apps/api/app/services/data_store.py`: `list_artifact_versions` and `restore_artifact_version` methods; version snapshots created on artifact create/update.
+- `apps/api/app/routes/data_routes.py`: `GET /artifacts/{id}/versions` and wired `POST /artifacts/{id}/versions` to `DataStore.restore_artifact_version`.
+- `db/migrate_to_supabase.sql`: `artifact_versions` table with index for version history.
+- `apps/api/app/config.py`: `SENTRY_DSN` setting.
+- `apps/api/app/main.py`: Sentry SDK init (gated by `SENTRY_DSN`), request logging middleware, and expanded production environment validation.
+- `apps/api/tests/test_data_store.py`: 21 DataStore CRUD unit tests.
+- `apps/api/tests/test_auth_routes.py`: 8 auth route tests.
+- `apps/api/tests/test_security_main_config.py`: 18 security/app/config tests.
+- `apps/api/tests/test_services.py`: 11 SummaStudy client and user store tests.
+- `apps/api/tests/test_data_routes.py`: 16 FastAPI TestClient integration tests.
+- `src/components/error-boundary.tsx`: React Error Boundary class component.
+- `src/app/loading.tsx`: Route-level Suspense loading fallback.
+- `src/app/error.tsx`: Route-level error boundary for Next.js App Router.
+- `src/components/dashboard-page-shell.tsx`: Children wrapped with `ErrorBoundary`.
+
+### Changed
+- `render.yaml`: `DATABASE_URL` changed from hardcoded SQLite URL to a Render-synced Postgres variable.
+- `src/lib/api.ts`: Added `apiGetOrThrow`/`apiPostOrThrow`/`apiDeleteOrThrow` variants and error logging to existing wrappers.
+
+### Fixed
+- `apps/api/app/services/data_store.py`: `restore_artifact_version` SQL parameter bug (`$1` used twice — fixed to `$1` and `$2`).

@@ -107,3 +107,16 @@
 - **Keep-alive**: Analytics endpoint now queries real concept mastery counts and timeline event totals from Postgres alongside hardcoded hexagon/scores data.
 - **Version restore**: Returns 501 since there's no `artifact_versions` table in the migration schema yet.
 - **API shapes unchanged**: Frontend needs no changes. 31/31 tests pass. Build passes.
+
+## 2026-07-17 (Milestone 8 — Testing, Observability & Production Readiness)
+- **Database completeness**: Added `artifact_versions` table to `db/migrate_to_supabase.sql`. DataStore now snapshots versions on artifact create/update. Version restore endpoint returns real data instead of 501.
+- **Deployment**: Fixed `render.yaml` `DATABASE_URL` from SQLite to a Postgres variable.
+- **Observability**: Initialized `sentry-sdk` in `main.py` gated by `SENTRY_DSN`. Added request logging middleware (method, path, status, duration). Expanded production startup validation to check `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `DATABASE_URL`.
+- **Tests**: Added 66 new tests across 5 files:
+  - `test_data_store.py` — 21 DataStore CRUD tests
+  - `test_auth_routes.py` — 8 auth route tests
+  - `test_security_main_config.py` — 18 security/app/config tests
+  - `test_services.py` — 11 SummaStudy client and user store tests
+  - `test_data_routes.py` — 16 HTTP integration tests
+- **Frontend resilience**: Added React `ErrorBoundary`, route-level `loading.tsx` and `error.tsx`, and wrapped `DashboardPageShell` children. Updated `src/lib/api.ts` with throw-variant API helpers and error logging.
+- **Coverage**: 97 total tests, all passing.
