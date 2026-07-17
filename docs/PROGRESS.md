@@ -22,3 +22,17 @@
 - Removed @prisma/client and prisma from package.json dependencies and db:* scripts.
 - Removed dead src/lib/db.ts (PrismaClient singleton — nothing imported it).
 - Updated README.md, SYSTEM_ARCHITECTURE.md, PROJECT_AUDIT.md, TECHNICAL_DEBT.md to reflect Prisma removal and config alignment.
+
+## 2026-07-17 (NEXT_STEPS item 6 — Credential sweep)
+- Performed repo-wide grep of apps/api (and src/) for hardcoded JWT tokens, API keys, bearer tokens, and credential-shaped strings beyond the already-fixed chat.py credentials.
+- **Result: No additional hardcoded credentials found.** The Milestone 1-2 changes covered the full credential surface.
+- Conclusion: the "credential sweep" recommendation from PROJECT_AUDIT.md (item 26) is now complete.
+
+## 2026-07-17 (NEXT_STEPS item 7 — SummaStudy service liveness check)
+- Checked SummaStudy repo at `/home/codegallantx/moi/summastudy-v2` for the four services flagged in PRODUCT_BOUNDARIES.md.
+- **All four services are live and actively used:**
+  - `study_planner.py` — imported (lazy) in `api/v1/endpoints/ai_core.py` for `generate_plan()`
+  - `spaced_repetition.py` — imported (lazy) in `api/v1/endpoints/ai_core.py` for `calculate_next_review()` / `get_due_date()`
+  - `memory_service.py` — imported in `services/agent_orchestrator.py`, `tasks/memory_tasks.py`, `agents/tools/memory_tools.py`, and has dedicated tests in `tests/test_memory_logic.py`
+  - `recommendation_service.py` — imported in `api/v1/endpoints/marketplace.py` and `api/v1/endpoints/tutorials.py`
+- This finding is now documented. The decision to reuse vs rebuild these services for Summa AI's adaptive layer requires user input.
