@@ -1,8 +1,7 @@
 """Security, JWT verification, and WebSocket utilities."""
 from contextvars import ContextVar
-from datetime import datetime, timedelta, timezone
 from typing import Optional
-from jose import JWTError, jwt
+import jwt as pyjwt
 from passlib.context import CryptContext
 from fastapi import HTTPException
 from app.config import settings
@@ -14,13 +13,21 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 logger = logging.getLogger(__name__)
 current_user_id: ContextVar[Optional[str]] = ContextVar("current_user_id", default=None)
 
-def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    return jwt.encode({"exp": expire, "sub": subject}, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-
-def verify_access_token(token: str) -> Optional[str]:
-    try: return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]).get("sub")
-    except JWTError: return None
+def verify_supabase_jwt(token: str) -> Optional[str]:
+    try:
+        payload = pyjwt.decode(
+            token,
+            settings.SUPABASE_JWT_SECRET,
+            algorithms=["HS256"],
+            audience="authenticated",
+        )
+        return payload.get("sub")
+    except pyjwt.ExpiredSignatureError:
+        logger.warning("Supabase JWT expired")
+        return None
+    except pyjwt.InvalidTokenError:
+        logger.warning("Invalid Supabase JWT")
+        return None
 
 def resolve_user_id() -> str:
     user_id = current_user_id.get()
