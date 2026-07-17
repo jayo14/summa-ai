@@ -59,4 +59,19 @@
 
 ### Fixed
 - `docs/SYSTEM_ARCHITECTURE.md`: Updated outdated references to hardcoded credentials (now read from Settings) and missing JWT production guard (now present). Fixed tech stack table (Prisma removed, raw sqlite3 + Cognee).
+
+## 2026-07-17 (Milestone 3 — Identity & Data Integration)
+### Changed
+- `apps/api/app/core/security.py`: Replaced `verify_access_token` (self-issued JWT via `python-jose`) with `verify_supabase_jwt` (decodes Supabase JWT via `PyJWT`). Removed `create_access_token`. Kept context var management (`resolve_user_id`, `set_current_user_id`).
+- `apps/api/app/main.py`: Auth middleware now calls `verify_supabase_jwt`. Production guard checks `SUPABASE_JWT_SECRET` instead of `JWT_SECRET_KEY`. WebSocket auth updated too.
+- `apps/api/app/routes/auth.py`: Rewritten — `/auth/signup` and `/auth/login` now proxy through Supabase Auth REST API (httpx). Response format kept compatible with frontend.
+- `apps/api/app/config.py`: Added `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_JWT_SECRET` to Settings.
+- `.env.example`, `apps/api/.env`, `apps/api/.env.production`: Added Supabase Auth vars.
+
+### Added
+- `db/migrate_to_supabase.sql`: Full schema migration — creates `summa_ai` schema in Supabase Postgres with 8 tables, indexes, and an `auth.users` insert trigger for auto-creating user profiles. ⚠️ Must be run via Supabase Dashboard SQL Editor (no IPv6).
+
+### Removed
+- `create_access_token` from `core/security.py` — no longer needed (Supabase Auth handles token creation).
+- JWT production guard (old `JWT_SECRET_KEY` check) — replaced with `SUPABASE_JWT_SECRET` check.
 - `docs/SYSTEM_ARCHITECTURE.md`: No changes needed (already accurate).

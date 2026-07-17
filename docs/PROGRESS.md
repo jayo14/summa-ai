@@ -43,3 +43,16 @@
 - **Recall caching**: Added `_TTLCache` class (60s TTL) and wired it into `CoggeeService._recall()`. Every chat turn previously re-fetched memory/exams/progress from Cognee fresh — now repeated calls within 60s hit the in-memory cache. Cache auto-evicts on expiry and is per-user/per-query scoped.
 - **Cognee production guard**: `main.py` lifespan now raises `RuntimeError` if `ENVIRONMENT=production` and `COGNEE_API_KEY` is empty, preventing the silent in-memory fallback that would defeat "never forgets" persistence.
 - **Expanded test coverage**: Wrote `tests/test_chat_utils.py` (11 tests — `detect_intent` for all 7 intent patterns + `_section` truncation) and `tests/test_cache.py` (7 tests — get/set/expiry/clear/args). Total test count: 19, all passing.
+
+## 2026-07-17 (Milestone 3 — Identity & Data Integration)
+- **Decisions confirmed** (user sign-off):
+  - D1: Drop self-issued JWT/NextAuth → adopt Supabase Auth
+  - D2: Migrate SQLite → Supabase Postgres (separate `summa_ai` schema)
+  - D3: Direct service-to-service calls (shared Supabase JWT)
+  - D4: Start fresh — no SQLite data migration
+- **Backend auth switch** (`core/security.py`): Replaced `verify_access_token` (self-issued JWT) with `verify_supabase_jwt` (decodes Supabase JWT using `SUPABASE_JWT_SECRET`). Removed `create_access_token`. Kept `resolve_user_id()` / `set_current_user_id()` context var pattern unchanged.
+- **Auth middleware** (`main.py`): Now calls `verify_supabase_jwt` instead of `verify_access_token`. Production guard checks `SUPABASE_JWT_SECRET` instead of `JWT_SECRET_KEY`.
+- **Auth routes** (`routes/auth.py`): Rewritten to proxy through Supabase Auth REST API. `/auth/signup` calls `POST /auth/v1/signup`; `/auth/login` calls `POST /auth/v1/token?grant_type=password`. Response format kept compatible with frontend's NextAuth flow.
+- **Supabase config**: Added `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_JWT_SECRET` to `Settings` class, `.env.example`, `apps/api/.env`, `apps/api/.env.production`.
+- **Schema migration**: Created `db/migrate_to_supabase.sql` — creates `summa_ai` schema with `user_profiles`, `conversations`, `messages`, `artifacts`, `timeline_events`, `settings`, `materials`, `concepts` tables plus indexes and a trigger to auto-create user profiles on first Supabase login. ⚠️ Cannot run from this server (no IPv6). Must be run via Supabase Dashboard SQL Editor.
+- **All 19 tests still passing** after auth changes. Test mocks were unaffected (they patch `resolve_user_id` directly).

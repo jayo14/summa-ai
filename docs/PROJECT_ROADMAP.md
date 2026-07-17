@@ -14,10 +14,14 @@ Status: ✅ Code changes complete. Manual token rotation still required at https
 - Resolve Prisma: adopt or remove — ✅ Removed (prisma/ dir, deps in package.json, dead src/lib/db.ts)
 Status: ✅ Complete. Chat now reads all Z.ai config (API base, model, key, token, user ID) from Settings. Prisma scaffolding removed.
 
-## Milestone 3 — Identity & Data Integration
-- Adopt Supabase Auth (per INTEGRATION_STRATEGY.md Decision 1)
-- Migrate relational data to Supabase Postgres, separate schema (Decision 2)
-Status: 🔒 Blocked — awaiting user decision on INTEGRATION_STRATEGY.md recommendation (NEXT_STEPS item 8)
+## Milestone 3 — Identity & Data Integration (in progress)
+- ✅ Decision 1 (adopt Supabase Auth): Backend JWT verification switched to `verify_supabase_jwt` (core/security.py). Auth routes now proxy through Supabase Auth REST API. JWT production guard replaced with Supabase secret guard.
+- ✅ Decision 2 (migrate to Supabase Postgres): Schema migration script created at `db/migrate_to_supabase.sql`. Creates `summa_ai` schema with 8 tables + trigger for auto-creating user profiles on first Supabase login. ⚠️ Requires running via Supabase Dashboard SQL Editor (no IPv6 from this server).
+- ✅ Decision 3 (direct service-to-service): No code change needed — backends already make direct calls; they'll share Supabase JWT for auth.
+- ✅ Decision 4 (start fresh SQLite): No migration needed. Old SQLite data in `db/custom.db` can be archived.
+- ⬜ Pending: Update `user_store.py` to use Supabase Postgres instead of SQLite (after schema is applied).
+- ⬜ Pending: Remove legacy JWT code (after Supabase migration is verified in production).
+Status: 🟡 Backend auth switch done. Schema script ready. Blocked on running SQL via Supabase Dashboard.
 
 ## Milestone 4 — AI Quality Hardening ✅
 - ✅ Prompt context budget cap — added `_section()` truncation to `build_orchestrator_prompt` (3k chars per section)

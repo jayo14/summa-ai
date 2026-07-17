@@ -9,7 +9,7 @@ Severity-ranked, consolidated from the deeper findings in `SECURITY_REPORT.md` a
 ## High
 3. ~~Prisma is fully scaffolded but unused — `schema.prisma` has generic `User`/`Post` boilerplate unrelated to the real domain models in `app/models/*.py`. Either adopt Prisma properly or remove it; right now it's dead infrastructure that misleads anyone reading the repo about where data actually lives.~~ **✅ Resolved in Milestone 2 — prisma/ removed, deps dropped.**
 4. ~~Declared LLM provider config (`OPENAI_API_KEY`, `LLM_PROVIDER`) doesn't match the actual chat implementation (hardcoded Z.ai). Config and reality have diverged.~~ **✅ Resolved in Milestone 2 — Z.ai API base, model, and creds all read from Settings.**
-5. Two disconnected auth systems (NextAuth frontend, self-issued JWT backend) with no confirmed bridge — needs direct tracing.
+5. ~~Two disconnected auth systems (NextAuth frontend, self-issued JWT backend) with no confirmed bridge.~~ ✅ **Resolved in Milestone 3** — Supabase Auth adopted. Backend now verifies Supabase JWTs. Auth routes proxy through Supabase Auth REST API. Self-issued JWT creation removed. Frontend NextAuth flow preserved (it receives Supabase JWTs from the same endpoints).
 6. No Supabase integration at all, despite the product vision requiring shared identity with SummaStudy — see `INTEGRATION_STRATEGY.md` for the resolution path.
 
 ## Medium

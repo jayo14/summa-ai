@@ -66,9 +66,20 @@ Status: Awaiting your confirmation before implementation — this is a recommend
 - Why: The in-memory Cognee fallback silently activates when no API key is configured, making "persistent memory" reset on every restart. This defeats the product's core promise without any user-visible signal. A hard boot-time failure ensures this cannot happen silently in production.
 - Status: Executed.
 
-## 2026-07-17 (NEXT_STEPS items 1, 8): Skipped — require user action
-- Item 1 (token rotation): Manual step at Z.ai, cannot be done in code.
-- Item 8 (integration strategy confirmation): Requires your review and sign-off on the INTEGRATION_STRATEGY.md recommendation before any identity/data migration work begins.
+## 2026-07-17 (Milestone 3): Adopt Supabase Auth
+- Decision: Replaced self-issued JWT verification with Supabase JWT verification (`verify_supabase_jwt` in `core/security.py`). Removed `create_access_token`. Auth routes now proxy through Supabase Auth REST API.
+- Why: Per your confirmed Decision 1 — one identity system shared with SummaStudy. Supabase Auth handles token creation, verification, and session management. The old self-issued JWT system had the JWT_SECRET_KEY security surface that SECURITY_REPORT.md flagged.
+- How: Backend verifies Supabase JWTs using `SUPABASE_JWT_SECRET` (HMAC-SHA256 with `aud="authenticated"`). Frontend's NextAuth flow is unchanged at this layer — it calls the same `/auth/login` and `/auth/signup` endpoints, which now proxy to Supabase. The access_token returned is now a real Supabase JWT instead of a self-issued one.
+- Status: Executed (backend). Frontend NextAuth flow works without changes since the response format is the same.
+
+## 2026-07-17 (Milestone 3): Migration schema for Supabase Postgres
+- Decision: Created `db/migrate_to_supabase.sql` — creates `summa_ai` schema with 8 tables mirroring the current in-memory/SQLite data model. Includes a trigger to auto-create user profiles on first Supabase login (`handle_new_user()` on `auth.users` INSERT).
+- Why: Per your confirmed Decision 2 — separate schema in shared Postgres instance. Decision 4 (start fresh) means no data migration needed.
+- Status: Script ready. Needs to be run via Supabase Dashboard SQL Editor (server lacks IPv6).
+
+## 2026-07-17 (NEXT_STEPS items 1, 8): Status update
+- Item 1 (token rotation): Still manual — mark as pending.
+- Item 8 (integration strategy): ✅ Confirmed and executed (Decisions 1-4).
 
 ## Open decision awaiting your input
 - Whether SummaStudy's existing study_planner/spaced_repetition/memory_service should be reused by Summa AI or deprecated in favor of Summa AI's own build (see PRODUCT_BOUNDARIES.md). All four services confirmed live — this is not a hypothetical question.

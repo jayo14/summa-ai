@@ -46,4 +46,8 @@ Centralize on Supabase (Auth + Postgres), no gateway, direct service-to-service 
 
 **Sequencing:** this entire integration effort should wait until the Critical security fixes in `SECURITY_REPORT.md` are done — don't build shared identity on top of an auth system you already know has an unguarded default secret.
 
-**Status (2026-07-17):** Security fixes done (Milestone 1-2). Credential sweep complete (no additional issues). This recommendation now awaits your review and sign-off before implementation (NEXT_STEPS item 8).
+**Status (2026-07-17):** Security fixes done (Milestone 1-2). **Decisions 1-4 confirmed and executed (Milestone 3).**
+- Decision 1 (Supabase Auth): Backend switched. Auth routes proxy to Supabase.
+- Decision 2 (Supabase Postgres): Schema migration script created at `db/migrate_to_supabase.sql`. ⚠️ Must be run via Supabase Dashboard.
+- Decision 3 (direct calls): No code change needed.
+- Decision 4 (subscriptions): Not started — no billing code exists yet.
