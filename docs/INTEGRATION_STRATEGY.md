@@ -44,4 +44,6 @@ Not deeply auditable from code in this pass (no billing code found in either rep
 
 Centralize on Supabase (Auth + Postgres), no gateway, direct service-to-service calls when cross-product data is genuinely needed, subscriptions owned by Summa AI. This is the smallest-complexity path that actually satisfies every goal listed in your integration questions (one identity, shared resource access, simple API contracts) without introducing infrastructure whose benefit only shows up at a scale neither product has reached yet.
 
-**Sequencing:** this entire integration effort should wait until the Critical security fixes in `SECURITY_REPORT.md` (credential rotation, JWT secret guard) are done — don't build shared identity on top of an auth system you already know has an unguarded default secret.
+**Sequencing:** this entire integration effort should wait until the Critical security fixes in `SECURITY_REPORT.md` are done — don't build shared identity on top of an auth system you already know has an unguarded default secret.
+
+**Status (2026-07-17):** Security fixes done (Milestone 1-2). Credential sweep complete (no additional issues). This recommendation now awaits your review and sign-off before implementation (NEXT_STEPS item 8).
