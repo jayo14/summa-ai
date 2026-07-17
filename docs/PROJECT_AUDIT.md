@@ -21,8 +21,9 @@ Severity-ranked, consolidated from the deeper findings in `SECURITY_REPORT.md` a
 
 ## Low
 - No dependency vulnerability scan performed in this pass.
+- 2026-07-17: Post-Milestone-2 credential sweep completed — no additional hardcoded credentials found.
 
 ## What This Pass Did Not Cover
-- Full trace of every `app/routes/*.py` file for additional hardcoded values beyond `chat.py` (recommend a repo-wide grep for API-key-shaped strings as an immediate follow-up, not just the one file found here)
-- Frontend (`src/`) code review beyond structural folder mapping
+- ~~Full trace of every app/routes/*.py file for additional hardcoded values beyond chat.py (recommend a repo-wide grep for API-key-shaped strings as an immediate follow-up, not just the one file found here)~~ ✅ **Resolved 2026-07-17** — repo-wide grep completed; no additional hardcoded credentials found.
+- Frontend (src/) code review beyond structural folder mapping
 - Live Cognee/Qdrant behavior under load
