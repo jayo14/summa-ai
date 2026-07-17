@@ -4,7 +4,7 @@ Severity-ranked, consolidated from the deeper findings in `SECURITY_REPORT.md` a
 
 ## Critical
 1. Hardcoded Z.ai API credentials in `apps/api/app/routes/chat.py` — see `SECURITY_REPORT.md`. Fix before anything else.
-2. `JWT_SECRET_KEY` insecure default with no production guard.
+2. ~~`JWT_SECRET_KEY` insecure default with no production guard.~~ ✅ **Resolved** — Supabase Auth adopted in Milestone 3. Self-issued JWTs removed. Backend verifies Supabase JWTs instead.
 
 ## High
 3. ~~Prisma is fully scaffolded but unused — `schema.prisma` has generic `User`/`Post` boilerplate unrelated to the real domain models in `app/models/*.py`. Either adopt Prisma properly or remove it; right now it's dead infrastructure that misleads anyone reading the repo about where data actually lives.~~ **✅ Resolved in Milestone 2 — prisma/ removed, deps dropped.**

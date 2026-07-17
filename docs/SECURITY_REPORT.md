@@ -18,9 +18,9 @@ This is a decoded-JWT-shaped bearer token, a user ID, and an API key literally c
 
 **This is the single highest-priority item across both repos in this entire audit round.** Fix this before anything else, including before running any other prompt in this pack.
 
-### 2. `JWT_SECRET_KEY` defaults to a placeholder with no production guard
+### 2. `JWT_SECRET_KEY` defaults to a placeholder with no production guard — ✅ **Fully resolved in Milestone 3**
 
-`config.py`: `JWT_SECRET_KEY: str = "change-me-in-production"`. The `is_production` property exists but nothing in the codebase checks `JWT_SECRET_KEY != "change-me-in-production"` and refuses to boot in production if it hasn't been overridden. If this service is ever deployed with the default `.env` (or no `.env`), every issued token is forgeable by anyone who reads this file — which, per finding #1, they may already have reason to.
+`config.py` previously had `JWT_SECRET_KEY: str = "change-me-in-production"`. **The entire self-issued JWT system has been replaced** with Supabase Auth in Milestone 3. The backend now verifies Supabase JWTs using `SUPABASE_JWT_SECRET` (configured via environment variable). `JWT_SECRET_KEY`, `JWT_ALGORITHM`, and `ACCESS_TOKEN_EXPIRE_MINUTES` have been removed from `config.py`, `.env.example`, and production env configs. This finding's root cause — self-issued JWTs with no rotation mechanism — no longer exists.
 
 ## High
 

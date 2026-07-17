@@ -30,7 +30,7 @@ db/custom.db                  SQLite file referenced by DATABASE_URL default
 | Layer | Technology |
 |---|---|
 | Frontend | Next.js, NextAuth (`src/app/api/auth/[...nextauth]`, `src/lib/auth.ts`), Google OAuth support |
-| Backend | FastAPI, own JWT issuance (`python-jose`, `passlib`/bcrypt) — independent of Supabase entirely |
+| Backend | FastAPI, Supabase Auth JWT verification (`PyJWT`) — shares identity with SummaStudy |
 | Data | Raw `sqlite3` via `user_store.py` (`db/custom.db`) for user/auth data; Cognee datasets for memory/exams/progress/artifacts. Prisma ORM was removed in Milestone 2 (unused scaffold). |
 | Memory | Cognee (managed memory layer), falls back to in-memory storage when `COGNEE_API_KEY` is unset |
 | Vector store | Qdrant (Cognee-managed) — config present, not directly called outside Cognee |
@@ -40,7 +40,7 @@ db/custom.db                  SQLite file referenced by DATABASE_URL default
 ## 3. Authentication Flow
 
 - Two separate auth surfaces exist: NextAuth on the frontend (Google OAuth capable) and a self-issued JWT system on the backend (`create_access_token`/`verify_access_token` in `core/security.py`), with no visible bridge connecting the two into one identity. This needs direct tracing to confirm whether NextAuth session tokens are exchanged for backend JWTs anywhere, or whether these are two independent, currently-disconnected auth states.
-- Backend JWTs are signed with `JWT_SECRET_KEY`. The default is `"change-me-in-production"`, but a startup guard in `main.py`'s lifespan now raises `RuntimeError` if `ENVIRONMENT=production` and the key hasn't been changed.
+- Backend verifies Supabase JWTs via `verify_supabase_jwt()` in `core/security.py`, using `SUPABASE_JWT_SECRET`. No self-issued JWTs. The old `JWT_SECRET_KEY` system was removed in Milestone 3.
 
 ## 4. Database Architecture
 
