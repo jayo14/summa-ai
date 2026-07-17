@@ -10,9 +10,9 @@ Status: ✅ Done. See SYSTEM_ARCHITECTURE.md, AI_ARCHITECTURE.md, PRODUCT_BOUNDA
 Status: ✅ Code changes complete. Manual token rotation still required at https://internal-api.z.ai
 
 ## Milestone 2 — Config/Reality Alignment
-- Route real chat generation through declared Settings-based provider config
-- Resolve Prisma: adopt or remove
-Status: Blocked on Milestone 1
+- Route real chat generation through declared Settings-based provider config — ✅ Done (see config.py ZAI_API_BASE, ZAI_MODEL; chat.py reads from settings)
+- Resolve Prisma: adopt or remove — ✅ Removed (prisma/ dir, deps in package.json, dead src/lib/db.ts)
+Status: ✅ Complete. Chat now reads all Z.ai config (API base, model, key, token, user ID) from Settings. Prisma scaffolding removed.
 
 ## Milestone 3 — Identity & Data Integration
 - Adopt Supabase Auth (per INTEGRATION_STRATEGY.md Decision 1)
