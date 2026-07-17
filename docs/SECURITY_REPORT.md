@@ -35,9 +35,19 @@ NextAuth (frontend, Google OAuth) and a self-issued JWT backend with no confirme
 - **In-memory Cognee fallback activates silently** whenever `COGNEE_API_KEY` is unset, with no environment guard preventing this in production — a student's "persistent memory" would silently stop persisting across restarts with no error surfaced anywhere.
 - **No dependency vulnerability scan performed** in this pass (same caveat as the SummaStudy report).
 
+## Follow-up actions (2026-07-17)
+
+1. ✅ Milestone 1: Credentials moved to env vars — Done.
+2. ✅ Milestone 1: JWT production guard — Done.
+3. ✅ Milestone 2: Provider config aligned with Settings — Done.
+4. ✅ **Post-Milestone-2 credential sweep**: Repo-wide grep of apps/api and src/ for additional hardcoded JWT tokens, API keys, bearer tokens, and credential-shaped strings — **No additional findings.** All credential surfaces cleaned.
+5. ⚠️ **Still requires manual action**: Rotate/revoke the old Z.ai token at https://internal-api.z.ai. The code now reads from env vars, but the old committed token may still be valid.
+
 ## Immediate action, in order
 
-1. Rotate/revoke the Z.ai token today, independent of any other work.
-2. Move `ZAI_API_KEY`, `ZAI_TOKEN`, `ZAI_USER_ID`, and `ZAI_API_BASE` into environment variables, reading through the existing `Settings` class in `config.py` rather than as module-level literals.
-3. Add a startup check that refuses to run with `JWT_SECRET_KEY == "change-me-in-production"` when `is_production` is true.
-4. Only after 1-3: proceed to the architecture/integration work in `INTEGRATION_STRATEGY.md`.
+1. ~~Rotate/revoke the Z.ai token today, independent of any other work.~~ **Manual step — cannot do from code.**
+2. ~~Move credentials to environment variables~~ ✅ Done (Milestone 1).
+3. ~~Add a startup check for JWT_SECRET_KEY~~ ✅ Done (Milestone 1).
+4. ~~Route chat through Settings~~ ✅ Done (Milestone 2).
+5. ~~Credential sweep~~ ✅ Done (2026-07-17).
+6. Proceed to the architecture/integration work in `INTEGRATION_STRATEGY.md` after the manual token rotation.
