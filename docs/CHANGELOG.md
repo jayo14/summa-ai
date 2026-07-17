@@ -18,3 +18,32 @@
 
 ### ⚠️ Manual action still required
 - Rotate/revoke the old hardcoded Z.ai token at https://internal-api.z.ai. The code now reads from env vars, but the old committed token is still potentially compromised and must be invalidated on Z.ai's side.
+
+## 2026-07-17 (Milestone 2 — Config/Reality Alignment)
+### Changed
+- `apps/api/app/config.py`: Added `ZAI_API_BASE` (default `https://internal-api.z.ai/v1`) and `ZAI_MODEL` (default `glm-4.5`) to `Settings`.
+- `apps/api/app/routes/chat.py`: Removed hardcoded `ZAI_API_BASE` module constant and hardcoded `"glm-4.5"` model string; both read from `settings` now.
+- `.env.example`, `apps/api/.env`, `apps/api/.env.production`: Added `ZAI_API_BASE` and `ZAI_MODEL`.
+
+### Removed
+- `prisma/` directory (unused default scaffold with User/Post boilerplate).
+- `@prisma/client` and `prisma` from `package.json` dependencies; removed `db:push`, `db:generate`, `db:migrate`, `db:reset` scripts.
+- `src/lib/db.ts` (PrismaClient singleton — nothing imported it).
+
+### Updated
+- `README.md`: Removed Prisma from project structure and tech stack.
+- `docs/SYSTEM_ARCHITECTURE.md`: Updated Prisma references to reflect removal; added note about config alignment.
+- `docs/PROJECT_AUDIT.md`: Marked items 3 (Prisma) and 4 (config/reality mismatch) as resolved.
+- `docs/TECHNICAL_DEBT.md`: Struck through both items, updated sequencing section.
+
+## 2026-07-17 (NEXT_STEPS items 6-8 — Audit follow-up)
+### Investigation
+- `docs/NEXT_STEPS.md`: Marked items 6 (credential sweep) as done; items 7 (SummaStudy service liveness) and 8 (integration strategy review) as awaiting decision.
+- `docs/PROGRESS.md`: Logged credential sweep results (no additional hardcoded credentials found) and SummaStudy service liveness confirmation (all four services are live and actively used).
+- `docs/CHANGELOG.md`: This entry.
+- `docs/PROJECT_ROADMAP.md`: Updated Milestone 3 status.
+- `docs/TECHNICAL_DECISIONS.md`: Added entry for credential sweep and SummaStudy findings.
+- `docs/PROJECT_AUDIT.md`: Marked item 26 (credential sweep recommendation) as resolved.
+- `docs/TECHNICAL_DEBT.md`: Updated status for audit follow-up items.
+- `docs/SECURITY_REPORT.md`: Added post-Milestone-2 credential sweep note.
+- `docs/SYSTEM_ARCHITECTURE.md`: No changes needed (already accurate).
