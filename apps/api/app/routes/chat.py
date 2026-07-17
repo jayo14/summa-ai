@@ -5,6 +5,7 @@ from typing import AsyncGenerator, Optional
 import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from app.config import settings
 from app.models.chat import ChatRequest, ChatResponse, ArtifactRef
 from app.core.security import resolve_user_id
 from app.services.cognee_service import CogneeService
@@ -14,9 +15,6 @@ router = APIRouter()
 cognee = CogneeService()
 
 ZAI_API_BASE = "https://internal-api.z.ai/v1"
-ZAI_API_KEY = "Z.ai"
-ZAI_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYmNjZWVlNzAtNjhhYy00NTNjLWE0NTItNDQwMmJlZjc4YzMxIiwiY2hhdF9pZCI6ImNoYXQtNGY1YmQ5ZTUtYmZiOS00ZWZjLTgwMmEtMWY5YzUxZjE5NjBmIiwicGxhdGZvcm0iOiJ6YWkifQ.pWpT01NAB2O82ch_exOjca4k6dwbRCAtfi6NSZRs-E4"
-ZAI_USER_ID = "bcceee70-68ac-453c-a452-4402bef78c31"
 
 INTENT_PATTERNS = {
     "quiz": [re.compile(r"\bquiz me\b", re.I), re.compile(r"\btest me\b", re.I)],
@@ -104,10 +102,10 @@ async def _stream_zai(messages: list[dict], enable_thinking: bool = True, contex
                 f"{ZAI_API_BASE}/chat/completions",
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {ZAI_API_KEY}",
+                    "Authorization": f"Bearer {settings.ZAI_API_KEY}",
                     "X-Z-AI-From": "Z",
-                    "X-Token": ZAI_TOKEN,
-                    "X-User-Id": ZAI_USER_ID,
+                    "X-Token": settings.ZAI_TOKEN,
+                    "X-User-Id": settings.ZAI_USER_ID,
                 },
                 json={
                     "model": "glm-4.5",
