@@ -29,7 +29,7 @@ Chat generation does not appear to be RAG in the retrieval-augmented-generation 
 - Declared in config: OpenAI (chat + embeddings), generic `LLM_PROVIDER`/`EMBEDDING_PROVIDER` settings.
 - Actually used in the one real chat path found: **Z.ai GLM-4.5**, hardcoded, bypassing the declared config entirely (see `SECURITY_REPORT.md` finding #1).
 
-This divergence between declared and actual provider is the top AI-architecture debt item: anyone reading `config.py` would reasonably believe changing `OPENAI_API_KEY` changes model behavior. It doesn't. Fix priority: after the credential rotation, route the actual chat call through the declared `Settings`-based provider config (even if the provider stays Z.ai — put it in `.env`, not in source, and make `config.py` the single source of truth).
+This divergence between declared and actual provider was the top AI-architecture debt item. Milestone 2 addressed the most critical part: Z.ai's API base, model, key, token, and user ID are now all read from `Settings` (env vars). The remaining abstraction gap is that `OPENAI_API_KEY`/`LLM_PROVIDER` still exist as separate settings from `ZAI_*` — a reader could still change `OPENAI_API_KEY` and believe it affects chat, when Z.ai has its own dedicated `ZAI_API_KEY`. Consolidating to a single provider abstraction would be a future improvement when the provider surface is better understood.
 
 ## Caching
 
@@ -37,7 +37,7 @@ None found in `apps/api`. Every chat request re-recalls memory/exams/progress fr
 
 ## Recommendation Summary (smallest safe next steps, in order)
 
-1. Move hardcoded credentials to env vars (blocking, see Security Report).
-2. Route chat generation through `config.py`'s declared provider settings instead of hardcoded Z.ai constants, so provider changes are a config change, not a code change.
+1. ✅ Move hardcoded credentials to env vars — Done (Milestone 1).
+2. ✅ Route chat generation through `config.py`'s Settings-based config — Done (Milestone 2).
 3. Add a token/character budget cap to `build_orchestrator_prompt`, with oldest/least-relevant context dropped first.
 4. Add a startup-time hard failure if Cognee is unreachable/unconfigured in production, rather than a silent in-memory fallback.
