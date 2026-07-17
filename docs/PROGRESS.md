@@ -89,3 +89,14 @@
 - **Config** (`config.py`): Added `HYBRID_MEMORY_ENABLED`, `SUMMASTUDY_API_BASE`, `SUMMASTUDY_ENABLED`
 - **Database migration**: Added `public.user_memories` table to `db/migrate_to_supabase.sql`
 - **All 19 tests still passing**
+
+## 2026-07-17 (Milestone 6 — Frontend-Backend Integration)
+- **Created `src/lib/api.ts`**: Typed API service layer with functions for all key backend endpoints (analytics, hexagon, exams, progress, artifacts, materials, concepts, timeline, memory facts, forget).
+- **Connected AnalyticsView**: Now fetches hexagon, analytics, exams, and progress from backend on mount. Falls back to hardcoded sample data when API returns empty/null.
+- **Connected ResourcesView**: Now fetches artifacts from `/api/v1/artifacts`. Falls back to `SAMPLE_RESOURCES`.
+- **Connected KnowledgeBaseView**: Now fetches materials and concepts from `/api/v1/materials` and `/api/v1/concepts`. Falls back to hardcoded samples.
+- **Connected TimelineView**: Now fetches events from `/api/v1/timeline`. Falls back to `TIMELINE_EVENTS`.
+- **Connected Settings memory tab**: Now fetches atomic facts from `/api/v1/memory/hybrid/facts` on dialog open. "Forget" and "Forget all" call the backend `/api/v1/memory/forget` endpoint.
+- **Connected onboarding persistence**: Onboarding completion now calls `PATCH /api/v1/user` to persist `onboarded: true` and `onboarding_data` to the backend, in addition to localStorage fallback.
+- **Fixed package.json**: Removed trailing comma that caused JSON parse error.
+- **Build passes**: `npx next build` succeeds with no errors.

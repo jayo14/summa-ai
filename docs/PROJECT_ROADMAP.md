@@ -52,3 +52,15 @@ Status: ✅ Complete
 - ✅ Database migration: `public.user_memories` table added to `db/migrate_to_supabase.sql`
 - ✅ All 19 existing tests pass
 Status: ✅ Complete
+
+## Milestone 6 — Frontend-Backend Integration ✅
+- ✅ Created typed API service layer (`src/lib/api.ts`) covering analytics, hexagon, exams, progress, artifacts, materials, concepts, timeline, and memory endpoints
+- ✅ Connected AnalyticsView to `GET /analytics`, `/memory/hexagon`, `/memory/exams`, `/memory/progress` with graceful fallback to sample data
+- ✅ Connected ResourcesView to `GET /artifacts` with fallback to `SAMPLE_RESOURCES`
+- ✅ Connected KnowledgeBaseView to `GET /materials` and `GET /concepts` with fallback to hardcoded samples
+- ✅ Connected TimelineView to `GET /timeline` with fallback to `TIMELINE_EVENTS`
+- ✅ Connected Settings memory tab to `GET /memory/hybrid/facts` and `POST /memory/forget` for real data + forget workflow
+- ✅ Connected onboarding completion to `PATCH /user` to persist `onboarded` status and `onboarding_data` to backend
+- ✅ Fixed `package.json` JSON syntax error (trailing comma)
+- ✅ `npx next build` passes cleanly
+Status: ✅ Complete

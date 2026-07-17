@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import {
   User,
@@ -51,7 +52,9 @@ import {
   Calendar as CalendarIcon,
   GraduationCap,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react'
+import { fetchMemoryFacts, forgetMemoryTopic, forgetDataset } from '@/lib/api'
 import type { OnboardingData } from './onboarding-flow'
 
 /* ------------------------------------------------------------------ */
@@ -180,7 +183,25 @@ export function SettingsDialog({
     openaiApiKey: '',
   }))
 
+  const { data: session } = useSession()
+  const token = session?.accessToken
   const [memories, setMemories] = React.useState<MemoryItem[]>(SAMPLE_MEMORIES)
+  const [loadingMemories, setLoadingMemories] = React.useState(true)
+
+  React.useEffect(() => {
+    if (!token) { setLoadingMemories(false); return }
+    fetchMemoryFacts(token).then(facts => {
+      if (facts && facts.length > 0) {
+        setMemories(facts.map((f, i) => ({
+          id: `mem-${i}`,
+          title: f.content.length > 60 ? f.content.slice(0, 60) + '…' : f.content,
+          category: (f.type === 'preference' || f.type === 'goal' ? f.type : 'note') as MemoryItem['category'],
+          createdAt: f.created_at ? new Date(f.created_at).toLocaleDateString() : 'recently',
+          snippet: f.content,
+        })))
+      }
+    }).finally(() => setLoadingMemories(false))
+  }, [token])
 
   const update = (patch: Partial<SettingsState>) =>
     setSettings((prev) => ({ ...prev, ...patch }))
@@ -199,12 +220,20 @@ export function SettingsDialog({
     })
   }
 
-  const handleForgetMemory = (id: string) => {
+  const handleForgetMemory = async (id: string) => {
+    const item = memories.find(m => m.id === id)
     setMemories((prev) => prev.filter((m) => m.id !== id))
+    if (token && item) {
+      await forgetMemoryTopic(token, 'conversations', item.title)
+    }
   }
 
-  const handleForgetAll = () => {
+  const handleForgetAll = async () => {
     setMemories([])
+    if (token) {
+      await forgetDataset(token, 'conversations')
+      await forgetDataset(token, 'progress')
+    }
   }
 
   return (
@@ -293,6 +322,7 @@ export function SettingsDialog({
                 memories={memories}
                 onForget={handleForgetMemory}
                 onForgetAll={handleForgetAll}
+                loading={loadingMemories}
               />
             </TabsContent>
             <TabsContent value="privacy" className="mt-0">
@@ -739,10 +769,12 @@ function MemoryManagementTab({
   memories,
   onForget,
   onForgetAll,
+  loading,
 }: {
   memories: MemoryItem[]
   onForget: (id: string) => void
   onForgetAll: () => void
+  loading?: boolean
 }) {
   return (
     <div className="space-y-8">
@@ -784,7 +816,11 @@ function MemoryManagementTab({
           )}
         </div>
 
-        {memories.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : memories.length === 0 ? (
           <div className="rounded-2xl border border-dashed bg-muted/30 p-10 text-center">
             <Database className="mx-auto mb-3 size-8 text-muted-foreground" />
             <p className="text-sm font-medium">No memories stored</p>

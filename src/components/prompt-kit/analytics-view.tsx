@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,9 +47,11 @@ import {
   Sparkles,
   Hexagon as HexagonIcon,
 } from 'lucide-react'
+import { fetchHexagon, fetchAnalytics, fetchExams, fetchLearningProgress } from '@/lib/api'
+import type { HexagonDim, HexagonEvolution, QuizScore, StudyTimeEntry, TopicMastery, ExamReadiness } from '@/lib/api'
 
 /* ------------------------------------------------------------------ */
-/* Sample data                                                         */
+/* Sample data (kept as fallback)                                      */
 /* ------------------------------------------------------------------ */
 
 // Hexagon evolution: 4 snapshots over time
@@ -135,13 +138,61 @@ const evolutionChartConfig: ChartConfig = {
 /* ------------------------------------------------------------------ */
 
 export function AnalyticsView() {
+  const { data: session } = useSession()
+  const token = session?.accessToken
+  const [loading, setLoading] = React.useState(true)
+  const [hexagonData, setHexagonData] = React.useState<HexagonDim[] | null>(null)
+  const [evolutionData, setEvolutionData] = React.useState<HexagonEvolution[] | null>(null)
+  const [quizTrendData, setQuizTrendData] = React.useState<QuizScore[] | null>(null)
+  const [studyTimeData, setStudyTimeData] = React.useState<StudyTimeEntry[] | null>(null)
+  const [topicMasteryData, setTopicMasteryData] = React.useState<TopicMastery[] | null>(null)
+  const [examReadinessData, setExamReadinessData] = React.useState<ExamReadiness[] | null>(null)
+
   const [range, setRange] = React.useState<'7d' | '30d' | '90d' | 'all'>('30d')
   const [topic, setTopic] = React.useState<'all' | string>('all')
 
-  const avgScore = Math.round(quizTrend.reduce((a, b) => a + b.score, 0) / quizTrend.length)
-  const totalHours = studyTime.reduce((a, b) => a + b.hours, 0)
-  const avgReadiness = Math.round(examReadiness.reduce((a, b) => a + b.readiness, 0) / examReadiness.length)
-  const quizzesTaken = quizTrend.length
+  React.useEffect(() => {
+    if (!token) return
+    setLoading(true)
+    Promise.all([
+      fetchAnalytics(token).then(d => {
+        if (d) {
+          setHexagonData(d.hexagonDimensions)
+          setEvolutionData(d.hexagonEvolution)
+          setQuizTrendData(d.quizScores)
+          setStudyTimeData(d.studyTime)
+          setTopicMasteryData(d.topicMastery)
+          setExamReadinessData(d.examReadiness)
+        }
+      }),
+      fetchHexagon(token).then(d => { if (d) setHexagonData(prev => prev ?? d) }),
+      fetchExams(token).then(d => { if (d) setExamReadinessData(prev => prev ?? d) }),
+    ]).finally(() => setLoading(false))
+  }, [token])
+
+  const resolvedQuizTrend = quizTrendData ?? quizTrend
+  const resolvedStudyTime = studyTimeData ?? studyTime
+  const resolvedExamReadiness = examReadinessData ?? examReadiness
+  const resolvedCurrentHexagon = hexagonData ?? currentHexagon
+  const resolvedEvolution = evolutionData ?? hexagonEvolution
+  const resolvedTopicMastery = topicMasteryData ?? topicMastery
+
+  const avgScore = Math.round(resolvedQuizTrend.reduce((a, b) => a + b.score, 0) / resolvedQuizTrend.length)
+  const totalHours = resolvedStudyTime.reduce((a, b) => a + b.hours, 0)
+  const avgReadiness = Math.round(resolvedExamReadiness.reduce((a, b) => a + b.readiness, 0) / resolvedExamReadiness.length)
+  const quizzesTaken = resolvedQuizTrend.length
+
+  if (loading) {
+    return (
+      <div className="thin-scroll flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+          <div className="flex items-center justify-center py-20">
+            <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="thin-scroll flex-1 overflow-y-auto">
@@ -228,7 +279,7 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent className="pb-0">
               <ChartContainer config={hexagonChartConfig} className="mx-auto aspect-square max-h-[260px]">
-                <RadarChart data={currentHexagon}>
+                <RadarChart data={resolvedCurrentHexagon}>
                   <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                   <PolarAngleAxis dataKey="dimension" className="text-[10px]" />
                   <PolarGrid />
@@ -250,7 +301,7 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent className="pb-0">
               <ChartContainer config={evolutionChartConfig} className="aspect-[4/3] max-h-[260px] w-full">
-                <LineChart data={hexagonEvolution} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <LineChart data={resolvedEvolution} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="month" tickLine={false} axisLine={false} className="text-[10px]" />
                   <YAxis domain={[0, 100]} tickLine={false} axisLine={false} className="text-[10px]" />
@@ -280,12 +331,12 @@ export function AnalyticsView() {
                 Quiz Scores Trend
               </CardTitle>
               <CardDescription className="text-xs">
-                Your last {quizTrend.length} quiz attempts
+                Your last {resolvedQuizTrend.length} quiz attempts
               </CardDescription>
             </CardHeader>
             <CardContent className="pb-0">
               <ChartContainer config={quizChartConfig} className="aspect-[4/3] max-h-[260px] w-full">
-                <AreaChart data={quizTrend} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <AreaChart data={resolvedQuizTrend} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--color-score)" stopOpacity={0.5} />
@@ -320,7 +371,7 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent className="pb-0">
               <ChartContainer config={studyChartConfig} className="aspect-[4/3] max-h-[260px] w-full">
-                <BarChart data={studyTime} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <BarChart data={resolvedStudyTime} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="topic" tickLine={false} axisLine={false} className="text-[10px]" />
                   <YAxis tickLine={false} axisLine={false} className="text-[10px]" />
@@ -345,7 +396,7 @@ export function AnalyticsView() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 pt-2">
-              {topicMastery.map((t) => (
+              {resolvedTopicMastery.map((t) => (
                 <div key={t.topic} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{t.topic}</span>
@@ -377,7 +428,7 @@ export function AnalyticsView() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 pt-2">
-              {examReadiness.map((e) => (
+              {resolvedExamReadiness.map((e) => (
                 <div key={e.exam} className="rounded-xl border bg-card p-3">
                   <div className="flex items-center justify-between">
                     <div>

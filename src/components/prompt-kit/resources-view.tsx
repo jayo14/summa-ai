@@ -33,6 +33,8 @@ import {
   Circle,
   Upload,
 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { fetchArtifacts, deleteArtifact, type Artifact } from '@/lib/api'
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -98,8 +100,32 @@ export function ResourcesView() {
   const [statusFilter, setStatusFilter] = React.useState<ResourceStatus | 'all'>('all')
   const [sort, setSort] = React.useState<'recent' | 'title' | 'score'>('recent')
 
+  const { data: session } = useSession()
+  const token = session?.accessToken
+  const [loading, setLoading] = React.useState(true)
+  const [artifacts, setArtifacts] = React.useState<Artifact[]>([])
+
+  React.useEffect(() => {
+    if (!token) { setLoading(false); return }
+    fetchArtifacts(token).then(data => {
+      if (data) setArtifacts(data)
+    }).finally(() => setLoading(false))
+  }, [token])
+
+  const mappedResources: Resource[] = React.useMemo(() => {
+    if (artifacts.length === 0) return SAMPLE_RESOURCES
+    return artifacts.map(a => ({
+      id: a.id,
+      type: (a.type as ResourceType) || 'notes',
+      title: a.title,
+      topic: a.source_label || 'General',
+      status: a.archived ? 'completed' as ResourceStatus : 'in-progress' as ResourceStatus,
+      createdAt: new Date(a.created_at).toLocaleDateString(),
+    }))
+  }, [artifacts])
+
   const filtered = React.useMemo(() => {
-    let list = SAMPLE_RESOURCES.filter((r) => {
+    let list = mappedResources.filter((r) => {
       if (typeFilter !== 'all' && r.type !== typeFilter) return false
       if (statusFilter !== 'all' && r.status !== statusFilter) return false
       if (search && !r.title.toLowerCase().includes(search.toLowerCase()) && !r.topic.toLowerCase().includes(search.toLowerCase())) return false
@@ -108,19 +134,30 @@ export function ResourcesView() {
     if (sort === 'title') list = [...list].sort((a, b) => a.title.localeCompare(b.title))
     else if (sort === 'score') list = [...list].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
     return list
-  }, [search, typeFilter, statusFilter, sort])
+  }, [search, typeFilter, statusFilter, sort, mappedResources])
 
   const stats = React.useMemo(() => {
-    const byType = (t: ResourceType) => SAMPLE_RESOURCES.filter((r) => r.type === t).length
-    const completed = SAMPLE_RESOURCES.filter((r) => r.status === 'completed').length
+    const byType = (t: ResourceType) => mappedResources.filter((r) => r.type === t).length
+    const completed = mappedResources.filter((r) => r.status === 'completed').length
     return {
-      total: SAMPLE_RESOURCES.length,
+      total: mappedResources.length,
       flashcards: byType('flashcards'),
       quizzes: byType('quiz'),
       plans: byType('study-plan'),
       completed,
     }
-  }, [])
+  }, [mappedResources])
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Loading resources…</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="thin-scroll flex-1 overflow-y-auto">

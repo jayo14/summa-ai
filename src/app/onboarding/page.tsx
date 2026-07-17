@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react"
 
 import { Loader } from "@/components/prompt-kit/loader"
 import { OnboardingFlow, type OnboardingData } from "@/components/prompt-kit/onboarding-flow"
-import { getOnboardingData, isOnboarded, setOnboarded, setOnboardingData } from "@/lib/onboarding"
+import { getOnboardingData, isOnboarded, setOnboarded, setOnboardingData, updateCurrentUserProfile } from "@/lib/onboarding"
 
 
 
@@ -72,6 +72,13 @@ export default function OnboardingPage() {
         if (userId) {
           setOnboardingData(userId, data)
           setOnboarded(userId, true)
+          const token = session?.accessToken
+          if (token) {
+            updateCurrentUserProfile(token, {
+              onboarded: true,
+              onboarding_data: data,
+            }).catch(() => {})
+          }
         }
         router.push("/chat")
         router.refresh()
@@ -80,6 +87,13 @@ export default function OnboardingPage() {
         if (userId) {
           setOnboardingData(userId, data)
           setOnboarded(userId, true)
+          const token = session?.accessToken
+          if (token) {
+            updateCurrentUserProfile(token, {
+              onboarded: true,
+              onboarding_data: data,
+            }).catch(() => {})
+          }
         }
         router.push("/chat")
         router.refresh()

@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { motion } from 'framer-motion'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,19 +21,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { FocusRing } from '@/components/focus-ring'
-
-/* ------------------------------------------------------------------ */
-/* Types                                                               */
-/* ------------------------------------------------------------------ */
-
-interface TimelineEvent {
-  id: string
-  type: 'artifact-generated' | 'quiz-completed' | 'study-session' | 'resource-uploaded' | 'milestone' | 'recommendation' | 'reminder' | 'streak'
-  title: string
-  description: string
-  timestamp: string
-  meta?: { label: string; value: string }[]
-}
+import { fetchTimelineEvents, type TimelineEvent } from '@/lib/api'
 
 /* ------------------------------------------------------------------ */
 /* Sample data                                                         */
@@ -144,6 +133,49 @@ const EVENT_META: Record<TimelineEvent['type'], { icon: React.ReactNode; color: 
 /* ------------------------------------------------------------------ */
 
 export function TimelineView() {
+  const { data: session } = useSession()
+  const token = session?.accessToken
+  const [loading, setLoading] = React.useState(true)
+  const [events, setEvents] = React.useState<TimelineEvent[]>([])
+
+  React.useEffect(() => {
+    if (!token) { setLoading(false); return }
+    fetchTimelineEvents(token).then(data => {
+      if (data) setEvents(data)
+    }).finally(() => setLoading(false))
+  }, [token])
+
+  const displayEvents = events.length > 0 ? events : TIMELINE_EVENTS
+
+  const artifactsCount = displayEvents.filter(e => e.type === 'artifact-generated').length
+  const quizzesCount = displayEvents.filter(e => e.type === 'quiz-completed').length
+
+  const totalMinutes = displayEvents
+    .filter(e => e.type === 'study-session' && e.meta)
+    .flatMap(e => e.meta!)
+    .filter(m => m.label === 'Duration')
+    .reduce((acc, m) => {
+      const num = parseInt(m.value)
+      return acc + (isNaN(num) ? 0 : num)
+    }, 0)
+  const studyHours = totalMinutes >= 60 ? `${Math.round(totalMinutes / 60)}h` : `${totalMinutes}m`
+
+  if (loading) {
+    return (
+      <div className="thin-scroll flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold tracking-tight">Study Timeline</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Your learning journey — like Git history, but for your brain.</p>
+          </div>
+          <div className="flex items-center justify-center py-20">
+            <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="thin-scroll flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
@@ -160,9 +192,9 @@ export function TimelineView() {
           <div className="flex items-center justify-center">
             <FocusRing value={70} size="sm" state="active" aria-label="7-day streak, 70%" />
           </div>
-          <StatCard label="Artifacts" value="14" icon={<Sparkles className="size-4" />} color="text-primary" />
-          <StatCard label="Quizzes taken" value="6" icon={<Brain className="size-4" />} color="text-purple-500" />
-          <StatCard label="Study hours" value="23h" icon={<Clock className="size-4" />} color="text-blue-500" />
+          <StatCard label="Artifacts" value={String(artifactsCount)} icon={<Sparkles className="size-4" />} color="text-primary" />
+          <StatCard label="Quizzes taken" value={String(quizzesCount)} icon={<Brain className="size-4" />} color="text-purple-500" />
+          <StatCard label="Study hours" value={studyHours} icon={<Clock className="size-4" />} color="text-blue-500" />
         </div>
 
         {/* Timeline */}
@@ -171,7 +203,7 @@ export function TimelineView() {
           <div className="absolute bottom-2 left-[19px] top-2 w-px bg-border" />
 
           <ol className="space-y-4">
-            {TIMELINE_EVENTS.map((event, i) => {
+            {displayEvents.map((event, i) => {
               const meta = EVENT_META[event.type]
               return (
                 <motion.li

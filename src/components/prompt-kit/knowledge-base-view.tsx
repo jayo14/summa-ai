@@ -23,6 +23,9 @@ import {
   Sparkles,
   FileType2,
 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { fetchMaterials, fetchConcepts } from '@/lib/api'
+import type { Material as ApiMaterial, Concept as ApiConcept } from '@/lib/api'
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -106,12 +109,56 @@ const MASTERY_BADGE: Record<Concept['mastery'], string> = {
 /* ------------------------------------------------------------------ */
 
 export function KnowledgeBaseView() {
+  const { data: session } = useSession()
+  const token = session?.accessToken
+  const [loading, setLoading] = React.useState(true)
+  const [materials, setMaterials] = React.useState<ApiMaterial[]>([])
+  const [concepts, setConcepts] = React.useState<ApiConcept[]>([])
+
+  React.useEffect(() => {
+    if (!token) { setLoading(false); return }
+    Promise.all([
+      fetchMaterials(token),
+      fetchConcepts(token),
+    ]).then(([m, c]) => {
+      if (m) setMaterials(m)
+      if (c) setConcepts(c)
+    }).finally(() => setLoading(false))
+  }, [token])
+
   const [search, setSearch] = React.useState('')
   const [typeFilter, setTypeFilter] = React.useState<MaterialType | 'all'>('all')
   const fileRef = React.useRef<HTMLInputElement>(null)
 
+  const displayMaterials = React.useMemo(() => {
+    if (materials.length === 0) return SAMPLE_MATERIALS
+    return materials.map(m => ({
+      id: m.id,
+      type: m.type,
+      title: m.title,
+      source: m.source,
+      uploadedAt: m.uploadedAt ?? 'recently',
+      size: m.size ?? undefined,
+      duration: m.duration ?? undefined,
+      conceptsExtracted: m.conceptsExtracted ?? 0,
+      status: m.status ?? 'processed' as const,
+    }))
+  }, [materials])
+
+  const displayConcepts = React.useMemo(() => {
+    if (concepts.length === 0) return SAMPLE_CONCEPTS
+    return concepts.map(c => ({
+      id: c.id,
+      name: c.name,
+      category: c.category,
+      mastery: c.mastery,
+      relatedConcepts: c.relatedConcepts ?? 0,
+      source: c.source ?? '',
+    }))
+  }, [concepts])
+
   const filteredMaterials = React.useMemo(() => {
-    return SAMPLE_MATERIALS.filter((m) => {
+    return displayMaterials.filter((m) => {
       if (typeFilter !== 'all' && m.type !== typeFilter) return false
       if (search && !m.title.toLowerCase().includes(search.toLowerCase())) return false
       return true
@@ -119,18 +166,29 @@ export function KnowledgeBaseView() {
   }, [search, typeFilter])
 
   const filteredConcepts = React.useMemo(() => {
-    return SAMPLE_CONCEPTS.filter((c) => {
+    return displayConcepts.filter((c) => {
       if (search && !c.name.toLowerCase().includes(search.toLowerCase()) && !c.category.toLowerCase().includes(search.toLowerCase())) return false
       return true
     })
   }, [search])
 
-  const totalConcepts = SAMPLE_CONCEPTS.length
-  const masteredConcepts = SAMPLE_CONCEPTS.filter((c) => c.mastery === 'mastered').length
+  const totalConcepts = displayConcepts.length
+  const masteredConcepts = displayConcepts.filter((c) => c.mastery === 'mastered').length
+
+  const AvgMasteryStat = () => {
+    const pct = totalConcepts > 0 ? Math.round((masteredConcepts / totalConcepts) * 100) : 0
+    return <StatCard label="Avg mastery" value={`${pct}%`} icon={<FileType2 className="size-4" />} />
+  }
 
   return (
     <div className="thin-scroll flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+        {loading && (
+          <div className="mb-4 flex items-center gap-2 rounded-xl border bg-muted/50 px-4 py-2 text-sm text-muted-foreground">
+            <RefreshCw className="size-4 animate-spin" />
+            Loading your knowledge base…
+          </div>
+        )}
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -153,10 +211,10 @@ export function KnowledgeBaseView() {
 
         {/* Stats */}
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard label="Materials" value={SAMPLE_MATERIALS.length} icon={<FileClock className="size-4" />} />
+          <StatCard label="Materials" value={displayMaterials.length} icon={<FileClock className="size-4" />} />
           <StatCard label="Concepts extracted" value={totalConcepts} icon={<Network className="size-4" />} />
           <StatCard label="Mastered" value={masteredConcepts} icon={<Sparkles className="size-4" />} />
-          <StatCard label="Avg mastery" value={`${Math.round((masteredConcepts / totalConcepts) * 100)}%`} icon={<FileType2 className="size-4" />} />
+          <AvgMasteryStat />
         </div>
 
         {/* Search + filter */}
