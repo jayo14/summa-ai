@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Loader } from "@/components/prompt-kit/loader"
 import { SettingsDialog } from "@/components/prompt-kit/settings-dialog"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { isOnboarded } from "@/lib/onboarding"
 
 type DashboardPageShellProps = {
@@ -196,7 +197,9 @@ export function DashboardPageShell({ title, description, activePath, children }:
         </header>
 
         <main className="flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-4 md:px-6">{children}</div>
+          <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-4 md:px-6">
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </div>
         </main>
       </SidebarInset>
 
