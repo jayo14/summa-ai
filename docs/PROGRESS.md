@@ -139,3 +139,7 @@
 - **Deployment config**: Updated `render.yaml` with a second web service (`summa-ai-frontend`) using Node runtime, running `npm ci && npm run build` and `npm run start`, with env vars pointing to the backend service.
 - **Containerisation**: Added `Dockerfile.backend` (Python 3.14-slim + gunicorn + uvicorn worker) and `Dockerfile.frontend` (multi-stage Node 20 Alpine build producing standalone Next.js output).
 - **Local dev**: Added `docker-compose.yml` spinning up Postgres 16, backend, and frontend with healthchecks, environment wiring, and volume mounts for hot reloading.
+
+## 2026-07-18 (Milestone 11 — E2E Testing & Quality Gates)
+- **Playwright**: Installed `@playwright/test`, added `playwright.config.ts` with Chromium project and dev-server auto-start. Created `src/e2e/navigation.spec.ts` with 5 navigation smoke tests (home, chat, progress, concept-map, study-timeline).
+- **Pre-commit hooks**: Installed `husky` + `lint-staged`. Added `prepare` script to package.json. Created `.husky/pre-commit` running `npx lint-staged`. Configured `lint-staged` to run `eslint --fix` and `vitest related --run` on staged `*.{ts,tsx}` files.

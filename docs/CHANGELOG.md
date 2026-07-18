@@ -140,3 +140,13 @@
 
 ### Changed
 - `render.yaml`: Added `summa-ai-frontend` web service (Node runtime, Next.js build/start, env vars for API base URLs).
+
+## 2026-07-18 (Milestone 11 — E2E Testing & Quality Gates)
+### Added
+- `playwright.config.ts`: Playwright configuration with Chromium project, `baseURL`, trace-on-first-retry, and dev-server auto-start.
+- `src/e2e/navigation.spec.ts`: 5 Playwright smoke tests covering homepage, chat, progress, concept-map, and study-timeline navigation.
+- `.husky/pre-commit`: Husky pre-commit hook running `npx lint-staged`.
+- `lint-staged` config in `package.json`: Runs `eslint --fix` and `vitest related --run` on staged `*.{ts,tsx}` files.
+
+### Changed
+- `package.json`: Added `prepare`, `test:watch` scripts; added `lint-staged` config; added `husky` and `lint-staged` as devDependencies.

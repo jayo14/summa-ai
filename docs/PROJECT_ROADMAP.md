@@ -106,9 +106,15 @@ Status: ✅ Complete
 - ✅ **Coverage** — **187 backend + 19 frontend = 206 total tests**, all passing
 Status: ✅ Complete
 
-## Milestone 10 — CI/CD Pipeline & Deployment Hardening
+## Milestone 10 — CI/CD Pipeline & Deployment Hardening ✅
 - ✅ **GitHub Actions CI** — added `.github/workflows/backend-ci.yml` (black lint + pytest with Postgres service) and `.github/workflows/frontend-ci.yml` (eslint + vitest + next build)
 - ✅ **Deployment config** — updated `render.yaml` with a frontend web service (Node runtime, Next.js build/start, env vars for API base URLs)
 - ✅ **Containerisation** — added `Dockerfile.backend` (Python 3.14-slim + gunicorn) and `Dockerfile.frontend` (multi-stage Node 20 Alpine build)
 - ✅ **Local dev** — added `docker-compose.yml` with Postgres, backend, and frontend services, healthchecks, and volume mounts
+Status: ✅ Complete
+
+## Milestone 11 — E2E Testing & Quality Gates
+- ✅ **Playwright setup** — installed `@playwright/test`, added `playwright.config.ts`, created `src/e2e/` directory
+- ✅ **E2E navigation tests** — added `src/e2e/navigation.spec.ts` covering homepage, chat, progress, concept map, and study timeline
+- ✅ **Pre-commit hooks** — installed `husky` + `lint-staged`, configured `.husky/pre-commit` to run eslint + vitest on staged `*.{ts,tsx}` files
 Status: ✅ Complete
