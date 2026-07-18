@@ -15,6 +15,7 @@ from app.services.cognee_service import CogneeService
 from app.routes import auth, chat, memory
 from app.routes.data_routes import (artifacts_router, conv_router, timeline_router,
     user_router, settings_router, materials_router, concepts_router, analytics_router)
+from app.routes.study_routes import (study_router, flashcards_router, exams_router)
 
 if settings.SENTRY_DSN:
     import sentry_sdk
@@ -140,7 +141,7 @@ async def security_headers_middleware(request: Request, call_next):
 app.add_middleware(CORSMiddleware, allow_origins=settings.get_cors_origins(), allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-for r, tag in [(auth.router,"auth"),(chat.router,"chat"),(memory.router,"memory"),(artifacts_router,"artifacts"),(conv_router,"conversations"),(timeline_router,"timeline"),(user_router,"user"),(settings_router,"settings"),(materials_router,"materials"),(concepts_router,"concepts"),(analytics_router,"analytics")]:
+for r, tag in [(auth.router,"auth"),(chat.router,"chat"),(memory.router,"memory"),(artifacts_router,"artifacts"),(conv_router,"conversations"),(timeline_router,"timeline"),(user_router,"user"),(settings_router,"settings"),(materials_router,"materials"),(concepts_router,"concepts"),(analytics_router,"analytics"),(study_router,"study"),(flashcards_router,"flashcards"),(exams_router,"exams")]:
     app.include_router(r, prefix=settings.API_V1_STR, tags=[tag])
 
 @app.get("/health", tags=["health"], summary="Health check", description="Returns API health status and online connection count")
