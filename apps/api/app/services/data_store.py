@@ -354,7 +354,13 @@ class DataStore:
                     str(uuid.uuid4()), pid, s.get("day", ""), s.get("topic", ""),
                     s.get("status", "upcoming"), s.get("duration", "30 min"), s.get("sort_order", i),
                 )
-            return await self._get_study_plan(pid)
+            result = await self._get_study_plan(pid)
+        await self.create_timeline_event(
+            user_id, "study_plan", f"Study Plan: {data.get('title', 'Untitled')}",
+            f"Created a new study plan with {len(sessions_data)} sessions",
+            {"plan_id": pid},
+        )
+        return result
 
     async def _get_study_plan(self, pid: str) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()
@@ -437,7 +443,14 @@ class DataStore:
                 fid, user_id, data.get("front"), data.get("back"),
             )
             row = await conn.fetchrow("SELECT * FROM summa_ai.flashcards WHERE id = $1", fid)
-        return dict(row)
+        result = dict(row)
+        front_preview = (data.get("front") or "")[:60]
+        await self.create_timeline_event(
+            user_id, "flashcard", f"Flashcard: {front_preview}",
+            "Created a new flashcard",
+            {"card_id": fid},
+        )
+        return result
 
     async def update_flashcard(self, fid: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()
@@ -489,7 +502,13 @@ class DataStore:
                 eid, user_id, data.get("name"), data.get("exam_date"), data.get("readiness", 0),
             )
             row = await conn.fetchrow("SELECT * FROM summa_ai.exams WHERE id = $1", eid)
-        return dict(row)
+        result = dict(row)
+        await self.create_timeline_event(
+            user_id, "exam", f"Exam: {data.get('name', 'Untitled')}",
+            f"Scheduled exam on {data.get('exam_date', 'TBD')}",
+            {"exam_id": eid},
+        )
+        return result
 
     async def update_exam(self, eid: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()

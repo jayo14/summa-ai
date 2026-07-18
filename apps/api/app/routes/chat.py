@@ -12,6 +12,7 @@ from app.core.security import resolve_user_id
 from app.services.cognee_service import CogneeService
 from app.services.summastudy_memory import summastudy_memory
 from app.services.user_store import UserStore
+from app.services.data_store import DataStore
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -224,6 +225,16 @@ async def chat_stream(request: ChatRequest):
             await cognee.remember_conversation(
                 user_id, last_query, full_response, session_id=request.conversation_id
             )
+
+            try:
+                ds = DataStore()
+                await ds.create_timeline_event(
+                    user_id, "chat", f"Chat: {last_query[:60]}",
+                    f"Assistant replied with {len(full_response)} chars",
+                    {"conversation_id": request.conversation_id},
+                )
+            except Exception:
+                logger.warning("Failed to create chat timeline event", exc_info=True)
 
             if settings.HYBRID_MEMORY_ENABLED:
                 asyncio.ensure_future(
