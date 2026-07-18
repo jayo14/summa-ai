@@ -171,7 +171,7 @@ export function DashboardPageShell({ title, description, activePath, children }:
               {isDark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
               {isDark ? "Light" : "Dark"}
             </Button>
-            <Button variant="ghost" size="sm" className="gap-2 rounded-[8px] h-8 text-xs" onClick={() => void signOut({ callbackUrl: "/home" })}>
+            <Button variant="ghost" size="sm" className="gap-2 rounded-[8px] h-8 text-xs" onClick={() => void signOut({ callbackUrl: "/home" })} aria-label="Sign out">
               <LogOut className="size-3.5" />
             </Button>
           </div>
@@ -179,8 +179,11 @@ export function DashboardPageShell({ title, description, activePath, children }:
       </Sidebar>
 
       <SidebarInset className="flex min-h-dvh flex-col">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:text-sm">
+          Skip to main content
+        </a>
         <header className="flex items-center gap-3 border-b border-border/30 bg-background/80 backdrop-blur-sm px-4 py-3">
-          <SidebarTrigger className="size-8 rounded-[8px] text-muted-foreground" />
+          <SidebarTrigger className="size-8 rounded-[8px] text-muted-foreground" aria-label="Toggle sidebar" />
           <div className="min-w-0">
             <div className="text-sm font-semibold tracking-tight font-serif">{title}</div>
             <div className="text-xs text-muted-foreground">{description}</div>
@@ -196,7 +199,7 @@ export function DashboardPageShell({ title, description, activePath, children }:
           </div>
         </header>
 
-        <main className="flex min-h-0 flex-1 flex-col">
+        <main id="main-content" className="flex min-h-0 flex-1 flex-col">
           <div className="flex min-h-0 w-full flex-1 flex-col px-4 py-4 md:px-6">
             <ErrorBoundary>{children}</ErrorBoundary>
           </div>
