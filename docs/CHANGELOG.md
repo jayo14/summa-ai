@@ -150,3 +150,12 @@
 
 ### Changed
 - `package.json`: Added `prepare`, `test:watch` scripts; added `lint-staged` config; added `husky` and `lint-staged` as devDependencies.
+
+## 2026-07-18 (Milestone 12 — Performance Optimization)
+### Fixed
+- `src/app/layout.tsx` + `src/app/globals.css`: Removed `Merriweather` Google Font import and CSS variable, replacing with system serif font stack. This fixes Turbopack build failures in environments where Google Fonts CDN is unreachable and eliminates an external network dependency.
+
+### Added
+- `next.config.ts`: Enabled `optimizePackageImports` for `@tanstack/react-table`, `recharts`, and `framer-motion` to improve tree-shaking and reduce client bundle size.
+- `apps/api/app/main.py`: Added `GZipMiddleware` (1KB minimum) to compress API responses.
+- `apps/api/app/routes/data_routes.py`: Added `Cache-Control: public, max-age=30` header to `/analytics` endpoint.

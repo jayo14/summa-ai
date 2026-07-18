@@ -143,3 +143,9 @@
 ## 2026-07-18 (Milestone 11 — E2E Testing & Quality Gates)
 - **Playwright**: Installed `@playwright/test`, added `playwright.config.ts` with Chromium project and dev-server auto-start. Created `src/e2e/navigation.spec.ts` with 5 navigation smoke tests (home, chat, progress, concept-map, study-timeline).
 - **Pre-commit hooks**: Installed `husky` + `lint-staged`. Added `prepare` script to package.json. Created `.husky/pre-commit` running `npx lint-staged`. Configured `lint-staged` to run `eslint --fix` and `vitest related --run` on staged `*.{ts,tsx}` files.
+
+## 2026-07-18 (Milestone 12 — Performance Optimization)
+- **Font fix**: Removed `Merriweather` Google Font from `layout.tsx` and `globals.css`, replaced with system serif stack. This eliminated an external font fetch that was causing Turbopack build failures in restricted environments.
+- **Bundle optimization**: Enabled `optimizePackageImports` in `next.config.ts` for `@tanstack/react-table`, `recharts`, and `framer-motion` to improve tree-shaking and reduce bundle size.
+- **Backend compression**: Added `GZipMiddleware` to FastAPI app with 1KB minimum size threshold.
+- **Cache headers**: Added `Cache-Control: public, max-age=30` to the `/analytics` endpoint.

@@ -113,8 +113,15 @@ Status: ✅ Complete
 - ✅ **Local dev** — added `docker-compose.yml` with Postgres, backend, and frontend services, healthchecks, and volume mounts
 Status: ✅ Complete
 
-## Milestone 11 — E2E Testing & Quality Gates
+## Milestone 11 — E2E Testing & Quality Gates ✅
 - ✅ **Playwright setup** — installed `@playwright/test`, added `playwright.config.ts`, created `src/e2e/` directory
 - ✅ **E2E navigation tests** — added `src/e2e/navigation.spec.ts` covering homepage, chat, progress, concept map, and study timeline
 - ✅ **Pre-commit hooks** — installed `husky` + `lint-staged`, configured `.husky/pre-commit` to run eslint + vitest on staged `*.{ts,tsx}` files
+Status: ✅ Complete
+
+## Milestone 12 — Performance Optimization
+- ✅ **Font performance** — removed `Merriweather` Google Font import from `layout.tsx` and `globals.css`; replaced with system serif stack, eliminating external font fetch and fixing Turbopack build failure
+- ✅ **Bundle optimization** — enabled `optimizePackageImports` for `@tanstack/react-table`, `recharts`, and `framer-motion` in `next.config.ts`
+- ✅ **Response compression** — added `GZipMiddleware` to FastAPI app with 1KB minimum size threshold
+- ✅ **Cache headers** — added `Cache-Control: public, max-age=30` to `/analytics` endpoint
 Status: ✅ Complete
