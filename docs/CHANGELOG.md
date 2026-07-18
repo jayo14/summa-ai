@@ -99,3 +99,33 @@
 
 ### Fixed
 - `apps/api/app/services/data_store.py`: `restore_artifact_version` SQL parameter bug (`$1` used twice — fixed to `$1` and `$2`).
+
+## 2026-07-18 (Milestone 9 — Test Coverage Expansion)
+### Fixed
+- `apps/api/tests/test_chat_routes.py`: Repaired 7 tests by replacing synchronous `MagicMock` return values with `AsyncMock` for `cognee` service methods and adding missing `@pytest.mark.asyncio` decorators to stream and endpoint tests.
+- `apps/api/tests/test_memory_routes.py`: Repaired 1 test (`test_hybrid_context`) by using `AsyncMock` for all mocked `cognee` methods.
+- `apps/api/tests/test_data_store.py`: Converted all 25 DataStore tests from sync to async (`@pytest.mark.asyncio` + `await`) and fixed pool mock to support async context manager protocol.
+- `apps/api/tests/test_data_routes.py`: Added JWT verification mock fixture and converted all store mocks to `AsyncMock`; added 5 new integration tests (get artifact, update artifact, delete conversation not found, timeline with limit).
+- `apps/api/tests/test_security_main_config.py`: Removed stale imports (`get_cors_origins`, `is_production`); patched `settings.SUPABASE_JWT_SECRET` in JWT tests; replaced `MagicMock` with `AsyncMock` for WebSocket tests; fixed CORS production test to use `patch.dict(os.environ, ...)`.
+- `apps/api/tests/test_services.py`: Replaced `AsyncMock` with `MagicMock` for synchronous httpx response mocks; created fresh `SummaStudyClient` instance per test after settings patch.
+- `apps/api/tests/test_auth_routes.py`: Replaced `AsyncMock` with `MagicMock` for httpx response mocks; added missing Supabase config error test.
+
+### Added
+- `apps/api/tests/test_chat_routes.py`: 16 tests covering `detect_intent` (10 patterns), `_section` truncation (3 cases), `build_orchestrator_prompt` (3 scenarios), `/chat/stream` (3 scenarios), `/chat` endpoint.
+- `apps/api/tests/test_memory_routes.py`: 10 tests covering all memory endpoints (remember text/conversation, hybrid extract/facts/summary/context, forget, improve, feedback, consolidate).
+- `apps/api/tests/test_cognee_service.py`: 15 tests covering `_TTLCache` (7 cases), `CogneeService` singleton, recall cache, remember/forget, learning progress, hexagon dimensions.
+- `apps/api/tests/test_services.py`: 5 new async `UserStore` tests (`get_user_by_id`, `update_user` success/not-found/no-changes).
+- `apps/api/tests/test_models.py`: 15 tests for Pydantic model validation across chat, user, memory, artifact, and timeline models.
+- `apps/api/tests/test_config.py`: 8 tests for `Settings` defaults and derived properties (`is_production`, `get_cors_origins`).
+- Frontend test infrastructure: `vitest.config.ts`, `src/test/setup.ts`, `package.json` scripts (`test`, `test:watch`).
+- `src/lib/api.test.ts`: 18 tests for all exported API functions with mocked `fastapiFetch`.
+- `src/components/prompt-kit/simple.test.tsx`: 1 basic component render test.
+
+### Changed
+- `package.json`: Added `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `jsdom` as devDependencies; added `test` and `test:watch` scripts.
+- `vitest.config.ts`: New file with React plugin, `@` path alias, jsdom environment, and global test setup.
+
+### Coverage
+- Backend: 187 tests passing (0 failing)
+- Frontend: 19 tests passing (0 failing)
+- Total: 206 tests

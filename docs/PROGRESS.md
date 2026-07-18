@@ -110,13 +110,26 @@
 
 ## 2026-07-17 (Milestone 8 — Testing, Observability & Production Readiness)
 - **Database completeness**: Added `artifact_versions` table to `db/migrate_to_supabase.sql`. DataStore now snapshots versions on artifact create/update. Version restore endpoint returns real data instead of 501.
-- **Deployment**: Fixed `render.yaml` `DATABASE_URL` from SQLite to a Postgres variable.
+- **Deployment**: Fixed `render.yaml` `DATABASE_URL` from hardcoded SQLite URL to a Render-synced Postgres variable.
 - **Observability**: Initialized `sentry-sdk` in `main.py` gated by `SENTRY_DSN`. Added request logging middleware (method, path, status, duration). Expanded production startup validation to check `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `DATABASE_URL`.
 - **Tests**: Added 66 new tests across 5 files:
   - `test_data_store.py` — 21 DataStore CRUD tests
   - `test_auth_routes.py` — 8 auth route tests
   - `test_security_main_config.py` — 18 security/app/config tests
   - `test_services.py` — 11 SummaStudy client and user store tests
-  - `test_data_routes.py` — 16 HTTP integration tests
+  - `test_data_routes.py` — 16 FastAPI TestClient integration tests
 - **Frontend resilience**: Added React `ErrorBoundary`, route-level `loading.tsx` and `error.tsx`, and wrapped `DashboardPageShell` children. Updated `src/lib/api.ts` with throw-variant API helpers and error logging.
 - **Coverage**: 97 total tests, all passing.
+
+## 2026-07-18 (Milestone 9 — Test Coverage Expansion)
+- **Backend test repairs**: Fixed 8 broken tests in `test_chat_routes.py` and `test_memory_routes.py` caused by async mock misconfiguration and missing `@pytest.mark.asyncio` decorators.
+- **New backend tests**: Added 90+ new tests across 6 files:
+  - `test_chat_routes.py` — intent detection, section truncation, orchestrator prompt, streaming/non-streaming endpoints
+  - `test_memory_routes.py` — all memory endpoints (remember, hybrid, forget, improve, feedback, consolidate)
+  - `test_cognee_service.py` — TTL cache, singleton, recall cache, remember/forget, progress, hexagon dimensions
+  - `test_services.py` — expanded with async `UserStore` tests (get, update, serialize edge cases)
+  - `test_data_routes.py` — expanded artifact, conversation, timeline, material, concept, analytics coverage
+  - `test_auth_routes.py` — missing Supabase config edge case
+- **Frontend test infrastructure**: Installed `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`. Added `vitest.config.ts` and `src/test/setup.ts`.
+- **Frontend API tests**: 19 tests covering all exported API functions (`fetchAnalytics`, `fetchHexagon`, `fetchExams`, `fetchLearningProgress`, `fetchArtifacts`, `deleteArtifact`, `fetchMaterials`, `fetchConcepts`, `fetchTimelineEvents`, `fetchMemoryFacts`, `fetchMemorySummary`, `forgetMemoryTopic`) plus basic component rendering.
+- **Coverage**: 187 backend + 19 frontend = **206 total tests**, all passing. Next.js build passes (pre-existing Merriweather font fetch issue in this environment is unrelated).
