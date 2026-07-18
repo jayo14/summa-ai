@@ -15,20 +15,38 @@ services:
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: COGNEE_API_KEY
-        sync: false  # Set this manually in Render dashboard
-      - key: OPENAI_API_KEY  
-        sync: false  # Set this manually in Render dashboard
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
       - key: LLM_API_KEY
-        sync: false  # Set this manually in Render dashboard
+        sync: false
       - key: QDRANT_API_KEY
-        sync: false  # Set this manually in Render dashboard
+        sync: false
       - key: QDRANT_CLUSTER_ENDPOINT
-        sync: false  # Set this manually in Render dashboard
+        sync: false
       - key: DATABASE_URL
-        sync: false  # Set to your Supabase Postgres URL in Render dashboard
+        sync: false
       - key: BACKEND_CORS_ORIGINS
-        value: '["https://your-frontend-domain.com"]'  # Update with your frontend URL
+        value: '["https://your-frontend-domain.com"]'
       - key: SCHEDULER_ENABLED
         value: true
       - key: DEMO_USER_EMAIL
         value: alex@summa.ai
+
+  - type: web
+    name: summa-ai-frontend
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: .
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_FASTAPI_BASE_URL
+        value: https://summa-ai-backend.onrender.com/api/v1
+      - key: NEXT_PUBLIC_SUMMASTUDY_API_BASE
+        value: https://summa-ai-backend.onrender.com
