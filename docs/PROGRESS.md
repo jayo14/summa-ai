@@ -174,3 +174,9 @@
 - **Service worker**: Added `public/sw.js` with cache-first strategy for static assets. Caches `/`, `/chat`, `/progress`, `/concept-map`, `/study-timeline`, `/saved-materials`, `/tokens`, and `/offline`.
 - **Service worker registration**: Added inline registration script in `layout.tsx` that only runs over HTTPS.
 - **Offline fallback**: Created `src/app/offline/page.tsx` with a friendly offline message and link back to home.
+
+## 2026-07-18 (Milestone 18 — Advanced Study Features)
+- **Study plan view**: Added `StudyPlanView` component and `/study-plan` page with progress bar, streak badge, and session checklist.
+- **Flashcard review**: Added `FlashcardReview` component and `/flashcards` page with card flip animation, prev/next navigation, and mastery rating buttons.
+- **Exam countdown**: Added `ExamCountdown` component and `/exams` page with days-remaining cards and readiness badges.
+- **Navigation**: Updated `DashboardPageShell` NAV_ITEMS to include Study plan, Flashcards, and Exams.

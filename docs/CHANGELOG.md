@@ -192,3 +192,13 @@
 - `public/sw.js`: Service worker with cache-first strategy for static assets and offline fallback.
 - `src/app/layout.tsx`: Service worker registration script (HTTPS-only).
 - `src/app/offline/page.tsx`: Offline fallback page with friendly message and home link.
+
+## 2026-07-18 (Milestone 18 — Advanced Study Features)
+### Added
+- `src/components/prompt-kit/study-plan-view.tsx`: Study plan component with progress bar, streak badge, and session checklist.
+- `src/app/study-plan/page.tsx`: Study plan page.
+- `src/components/prompt-kit/flashcard-review.tsx`: Flashcard review component with flip animation and mastery rating.
+- `src/app/flashcards/page.tsx`: Flashcards page.
+- `src/components/prompt-kit/exam-countdown.tsx`: Exam countdown widget with days-remaining and readiness badges.
+- `src/app/exams/page.tsx`: Exams page.
+- `src/components/dashboard-page-shell.tsx`: Updated navigation to include Study plan, Flashcards, and Exams.

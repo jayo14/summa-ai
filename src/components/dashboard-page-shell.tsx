@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
-import { BarChart3, BookOpen, Calendar, FolderOpen, LogOut, Moon, Plus, Settings, Sparkles, Sun, Workflow } from "lucide-react"
+import { BarChart3, BookOpen, Calendar, FolderOpen, Layers, LogOut, Moon, Plus, Settings, Sparkles, Sun, Trophy, Workflow } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -40,6 +40,9 @@ const NAV_ITEMS = [
   { href: "/saved-materials", label: "Saved materials", icon: FolderOpen },
   { href: "/concept-map", label: "Concept map", icon: Workflow },
   { href: "/study-timeline", label: "Study timeline", icon: Calendar },
+  { href: "/study-plan", label: "Study plan", icon: Calendar },
+  { href: "/flashcards", label: "Flashcards", icon: Layers },
+  { href: "/exams", label: "Exams", icon: Trophy },
 ]
 
 function useThemeMode() {

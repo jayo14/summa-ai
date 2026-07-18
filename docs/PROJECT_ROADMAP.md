@@ -149,9 +149,16 @@ Status: ✅ Complete
 - ✅ **Provider wiring** — integrated `FeatureFlagsProvider` into root `Providers` component
 Status: ✅ Complete
 
-## Milestone 17 — PWA & Offline Support
+## Milestone 17 — PWA & Offline Support ✅
 - ✅ **Web app manifest** — added `src/app/manifest.ts` with app name, icons, theme color, and display mode
 - ✅ **Service worker** — added `public/sw.js` with cache-first strategy for static assets and offline fallback
 - ✅ **Service worker registration** — added inline registration script in `layout.tsx` (HTTPS-only)
 - ✅ **Offline fallback** — created `src/app/offline/page.tsx` with friendly offline message and home link
+Status: ✅ Complete
+
+## Milestone 18 — Advanced Study Features
+- ✅ **Study plan view** — added `StudyPlanView` component and `/study-plan` page with progress tracking, streak badge, and session checklist
+- ✅ **Flashcard review** — added `FlashcardReview` component and `/flashcards` page with flip animation, prev/next navigation, and mastery rating
+- ✅ **Exam countdown** — added `ExamCountdown` component and `/exams` page with days-remaining cards and readiness badges
+- ✅ **Navigation** — updated `DashboardPageShell` NAV_ITEMS to include Study plan, Flashcards, and Exams
 Status: ✅ Complete
