@@ -94,6 +94,18 @@ export interface OnboardingFlowProps {
   onDataChange?: (data: OnboardingData) => void
 }
 
+function getStepName(s: number): string {
+  switch (s) {
+    case 0: return 'Welcome'
+    case 1: return 'How it works'
+    case 2: return 'Academic Profile'
+    case 3: return 'Learning Style'
+    case 4: return 'Goals & Exams'
+    case 5: return 'Personality Quiz'
+    default: return 'Unknown'
+  }
+}
+
 export function OnboardingFlow({ onComplete, onSkip, initialData, onDataChange }: OnboardingFlowProps) {
   const [step, setStep] = React.useState(0) // 0..6 (6 is completion)
   const [direction, setDirection] = React.useState<1 | -1>(1)
@@ -125,18 +137,6 @@ export function OnboardingFlow({ onComplete, onSkip, initialData, onDataChange }
     setDirection(-1)
     if (step > 0) setStep((s) => s - 1)
   }
-
-function getStepName(s: number): string {
-  switch (s) {
-    case 0: return 'Welcome'
-    case 1: return 'How it works'
-    case 2: return 'Academic Profile'
-    case 3: return 'Learning Style'
-    case 4: return 'Goals & Exams'
-    case 5: return 'Personality Quiz'
-    default: return 'Unknown'
-  }
-}
 
   const handleFinish = () => {
     // Confetti burst!

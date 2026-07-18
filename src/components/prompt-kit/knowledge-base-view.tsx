@@ -174,11 +174,7 @@ export function KnowledgeBaseView() {
 
   const totalConcepts = displayConcepts.length
   const masteredConcepts = displayConcepts.filter((c) => c.mastery === 'mastered').length
-
-  const AvgMasteryStat = () => {
-    const pct = totalConcepts > 0 ? Math.round((masteredConcepts / totalConcepts) * 100) : 0
-    return <StatCard label="Avg mastery" value={`${pct}%`} icon={<FileType2 className="size-4" />} />
-  }
+  const avgMasteryPct = totalConcepts > 0 ? Math.round((masteredConcepts / totalConcepts) * 100) : 0
 
   return (
     <div className="thin-scroll flex-1 overflow-y-auto">
@@ -214,7 +210,7 @@ export function KnowledgeBaseView() {
           <StatCard label="Materials" value={displayMaterials.length} icon={<FileClock className="size-4" />} />
           <StatCard label="Concepts extracted" value={totalConcepts} icon={<Network className="size-4" />} />
           <StatCard label="Mastered" value={masteredConcepts} icon={<Sparkles className="size-4" />} />
-          <AvgMasteryStat />
+          <StatCard label="Avg mastery" value={`${avgMasteryPct}%`} icon={<FileType2 className="size-4" />} />
         </div>
 
         {/* Search + filter */}
