@@ -1,7 +1,8 @@
 """Artifacts, Conversations, Timeline, User, Settings, Materials, Concepts, Analytics routes — Postgres-backed."""
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi.responses import JSONResponse
 from app.models.artifact import ArtifactCreate, ArtifactUpdate, ArtifactVersionRestore
 from app.models.chat import ConversationCreate, MessageCreate
 from app.models.timeline import TimelineEventCreate, MaterialCreate, ConceptCreate
@@ -243,7 +244,7 @@ async def get_analytics():
     mastered = concepts_row["mastered"] if concepts_row else 0
     quiz_count = sum(r["cnt"] for r in events if r["type"] == "quiz-completed")
     study_count = sum(r["cnt"] for r in events if r["type"] == "study-session")
-    return {
+    payload = {
         "hexagon_dimensions": [{"dimension":"Depth","score":78},{"dimension":"Problem-Solving","score":65},{"dimension":"Speed","score":42},{"dimension":"Consistency","score":80},{"dimension":"Confidence","score":55},{"dimension":"Creativity","score":70}],
         "hexagon_evolution": [{"month":"Jan","Depth":45,"Problem-Solving":38,"Speed":30,"Consistency":50,"Confidence":35,"Creativity":40},{"month":"Feb","Depth":55,"Problem-Solving":45,"Speed":35,"Consistency":58,"Confidence":42,"Creativity":48},{"month":"Mar","Depth":65,"Problem-Solving":55,"Speed":38,"Consistency":65,"Confidence":50,"Creativity":55},{"month":"Apr","Depth":78,"Problem-Solving":65,"Speed":42,"Consistency":80,"Confidence":55,"Creativity":70}],
         "quiz_scores": [{"date":"Apr 1","score":65,"topic":"LA"},{"date":"Apr 8","score":72,"topic":"Calc"},{"date":"Apr 15","score":85,"topic":"NLP"},{"date":"Apr 22","score":60,"topic":"Prob"},{"date":"Apr 29","score":88,"topic":"Embed"},{"date":"May 6","score":92,"topic":"LA"},{"date":"May 13","score":78,"topic":"Attn"}],
@@ -256,3 +257,4 @@ async def get_analytics():
             "concepts_total":total,"concepts_mastered":mastered,"quiz_count":quiz_count,"study_sessions":study_count,
         },
     }
+    return JSONResponse(content=payload, headers={"Cache-Control": "public, max-age=30"})
