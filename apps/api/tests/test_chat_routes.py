@@ -91,6 +91,38 @@ class TestBuildOrchestratorPrompt:
         assert len(prompt) < 5000
 
     @pytest.mark.asyncio
+    @patch("app.routes.chat.UserStore")
+    @patch("app.routes.chat.cognee")
+    async def test_prompt_includes_onboarding_goals(self, mock_cognee, mock_user_store):
+        mock_cognee.recall_context = AsyncMock(return_value={"results": []})
+        mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
+        mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
+        mock_store_instance = AsyncMock()
+        mock_store_instance.get_onboarding_data = AsyncMock(return_value={
+            "goals": "Master NLP and get an A in the final",
+            "level": "intermediate",
+            "personality": {"quiz_1": "visual"},
+        })
+        mock_user_store.return_value = mock_store_instance
+        prompt = await build_orchestrator_prompt("user-1", "query", [])
+        assert "STUDENT PROFILE" in prompt
+        assert "Master NLP" in prompt
+        assert "intermediate" in prompt
+
+    @pytest.mark.asyncio
+    @patch("app.routes.chat.UserStore")
+    @patch("app.routes.chat.cognee")
+    async def test_prompt_handles_missing_onboarding(self, mock_cognee, mock_user_store):
+        mock_cognee.recall_context = AsyncMock(return_value={"results": []})
+        mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
+        mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
+        mock_store_instance = AsyncMock()
+        mock_store_instance.get_onboarding_data = AsyncMock(return_value=None)
+        mock_user_store.return_value = mock_store_instance
+        prompt = await build_orchestrator_prompt("user-1", "query", [])
+        assert "STUDENT PROFILE" not in prompt
+
+    @pytest.mark.asyncio
     @patch("app.routes.chat.cognee")
     @patch("app.routes.chat.summastudy_memory")
     async def test_prompt_includes_hybrid_memory(self, mock_memory, mock_cognee):
