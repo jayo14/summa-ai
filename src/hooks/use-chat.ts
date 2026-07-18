@@ -14,6 +14,13 @@ export interface UseChatMessage {
   components?: ChatComponentData[]
 }
 
+export interface ChatArtifactEvent {
+  id: string
+  title: string
+  type: string
+  data?: unknown
+}
+
 export interface UseChatOptions {
   api?: string
   enableThinking?: boolean
@@ -21,6 +28,7 @@ export interface UseChatOptions {
   conversationId?: string
   onDone?: (messages: UseChatMessage[]) => void
   onError?: (err: string) => void
+  onArtifact?: (artifact: ChatArtifactEvent) => void
 }
 
 export interface UseChatReturn {
@@ -40,7 +48,7 @@ export interface UseChatReturn {
  * Designed to plug into prompt-kit components.
  */
 export function useChat(opts: UseChatOptions = {}): UseChatReturn {
-  const { api = '/api/chat', enableThinking = true, userId, conversationId, onDone, onError } = opts
+  const { api = '/api/chat', enableThinking = true, userId, conversationId, onDone, onError, onArtifact } = opts
   const [messages, setMessages] = React.useState<UseChatMessage[]>([])
   const [status, setStatus] = React.useState<'ready' | 'submitted' | 'streaming' | 'error'>('ready')
   const abortRef = React.useRef<AbortController | null>(null)
@@ -121,11 +129,19 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
             const raw = buffer.slice(0, idx).trim()
             buffer = buffer.slice(idx + 2)
             if (!raw.startsWith('data: ')) continue
-            const json = raw.slice(6)
-            let event: { type: string; delta?: string; message?: string }
+            const payload = raw.slice(6)
+            if (payload === '[DONE]') {
+              update({ streaming: false, reasoningActive: false })
+              continue
+            }
+            let event: { type: string; delta?: string; message?: string; artifact?: { id: string; title: string; type: string; data?: unknown } }
             try {
-              event = JSON.parse(json)
+              event = JSON.parse(payload)
             } catch {
+              continue
+            }
+            if (event.type === 'artifact' && event.artifact) {
+              onArtifact?.(event.artifact)
               continue
             }
             if (event.type === 'thinking' && event.delta) {
