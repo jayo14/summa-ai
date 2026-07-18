@@ -142,3 +142,9 @@ Status: ✅ Complete
 - ✅ **Skip link** — added visually-hidden skip-to-main-content link in `DashboardPageShell` for keyboard navigation
 - ✅ **Icon button labels** — added `aria-label` to icon-only buttons (sidebar trigger, theme toggle, sign out)
 Status: ✅ Complete
+
+## Milestone 16 — Real-time Features & Feature Flags
+- ✅ **WebSocket broadcast** — added `/ws/broadcast` POST endpoint and `ConnectionManager.broadcast()` method for pushing messages to all connected clients
+- ✅ **Feature flags** — added `WEBSOCKET_ENABLED`, `NEW_CHAT_UI`, `ADVANCED_ANALYTICS` to backend `Settings`; created `src/lib/feature-flags.ts` with React context provider and `useFeatureFlags` hook
+- ✅ **Provider wiring** — integrated `FeatureFlagsProvider` into root `Providers` component
+Status: ✅ Complete

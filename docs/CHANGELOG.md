@@ -177,3 +177,11 @@
 ### Added
 - `src/components/dashboard-page-shell.tsx`: Skip-to-main-content link for keyboard navigation.
 - `src/components/dashboard-page-shell.tsx`: `aria-label` attributes on icon-only buttons (sidebar trigger, theme toggle, sign out).
+
+## 2026-07-18 (Milestone 16 — Real-time Features & Feature Flags)
+### Added
+- `apps/api/app/core/security.py`: `ConnectionManager.broadcast()` method for sending messages to all connected WebSocket clients.
+- `apps/api/app/main.py`: `POST /ws/broadcast` endpoint for broadcasting messages (gated by `WEBSOCKET_ENABLED` feature flag).
+- `apps/api/app/config.py`: Feature flags `WEBSOCKET_ENABLED`, `NEW_CHAT_UI`, `ADVANCED_ANALYTICS`.
+- `src/lib/feature-flags.ts`: React context provider and `useFeatureFlags` hook with localStorage persistence.
+- `src/components/providers.tsx`: Wired `FeatureFlagsProvider` into root providers.

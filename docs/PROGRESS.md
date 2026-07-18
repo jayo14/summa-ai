@@ -163,3 +163,8 @@
 ## 2026-07-18 (Milestone 15 — Accessibility & Polish)
 - **Skip link**: Added visually-hidden skip-to-main-content link in `DashboardPageShell` for keyboard navigation. Uses `sr-only` class with `focus:not-sr-only` to reveal on focus.
 - **Icon button labels**: Added `aria-label` to icon-only buttons: sidebar trigger ("Toggle sidebar"), theme toggle in header, and sign out button ("Sign out").
+
+## 2026-07-18 (Milestone 16 — Real-time Features & Feature Flags)
+- **WebSocket broadcast**: Added `POST /ws/broadcast` endpoint and `ConnectionManager.broadcast()` method for pushing messages to all connected WebSocket clients.
+- **Feature flags**: Added `WEBSOCKET_ENABLED`, `NEW_CHAT_UI`, `ADVANCED_ANALYTICS` to backend `Settings`. Created `src/lib/feature-flags.ts` with React context provider and `useFeatureFlags` hook for client-side feature flag management with localStorage persistence.
+- **Provider wiring**: Integrated `FeatureFlagsProvider` into root `Providers` component.
