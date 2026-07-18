@@ -159,3 +159,8 @@
 - `next.config.ts`: Enabled `optimizePackageImports` for `@tanstack/react-table`, `recharts`, and `framer-motion` to improve tree-shaking and reduce client bundle size.
 - `apps/api/app/main.py`: Added `GZipMiddleware` (1KB minimum) to compress API responses.
 - `apps/api/app/routes/data_routes.py`: Added `Cache-Control: public, max-age=30` header to `/analytics` endpoint.
+
+## 2026-07-18 (Milestone 13 — Production Hardening & Feature Completeness)
+### Added
+- `apps/api/app/main.py`: Simple in-memory rate limiting middleware (100 req/min per IP, production-only).
+- `apps/api/app/main.py`: Security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`).

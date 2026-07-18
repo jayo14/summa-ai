@@ -149,3 +149,8 @@
 - **Bundle optimization**: Enabled `optimizePackageImports` in `next.config.ts` for `@tanstack/react-table`, `recharts`, and `framer-motion` to improve tree-shaking and reduce bundle size.
 - **Backend compression**: Added `GZipMiddleware` to FastAPI app with 1KB minimum size threshold.
 - **Cache headers**: Added `Cache-Control: public, max-age=30` to the `/analytics` endpoint.
+
+## 2026-07-18 (Milestone 13 — Production Hardening & Feature Completeness)
+- **Rate limiting**: Added simple in-memory rate limiting middleware to FastAPI app — 100 requests per minute per IP, production-only. Replaced `slowapi` approach (broke tests due to TestClient IP resolution) with custom middleware.
+- **Security headers**: Added middleware setting `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera/mic/geo disabled), and `Strict-Transport-Security` on HTTPS.
+- **Frontend pages**: Verified all dashboard pages (concept-map, progress, tokens, saved-materials, study-timeline) are wired to backend APIs with graceful fallbacks.

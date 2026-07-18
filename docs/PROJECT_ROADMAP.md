@@ -119,9 +119,15 @@ Status: ✅ Complete
 - ✅ **Pre-commit hooks** — installed `husky` + `lint-staged`, configured `.husky/pre-commit` to run eslint + vitest on staged `*.{ts,tsx}` files
 Status: ✅ Complete
 
-## Milestone 12 — Performance Optimization
+## Milestone 12 — Performance Optimization ✅
 - ✅ **Font performance** — removed `Merriweather` Google Font import from `layout.tsx` and `globals.css`; replaced with system serif stack, eliminating external font fetch and fixing Turbopack build failure
 - ✅ **Bundle optimization** — enabled `optimizePackageImports` for `@tanstack/react-table`, `recharts`, and `framer-motion` in `next.config.ts`
 - ✅ **Response compression** — added `GZipMiddleware` to FastAPI app with 1KB minimum size threshold
 - ✅ **Cache headers** — added `Cache-Control: public, max-age=30` to `/analytics` endpoint
+Status: ✅ Complete
+
+## Milestone 13 — Production Hardening & Feature Completeness
+- ✅ **Rate limiting** — added simple in-memory rate limiting middleware (100 req/min per IP, production-only)
+- ✅ **Security headers** — added middleware setting `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`, and `Strict-Transport-Security` (HTTPS only)
+- ✅ **Frontend pages** — verified all dashboard pages are wired to backend APIs or fallback data (concept-map, progress, tokens, saved-materials, study-timeline)
 Status: ✅ Complete
