@@ -1,4 +1,5 @@
 """Tests for SummaStudyClient and UserStore."""
+
 import json
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
@@ -9,8 +10,10 @@ from app.services.user_store import UserStore
 class _AsyncContextManager:
     def __init__(self, value):
         self.value = value
+
     async def __aenter__(self):
         return self.value
+
     async def __aexit__(self, *args):
         return None
 
@@ -118,6 +121,7 @@ class TestUserStore:
 
     def test_serialize_user_with_datetime_dates(self):
         from datetime import datetime
+
         user = {
             "id": "u1",
             "email": "a@b.com",

@@ -14,6 +14,7 @@ etc.).  We use cognee.config.set() for any runtime overrides we need.
 Falls back to an in-memory store when COGNEE_API_KEY is absent AND no LLM key
 is available, so local dev works without any external services.
 """
+
 import asyncio
 import logging
 import os
@@ -106,7 +107,9 @@ class CogneeService:
                         model = f"openai/{model}"
                     cognee.config.set("llm_model", model)
 
-                qdrant_endpoint = settings.QDRANT_CLUSTER_ENDPOINT or settings.VECTOR_DB_URL
+                qdrant_endpoint = (
+                    settings.QDRANT_CLUSTER_ENDPOINT or settings.VECTOR_DB_URL
+                )
                 qdrant_api_key = settings.QDRANT_API_KEY or settings.VECTOR_DB_KEY
                 qdrant_enabled = bool(
                     qdrant_endpoint
@@ -123,7 +126,10 @@ class CogneeService:
                         os.environ["QDRANT_API_KEY"] = qdrant_api_key
                         os.environ.setdefault("VECTOR_DB_KEY", qdrant_api_key)
                     try:
-                        from cognee_community_vector_adapter_qdrant import register  # noqa: PLC0415
+                        from cognee_community_vector_adapter_qdrant import (
+                            register,
+                        )  # noqa: PLC0415
+
                         register()
                         logger.info("Qdrant vector adapter registered")
                     except ImportError:
@@ -169,7 +175,8 @@ class CogneeService:
                                 try:
                                     await instance._cognee.improve(dataset=dataset_key)
                                     logger.info(
-                                        "Background consolidation: %s improved", dataset_key
+                                        "Background consolidation: %s improved",
+                                        dataset_key,
                                     )
                                 except Exception as exc:
                                     logger.debug(
@@ -440,7 +447,8 @@ class CogneeService:
             scores = [
                 p.get("metadata", {}).get("score", 0)
                 for p in progress
-                if isinstance(p, dict) and p.get("metadata", {}).get("score") is not None
+                if isinstance(p, dict)
+                and p.get("metadata", {}).get("score") is not None
             ]
             if scores:
                 avg = sum(scores) / len(scores)
@@ -472,7 +480,11 @@ class CogneeService:
                 await self._cognee.improve(dataset=dataset)
             except Exception as exc:
                 logger.warning("Cognee improve failed: %s", exc)
-        return {"status": "success", "dataset": dataset, "sessions_bridged": session_ids}
+        return {
+            "status": "success",
+            "dataset": dataset,
+            "sessions_bridged": session_ids,
+        }
 
     async def improve_with_feedback(
         self,
@@ -533,9 +545,7 @@ class CogneeService:
 
         return {"status": "success", "topic": topic, "dataset": dataset}
 
-    async def forget_dataset(
-        self, user_id: str, dataset_name: str
-    ) -> Dict[str, Any]:
+    async def forget_dataset(self, user_id: str, dataset_name: str) -> Dict[str, Any]:
         dataset = self._dataset(user_id, dataset_name)
         if self._cognee:
             try:

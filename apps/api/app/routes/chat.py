@@ -1,4 +1,5 @@
 """Chat route — streams from Z.ai GLM + intent detection + memory-augmented orchestration."""
+
 import asyncio
 import json, logging, re
 from datetime import datetime
@@ -21,7 +22,10 @@ cognee = CogneeService()
 INTENT_PATTERNS = {
     "quiz": [re.compile(r"\bquiz me\b", re.I), re.compile(r"\btest me\b", re.I)],
     "flashcards": [re.compile(r"\bflash ?cards?\b", re.I)],
-    "study-plan": [re.compile(r"\bstudy plan\b", re.I), re.compile(r"\bexam prep\b", re.I)],
+    "study-plan": [
+        re.compile(r"\bstudy plan\b", re.I),
+        re.compile(r"\bexam prep\b", re.I),
+    ],
     "hexagon": [re.compile(r"\b(progress|hexagon|proficien)\b", re.I)],
     "graph": [re.compile(r"\b(knowledge )?graph\b", re.I)],
     "timeline": [re.compile(r"\b(schedule|timeline|calendar)\b", re.I)],
@@ -67,7 +71,9 @@ async def detect_knowledge_gaps(user_id: str) -> Optional[dict]:
     return None
 
 
-async def build_orchestrator_prompt(user_id: str, query: str, messages: list[dict]) -> str:
+async def build_orchestrator_prompt(
+    user_id: str, query: str, messages: list[dict]
+) -> str:
     memory_context = await cognee.recall_context(user_id, query)
     exams_context = await cognee.recall_exams(user_id)
     progress_context = await cognee.recall_learning_progress(user_id)
@@ -98,21 +104,24 @@ async def build_orchestrator_prompt(user_id: str, query: str, messages: list[dic
                 profile_parts.append(f"Student's preferred learning style: {style}")
             if profile_parts:
                 parts.append(
-                    _section("\nSTUDENT PROFILE (from onboarding):\n" + "\n".join(profile_parts) +
-                    "\nTailor your tone, depth, and examples to match this profile.")
+                    _section(
+                        "\nSTUDENT PROFILE (from onboarding):\n"
+                        + "\n".join(profile_parts)
+                        + "\nTailor your tone, depth, and examples to match this profile."
+                    )
                 )
     except Exception as exc:
         logger.debug("Onboarding data fetch skipped: %s", exc)
     memories = memory_context.get("results", [])
     if memories:
         parts.append(
-            _section(f"\nRECALLED CONTEXT FROM MEMORY:\n{json.dumps(memories, indent=2)}")
+            _section(
+                f"\nRECALLED CONTEXT FROM MEMORY:\n{json.dumps(memories, indent=2)}"
+            )
         )
     exams = exams_context.get("exams", [])
     if exams:
-        parts.append(
-            _section(f"\nUPCOMING EXAMS:\n{json.dumps(exams, indent=2)}")
-        )
+        parts.append(_section(f"\nUPCOMING EXAMS:\n{json.dumps(exams, indent=2)}"))
     progress = progress_context.get("progress", [])
     if progress:
         parts.append(
@@ -120,18 +129,24 @@ async def build_orchestrator_prompt(user_id: str, query: str, messages: list[dic
         )
     if gaps:
         parts.append(
-            _section(f"\nKNOWLEDGE GAPS DETECTED:\n{json.dumps(gaps, indent=2)}\n"
-            "The student is struggling with these topics. "
-            "Prioritise explanations and suggest resources.")
+            _section(
+                f"\nKNOWLEDGE GAPS DETECTED:\n{json.dumps(gaps, indent=2)}\n"
+                "The student is struggling with these topics. "
+                "Prioritise explanations and suggest resources."
+            )
         )
 
     if settings.HYBRID_MEMORY_ENABLED:
         try:
-            atomic_facts = await summastudy_memory.retrieve_relevant_memories(user_id, limit=8)
+            atomic_facts = await summastudy_memory.retrieve_relevant_memories(
+                user_id, limit=8
+            )
             if atomic_facts:
                 parts.append(
-                    _section(f"\nATOMIC FACTS (from SummaStudy shared memory):\n{json.dumps(atomic_facts, indent=2)}\n"
-                    "These are persistent facts the student has told us — preferences, goals, struggles, or habits.")
+                    _section(
+                        f"\nATOMIC FACTS (from SummaStudy shared memory):\n{json.dumps(atomic_facts, indent=2)}\n"
+                        "These are persistent facts the student has told us — preferences, goals, struggles, or habits."
+                    )
                 )
         except Exception as exc:
             logger.debug("Hybrid memory supplement skipped: %s", exc)
@@ -145,9 +160,13 @@ async def build_orchestrator_prompt(user_id: str, query: str, messages: list[dic
     return "\n".join(parts)
 
 
-async def _stream_zai(messages: list[dict], enable_thinking: bool = True, context: str = "") -> AsyncGenerator[str, None]:
+async def _stream_zai(
+    messages: list[dict], enable_thinking: bool = True, context: str = ""
+) -> AsyncGenerator[str, None]:
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0)) as client:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(120.0, connect=10.0)
+        ) as client:
             async with client.stream(
                 "POST",
                 f"{settings.ZAI_API_BASE}/chat/completions",
@@ -211,7 +230,9 @@ async def chat_stream(request: ChatRequest):
             yield f"data: {json.dumps({'type': 'artifact', 'artifact': {'id': f'pending-{intent}', 'title': intent.replace('-', ' ').title(), 'type': intent}})}\n\n"
 
         full_response = ""
-        async for event in _stream_zai(messages, request.enable_thinking, context=orch_prompt):
+        async for event in _stream_zai(
+            messages, request.enable_thinking, context=orch_prompt
+        ):
             yield event
             if event.startswith("data: {"):
                 try:
@@ -229,7 +250,9 @@ async def chat_stream(request: ChatRequest):
             try:
                 ds = DataStore()
                 await ds.create_timeline_event(
-                    user_id, "chat", f"Chat: {last_query[:60]}",
+                    user_id,
+                    "chat",
+                    f"Chat: {last_query[:60]}",
                     f"Assistant replied with {len(full_response)} chars",
                     {"conversation_id": request.conversation_id},
                 )
@@ -257,7 +280,13 @@ async def chat(request: ChatRequest):
     last_query = request.messages[-1].content if request.messages else ""
     intent = detect_intent(last_query)
     artifacts = (
-        [ArtifactRef(id=f"pending-{intent}", title=intent.replace("-", " ").title(), type=intent)]
+        [
+            ArtifactRef(
+                id=f"pending-{intent}",
+                title=intent.replace("-", " ").title(),
+                type=intent,
+            )
+        ]
         if intent
         else []
     )

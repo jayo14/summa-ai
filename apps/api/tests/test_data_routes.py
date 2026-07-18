@@ -1,9 +1,9 @@
 """HTTP integration tests for data routes using FastAPI TestClient."""
+
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock, MagicMock
 from app.main import app
-
 
 client = TestClient(app)
 
@@ -50,8 +50,12 @@ class TestArtifacts:
 
     @patch("app.routes.data_routes._store")
     def test_update_artifact(self, mock_store):
-        mock_store.update_artifact = AsyncMock(return_value={"id": "a1", "title": "Updated"})
-        response = client.patch("/api/v1/artifacts/a1", headers=_auth_headers(), json={"title": "Updated"})
+        mock_store.update_artifact = AsyncMock(
+            return_value={"id": "a1", "title": "Updated"}
+        )
+        response = client.patch(
+            "/api/v1/artifacts/a1", headers=_auth_headers(), json={"title": "Updated"}
+        )
         assert response.status_code == 200
         assert response.json()["title"] == "Updated"
 
@@ -70,14 +74,24 @@ class TestArtifacts:
 
     @patch("app.routes.data_routes._store")
     def test_restore_version_success(self, mock_store):
-        mock_store.restore_artifact_version = AsyncMock(return_value={"id": "a1", "title": "Restored"})
-        response = client.post("/api/v1/artifacts/a1/versions", headers=_auth_headers(), json={"version": 1})
+        mock_store.restore_artifact_version = AsyncMock(
+            return_value={"id": "a1", "title": "Restored"}
+        )
+        response = client.post(
+            "/api/v1/artifacts/a1/versions",
+            headers=_auth_headers(),
+            json={"version": 1},
+        )
         assert response.status_code == 200
 
     @patch("app.routes.data_routes._store")
     def test_restore_version_not_found(self, mock_store):
         mock_store.restore_artifact_version = AsyncMock(return_value=None)
-        response = client.post("/api/v1/artifacts/a1/versions", headers=_auth_headers(), json={"version": 99})
+        response = client.post(
+            "/api/v1/artifacts/a1/versions",
+            headers=_auth_headers(),
+            json={"version": 99},
+        )
         assert response.status_code == 404
 
 
@@ -91,7 +105,9 @@ class TestConversations:
     @patch("app.routes.data_routes._store")
     def test_create_conversation(self, mock_store):
         mock_store.create_conversation = AsyncMock(return_value={"id": "c1"})
-        response = client.post("/api/v1/conversations", headers=_auth_headers(), json={"title": "Chat"})
+        response = client.post(
+            "/api/v1/conversations", headers=_auth_headers(), json={"title": "Chat"}
+        )
         assert response.status_code == 201
 
     @patch("app.routes.data_routes._store")
@@ -103,7 +119,9 @@ class TestConversations:
     @patch("app.routes.data_routes._store")
     def test_delete_conversation_not_found(self, mock_store):
         mock_store.delete_conversation = AsyncMock(return_value=False)
-        response = client.delete("/api/v1/conversations/missing", headers=_auth_headers())
+        response = client.delete(
+            "/api/v1/conversations/missing", headers=_auth_headers()
+        )
         assert response.status_code == 404
 
 
@@ -123,7 +141,11 @@ class TestTimeline:
     @patch("app.routes.data_routes._store")
     def test_create_timeline_event(self, mock_store):
         mock_store.create_timeline_event = AsyncMock(return_value={"id": "t1"})
-        response = client.post("/api/v1/timeline", headers=_auth_headers(), json={"type": "milestone", "title": "T", "description": "D"})
+        response = client.post(
+            "/api/v1/timeline",
+            headers=_auth_headers(),
+            json={"type": "milestone", "title": "T", "description": "D"},
+        )
         assert response.status_code == 201
 
 
@@ -136,8 +158,14 @@ class TestMaterials:
 
     @patch("app.routes.data_routes._store")
     def test_create_material(self, mock_store):
-        mock_store.create_material = AsyncMock(return_value={"id": "m1", "status": "processing"})
-        response = client.post("/api/v1/materials", headers=_auth_headers(), json={"type": "pdf", "title": "Notes", "source": "upload"})
+        mock_store.create_material = AsyncMock(
+            return_value={"id": "m1", "status": "processing"}
+        )
+        response = client.post(
+            "/api/v1/materials",
+            headers=_auth_headers(),
+            json={"type": "pdf", "title": "Notes", "source": "upload"},
+        )
         assert response.status_code == 201
         assert response.json()["status"] == "processing"
 
@@ -152,7 +180,11 @@ class TestConcepts:
     @patch("app.routes.data_routes._store")
     def test_create_concept(self, mock_store):
         mock_store.create_concept = AsyncMock(return_value={"id": "con1"})
-        response = client.post("/api/v1/concepts", headers=_auth_headers(), json={"name": "Polymorphism", "category": "oop"})
+        response = client.post(
+            "/api/v1/concepts",
+            headers=_auth_headers(),
+            json={"name": "Polymorphism", "category": "oop"},
+        )
         assert response.status_code == 201
 
 
@@ -166,6 +198,7 @@ class TestAnalytics:
         class _Ctx:
             async def __aenter__(self):
                 return mock_conn
+
             async def __aexit__(self, *args):
                 return None
 

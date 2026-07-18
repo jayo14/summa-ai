@@ -1,4 +1,5 @@
 """Tests for CogneeService — recall cache, remember/forget, and in-memory fallback."""
+
 import pytest
 from unittest.mock import AsyncMock, patch
 from app.services.cognee_service import CogneeService, _TTLCache
@@ -80,7 +81,9 @@ class TestCogneeService:
         mock_settings.LLM_API_KEY = ""
         mock_settings.COGNEE_API_KEY = ""
         service = CogneeService()
-        await service.remember_conversation("user-1", "query", "response", session_id="s1")
+        await service.remember_conversation(
+            "user-1", "query", "response", session_id="s1"
+        )
         assert "user_user-1_conversations" in service._memory
         assert len(service._memory["user_user-1_conversations"]) == 1
 
@@ -113,10 +116,19 @@ class TestCogneeService:
         mock_settings.COGNEE_API_KEY = ""
         service = CogneeService()
         service._recall_cache.clear()
-        with patch.object(service, "_recall", AsyncMock(return_value=[
-            {"text": "loops", "metadata": {"topic": "loops", "score": 30}},
-            {"text": "functions", "metadata": {"topic": "functions", "score": 80}},
-        ])):
+        with patch.object(
+            service,
+            "_recall",
+            AsyncMock(
+                return_value=[
+                    {"text": "loops", "metadata": {"topic": "loops", "score": 30}},
+                    {
+                        "text": "functions",
+                        "metadata": {"topic": "functions", "score": 80},
+                    },
+                ]
+            ),
+        ):
             result = await service.recall_learning_progress("user-42")
             assert len(result.get("progress", [])) == 2
 

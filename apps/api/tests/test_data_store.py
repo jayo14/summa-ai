@@ -1,4 +1,5 @@
 """Tests for DataStore — artifact, conversation, timeline, material, and concept CRUD."""
+
 import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock
@@ -8,8 +9,10 @@ from app.services.data_store import DataStore
 class _AsyncContextManager:
     def __init__(self, value):
         self.value = value
+
     async def __aenter__(self):
         return self.value
+
     async def __aexit__(self, *args):
         return None
 
@@ -34,9 +37,17 @@ async def test_list_artifacts_empty():
 async def test_create_artifact():
     store = DataStore()
     pool, conn = _mock_pool(store)
-    row = {"id": "a1", "user_id": "user-1", "title": "Test", "type": "notes", "current_version": 1}
+    row = {
+        "id": "a1",
+        "user_id": "user-1",
+        "title": "Test",
+        "type": "notes",
+        "current_version": 1,
+    }
     conn.fetchrow.return_value = row
-    result = await store.create_artifact("user-1", {"title": "Test", "type": "notes", "component": None})
+    result = await store.create_artifact(
+        "user-1", {"title": "Test", "type": "notes", "component": None}
+    )
     assert result["id"] == "a1"
 
 

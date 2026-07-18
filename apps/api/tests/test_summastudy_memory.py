@@ -1,4 +1,5 @@
 """Tests for SummaStudyMemoryClient — noise detection, fact extraction parsing."""
+
 import json
 import pytest
 from app.services.summastudy_memory import SummaStudyMemoryClient
@@ -61,11 +62,13 @@ class TestFactExtraction:
 
     def test_parse_filters_empty_content(self):
         facts = self.client._parse_facts(
-            json.dumps([
-                {"content": "valid", "type": "fact"},
-                {"content": "", "type": "preference"},
-                {"type": "goal"},
-            ])
+            json.dumps(
+                [
+                    {"content": "valid", "type": "fact"},
+                    {"content": "", "type": "preference"},
+                    {"type": "goal"},
+                ]
+            )
         )
         assert len(facts) == 1
         assert facts[0]["content"] == "valid"

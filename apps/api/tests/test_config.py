@@ -1,4 +1,5 @@
 """Tests for application config — Settings defaults and derived properties."""
+
 import os
 import pytest
 from unittest.mock import patch
@@ -41,7 +42,9 @@ class TestSettingsDerived:
         assert s.is_production is True
 
     def test_get_cors_origins_default(self):
-        s = Settings(BACKEND_CORS_ORIGINS=["http://localhost:3000"], ENVIRONMENT="development")
+        s = Settings(
+            BACKEND_CORS_ORIGINS=["http://localhost:3000"], ENVIRONMENT="development"
+        )
         assert s.get_cors_origins() == ["http://localhost:3000"]
 
     def test_get_cors_origins_production_with_frontend_url(self):
@@ -53,7 +56,9 @@ class TestSettingsDerived:
             assert "https://app.example.com" in s.get_cors_origins()
 
     def test_get_cors_origins_production_with_render_url(self):
-        with patch.dict(os.environ, {"RENDER_EXTERNAL_URL": "https://summa-ai-backend.onrender.com"}):
+        with patch.dict(
+            os.environ, {"RENDER_EXTERNAL_URL": "https://summa-ai-backend.onrender.com"}
+        ):
             s = Settings(
                 BACKEND_CORS_ORIGINS=["http://localhost:3000"],
                 ENVIRONMENT="production",

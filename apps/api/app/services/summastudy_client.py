@@ -10,6 +10,7 @@ Services integrated:
   - recommendation   → GET  /api/v1/tutorials/recommendations
                       GET  /api/v1/marketplace/recommendations
 """
+
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -92,7 +93,8 @@ class SummaStudyClient:
             logger.warning("Invalid flashcard rating: %d", rating)
             return None
         return await self._post(
-            "/ai-core/flashcard/review", jwt,
+            "/ai-core/flashcard/review",
+            jwt,
             {"flashcard_id": flashcard_id, "rating": rating},
         )
 
@@ -114,7 +116,9 @@ class SummaStudyClient:
         self, jwt: str, limit: int = 5
     ) -> Optional[List[Dict[str, Any]]]:
         """Get marketplace recommendations via SummaStudy's recommendation_service."""
-        return await self._get("/marketplace/recommendations", jwt, params={"limit": limit})
+        return await self._get(
+            "/marketplace/recommendations", jwt, params={"limit": limit}
+        )
 
 
 summastudy_client = SummaStudyClient()

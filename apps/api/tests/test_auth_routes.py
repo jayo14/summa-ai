@@ -1,4 +1,5 @@
 """Tests for auth routes — signup and login proxy to Supabase."""
+
 import json
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi import HTTPException
@@ -13,11 +14,17 @@ async def test_signup_success():
     mock_resp.status_code = 200
     mock_resp.json.return_value = {
         "access_token": "token-123",
-        "user": {"id": "u1", "email": "a@b.com", "user_metadata": {"name": "A", "avatar": "av"}},
+        "user": {
+            "id": "u1",
+            "email": "a@b.com",
+            "user_metadata": {"name": "A", "avatar": "av"},
+        },
     }
     with patch("app.routes.auth.httpx.AsyncClient") as MockClient:
         MockClient.return_value.__aenter__.return_value.post.return_value = mock_resp
-        result = await signup(AuthLoginRequest(email="a@b.com", password="pass123", name="A", avatar="av"))
+        result = await signup(
+            AuthLoginRequest(email="a@b.com", password="pass123", name="A", avatar="av")
+        )
         assert result["access_token"] == "token-123"
         assert result["user"]["name"] == "A"
 
@@ -58,7 +65,11 @@ async def test_login_credentials_success():
     }
     with patch("app.routes.auth.httpx.AsyncClient") as MockClient:
         MockClient.return_value.__aenter__.return_value.post.return_value = mock_resp
-        result = await login(AuthLoginRequest(email="a@b.com", password="pass123", provider="credentials"))
+        result = await login(
+            AuthLoginRequest(
+                email="a@b.com", password="pass123", provider="credentials"
+            )
+        )
         assert result["access_token"] == "token-456"
         assert result["user"]["provider"] == "credentials"
 
@@ -73,7 +84,9 @@ async def test_login_missing_email():
 @pytest.mark.asyncio
 async def test_login_missing_password_credentials():
     with pytest.raises(HTTPException) as exc:
-        await login(AuthLoginRequest(email="a@b.com", password="", provider="credentials"))
+        await login(
+            AuthLoginRequest(email="a@b.com", password="", provider="credentials")
+        )
     assert exc.value.status_code == 400
 
 
@@ -85,7 +98,11 @@ async def test_login_supabase_error():
     with patch("app.routes.auth.httpx.AsyncClient") as MockClient:
         MockClient.return_value.__aenter__.return_value.post.return_value = mock_resp
         with pytest.raises(HTTPException) as exc:
-            await login(AuthLoginRequest(email="a@b.com", password="wrong", provider="credentials"))
+            await login(
+                AuthLoginRequest(
+                    email="a@b.com", password="wrong", provider="credentials"
+                )
+            )
         assert exc.value.status_code == 401
 
 
@@ -99,7 +116,9 @@ async def test_login_id_token_provider():
     }
     with patch("app.routes.auth.httpx.AsyncClient") as MockClient:
         MockClient.return_value.__aenter__.return_value.post.return_value = mock_resp
-        result = await login(AuthLoginRequest(email="a@b.com", password="id-token", provider="google"))
+        result = await login(
+            AuthLoginRequest(email="a@b.com", password="id-token", provider="google")
+        )
         assert result["user"]["provider"] == "google"
 
 
@@ -109,6 +128,8 @@ async def test_signup_missing_supabase_url():
         mock_settings.SUPABASE_URL = ""
         mock_settings.SUPABASE_ANON_KEY = ""
         with patch("app.routes.auth.httpx.AsyncClient") as MockClient:
-            MockClient.return_value.__aenter__.return_value.post.side_effect = Exception("Invalid URL")
+            MockClient.return_value.__aenter__.return_value.post.side_effect = (
+                Exception("Invalid URL")
+            )
             with pytest.raises(Exception):
                 await signup(AuthLoginRequest(email="a@b.com", password="pass123"))

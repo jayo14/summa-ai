@@ -1,12 +1,21 @@
 """Tests for chat routes — intent detection, streaming, and non-streaming endpoints."""
+
 import json
 import pytest
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
-from app.routes.chat import detect_intent, _section, build_orchestrator_prompt, _stream_zai
+from app.routes.chat import (
+    detect_intent,
+    _section,
+    build_orchestrator_prompt,
+    _stream_zai,
+)
 from app.main import app
-from app.core.security import current_user_id, set_current_user_id, reset_current_user_id
-
+from app.core.security import (
+    current_user_id,
+    set_current_user_id,
+    reset_current_user_id,
+)
 
 client = TestClient(app)
 
@@ -72,8 +81,12 @@ class TestBuildOrchestratorPrompt:
     @pytest.mark.asyncio
     @patch("app.routes.chat.cognee")
     async def test_prompt_with_memory_and_exams(self, mock_cognee):
-        mock_cognee.recall_context = AsyncMock(return_value={"results": [{"text": "memory"}]})
-        mock_cognee.recall_exams = AsyncMock(return_value={"exams": [{"title": "Math"}]})
+        mock_cognee.recall_context = AsyncMock(
+            return_value={"results": [{"text": "memory"}]}
+        )
+        mock_cognee.recall_exams = AsyncMock(
+            return_value={"exams": [{"title": "Math"}]}
+        )
         mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
         prompt = await build_orchestrator_prompt("user-1", "query", [])
         assert "RECALLED CONTEXT FROM MEMORY" in prompt
@@ -98,11 +111,13 @@ class TestBuildOrchestratorPrompt:
         mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
         mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
         mock_store_instance = AsyncMock()
-        mock_store_instance.get_onboarding_data = AsyncMock(return_value={
-            "goals": "Master NLP and get an A in the final",
-            "level": "intermediate",
-            "personality": {"quiz_1": "visual"},
-        })
+        mock_store_instance.get_onboarding_data = AsyncMock(
+            return_value={
+                "goals": "Master NLP and get an A in the final",
+                "level": "intermediate",
+                "personality": {"quiz_1": "visual"},
+            }
+        )
         mock_user_store.return_value = mock_store_instance
         prompt = await build_orchestrator_prompt("user-1", "query", [])
         assert "STUDENT PROFILE" in prompt
@@ -112,7 +127,9 @@ class TestBuildOrchestratorPrompt:
     @pytest.mark.asyncio
     @patch("app.routes.chat.UserStore")
     @patch("app.routes.chat.cognee")
-    async def test_prompt_handles_missing_onboarding(self, mock_cognee, mock_user_store):
+    async def test_prompt_handles_missing_onboarding(
+        self, mock_cognee, mock_user_store
+    ):
         mock_cognee.recall_context = AsyncMock(return_value={"results": []})
         mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
         mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
@@ -130,7 +147,9 @@ class TestBuildOrchestratorPrompt:
         mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
         mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
         mock_cognee.detect_knowledge_gaps = AsyncMock(return_value=None)
-        mock_memory.retrieve_relevant_memories = AsyncMock(return_value=[{"content": "likes NLP"}])
+        mock_memory.retrieve_relevant_memories = AsyncMock(
+            return_value=[{"content": "likes NLP"}]
+        )
         with patch("app.routes.chat.settings") as mock_settings:
             mock_settings.HYBRID_MEMORY_ENABLED = True
             prompt = await build_orchestrator_prompt("user-1", "query", [])
@@ -154,12 +173,19 @@ class TestChatStreamEndpoint:
         with patch("app.routes.chat._stream_zai", side_effect=fake_stream):
             token = set_current_user_id("user-1")
             try:
-                response = client.post("/api/v1/chat/stream", headers=_auth_headers(), json={
-                    "user_id": "user-1",
-                    "messages": [{"role": "user", "content": "Hi"}],
-                })
+                response = client.post(
+                    "/api/v1/chat/stream",
+                    headers=_auth_headers(),
+                    json={
+                        "user_id": "user-1",
+                        "messages": [{"role": "user", "content": "Hi"}],
+                    },
+                )
                 assert response.status_code == 200
-                assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
+                assert (
+                    response.headers["content-type"]
+                    == "text/event-stream; charset=utf-8"
+                )
             finally:
                 reset_current_user_id(token)
 
@@ -179,10 +205,14 @@ class TestChatStreamEndpoint:
         with patch("app.routes.chat._stream_zai", side_effect=fake_stream):
             token = set_current_user_id("user-1")
             try:
-                response = client.post("/api/v1/chat/stream", headers=_auth_headers(), json={
-                    "user_id": "user-1",
-                    "messages": [{"role": "user", "content": "quiz me"}],
-                })
+                response = client.post(
+                    "/api/v1/chat/stream",
+                    headers=_auth_headers(),
+                    json={
+                        "user_id": "user-1",
+                        "messages": [{"role": "user", "content": "quiz me"}],
+                    },
+                )
                 assert response.status_code == 200
                 body = b"".join(response.iter_bytes()).decode("utf-8")
                 assert "quiz" in body
@@ -205,10 +235,14 @@ class TestChatStreamEndpoint:
         with patch("app.routes.chat._stream_zai", side_effect=fake_stream):
             token = set_current_user_id("user-1")
             try:
-                response = client.post("/api/v1/chat/stream", headers=_auth_headers(), json={
-                    "user_id": "user-1",
-                    "messages": [{"role": "user", "content": "Hi"}],
-                })
+                response = client.post(
+                    "/api/v1/chat/stream",
+                    headers=_auth_headers(),
+                    json={
+                        "user_id": "user-1",
+                        "messages": [{"role": "user", "content": "Hi"}],
+                    },
+                )
                 assert response.status_code == 200
                 body = b"".join(response.iter_bytes()).decode("utf-8")
                 assert "Z.ai down" in body
@@ -221,10 +255,14 @@ class TestChatEndpoint:
     @patch("app.routes.chat.cognee")
     async def test_chat_returns_response_and_artifacts(self, mock_cognee):
         mock_cognee.recall_context = AsyncMock(return_value={"results": []})
-        response = client.post("/api/v1/chat", headers=_auth_headers(), json={
-            "user_id": "user-1",
-            "messages": [{"role": "user", "content": "quiz me"}],
-        })
+        response = client.post(
+            "/api/v1/chat",
+            headers=_auth_headers(),
+            json={
+                "user_id": "user-1",
+                "messages": [{"role": "user", "content": "quiz me"}],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["response"] == "(Use /chat/stream for streaming)"

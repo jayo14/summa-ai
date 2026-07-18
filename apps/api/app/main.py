@@ -1,4 +1,5 @@
 """Summa AI — FastAPI entry point."""
+
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -8,26 +9,44 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from app.config import settings
-from app.core.security import (ConnectionManager, current_user_id, reset_current_user_id,
-    reset_current_jwt_token, set_current_jwt_token,
-    set_current_user_id, verify_supabase_jwt)
+from app.core.security import (
+    ConnectionManager,
+    current_user_id,
+    reset_current_user_id,
+    reset_current_jwt_token,
+    set_current_jwt_token,
+    set_current_user_id,
+    verify_supabase_jwt,
+)
 from app.services.cognee_service import CogneeService
 from app.routes import auth, chat, memory
-from app.routes.data_routes import (artifacts_router, conv_router, timeline_router,
-    user_router, settings_router, materials_router, concepts_router, analytics_router)
-from app.routes.study_routes import (study_router, flashcards_router, exams_router)
+from app.routes.data_routes import (
+    artifacts_router,
+    conv_router,
+    timeline_router,
+    user_router,
+    settings_router,
+    materials_router,
+    concepts_router,
+    analytics_router,
+)
+from app.routes.study_routes import study_router, flashcards_router, exams_router
 
 if settings.SENTRY_DSN:
     import sentry_sdk
+
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
         environment=settings.ENVIRONMENT,
         traces_sample_rate=0.1 if settings.is_production else 1.0,
     )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 logger = logging.getLogger(__name__)
 manager = ConnectionManager()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,7 +60,11 @@ async def lifespan(app: FastAPI):
             missing.append("SUPABASE_URL")
         if not settings.SUPABASE_ANON_KEY:
             missing.append("SUPABASE_ANON_KEY")
-        if not settings.DATABASE_URL or settings.DATABASE_URL == "postgresql://postgres:password@localhost:5432/postgres":
+        if (
+            not settings.DATABASE_URL
+            or settings.DATABASE_URL
+            == "postgresql://postgres:password@localhost:5432/postgres"
+        ):
             missing.append("DATABASE_URL")
     if missing:
         raise RuntimeError(
@@ -54,7 +77,13 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("👋 Summa AI API Shutting Down")
 
-app = FastAPI(title="Summa AI API", version="1.0.0", description="AI-Native Learning Workspace API", lifespan=lifespan)
+
+app = FastAPI(
+    title="Summa AI API",
+    version="1.0.0",
+    description="AI-Native Learning Workspace API",
+    lifespan=lifespan,
+)
 
 # Simple in-memory rate limiter state
 _rate_limit_store: Dict[str, list] = {}
@@ -80,13 +109,25 @@ async def rate_limit_middleware(request: Request, call_next):
     return await call_next(request)
 
 
-PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc", f"{settings.API_V1_STR}/auth/login", f"{settings.API_V1_STR}/auth/signup"}
+PUBLIC_PATHS = {
+    "/",
+    "/health",
+    "/docs",
+    "/openapi.json",
+    "/redoc",
+    f"{settings.API_V1_STR}/auth/login",
+    f"{settings.API_V1_STR}/auth/signup",
+}
 
 
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
-    if request.method == "OPTIONS" or path in PUBLIC_PATHS or not path.startswith(settings.API_V1_STR):
+    if (
+        request.method == "OPTIONS"
+        or path in PUBLIC_PATHS
+        or not path.startswith(settings.API_V1_STR)
+    ):
         return await call_next(request)
 
     auth_header = request.headers.get("authorization", "")
@@ -112,6 +153,7 @@ async def auth_middleware(request: Request, call_next):
 @app.middleware("http")
 async def request_logging_middleware(request: Request, call_next):
     import time
+
     start = time.perf_counter()
     response = await call_next(request)
     duration_ms = (time.perf_counter() - start) * 1000
@@ -134,19 +176,54 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     if request.url.scheme == "https":
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
     return response
 
 
-app.add_middleware(CORSMiddleware, allow_origins=settings.get_cors_origins(), allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.get_cors_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-for r, tag in [(auth.router,"auth"),(chat.router,"chat"),(memory.router,"memory"),(artifacts_router,"artifacts"),(conv_router,"conversations"),(timeline_router,"timeline"),(user_router,"user"),(settings_router,"settings"),(materials_router,"materials"),(concepts_router,"concepts"),(analytics_router,"analytics"),(study_router,"study"),(flashcards_router,"flashcards"),(exams_router,"exams")]:
+for r, tag in [
+    (auth.router, "auth"),
+    (chat.router, "chat"),
+    (memory.router, "memory"),
+    (artifacts_router, "artifacts"),
+    (conv_router, "conversations"),
+    (timeline_router, "timeline"),
+    (user_router, "user"),
+    (settings_router, "settings"),
+    (materials_router, "materials"),
+    (concepts_router, "concepts"),
+    (analytics_router, "analytics"),
+    (study_router, "study"),
+    (flashcards_router, "flashcards"),
+    (exams_router, "exams"),
+]:
     app.include_router(r, prefix=settings.API_V1_STR, tags=[tag])
 
-@app.get("/health", tags=["health"], summary="Health check", description="Returns API health status and online connection count")
+
+@app.get(
+    "/health",
+    tags=["health"],
+    summary="Health check",
+    description="Returns API health status and online connection count",
+)
 async def health_check():
-    return {"status": "healthy", "version": "1.0.0", "service": "summa-ai-api", "online_connections": manager.get_online_count()}
+    return {
+        "status": "healthy",
+        "version": "1.0.0",
+        "service": "summa-ai-api",
+        "online_connections": manager.get_online_count(),
+    }
+
 
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
@@ -159,18 +236,31 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.send_to_user(user_id, {"type": "echo", "message": f"Echo: {data}"})
+            await manager.send_to_user(
+                user_id, {"type": "echo", "message": f"Echo: {data}"}
+            )
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)
 
 
-@app.post("/ws/broadcast", tags=["websocket"], summary="Broadcast message", description="Send a message to all connected WebSocket clients")
+@app.post(
+    "/ws/broadcast",
+    tags=["websocket"],
+    summary="Broadcast message",
+    description="Send a message to all connected WebSocket clients",
+)
 async def broadcast_message(message: dict):
     if not settings.WEBSOCKET_ENABLED:
         raise HTTPException(status_code=503, detail="WebSocket disabled")
     await manager.broadcast(message)
     return {"status": "broadcasted"}
 
-@app.get("/", tags=["root"], summary="API root", description="Redirects to Swagger UI documentation")
+
+@app.get(
+    "/",
+    tags=["root"],
+    summary="API root",
+    description="Redirects to Swagger UI documentation",
+)
 async def root():
     return RedirectResponse(url="/docs")

@@ -1,4 +1,5 @@
 """Tests for security, main app wiring, and config settings."""
+
 import os
 import asyncio
 import pytest
@@ -21,6 +22,7 @@ from app.config import Settings
 def _make_token(sub: str, secret: str, aud: str, expired: bool = False):
     import jwt as pyjwt
     from datetime import datetime, timedelta
+
     payload = {"sub": sub, "aud": aud}
     if expired:
         payload["exp"] = datetime.now() - timedelta(hours=1)
@@ -62,6 +64,7 @@ class TestResolveUserId:
 
     def test_unset_raises(self):
         from app.core.security import current_user_id
+
         token = current_user_id.set(None)
         with pytest.raises(HTTPException) as exc:
             resolve_user_id()
@@ -107,7 +110,9 @@ class TestConfig:
         assert s.is_production is False
 
     def test_get_cors_origins_default(self):
-        s = Settings(BACKEND_CORS_ORIGINS=["http://localhost:3000"], ENVIRONMENT="development")
+        s = Settings(
+            BACKEND_CORS_ORIGINS=["http://localhost:3000"], ENVIRONMENT="development"
+        )
         assert s.get_cors_origins() == ["http://localhost:3000"]
 
     def test_get_cors_origins_production_with_frontend_url(self):

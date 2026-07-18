@@ -1,4 +1,5 @@
 """Authentication routes — proxy to Supabase Auth REST API."""
+
 import httpx
 from fastapi import APIRouter, HTTPException
 
@@ -9,7 +10,12 @@ router = APIRouter()
 SUPABASE_AUTH_URL = f"{settings.SUPABASE_URL}/auth/v1"
 
 
-@router.post("/auth/signup", response_model=AuthLoginResponse, summary="Sign up", description="Create a new account via Supabase Auth and return a JWT")
+@router.post(
+    "/auth/signup",
+    response_model=AuthLoginResponse,
+    summary="Sign up",
+    description="Create a new account via Supabase Auth and return a JWT",
+)
 async def signup(payload: AuthLoginRequest):
     if not payload.email or not payload.password:
         raise HTTPException(status_code=400, detail="Email and password are required")
@@ -18,11 +24,18 @@ async def signup(payload: AuthLoginRequest):
         resp = await client.post(
             f"{SUPABASE_AUTH_URL}/signup",
             headers={"apikey": settings.SUPABASE_ANON_KEY},
-            json={"email": payload.email, "password": payload.password,
-                  "data": {"name": payload.name, "avatar": payload.avatar}},
+            json={
+                "email": payload.email,
+                "password": payload.password,
+                "data": {"name": payload.name, "avatar": payload.avatar},
+            },
         )
         if resp.status_code != 200:
-            detail = resp.json().get("error_description") or resp.json().get("msg") or "Signup failed"
+            detail = (
+                resp.json().get("error_description")
+                or resp.json().get("msg")
+                or "Signup failed"
+            )
             if resp.status_code == 422:
                 detail = "An account with this email may already exist"
             raise HTTPException(status_code=resp.status_code, detail=detail)
@@ -44,7 +57,12 @@ async def signup(payload: AuthLoginRequest):
         }
 
 
-@router.post("/auth/login", response_model=AuthLoginResponse, summary="Login exchange", description="Authenticate via Supabase Auth and return a JWT")
+@router.post(
+    "/auth/login",
+    response_model=AuthLoginResponse,
+    summary="Login exchange",
+    description="Authenticate via Supabase Auth and return a JWT",
+)
 async def login(payload: AuthLoginRequest):
     if not payload.email:
         raise HTTPException(status_code=400, detail="Email is required")
@@ -52,7 +70,10 @@ async def login(payload: AuthLoginRequest):
     async with httpx.AsyncClient() as client:
         if payload.provider == "credentials":
             if not payload.password:
-                raise HTTPException(status_code=400, detail="Password is required for credential sign-in")
+                raise HTTPException(
+                    status_code=400,
+                    detail="Password is required for credential sign-in",
+                )
             resp = await client.post(
                 f"{SUPABASE_AUTH_URL}/token?grant_type=password",
                 headers={"apikey": settings.SUPABASE_ANON_KEY},
@@ -66,7 +87,11 @@ async def login(payload: AuthLoginRequest):
             )
 
         if resp.status_code != 200:
-            detail = resp.json().get("error_description") or resp.json().get("msg") or "Authentication failed"
+            detail = (
+                resp.json().get("error_description")
+                or resp.json().get("msg")
+                or "Authentication failed"
+            )
             raise HTTPException(status_code=401, detail=detail)
 
         body = resp.json()

@@ -1,4 +1,5 @@
 """Tests for the in-memory TTL cache used by CogneeService."""
+
 import time
 from app.services.cognee_service import _TTLCache
 

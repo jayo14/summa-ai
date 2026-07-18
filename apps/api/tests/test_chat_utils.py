@@ -1,4 +1,5 @@
 """Tests for chat utility functions: detect_intent, _section, knowledge gaps."""
+
 import pytest
 from app.routes.chat import detect_intent, _section
 

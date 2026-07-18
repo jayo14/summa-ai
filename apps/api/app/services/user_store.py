@@ -1,4 +1,5 @@
 """Postgres-backed user store — queries summa_ai.user_profiles via asyncpg."""
+
 from __future__ import annotations
 
 import json
@@ -111,6 +112,14 @@ class UserStore:
             "provider": user.get("provider"),
             "onboarded": bool(user.get("onboarded")),
             "onboarding_data": onboarding_data,
-            "created_at": user["created_at"].isoformat() if hasattr(user.get("created_at"), "isoformat") else user["created_at"],
-            "updated_at": user["updated_at"].isoformat() if hasattr(user.get("updated_at"), "isoformat") else user["updated_at"],
+            "created_at": (
+                user["created_at"].isoformat()
+                if hasattr(user.get("created_at"), "isoformat")
+                else user["created_at"]
+            ),
+            "updated_at": (
+                user["updated_at"].isoformat()
+                if hasattr(user.get("updated_at"), "isoformat")
+                else user["updated_at"]
+            ),
         }

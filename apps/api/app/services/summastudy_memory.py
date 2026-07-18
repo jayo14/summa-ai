@@ -7,6 +7,7 @@ table (same schema as SummaStudy's memory_service) for cross-product memory shar
 Both Summa AI and SummaStudy read/write the same user_memories table, so facts
 extracted by either product are available to the other.
 """
+
 import json
 import logging
 import re
@@ -35,9 +36,19 @@ USER MESSAGE:
 {message}"""
 
 GREETING_DENYLIST = {
-    "hi", "hello", "thanks", "thank you", "ok", "okay",
-    "yes", "no", "sure", "hey", "good morning",
-    "good afternoon", "good evening",
+    "hi",
+    "hello",
+    "thanks",
+    "thank you",
+    "ok",
+    "okay",
+    "yes",
+    "no",
+    "sure",
+    "hey",
+    "good morning",
+    "good afternoon",
+    "good evening",
 }
 
 
@@ -53,6 +64,7 @@ class SummaStudyMemoryClient:
     async def _get_conn(self):
         if self._pool is None:
             import asyncpg
+
             self._pool = await asyncpg.create_pool(
                 settings.DATABASE_URL,
                 min_size=1,
@@ -71,7 +83,7 @@ class SummaStudyMemoryClient:
 
     @staticmethod
     def _is_noise(message: str) -> bool:
-        clean = re.sub(r'[^\w\s]', '', message.lower()).strip()
+        clean = re.sub(r"[^\w\s]", "", message.lower()).strip()
         if len(message.strip()) < 40:
             return True
         if clean in GREETING_DENYLIST:
@@ -94,7 +106,10 @@ class SummaStudyMemoryClient:
                     json={
                         "model": settings.ZAI_MODEL,
                         "messages": [
-                            {"role": "system", "content": "You are a memory extraction assistant. Extract atomic facts from student messages."},
+                            {
+                                "role": "system",
+                                "content": "You are a memory extraction assistant. Extract atomic facts from student messages.",
+                            },
                             {"role": "user", "content": prompt},
                         ],
                         "stream": False,
@@ -165,13 +180,13 @@ class SummaStudyMemoryClient:
                     VALUES ($1, $2, $3)
                     ON CONFLICT DO NOTHING
                     """,
-                    user_id, m_type, content,
+                    user_id,
+                    m_type,
+                    content,
                 )
                 stored.append({"content": content, "type": m_type})
             if stored:
-                logger.info(
-                    "Stored %d atomic facts for user %s", len(stored), user_id
-                )
+                logger.info("Stored %d atomic facts for user %s", len(stored), user_id)
             return stored
         except Exception as e:
             logger.error("Failed to store memories: %s", e)
@@ -193,15 +208,16 @@ class SummaStudyMemoryClient:
                 ORDER BY created_at DESC
                 LIMIT $2
                 """,
-                user_id, limit,
+                user_id,
+                limit,
             )
             return [
                 {
                     "content": row["content"],
                     "type": row["memory_type"],
-                    "created_at": row["created_at"].isoformat()
-                    if row["created_at"]
-                    else None,
+                    "created_at": (
+                        row["created_at"].isoformat() if row["created_at"] else None
+                    ),
                 }
                 for row in rows
             ]
@@ -225,15 +241,17 @@ class SummaStudyMemoryClient:
                 ORDER BY created_at DESC
                 LIMIT $3
                 """,
-                user_id, memory_type, limit,
+                user_id,
+                memory_type,
+                limit,
             )
             return [
                 {
                     "content": row["content"],
                     "type": row["memory_type"],
-                    "created_at": row["created_at"].isoformat()
-                    if row["created_at"]
-                    else None,
+                    "created_at": (
+                        row["created_at"].isoformat() if row["created_at"] else None
+                    ),
                 }
                 for row in rows
             ]
