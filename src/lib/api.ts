@@ -344,6 +344,6 @@ export async function updateExam(token: string, id: string, data: Partial<Exam>)
   return apiPatch<Exam>(`/exams/${id}`, data, token)
 }
 
-export async function deleteExam(token: string, id: string): Promise<boolean> {
+export async function deleteExam(id: string, token: string): Promise<boolean> {
   return apiDelete(`/exams/${id}`, token)
 }

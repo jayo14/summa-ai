@@ -12,6 +12,14 @@ import {
   fetchMemoryFacts,
   fetchMemorySummary,
   forgetMemoryTopic,
+  fetchStudyPlans,
+  fetchFlashcards,
+  fetchExamsList,
+  createFlashcard,
+  updateFlashcard,
+  deleteFlashcard,
+  createExam,
+  deleteExam,
 } from "@/lib/api";
 
 vi.mock("@/lib/fastapi", () => ({
@@ -132,6 +140,93 @@ describe("API layer", () => {
   it("forgetMemoryTopic returns false when status not success", async () => {
     (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ status: "error" });
     const result = await forgetMemoryTopic("token", "main", "loops");
+    expect(result).toBe(false);
+  });
+
+  // ── Study Plan API ─────────────────────────────────────────────────
+
+  it("fetchStudyPlans returns plans on success", async () => {
+    const plans = [{ id: "p1", title: "Plan", progress: 0.5, days_left: 10, streak: 3, sessions: [], created_at: "", updated_at: "" }];
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(plans);
+    const result = await fetchStudyPlans("token");
+    expect(result).toEqual(plans);
+  });
+
+  it("fetchStudyPlans returns null on error", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("fail"));
+    const result = await fetchStudyPlans("token");
+    expect(result).toBeNull();
+  });
+
+  // ── Flashcard API ──────────────────────────────────────────────────
+
+  it("fetchFlashcards returns cards on success", async () => {
+    const cards = [{ id: "f1", front: "Q", back: "A", mastered: false, ease_factor: 2.5, interval_days: 0, repetitions: 0, next_review_at: "", created_at: "" }];
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(cards);
+    const result = await fetchFlashcards("token");
+    expect(result).toEqual(cards);
+  });
+
+  it("fetchFlashcards returns null on error", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("fail"));
+    const result = await fetchFlashcards("token");
+    expect(result).toBeNull();
+  });
+
+  it("createFlashcard calls POST with front and back", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "f1", front: "Q", back: "A" });
+    await createFlashcard("token", "Q", "A");
+    expect(fastapiFetch).toHaveBeenCalledWith("/flashcards", { method: "POST", body: JSON.stringify({ front: "Q", back: "A" }) }, "token");
+  });
+
+  it("updateFlashcard calls PATCH with partial data", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "f1", mastered: true });
+    await updateFlashcard("token", "f1", { mastered: true });
+    expect(fastapiFetch).toHaveBeenCalledWith("/flashcards/f1", { method: "PATCH", body: JSON.stringify({ mastered: true }) }, "token");
+  });
+
+  it("deleteFlashcard returns true on success", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    const result = await deleteFlashcard("f1", "token");
+    expect(result).toBe(true);
+  });
+
+  it("deleteFlashcard returns false on error", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("fail"));
+    const result = await deleteFlashcard("f1", "token");
+    expect(result).toBe(false);
+  });
+
+  // ── Exam API ──────────────────────────────────────────────────────
+
+  it("fetchExamsList returns exams on success", async () => {
+    const exams = [{ id: "e1", name: "Final", exam_date: "2026-08-01", readiness: 80, created_at: "" }];
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(exams);
+    const result = await fetchExamsList("token");
+    expect(result).toEqual(exams);
+  });
+
+  it("fetchExamsList returns null on error", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("fail"));
+    const result = await fetchExamsList("token");
+    expect(result).toBeNull();
+  });
+
+  it("createExam calls POST with exam data", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "e1" });
+    await createExam("token", { name: "Calc", exam_date: "2026-08-15" });
+    expect(fastapiFetch).toHaveBeenCalledWith("/exams", { method: "POST", body: JSON.stringify({ name: "Calc", exam_date: "2026-08-15" }) }, "token");
+  });
+
+  it("deleteExam returns true on success", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    const result = await deleteExam("e1", "token");
+    expect(result).toBe(true);
+  });
+
+  it("deleteExam returns false on error", async () => {
+    (fastapiFetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("fail"));
+    const result = await deleteExam("e1", "token");
     expect(result).toBe(false);
   });
 });
