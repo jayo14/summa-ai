@@ -91,3 +91,17 @@ Status: ✅ Complete
 - ✅ **API error visibility** — updated `src/lib/api.ts` with throw-variant helpers (`fetchAnalyticsOrThrow`, `deleteArtifactOrThrow`, etc.) and added error logging to existing wrappers
 - ✅ **Coverage** — 31 existing + 66 new tests = **97 total tests**, all passing
 Status: ✅ Complete
+
+## Milestone 9 — Test Coverage Expansion ✅
+- ✅ **Backend test fixes** — repaired 8 broken tests across `test_chat_routes.py` and `test_memory_routes.py` caused by async mock misconfiguration and missing `@pytest.mark.asyncio` decorators
+- ✅ **New backend tests** — added 90+ new tests across 6 files:
+  - `test_chat_routes.py` — intent detection, section truncation, orchestrator prompt, streaming and non-streaming chat endpoints
+  - `test_memory_routes.py` — all memory endpoints (remember, hybrid extract/facts/summary/context, forget, improve, feedback, consolidate)
+  - `test_cognee_service.py` — TTL cache, singleton, recall cache, remember/forget, learning progress, hexagon dimensions
+  - `test_user_store.py` — get_user, update_user, serialize_user edge cases
+  - `test_data_routes.py` — expanded artifact/conversation/timeline/material/concept CRUD and analytics coverage
+  - `test_auth_routes.py` — missing Supabase config edge case
+- ✅ **Frontend test infrastructure** — installed `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`; added `vitest.config.ts` with path alias and `src/test/setup.ts`
+- ✅ **Frontend API tests** — 19 tests covering `fetchAnalytics`, `fetchHexagon`, `fetchExams`, `fetchLearningProgress`, `fetchArtifacts`, `deleteArtifact`, `fetchMaterials`, `fetchConcepts`, `fetchTimelineEvents`, `fetchMemoryFacts`, `fetchMemorySummary`, `forgetMemoryTopic`, and component rendering
+- ✅ **Coverage** — **187 backend + 19 frontend = 206 total tests**, all passing
+Status: ✅ Complete
