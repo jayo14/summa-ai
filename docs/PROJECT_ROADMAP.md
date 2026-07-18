@@ -162,3 +162,14 @@ Status: ✅ Complete
 - ✅ **Exam countdown** — added `ExamCountdown` component and `/exams` page with days-remaining cards and readiness badges
 - ✅ **Navigation** — updated `DashboardPageShell` NAV_ITEMS to include Study plan, Flashcards, and Exams
 Status: ✅ Complete
+
+## Milestone 19 — Backend Integration for Study Features
+- ✅ **Database migration** — added `study_plans`, `study_sessions`, `flashcards`, and `exams` tables to `db/migrate_to_supabase.sql`
+- ✅ **Pydantic models** — created `StudyPlanCreate/Update`, `StudySessionCreate/Update`, `FlashcardCreate/Update`, `ExamCreate/Update` in `apps/api/app/models/study.py`
+- ✅ **DataStore CRUD** — added full Postgres-backed CRUD for study plans (with nested sessions), flashcards (with spaced repetition fields), and exams in `DataStore`
+- ✅ **API endpoints** — created `/api/v1/study-plans`, `/api/v1/flashcards`, and `/api/v1/exams` routers with GET, POST, PATCH, DELETE operations
+- ✅ **Frontend API layer** — added `fetchStudyPlans`, `fetchFlashcards`, `fetchExamsList`, `createFlashcard`, `updateFlashcard`, `deleteFlashcard`, `createExam`, `deleteExam`, `updateSessionStatus` to `src/lib/api.ts`
+- ✅ **Backend-connected UI** — `StudyPlanView`, `FlashcardReview`, and `ExamCountdown` now fetch real data from the backend with graceful fallback to sample data
+- ✅ **Tests** — 28 backend tests covering all new endpoints + 13 frontend API tests
+- ✅ **Bug fix** — fixed JSX syntax error in `StudyPlanView` (extra `"` on line 77)
+Status: ✅ Complete

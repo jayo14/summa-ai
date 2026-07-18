@@ -202,3 +202,27 @@
 - `src/components/prompt-kit/exam-countdown.tsx`: Exam countdown widget with days-remaining and readiness badges.
 - `src/app/exams/page.tsx`: Exams page.
 - `src/components/dashboard-page-shell.tsx`: Updated navigation to include Study plan, Flashcards, and Exams.
+
+## 2026-07-18 (Milestone 19 — Backend Integration for Study Features)
+### Added
+- `db/migrate_to_supabase.sql`: Added `study_plans`, `study_sessions`, `flashcards`, and `exams` tables with indexes and RLS policies.
+- `apps/api/app/models/study.py`: Pydantic models for study plans, flashcards, and exams.
+- `apps/api/app/services/data_store.py`: CRUD methods for study plans (with nested sessions), flashcards (spaced repetition fields), and exams.
+- `apps/api/app/routes/study_routes.py`: API routers for `/api/v1/study-plans`, `/api/v1/flashcards`, `/api/v1/exams` with full CRUD.
+- `apps/api/app/main.py`: Registered new study routers.
+- `src/lib/api.ts`: Added `fetchStudyPlans`, `fetchFlashcards`, `fetchExamsList`, `createFlashcard`, `updateFlashcard`, `deleteFlashcard`, `createExam`, `deleteExam`, `updateSessionStatus`, and `apiPatch` helper.
+- `apps/api/tests/test_study_features.py`: 28 backend tests covering all new endpoints.
+- `src/lib/api.test.ts`: 13 frontend API tests.
+
+### Changed
+- `src/components/prompt-kit/study-plan-view.tsx`: Now fetches from backend API, session toggle updates backend, fixed JSX syntax error.
+- `src/components/prompt-kit/flashcard-review.tsx`: Now fetches from backend API, mastery rating updates backend with spaced repetition parameters.
+- `src/components/prompt-kit/exam-countdown.tsx`: Now fetches from backend API.
+
+### Fixed
+- `src/components/prompt-kit/study-plan-view.tsx`: Fixed `session.status === "in-progress""` syntax error (extra quote).
+
+### Coverage
+- Backend: 221 tests passing (0 failing)
+- Frontend: 32 tests passing (0 failing)
+- Total: 253 tests
