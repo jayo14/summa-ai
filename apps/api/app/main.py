@@ -1,6 +1,8 @@
 """Summa AI — FastAPI entry point."""
 import logging
+import time
 from contextlib import asynccontextmanager
+from typing import Dict
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -53,6 +55,30 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Summa AI API", version="1.0.0", description="AI-Native Learning Workspace API", lifespan=lifespan)
 
+# Simple in-memory rate limiter state
+_rate_limit_store: Dict[str, list] = {}
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    if not settings.is_production:
+        return await call_next(request)
+
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    window = 60
+
+    requests = _rate_limit_store.get(client_ip, [])
+    requests = [ts for ts in requests if now - ts < window]
+
+    if len(requests) >= 100:
+        return JSONResponse({"detail": "Rate limit exceeded"}, status_code=429)
+
+    requests.append(now)
+    _rate_limit_store[client_ip] = requests
+    return await call_next(request)
+
+
 PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc", f"{settings.API_V1_STR}/auth/login", f"{settings.API_V1_STR}/auth/signup"}
 
 
@@ -95,6 +121,19 @@ async def request_logging_middleware(request: Request, call_next):
         response.status_code,
         duration_ms,
     )
+    return response
+
+
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if request.url.scheme == "https":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
 
