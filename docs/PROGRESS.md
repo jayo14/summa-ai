@@ -154,3 +154,8 @@
 - **Rate limiting**: Added simple in-memory rate limiting middleware to FastAPI app — 100 requests per minute per IP, production-only. Replaced `slowapi` approach (broke tests due to TestClient IP resolution) with custom middleware.
 - **Security headers**: Added middleware setting `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera/mic/geo disabled), and `Strict-Transport-Security` on HTTPS.
 - **Frontend pages**: Verified all dashboard pages (concept-map, progress, tokens, saved-materials, study-timeline) are wired to backend APIs with graceful fallbacks.
+
+## 2026-07-18 (Milestone 14 — Database Migrations & Developer Experience)
+- **Alembic**: Set up Alembic for database migrations. Created `alembic.ini`, `alembic/env.py` with asyncpg support (using SQLAlchemy async engine + NullPool), and `alembic/script.py.mako` template. The existing schema in `db/migrate_to_supabase.sql` can be used as reference for generating the initial migration.
+- **Makefile**: Added `Makefile` with targets: `install`, `install-frontend`, `test`, `test-frontend`, `lint`, `format`, `lint-frontend`, `run-api`, `run-frontend`, `db-up`, `db-down`, `migrate`, `migrate-create`, `build`.
+- **Local env**: Added `.env.local` with development defaults for all environment variables. It's gitignored so each developer can override locally.

@@ -126,8 +126,14 @@ Status: ✅ Complete
 - ✅ **Cache headers** — added `Cache-Control: public, max-age=30` to `/analytics` endpoint
 Status: ✅ Complete
 
-## Milestone 13 — Production Hardening & Feature Completeness
+## Milestone 13 — Production Hardening & Feature Completeness ✅
 - ✅ **Rate limiting** — added simple in-memory rate limiting middleware (100 req/min per IP, production-only)
 - ✅ **Security headers** — added middleware setting `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`, and `Strict-Transport-Security` (HTTPS only)
 - ✅ **Frontend pages** — verified all dashboard pages are wired to backend APIs or fallback data (concept-map, progress, tokens, saved-materials, study-timeline)
+Status: ✅ Complete
+
+## Milestone 14 — Database Migrations & Developer Experience
+- ✅ **Alembic setup** — created `alembic.ini`, `alembic/env.py` with asyncpg support, and `alembic/script.py.mako` migration template
+- ✅ **Makefile** — added `Makefile` with targets for install, test, lint, format, run-api, run-frontend, db-up/down, migrate, and build
+- ✅ **Local env** — added `.env.local` with development defaults for all backend and frontend environment variables
 Status: ✅ Complete

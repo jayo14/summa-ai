@@ -164,3 +164,11 @@
 ### Added
 - `apps/api/app/main.py`: Simple in-memory rate limiting middleware (100 req/min per IP, production-only).
 - `apps/api/app/main.py`: Security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`).
+
+## 2026-07-18 (Milestone 14 — Database Migrations & Developer Experience)
+### Added
+- `alembic.ini`: Alembic configuration for database migrations.
+- `alembic/env.py`: Alembic environment with asyncpg support using SQLAlchemy async engine.
+- `alembic/script.py.mako`: Migration template for new revisions.
+- `Makefile`: Developer workflow targets for install, test, lint, format, run, db, and migrate.
+- `.env.local`: Development environment variables (gitignored).
