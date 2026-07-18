@@ -315,3 +315,206 @@ class DataStore:
         async with pool.acquire() as conn:
             result = await conn.execute("DELETE FROM summa_ai.concepts WHERE id = $1", cid)
         return "DELETE 1" in result
+
+    # ── Study Plans ─────────────────────────────────────────────────
+
+    async def list_study_plans(self, user_id: str) -> List[Dict[str, Any]]:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                "SELECT * FROM summa_ai.study_plans WHERE user_id = $1 ORDER BY created_at DESC",
+                user_id,
+            )
+            plans = []
+            for row in rows:
+                p = dict(row)
+                sessions = await conn.fetch(
+                    "SELECT * FROM summa_ai.study_sessions WHERE plan_id = $1 ORDER BY sort_order ASC",
+                    p["id"],
+                )
+                p["sessions"] = [dict(s) for s in sessions]
+                plans.append(p)
+        return plans
+
+    async def create_study_plan(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        pool = await self._get_pool()
+        pid = str(uuid.uuid4())
+        sessions_data = data.pop("sessions", [])
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """INSERT INTO summa_ai.study_plans (id, user_id, title, progress, days_left, streak)
+                   VALUES ($1, $2, $3, $4, $5, $6)""",
+                pid, user_id, data.get("title", "Study Plan"),
+                data.get("progress", 0.0), data.get("days_left", 0), data.get("streak", 0),
+            )
+            for i, s in enumerate(sessions_data):
+                await conn.execute(
+                    """INSERT INTO summa_ai.study_sessions (id, plan_id, day, topic, status, duration, sort_order)
+                       VALUES ($1, $2, $3, $4, $5, $6, $7)""",
+                    str(uuid.uuid4()), pid, s.get("day", ""), s.get("topic", ""),
+                    s.get("status", "upcoming"), s.get("duration", "30 min"), s.get("sort_order", i),
+                )
+            return await self._get_study_plan(pid)
+
+    async def _get_study_plan(self, pid: str) -> Optional[Dict[str, Any]]:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT * FROM summa_ai.study_plans WHERE id = $1", pid)
+            if not row:
+                return None
+            p = dict(row)
+            sessions = await conn.fetch(
+                "SELECT * FROM summa_ai.study_sessions WHERE plan_id = $1 ORDER BY sort_order ASC",
+                pid,
+            )
+            p["sessions"] = [dict(s) for s in sessions]
+        return p
+
+    async def update_study_plan(self, pid: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        pool = await self._get_pool()
+        sets = []
+        vals = []
+        for key in ("title", "progress", "days_left", "streak"):
+            if key in data:
+                sets.append(f"{key} = ${len(vals) + 1}")
+                vals.append(data[key])
+        if not sets:
+            return await self._get_study_plan(pid)
+        sets.append("updated_at = NOW()")
+        vals.append(pid)
+        async with pool.acquire() as conn:
+            await conn.execute(
+                f"UPDATE summa_ai.study_plans SET {', '.join(sets)} WHERE id = ${len(vals)}",
+                *vals,
+            )
+            return await self._get_study_plan(pid)
+
+    async def delete_study_plan(self, pid: str) -> bool:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            result = await conn.execute("DELETE FROM summa_ai.study_plans WHERE id = $1", pid)
+        return "DELETE 1" in result
+
+    async def update_session(self, sid: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        pool = await self._get_pool()
+        sets = []
+        vals = []
+        for key in ("status", "duration"):
+            if key in data:
+                sets.append(f"{key} = ${len(vals) + 1}")
+                vals.append(data[key])
+        if not sets:
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow("SELECT * FROM summa_ai.study_sessions WHERE id = $1", sid)
+            return dict(row) if row else None
+        vals.append(sid)
+        async with pool.acquire() as conn:
+            await conn.execute(
+                f"UPDATE summa_ai.study_sessions SET {', '.join(sets)} WHERE id = ${len(vals)}",
+                *vals,
+            )
+            row = await conn.fetchrow("SELECT * FROM summa_ai.study_sessions WHERE id = $1", sid)
+        return dict(row) if row else None
+
+    # ── Flashcards ──────────────────────────────────────────────────
+
+    async def list_flashcards(self, user_id: str) -> List[Dict[str, Any]]:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                "SELECT * FROM summa_ai.flashcards WHERE user_id = $1 ORDER BY created_at ASC",
+                user_id,
+            )
+        return [dict(r) for r in rows]
+
+    async def create_flashcard(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        pool = await self._get_pool()
+        fid = str(uuid.uuid4())
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """INSERT INTO summa_ai.flashcards (id, user_id, front, back)
+                   VALUES ($1, $2, $3, $4)""",
+                fid, user_id, data.get("front"), data.get("back"),
+            )
+            row = await conn.fetchrow("SELECT * FROM summa_ai.flashcards WHERE id = $1", fid)
+        return dict(row)
+
+    async def update_flashcard(self, fid: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        pool = await self._get_pool()
+        sets = []
+        vals = []
+        for key in ("mastered", "ease_factor", "interval_days", "repetitions"):
+            if key in data:
+                sets.append(f"{key} = ${len(vals) + 1}")
+                vals.append(data[key])
+        if "interval_days" in data:
+            sets.append(f"next_review_at = NOW() + (${len(vals) + 1} || ' days')::INTERVAL")
+            vals.append(data["interval_days"])
+        if not sets:
+            return None
+        sets.append("updated_at = NOW()")
+        vals.append(fid)
+        async with pool.acquire() as conn:
+            await conn.execute(
+                f"UPDATE summa_ai.flashcards SET {', '.join(sets)} WHERE id = ${len(vals)}",
+                *vals,
+            )
+            row = await conn.fetchrow("SELECT * FROM summa_ai.flashcards WHERE id = $1", fid)
+        return dict(row) if row else None
+
+    async def delete_flashcard(self, fid: str) -> bool:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            result = await conn.execute("DELETE FROM summa_ai.flashcards WHERE id = $1", fid)
+        return "DELETE 1" in result
+
+    # ── Exams ───────────────────────────────────────────────────────
+
+    async def list_exams(self, user_id: str) -> List[Dict[str, Any]]:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                "SELECT * FROM summa_ai.exams WHERE user_id = $1 ORDER BY exam_date ASC",
+                user_id,
+            )
+        return [dict(r) for r in rows]
+
+    async def create_exam(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        pool = await self._get_pool()
+        eid = str(uuid.uuid4())
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """INSERT INTO summa_ai.exams (id, user_id, name, exam_date, readiness)
+                   VALUES ($1, $2, $3, $4, $5)""",
+                eid, user_id, data.get("name"), data.get("exam_date"), data.get("readiness", 0),
+            )
+            row = await conn.fetchrow("SELECT * FROM summa_ai.exams WHERE id = $1", eid)
+        return dict(row)
+
+    async def update_exam(self, eid: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        pool = await self._get_pool()
+        sets = []
+        vals = []
+        for key in ("name", "exam_date", "readiness"):
+            if key in data:
+                sets.append(f"{key} = ${len(vals) + 1}")
+                vals.append(data[key])
+        if not sets:
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow("SELECT * FROM summa_ai.exams WHERE id = $1", eid)
+            return dict(row) if row else None
+        sets.append("updated_at = NOW()")
+        vals.append(eid)
+        async with pool.acquire() as conn:
+            await conn.execute(
+                f"UPDATE summa_ai.exams SET {', '.join(sets)} WHERE id = ${len(vals)}",
+                *vals,
+            )
+            row = await conn.fetchrow("SELECT * FROM summa_ai.exams WHERE id = $1", eid)
+        return dict(row) if row else None
+
+    async def delete_exam(self, eid: str) -> bool:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            result = await conn.execute("DELETE FROM summa_ai.exams WHERE id = $1", eid)
+        return "DELETE 1" in result
