@@ -226,3 +226,20 @@
 - Backend: 221 tests passing (0 failing)
 - Frontend: 32 tests passing (0 failing)
 - Total: 253 tests
+
+## 2026-07-18 (Milestone 20 — AI Personalization & Study Feature Creation)
+### Added
+- `apps/api/app/routes/chat.py`: `build_orchestrator_prompt` now fetches onboarding data from `UserStore` and injects learning goals, level, style, and personality traits into the system prompt.
+- `apps/api/app/services/user_store.py`: Added `get_onboarding_data()` method to retrieve parsed onboarding JSONB.
+- `src/components/prompt-kit/study-plan-view.tsx`: "New Plan" dialog with title/duration inputs; `handleCreate()` posts to backend.
+- `src/components/prompt-kit/flashcard-review.tsx`: "Add Card" dialog with front/back inputs; `handleAddCard()` posts to backend.
+- `src/components/prompt-kit/exam-countdown.tsx`: "Add Exam" dialog with name/date/readiness inputs; `handleAddExam()` posts to backend.
+- `apps/api/tests/test_chat_routes.py`: 2 tests for onboarding data injection in orchestrator prompt.
+
+### Changed
+- All three M18 study feature components now support creating new items directly from the UI.
+
+### Coverage
+- Backend: 223 tests passing (0 failing)
+- Frontend: 32 tests passing (0 failing)
+- Total: 255 tests

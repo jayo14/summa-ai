@@ -173,3 +173,11 @@ Status: ✅ Complete
 - ✅ **Tests** — 28 backend tests covering all new endpoints + 13 frontend API tests
 - ✅ **Bug fix** — fixed JSX syntax error in `StudyPlanView` (extra `"` on line 77)
 Status: ✅ Complete
+
+## Milestone 20 — AI Personalization & Study Feature Creation
+- ✅ **Onboarding data in orchestrator prompt** — `build_orchestrator_prompt()` now fetches `onboarding_data` from `UserStore` and injects learning goals, level, learning style, and personality traits so the AI tailors responses to the student's profile
+- ✅ **Create study plan from UI** — added "New Plan" button and dialog on `/study-plan` page; users can name their plan and set duration; creates sessions with auto-generated topics
+- ✅ **Create flashcards from UI** — added "Add Card" button and dialog on `/flashcards` page; users enter front/back pairs that persist to the backend
+- ✅ **Create exams from UI** — added "Add Exam" button and dialog on `/exams` page; users enter name, date, and readiness level; exams are sorted by date
+- ✅ **Tests** — 2 new backend tests for onboarding personalization (223 total backend, 32 frontend, all passing)
+Status: ✅ Complete

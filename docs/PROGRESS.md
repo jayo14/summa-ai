@@ -190,3 +190,10 @@
 - **Backend-connected UI**: `StudyPlanView`, `FlashcardReview`, `ExamCountdown` now fetch from backend with fallback to sample data.
 - **Bug fix**: Fixed JSX syntax error in `StudyPlanView` (extra quote on line 77).
 - **Tests**: 28 new backend tests (all passing, 221 total) + 13 new frontend API tests (all passing, 32 total).
+
+## 2026-07-18 (Milestone 20 — AI Personalization & Study Feature Creation)
+- **Onboarding personalization**: `build_orchestrator_prompt()` now fetches and injects user onboarding data (goals, level, learning style, personality) so the AI adapts its tone and content to each student's profile.
+- **Study plan creation UI**: Added "New Plan" dialog to `StudyPlanView` — users name their plan, set duration, and the component auto-generates sessions with a create call to the backend.
+- **Flashcard creation UI**: Added "Add Card" dialog to `FlashcardReview` — users add front/back pairs that persist to the backend and appear in the review queue.
+- **Exam creation UI**: Added "Add Exam" dialog to `ExamCountdown` — users enter name, date, and readiness; exams are sorted chronologically.
+- **Tests**: 2 new backend tests for onboarding personalization; 223 total backend tests, 32 frontend tests, all passing.
