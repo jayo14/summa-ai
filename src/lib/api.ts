@@ -149,6 +149,15 @@ async function apiPostOrThrow<T>(path: string, body: unknown, token?: string): P
   return fastapiFetch<T>(path, { method: "POST", body: JSON.stringify(body) }, token)
 }
 
+async function apiPatch<T>(path: string, body: unknown, token?: string): Promise<T | null> {
+  try {
+    return await fastapiFetch<T>(path, { method: "PATCH", body: JSON.stringify(body) }, token)
+  } catch (error) {
+    console.error(`apiPatch ${path} failed:`, error)
+    return null
+  }
+}
+
 async function apiDeleteOrThrow(path: string, token?: string): Promise<void> {
   await fastapiFetch<unknown>(path, { method: "DELETE" }, token)
 }
@@ -239,4 +248,102 @@ export async function forgetMemoryTopic(token: string, dataset = "main", topic?:
 
 export async function forgetDataset(token: string, dataset = "main"): Promise<boolean> {
   return forgetMemoryTopic(token, dataset)
+}
+
+/* ── Study Plan ───────────────────────────────────────────────────── */
+
+export interface StudySession {
+  id: string
+  day: string
+  topic: string
+  status: "done" | "in-progress" | "upcoming"
+  duration: string
+  sort_order: number
+}
+
+export interface StudyPlan {
+  id: string
+  title: string
+  progress: number
+  days_left: number
+  streak: number
+  sessions: StudySession[]
+  created_at: string
+  updated_at: string
+}
+
+export async function fetchStudyPlans(token: string): Promise<StudyPlan[] | null> {
+  return apiGet<StudyPlan[]>("/study-plans", token)
+}
+
+export async function fetchStudyPlan(token: string, id: string): Promise<StudyPlan | null> {
+  return apiGet<StudyPlan>(`/study-plans/${id}`, token)
+}
+
+export async function createStudyPlan(token: string, data: Partial<StudyPlan>): Promise<StudyPlan | null> {
+  return apiPost<StudyPlan>("/study-plans", data, token)
+}
+
+export async function updateStudyPlan(token: string, id: string, data: Partial<StudyPlan>): Promise<StudyPlan | null> {
+  return apiPatch<StudyPlan>(`/study-plans/${id}`, data, token)
+}
+
+export async function updateSessionStatus(token: string, sessionId: string, status: string): Promise<StudySession | null> {
+  return apiPatch<StudySession>(`/study-plans/sessions/${sessionId}`, { status }, token)
+}
+
+/* ── Flashcards ──────────────────────────────────────────────────── */
+
+export interface Flashcard {
+  id: string
+  front: string
+  back: string
+  mastered: boolean
+  ease_factor: number
+  interval_days: number
+  repetitions: number
+  next_review_at: string
+  created_at: string
+}
+
+export async function fetchFlashcards(token: string): Promise<Flashcard[] | null> {
+  return apiGet<Flashcard[]>("/flashcards", token)
+}
+
+export async function createFlashcard(token: string, front: string, back: string): Promise<Flashcard | null> {
+  return apiPost<Flashcard>("/flashcards", { front, back }, token)
+}
+
+export async function updateFlashcard(token: string, id: string, data: Partial<Flashcard>): Promise<Flashcard | null> {
+  return apiPatch<Flashcard>(`/flashcards/${id}`, data, token)
+}
+
+export async function deleteFlashcard(token: string, id: string): Promise<boolean> {
+  return apiDelete(`/flashcards/${id}`, token)
+}
+
+/* ── Exams ────────────────────────────────────────────────────────── */
+
+export interface Exam {
+  id: string
+  name: string
+  exam_date: string
+  readiness: number
+  created_at: string
+}
+
+export async function fetchExamsList(token: string): Promise<Exam[] | null> {
+  return apiGet<Exam[]>("/exams", token)
+}
+
+export async function createExam(token: string, data: { name: string; exam_date: string; readiness?: number }): Promise<Exam | null> {
+  return apiPost<Exam>("/exams", data, token)
+}
+
+export async function updateExam(token: string, id: string, data: Partial<Exam>): Promise<Exam | null> {
+  return apiPatch<Exam>(`/exams/${id}`, data, token)
+}
+
+export async function deleteExam(token: string, id: string): Promise<boolean> {
+  return apiDelete(`/exams/${id}`, token)
 }
