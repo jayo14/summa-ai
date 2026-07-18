@@ -1,14 +1,17 @@
 "use client"
 
 import * as React from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Trophy } from "lucide-react"
+import type { Exam } from "@/lib/api"
+import { fetchExamsList } from "@/lib/api"
 
-const EXAMS = [
-  { id: "1", name: "NLP Final", date: "2026-08-01", readiness: 62 },
-  { id: "2", name: "Deep Learning Final", date: "2026-08-04", readiness: 78 },
-  { id: "3", name: "Calculus II", date: "2026-08-08", readiness: 88 },
+const SAMPLE_EXAMS: Exam[] = [
+  { id: "1", name: "NLP Final", exam_date: "2026-08-01", readiness: 62, created_at: "" },
+  { id: "2", name: "Deep Learning Final", exam_date: "2026-08-04", readiness: 78, created_at: "" },
+  { id: "3", name: "Calculus II", exam_date: "2026-08-08", readiness: 88, created_at: "" },
 ]
 
 function daysUntil(dateStr: string) {
@@ -19,6 +22,34 @@ function daysUntil(dateStr: string) {
 }
 
 export function ExamCountdown() {
+  const { data: session } = useSession()
+  const token = session?.accessToken as string | undefined
+  const [exams, setExams] = React.useState<Exam[]>(SAMPLE_EXAMS)
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    if (!token) {
+      setLoading(false)
+      return
+    }
+    fetchExamsList(token).then((fetched) => {
+      if (fetched && fetched.length > 0) {
+        setExams(fetched)
+      }
+      setLoading(false)
+    })
+  }, [token])
+
+  if (loading) {
+    return (
+      <div className="thin-scroll flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+          <p className="text-sm text-muted-foreground">Loading exams...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="thin-scroll flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
@@ -30,8 +61,8 @@ export function ExamCountdown() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {EXAMS.map((exam) => {
-            const days = daysUntil(exam.date)
+          {exams.map((exam) => {
+            const days = daysUntil(exam.exam_date)
             return (
               <Card key={exam.id}>
                 <CardHeader className="pb-2">
