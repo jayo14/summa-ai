@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  experimental: {
+    optimizePackageImports: ["@tanstack/react-table", "recharts", "framer-motion"],
+  },
 };
 
 export default nextConfig;
