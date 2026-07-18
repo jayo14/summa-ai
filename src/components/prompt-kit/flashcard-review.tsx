@@ -5,9 +5,20 @@ import { useSession } from "next-auth/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, RotateCcw, Check, X } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { ChevronLeft, ChevronRight, RotateCcw, Check, X, Plus } from "lucide-react"
 import type { Flashcard } from "@/lib/api"
-import { fetchFlashcards, updateFlashcard } from "@/lib/api"
+import { fetchFlashcards, updateFlashcard, createFlashcard } from "@/lib/api"
 
 const SAMPLE_CARDS: Flashcard[] = [
   { id: "1", front: "What is the attention mechanism?", back: "A method that allows models to focus on specific parts of the input sequence when producing each element of the output.", mastered: true, ease_factor: 2.5, interval_days: 0, repetitions: 0, next_review_at: "", created_at: "" },
@@ -23,6 +34,21 @@ export function FlashcardReview() {
   const [flipped, setFlipped] = React.useState(false)
   const [loading, setLoading] = React.useState(true)
   const card = cards[index] ?? cards[0]
+
+  const [createOpen, setCreateOpen] = React.useState(false)
+  const [newFront, setNewFront] = React.useState("")
+  const [newBack, setNewBack] = React.useState("")
+
+  const handleAddCard = async () => {
+    if (!newFront.trim() || !newBack.trim() || !token) return
+    const card = await createFlashcard(token, newFront.trim(), newBack.trim())
+    if (card) {
+      setCards((prev) => [...prev, card])
+    }
+    setCreateOpen(false)
+    setNewFront("")
+    setNewBack("")
+  }
 
   React.useEffect(() => {
     if (!token) {
@@ -79,17 +105,58 @@ export function FlashcardReview() {
   return (
     <div className="thin-scroll flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Flashcards</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Review cards to strengthen memory.
-            </p>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Flashcards</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Review cards to strengthen memory.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Plus className="size-3.5" /> Add Card
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Flashcard</DialogTitle>
+                    <DialogDescription>
+                      Enter the question and answer for your new card.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="fc-front">Question (front)</Label>
+                      <Input
+                        id="fc-front"
+                        value={newFront}
+                        onChange={(e) => setNewFront(e.target.value)}
+                        placeholder="e.g. What is an API?"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="fc-back">Answer (back)</Label>
+                      <Input
+                        id="fc-back"
+                        value={newBack}
+                        onChange={(e) => setNewBack(e.target.value)}
+                        placeholder="e.g. Application Programming Interface"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+                    <Button onClick={handleAddCard}>Add Card</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Badge variant="secondary">
+                {index + 1} / {cards.length}
+              </Badge>
+            </div>
           </div>
-          <Badge variant="secondary">
-            {index + 1} / {cards.length}
-          </Badge>
-        </div>
 
         <div className="mb-4">
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted">

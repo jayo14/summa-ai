@@ -5,9 +5,21 @@ import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Calendar, CheckCircle2, Circle, Flame } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Calendar, CheckCircle2, Circle, Flame, Plus } from "lucide-react"
 import type { StudyPlan } from "@/lib/api"
-import { fetchStudyPlans, updateSessionStatus } from "@/lib/api"
+import { fetchStudyPlans, updateSessionStatus, createStudyPlan } from "@/lib/api"
 
 const SAMPLE_PLAN: StudyPlan = {
   id: "sample",
@@ -24,6 +36,18 @@ const SAMPLE_PLAN: StudyPlan = {
   ],
   created_at: "",
   updated_at: "",
+}
+
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+function generateDefaultSessions(days: number, title: string) {
+  return Array.from({ length: Math.min(days, 7) }, (_, i) => ({
+    day: DAY_NAMES[i % 7],
+    topic: `${title} — Session ${i + 1}`,
+    status: "upcoming" as const,
+    duration: "30 min",
+    sort_order: i,
+  }))
 }
 
 export function StudyPlanView() {
@@ -44,6 +68,25 @@ export function StudyPlanView() {
       setLoading(false)
     })
   }, [token])
+
+  const [createOpen, setCreateOpen] = React.useState(false)
+  const [newTitle, setNewTitle] = React.useState("")
+  const [newDays, setNewDays] = React.useState("14")
+
+  const handleCreate = async () => {
+    if (!newTitle.trim() || !token) return
+    const plan = await createStudyPlan(token, {
+      title: newTitle.trim(),
+      days_left: parseInt(newDays) || 14,
+      sessions: generateDefaultSessions(parseInt(newDays) || 14, newTitle.trim()),
+    })
+    if (plan) {
+      setPlan(plan)
+    }
+    setCreateOpen(false)
+    setNewTitle("")
+    setNewDays("14")
+  }
 
   const handleToggleSession = async (sessionId: string, currentStatus: string) => {
     const newStatus = currentStatus === "done" ? "upcoming" : "done"
@@ -90,6 +133,49 @@ export function StudyPlanView() {
               {plan.streak} day streak
             </Badge>
             <Badge variant="outline">{plan.days_left} days left</Badge>
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Plus className="size-3.5" /> New Plan
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create Study Plan</DialogTitle>
+                  <DialogDescription>
+                    Give your study plan a name and set the duration.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="plan-title">Plan title</Label>
+                    <Input
+                      id="plan-title"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      placeholder="e.g. NLP Final Sprint"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="plan-days">Duration (days)</Label>
+                    <Input
+                      id="plan-days"
+                      type="number"
+                      min={1}
+                      max={90}
+                      value={newDays}
+                      onChange={(e) => setNewDays(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setCreateOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreate}>Create Plan</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
