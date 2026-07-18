@@ -105,3 +105,10 @@ Status: ✅ Complete
 - ✅ **Frontend API tests** — 19 tests covering `fetchAnalytics`, `fetchHexagon`, `fetchExams`, `fetchLearningProgress`, `fetchArtifacts`, `deleteArtifact`, `fetchMaterials`, `fetchConcepts`, `fetchTimelineEvents`, `fetchMemoryFacts`, `fetchMemorySummary`, `forgetMemoryTopic`, and component rendering
 - ✅ **Coverage** — **187 backend + 19 frontend = 206 total tests**, all passing
 Status: ✅ Complete
+
+## Milestone 10 — CI/CD Pipeline & Deployment Hardening
+- ✅ **GitHub Actions CI** — added `.github/workflows/backend-ci.yml` (black lint + pytest with Postgres service) and `.github/workflows/frontend-ci.yml` (eslint + vitest + next build)
+- ✅ **Deployment config** — updated `render.yaml` with a frontend web service (Node runtime, Next.js build/start, env vars for API base URLs)
+- ✅ **Containerisation** — added `Dockerfile.backend` (Python 3.14-slim + gunicorn) and `Dockerfile.frontend` (multi-stage Node 20 Alpine build)
+- ✅ **Local dev** — added `docker-compose.yml` with Postgres, backend, and frontend services, healthchecks, and volume mounts
+Status: ✅ Complete

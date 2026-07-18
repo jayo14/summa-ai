@@ -129,3 +129,14 @@
 - Backend: 187 tests passing (0 failing)
 - Frontend: 19 tests passing (0 failing)
 - Total: 206 tests
+
+## 2026-07-18 (Milestone 10 — CI/CD Pipeline & Deployment Hardening)
+### Added
+- `.github/workflows/backend-ci.yml`: GitHub Actions workflow for backend — runs `black --check` and `pytest` against a Postgres 16 service container.
+- `.github/workflows/frontend-ci.yml`: GitHub Actions workflow for frontend — runs `eslint`, `vitest run`, and `next build`.
+- `Dockerfile.backend`: Python 3.14-slim image with gunicorn + uvicorn worker, exposes port 8000.
+- `Dockerfile.frontend`: Multi-stage Node 20 Alpine build producing standalone Next.js server.
+- `docker-compose.yml`: Local development stack with Postgres 16, backend, and frontend services, healthchecks, and volume mounts.
+
+### Changed
+- `render.yaml`: Added `summa-ai-frontend` web service (Node runtime, Next.js build/start, env vars for API base URLs).

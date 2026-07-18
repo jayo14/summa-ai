@@ -133,3 +133,9 @@
 - **Frontend test infrastructure**: Installed `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`. Added `vitest.config.ts` and `src/test/setup.ts`.
 - **Frontend API tests**: 19 tests covering all exported API functions (`fetchAnalytics`, `fetchHexagon`, `fetchExams`, `fetchLearningProgress`, `fetchArtifacts`, `deleteArtifact`, `fetchMaterials`, `fetchConcepts`, `fetchTimelineEvents`, `fetchMemoryFacts`, `fetchMemorySummary`, `forgetMemoryTopic`) plus basic component rendering.
 - **Coverage**: 187 backend + 19 frontend = **206 total tests**, all passing. Next.js build passes (pre-existing Merriweather font fetch issue in this environment is unrelated).
+
+## 2026-07-18 (Milestone 10 — CI/CD Pipeline & Deployment Hardening)
+- **GitHub Actions CI**: Added `.github/workflows/backend-ci.yml` (black lint + pytest with Postgres service) and `.github/workflows/frontend-ci.yml` (eslint + vitest + next build). Both trigger on push/PR to main when relevant paths change.
+- **Deployment config**: Updated `render.yaml` with a second web service (`summa-ai-frontend`) using Node runtime, running `npm ci && npm run build` and `npm run start`, with env vars pointing to the backend service.
+- **Containerisation**: Added `Dockerfile.backend` (Python 3.14-slim + gunicorn + uvicorn worker) and `Dockerfile.frontend` (multi-stage Node 20 Alpine build producing standalone Next.js output).
+- **Local dev**: Added `docker-compose.yml` spinning up Postgres 16, backend, and frontend with healthchecks, environment wiring, and volume mounts for hot reloading.
