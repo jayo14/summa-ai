@@ -37,10 +37,10 @@ db-down: ## Stop Postgres via docker-compose
 	docker compose down
 
 migrate: ## Run Alembic migrations
-	alembic upgrade head
+	cd apps/api && python -m alembic upgrade head
 
 migrate-create: ## Create new Alembic migration
-	alembic revision --autogenerate -m "$(msg)"
+	cd apps/api && python -m alembic revision --autogenerate -m "$(msg)"
 
 build: ## Build frontend for production
 	npm run build
