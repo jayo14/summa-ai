@@ -3,7 +3,7 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Dict
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -161,6 +161,14 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
             await manager.send_to_user(user_id, {"type": "echo", "message": f"Echo: {data}"})
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)
+
+
+@app.post("/ws/broadcast", tags=["websocket"], summary="Broadcast message", description="Send a message to all connected WebSocket clients")
+async def broadcast_message(message: dict):
+    if not settings.WEBSOCKET_ENABLED:
+        raise HTTPException(status_code=503, detail="WebSocket disabled")
+    await manager.broadcast(message)
+    return {"status": "broadcasted"}
 
 @app.get("/", tags=["root"], summary="API root", description="Redirects to Swagger UI documentation")
 async def root():

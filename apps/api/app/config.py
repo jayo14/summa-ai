@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     
     # Feature flags
     SCHEDULER_ENABLED: bool = True
+    WEBSOCKET_ENABLED: bool = True
+    NEW_CHAT_UI: bool = False
+    ADVANCED_ANALYTICS: bool = False
     
     # Z.ai configuration (set via environment variables — do not hardcode)
     ZAI_API_KEY: str = ""

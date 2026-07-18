@@ -75,4 +75,9 @@ class ConnectionManager:
         for ws in list(self._connections.get(user_id, [])):
             try: await ws.send_json(message)
             except: self.disconnect(ws, user_id)
+    async def broadcast(self, message: dict):
+        for conns in self._connections.values():
+            for ws in list(conns):
+                try: await ws.send_json(message)
+                except: self.disconnect(ws, ws)
     def get_online_count(self) -> int: return sum(len(c) for c in self._connections.values())
