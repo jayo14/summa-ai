@@ -172,3 +172,8 @@
 - `alembic/script.py.mako`: Migration template for new revisions.
 - `Makefile`: Developer workflow targets for install, test, lint, format, run, db, and migrate.
 - `.env.local`: Development environment variables (gitignored).
+
+## 2026-07-18 (Milestone 15 — Accessibility & Polish)
+### Added
+- `src/components/dashboard-page-shell.tsx`: Skip-to-main-content link for keyboard navigation.
+- `src/components/dashboard-page-shell.tsx`: `aria-label` attributes on icon-only buttons (sidebar trigger, theme toggle, sign out).

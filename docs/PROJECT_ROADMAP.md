@@ -132,8 +132,13 @@ Status: ✅ Complete
 - ✅ **Frontend pages** — verified all dashboard pages are wired to backend APIs or fallback data (concept-map, progress, tokens, saved-materials, study-timeline)
 Status: ✅ Complete
 
-## Milestone 14 — Database Migrations & Developer Experience
+## Milestone 14 — Database Migrations & Developer Experience ✅
 - ✅ **Alembic setup** — created `alembic.ini`, `alembic/env.py` with asyncpg support, and `alembic/script.py.mako` migration template
 - ✅ **Makefile** — added `Makefile` with targets for install, test, lint, format, run-api, run-frontend, db-up/down, migrate, and build
 - ✅ **Local env** — added `.env.local` with development defaults for all backend and frontend environment variables
+Status: ✅ Complete
+
+## Milestone 15 — Accessibility & Polish
+- ✅ **Skip link** — added visually-hidden skip-to-main-content link in `DashboardPageShell` for keyboard navigation
+- ✅ **Icon button labels** — added `aria-label` to icon-only buttons (sidebar trigger, theme toggle, sign out)
 Status: ✅ Complete

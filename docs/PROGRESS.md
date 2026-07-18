@@ -159,3 +159,7 @@
 - **Alembic**: Set up Alembic for database migrations. Created `alembic.ini`, `alembic/env.py` with asyncpg support (using SQLAlchemy async engine + NullPool), and `alembic/script.py.mako` template. The existing schema in `db/migrate_to_supabase.sql` can be used as reference for generating the initial migration.
 - **Makefile**: Added `Makefile` with targets: `install`, `install-frontend`, `test`, `test-frontend`, `lint`, `format`, `lint-frontend`, `run-api`, `run-frontend`, `db-up`, `db-down`, `migrate`, `migrate-create`, `build`.
 - **Local env**: Added `.env.local` with development defaults for all environment variables. It's gitignored so each developer can override locally.
+
+## 2026-07-18 (Milestone 15 — Accessibility & Polish)
+- **Skip link**: Added visually-hidden skip-to-main-content link in `DashboardPageShell` for keyboard navigation. Uses `sr-only` class with `focus:not-sr-only` to reveal on focus.
+- **Icon button labels**: Added `aria-label` to icon-only buttons: sidebar trigger ("Toggle sidebar"), theme toggle in header, and sign out button ("Sign out").
