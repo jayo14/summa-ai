@@ -11,6 +11,7 @@ from app.models.chat import ChatRequest, ChatResponse, ArtifactRef
 from app.core.security import resolve_user_id
 from app.services.cognee_service import CogneeService
 from app.services.summastudy_memory import summastudy_memory
+from app.services.user_store import UserStore
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -75,6 +76,32 @@ async def build_orchestrator_prompt(user_id: str, query: str, messages: list[dic
         "You are Summa AI, an adaptive learning companion. "
         "Keep explanations concise, friendly, and well-structured with Markdown.",
     ]
+
+    try:
+        user_store = UserStore()
+        onboarding = await user_store.get_onboarding_data(user_id)
+        if onboarding:
+            profile_parts = []
+            goals = onboarding.get("goals")
+            if goals:
+                profile_parts.append(f"Student's learning goals: {goals}")
+            personality = onboarding.get("personality", {})
+            if personality:
+                traits = ", ".join(f"{k}: {v}" for k, v in personality.items())
+                profile_parts.append(f"Student's personality traits: {traits}")
+            level = onboarding.get("level")
+            if level:
+                profile_parts.append(f"Student's self-reported level: {level}")
+            style = onboarding.get("learningStyle")
+            if style:
+                profile_parts.append(f"Student's preferred learning style: {style}")
+            if profile_parts:
+                parts.append(
+                    _section("\nSTUDENT PROFILE (from onboarding):\n" + "\n".join(profile_parts) +
+                    "\nTailor your tone, depth, and examples to match this profile.")
+                )
+    except Exception as exc:
+        logger.debug("Onboarding data fetch skipped: %s", exc)
     memories = memory_context.get("results", [])
     if memories:
         parts.append(

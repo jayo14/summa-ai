@@ -81,6 +81,18 @@ class UserStore:
             raise RuntimeError("Failed to update user")
         return updated
 
+    async def get_onboarding_data(self, user_id: str) -> Optional[Dict[str, Any]]:
+        user = await self.get_user_by_id(user_id)
+        if user is None:
+            return None
+        onboarding_raw = user.get("onboarding_data")
+        if isinstance(onboarding_raw, str):
+            try:
+                return json.loads(onboarding_raw)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return onboarding_raw or {}
+
     def serialize_user(self, user: Dict[str, Any]) -> Dict[str, Any]:
         onboarding_raw = user.get("onboarding_data")
         if isinstance(onboarding_raw, str):
