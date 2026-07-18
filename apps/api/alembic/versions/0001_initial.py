@@ -10,11 +10,11 @@ The pgvector `embedding` column on public.user_memories is created only when
 the `vector` extension is available, so this migration also runs on a stock
 postgres:16 image (CI) that does not ship pgvector.
 """
+
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
 
 revision: str = "0001_initial"
 down_revision: Union[str, None] = None
@@ -39,40 +39,86 @@ def upgrade() -> None:
         sa.Column("avatar", sa.Text(), nullable=True),
         sa.Column("bio", sa.Text(), nullable=True),
         sa.Column("provider", sa.Text(), nullable=True, server_default="credentials"),
-        sa.Column("onboarded", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")),
-        sa.Column("onboarding_data", sa.JSON(), nullable=True, server_default=sa.text("'{}'")),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "onboarded", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")
+        ),
+        sa.Column(
+            "onboarding_data", sa.JSON(), nullable=True, server_default=sa.text("'{}'")
+        ),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "conversations",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("title", sa.Text(), nullable=True, server_default="New chat"),
         sa.Column("snippet", sa.Text(), nullable=True),
-        sa.Column("archived", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "archived", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")
+        ),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "messages",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("conversation_id", sa.UUID(), nullable=False),
         sa.Column("role", sa.Text(), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
         sa.Column("reasoning", sa.Text(), nullable=True),
         sa.Column("components", sa.JSON(), nullable=True),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "artifacts",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("conversation_id", sa.UUID(), nullable=True),
         sa.Column("title", sa.Text(), nullable=True),
@@ -80,24 +126,50 @@ def upgrade() -> None:
         sa.Column("source", sa.Text(), nullable=True),
         sa.Column("source_label", sa.Text(), nullable=True),
         sa.Column("parent_artifact_id", sa.UUID(), nullable=True),
-        sa.Column("current_version", sa.Integer(), nullable=True, server_default=sa.text("1")),
-        sa.Column("archived", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")),
-        sa.Column("pinned", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")),
+        sa.Column(
+            "current_version", sa.Integer(), nullable=True, server_default=sa.text("1")
+        ),
+        sa.Column(
+            "archived", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")
+        ),
+        sa.Column(
+            "pinned", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")
+        ),
         sa.Column("component", sa.JSON(), nullable=True),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "timeline_events",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("type", sa.Text(), nullable=False),
         sa.Column("title", sa.Text(), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("metadata", sa.JSON(), nullable=True),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
@@ -105,122 +177,288 @@ def upgrade() -> None:
         "settings",
         sa.Column("user_id", sa.UUID(), primary_key=True),
         sa.Column("theme", sa.Text(), nullable=True, server_default="system"),
-        sa.Column("font_size", sa.Integer(), nullable=True, server_default=sa.text("14")),
+        sa.Column(
+            "font_size", sa.Integer(), nullable=True, server_default=sa.text("14")
+        ),
         sa.Column("density", sa.Text(), nullable=True, server_default="comfortable"),
-        sa.Column("exam_reminders", sa.Boolean(), nullable=True, server_default=sa.text("TRUE")),
-        sa.Column("proactive_check_ins", sa.Boolean(), nullable=True, server_default=sa.text("TRUE")),
-        sa.Column("weekly_progress", sa.Boolean(), nullable=True, server_default=sa.text("TRUE")),
-        sa.Column("email_notifications", sa.Boolean(), nullable=True, server_default=sa.text("TRUE")),
-        sa.Column("thinking_mode", sa.Boolean(), nullable=True, server_default=sa.text("TRUE")),
-        sa.Column("response_style", sa.Text(), nullable=True, server_default="balanced"),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "exam_reminders",
+            sa.Boolean(),
+            nullable=True,
+            server_default=sa.text("TRUE"),
+        ),
+        sa.Column(
+            "proactive_check_ins",
+            sa.Boolean(),
+            nullable=True,
+            server_default=sa.text("TRUE"),
+        ),
+        sa.Column(
+            "weekly_progress",
+            sa.Boolean(),
+            nullable=True,
+            server_default=sa.text("TRUE"),
+        ),
+        sa.Column(
+            "email_notifications",
+            sa.Boolean(),
+            nullable=True,
+            server_default=sa.text("TRUE"),
+        ),
+        sa.Column(
+            "thinking_mode", sa.Boolean(), nullable=True, server_default=sa.text("TRUE")
+        ),
+        sa.Column(
+            "response_style", sa.Text(), nullable=True, server_default="balanced"
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "materials",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("type", sa.Text(), nullable=True),
         sa.Column("title", sa.Text(), nullable=True),
         sa.Column("source", sa.Text(), nullable=True),
         sa.Column("size", sa.Integer(), nullable=True),
         sa.Column("duration", sa.Integer(), nullable=True),
-        sa.Column("concepts_extracted", sa.Integer(), nullable=True, server_default=sa.text("0")),
+        sa.Column(
+            "concepts_extracted",
+            sa.Integer(),
+            nullable=True,
+            server_default=sa.text("0"),
+        ),
         sa.Column("status", sa.Text(), nullable=True, server_default="processing"),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "concepts",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("name", sa.Text(), nullable=False),
         sa.Column("category", sa.Text(), nullable=True),
         sa.Column("mastery", sa.Text(), nullable=True),
         sa.Column("material_id", sa.UUID(), nullable=True),
-        sa.Column("related_count", sa.Integer(), nullable=True, server_default=sa.text("0")),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "related_count", sa.Integer(), nullable=True, server_default=sa.text("0")
+        ),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "artifact_versions",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("artifact_id", sa.UUID(), nullable=False),
         sa.Column("version", sa.Integer(), nullable=False),
         sa.Column("title", sa.Text(), nullable=True),
         sa.Column("component", sa.JSON(), nullable=True),
         sa.Column("change_note", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "study_plans",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("title", sa.Text(), nullable=False),
         sa.Column("progress", sa.Float(), nullable=True, server_default=sa.text("0.0")),
-        sa.Column("days_left", sa.Integer(), nullable=True, server_default=sa.text("0")),
+        sa.Column(
+            "days_left", sa.Integer(), nullable=True, server_default=sa.text("0")
+        ),
         sa.Column("streak", sa.Integer(), nullable=True, server_default=sa.text("0")),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "study_sessions",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("plan_id", sa.UUID(), nullable=False),
         sa.Column("day", sa.Text(), nullable=False),
         sa.Column("topic", sa.Text(), nullable=False),
         sa.Column("status", sa.Text(), nullable=True, server_default="upcoming"),
         sa.Column("duration", sa.Text(), nullable=True, server_default="30 min"),
-        sa.Column("sort_order", sa.Integer(), nullable=True, server_default=sa.text("0")),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "sort_order", sa.Integer(), nullable=True, server_default=sa.text("0")
+        ),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "flashcards",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("front", sa.Text(), nullable=False),
         sa.Column("back", sa.Text(), nullable=False),
-        sa.Column("mastered", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")),
-        sa.Column("ease_factor", sa.Float(), nullable=True, server_default=sa.text("2.5")),
-        sa.Column("interval_days", sa.Integer(), nullable=True, server_default=sa.text("0")),
-        sa.Column("repetitions", sa.Integer(), nullable=True, server_default=sa.text("0")),
-        sa.Column("next_review_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "mastered", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")
+        ),
+        sa.Column(
+            "ease_factor", sa.Float(), nullable=True, server_default=sa.text("2.5")
+        ),
+        sa.Column(
+            "interval_days", sa.Integer(), nullable=True, server_default=sa.text("0")
+        ),
+        sa.Column(
+            "repetitions", sa.Integer(), nullable=True, server_default=sa.text("0")
+        ),
+        sa.Column(
+            "next_review_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
     op.create_table(
         "exams",
-        sa.Column("id", sa.UUID(), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            sa.UUID(),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("name", sa.Text(), nullable=False),
         sa.Column("exam_date", sa.Date(), nullable=False),
-        sa.Column("readiness", sa.Integer(), nullable=True, server_default=sa.text("0")),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=True, server_default=sa.text("NOW()")),
+        sa.Column(
+            "readiness", sa.Integer(), nullable=True, server_default=sa.text("0")
+        ),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.text("NOW()"),
+        ),
         schema="summa_ai",
     )
 
-    op.create_index("idx_conversations_user_id", "conversations", ["user_id"], schema="summa_ai")
-    op.create_index("idx_messages_conversation_id", "messages", ["conversation_id"], schema="summa_ai")
-    op.create_index("idx_artifacts_user_id", "artifacts", ["user_id"], schema="summa_ai")
-    op.create_index("idx_timeline_events_user_id", "timeline_events", ["user_id"], schema="summa_ai")
-    op.create_index("idx_materials_user_id", "materials", ["user_id"], schema="summa_ai")
+    op.create_index(
+        "idx_conversations_user_id", "conversations", ["user_id"], schema="summa_ai"
+    )
+    op.create_index(
+        "idx_messages_conversation_id",
+        "messages",
+        ["conversation_id"],
+        schema="summa_ai",
+    )
+    op.create_index(
+        "idx_artifacts_user_id", "artifacts", ["user_id"], schema="summa_ai"
+    )
+    op.create_index(
+        "idx_timeline_events_user_id", "timeline_events", ["user_id"], schema="summa_ai"
+    )
+    op.create_index(
+        "idx_materials_user_id", "materials", ["user_id"], schema="summa_ai"
+    )
     op.create_index("idx_concepts_user_id", "concepts", ["user_id"], schema="summa_ai")
-    op.create_index("idx_artifact_versions_artifact_id", "artifact_versions", ["artifact_id", "version"], schema="summa_ai")
-    op.create_index("idx_study_plans_user_id", "study_plans", ["user_id"], schema="summa_ai")
-    op.create_index("idx_study_sessions_plan_id", "study_sessions", ["plan_id"], schema="summa_ai")
-    op.create_index("idx_flashcards_user_id", "flashcards", ["user_id"], schema="summa_ai")
+    op.create_index(
+        "idx_artifact_versions_artifact_id",
+        "artifact_versions",
+        ["artifact_id", "version"],
+        schema="summa_ai",
+    )
+    op.create_index(
+        "idx_study_plans_user_id", "study_plans", ["user_id"], schema="summa_ai"
+    )
+    op.create_index(
+        "idx_study_sessions_plan_id", "study_sessions", ["plan_id"], schema="summa_ai"
+    )
+    op.create_index(
+        "idx_flashcards_user_id", "flashcards", ["user_id"], schema="summa_ai"
+    )
     op.create_index("idx_exams_user_id", "exams", ["user_id"], schema="summa_ai")
 
     # Foreign keys are added with raw DDL because the referenced table
@@ -265,8 +503,7 @@ def upgrade() -> None:
     # requires the pgvector extension; create the table always, then add the
     # embedding column only when the extension is available so this migration
     # also applies on a stock postgres image (CI) without pgvector.
-    op.execute(
-        """
+    op.execute("""
         CREATE TABLE IF NOT EXISTS public.user_memories (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -276,8 +513,7 @@ def upgrade() -> None:
             created_at TIMESTAMPTZ DEFAULT NOW(),
             last_accessed_at TIMESTAMPTZ DEFAULT NOW()
         );
-        """
-    )
+        """)
     # The embedding column requires the pgvector extension, which is not
     # present on a stock postgres image (CI). Best-effort: add it only when
     # the extension can be created, otherwise leave it out (Supabase has it).
@@ -297,7 +533,6 @@ def upgrade() -> None:
             )
             _engine = create_async_engine(_url, poolclass=sa.pool.NullPool)
             async with _engine.connect() as _c:
-                _c = _c.execution_options(isolation_level="AUTOCOMMIT")
                 try:
                     await _c.execute(sa.text("CREATE EXTENSION IF NOT EXISTS vector"))
                     await _c.execute(
@@ -323,8 +558,7 @@ def upgrade() -> None:
     )
 
     # Auto-create user profile on first Supabase login.
-    op.execute(
-        """
+    op.execute("""
         CREATE OR REPLACE FUNCTION summa_ai.handle_new_user()
         RETURNS TRIGGER AS $$
         BEGIN
@@ -339,17 +573,14 @@ def upgrade() -> None:
             RETURN NEW;
         END;
         $$ LANGUAGE plpgsql SECURITY DEFINER;
-        """
-    )
+        """)
     op.execute("DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users")
-    op.execute(
-        """
+    op.execute("""
         CREATE TRIGGER on_auth_user_created
             AFTER INSERT ON auth.users
             FOR EACH ROW
             EXECUTE FUNCTION summa_ai.handle_new_user();
-        """
-    )
+        """)
 
 
 def downgrade() -> None:
@@ -361,7 +592,9 @@ def downgrade() -> None:
     op.drop_index("idx_flashcards_user_id", "flashcards", schema="summa_ai")
     op.drop_index("idx_study_sessions_plan_id", "study_sessions", schema="summa_ai")
     op.drop_index("idx_study_plans_user_id", "study_plans", schema="summa_ai")
-    op.drop_index("idx_artifact_versions_artifact_id", "artifact_versions", schema="summa_ai")
+    op.drop_index(
+        "idx_artifact_versions_artifact_id", "artifact_versions", schema="summa_ai"
+    )
     op.drop_index("idx_concepts_user_id", "concepts", schema="summa_ai")
     op.drop_index("idx_materials_user_id", "materials", schema="summa_ai")
     op.drop_index("idx_timeline_events_user_id", "timeline_events", schema="summa_ai")
@@ -384,8 +617,7 @@ def downgrade() -> None:
     op.drop_table("user_profiles", schema="summa_ai")
 
     # Drop the auth stub only if no other objects depend on it.
-    op.execute(
-        """
+    op.execute("""
         DO $$
         BEGIN
             IF NOT EXISTS (
@@ -396,5 +628,4 @@ def downgrade() -> None:
                 DROP SCHEMA IF EXISTS auth;
             END IF;
         END $$;
-        """
-    )
+        """)
