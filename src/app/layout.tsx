@@ -112,6 +112,17 @@ export default function RootLayout({
       </head>
       <body className={`${lexendDeca.variable} font-sans antialiased bg-background text-foreground`}>
         <Providers>{children}</Providers>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js').catch(() => {})
+                })
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

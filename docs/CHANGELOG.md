@@ -185,3 +185,10 @@
 - `apps/api/app/config.py`: Feature flags `WEBSOCKET_ENABLED`, `NEW_CHAT_UI`, `ADVANCED_ANALYTICS`.
 - `src/lib/feature-flags.ts`: React context provider and `useFeatureFlags` hook with localStorage persistence.
 - `src/components/providers.tsx`: Wired `FeatureFlagsProvider` into root providers.
+
+## 2026-07-18 (Milestone 17 — PWA & Offline Support)
+### Added
+- `src/app/manifest.ts`: Web app manifest for PWA installability.
+- `public/sw.js`: Service worker with cache-first strategy for static assets and offline fallback.
+- `src/app/layout.tsx`: Service worker registration script (HTTPS-only).
+- `src/app/offline/page.tsx`: Offline fallback page with friendly message and home link.

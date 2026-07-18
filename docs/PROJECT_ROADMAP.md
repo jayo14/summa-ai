@@ -148,3 +148,10 @@ Status: ✅ Complete
 - ✅ **Feature flags** — added `WEBSOCKET_ENABLED`, `NEW_CHAT_UI`, `ADVANCED_ANALYTICS` to backend `Settings`; created `src/lib/feature-flags.ts` with React context provider and `useFeatureFlags` hook
 - ✅ **Provider wiring** — integrated `FeatureFlagsProvider` into root `Providers` component
 Status: ✅ Complete
+
+## Milestone 17 — PWA & Offline Support
+- ✅ **Web app manifest** — added `src/app/manifest.ts` with app name, icons, theme color, and display mode
+- ✅ **Service worker** — added `public/sw.js` with cache-first strategy for static assets and offline fallback
+- ✅ **Service worker registration** — added inline registration script in `layout.tsx` (HTTPS-only)
+- ✅ **Offline fallback** — created `src/app/offline/page.tsx` with friendly offline message and home link
+Status: ✅ Complete

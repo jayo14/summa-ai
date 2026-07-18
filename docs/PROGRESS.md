@@ -168,3 +168,9 @@
 - **WebSocket broadcast**: Added `POST /ws/broadcast` endpoint and `ConnectionManager.broadcast()` method for pushing messages to all connected WebSocket clients.
 - **Feature flags**: Added `WEBSOCKET_ENABLED`, `NEW_CHAT_UI`, `ADVANCED_ANALYTICS` to backend `Settings`. Created `src/lib/feature-flags.ts` with React context provider and `useFeatureFlags` hook for client-side feature flag management with localStorage persistence.
 - **Provider wiring**: Integrated `FeatureFlagsProvider` into root `Providers` component.
+
+## 2026-07-18 (Milestone 17 — PWA & Offline Support)
+- **Web app manifest**: Added `src/app/manifest.ts` with app name, icons, theme color, and standalone display mode.
+- **Service worker**: Added `public/sw.js` with cache-first strategy for static assets. Caches `/`, `/chat`, `/progress`, `/concept-map`, `/study-timeline`, `/saved-materials`, `/tokens`, and `/offline`.
+- **Service worker registration**: Added inline registration script in `layout.tsx` that only runs over HTTPS.
+- **Offline fallback**: Created `src/app/offline/page.tsx` with a friendly offline message and link back to home.
