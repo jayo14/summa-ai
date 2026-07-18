@@ -150,6 +150,65 @@ CREATE INDEX IF NOT EXISTS idx_timeline_events_user_id ON summa_ai.timeline_even
 CREATE INDEX IF NOT EXISTS idx_materials_user_id ON summa_ai.materials(user_id);
 CREATE INDEX IF NOT EXISTS idx_concepts_user_id ON summa_ai.concepts(user_id);
 
+-- Step 15: Study plans
+CREATE TABLE IF NOT EXISTS summa_ai.study_plans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    progress FLOAT DEFAULT 0.0,
+    days_left INT DEFAULT 0,
+    streak INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_study_plans_user_id ON summa_ai.study_plans(user_id);
+
+-- Step 16: Study plan sessions
+CREATE TABLE IF NOT EXISTS summa_ai.study_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plan_id UUID NOT NULL REFERENCES summa_ai.study_plans(id) ON DELETE CASCADE,
+    day TEXT NOT NULL,
+    topic TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'upcoming',
+    duration TEXT DEFAULT '30 min',
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_study_sessions_plan_id ON summa_ai.study_sessions(plan_id);
+
+-- Step 17: Flashcards
+CREATE TABLE IF NOT EXISTS summa_ai.flashcards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    front TEXT NOT NULL,
+    back TEXT NOT NULL,
+    mastered BOOLEAN DEFAULT FALSE,
+    ease_factor FLOAT DEFAULT 2.5,
+    interval_days INT DEFAULT 0,
+    repetitions INT DEFAULT 0,
+    next_review_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_flashcards_user_id ON summa_ai.flashcards(user_id);
+CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON summa_ai.flashcards(user_id, next_review_at);
+
+-- Step 18: Exams
+CREATE TABLE IF NOT EXISTS summa_ai.exams (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    exam_date DATE NOT NULL,
+    readiness INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_exams_user_id ON summa_ai.exams(user_id);
+
 -- Step 13: Auto-create user profile on first Supabase login (via trigger)
 CREATE OR REPLACE FUNCTION summa_ai.handle_new_user()
 RETURNS TRIGGER AS $$
