@@ -57,8 +57,9 @@ import { SettingsDialog } from "@/components/prompt-kit/settings-dialog"
 import { WorkspacePanel } from "@/components/prompt-kit/workspace-panel"
 import { FocusRing } from "@/components/focus-ring"
 import type { OnboardingData } from "@/components/prompt-kit/onboarding-flow"
-import { useChat, type UseChatMessage } from "@/hooks/use-chat"
-import { useWorkspaceStore } from "@/hooks/use-workspace"
+import { useChat, type UseChatMessage, type ChatArtifactEvent } from "@/hooks/use-chat"
+import { useWorkspaceStore, type ArtifactSource } from "@/hooks/use-workspace"
+import type { ChatComponentData, ChatComponentType } from "@/components/prompt-kit/chat-components"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { fastapiFetch, type FastapiConversation, type FastapiMessage } from "@/lib/fastapi"
@@ -200,6 +201,25 @@ export function ChatWorkspace() {
     api: "/api/chat",
     userId,
     conversationId: activeConversationId ?? undefined,
+    onArtifact: (artifact: ChatArtifactEvent) => {
+      const artifactType = artifact.type as ChatComponentType
+      const component = { type: artifactType, title: artifact.title } as ChatComponentData
+      useWorkspaceStore.getState().addSuggestion(
+        {
+          id: artifact.id,
+          title: artifact.title,
+          type: artifactType,
+          versions: [{ version: 1, createdAt: Date.now(), component }],
+          currentVersion: 1,
+          source: 'conversation' as ArtifactSource,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          archived: false,
+          pinned: false,
+        },
+        `Summa AI generated: ${artifact.title}`,
+      )
+    },
     onDone: async (history) => {
       const conversationId = conversationIdRef.current
       if (!conversationId || history.length < 2) return
