@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/use-supabase-auth'
 import { cn } from '@/lib/utils'
 import {
   User,
@@ -183,7 +183,7 @@ export function SettingsDialog({
     openaiApiKey: '',
   }))
 
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const token = session?.accessToken
   const [memories, setMemories] = React.useState<MemoryItem[]>(SAMPLE_MEMORIES)
   const [loadingMemories, setLoadingMemories] = React.useState(true)

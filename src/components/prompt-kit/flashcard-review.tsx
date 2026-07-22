@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/lib/use-supabase-auth"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -27,7 +27,7 @@ const SAMPLE_CARDS: Flashcard[] = [
 ]
 
 export function FlashcardReview() {
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const token = session?.accessToken as string | undefined
   const [cards, setCards] = React.useState<Flashcard[]>(SAMPLE_CARDS)
   const [index, setIndex] = React.useState(0)

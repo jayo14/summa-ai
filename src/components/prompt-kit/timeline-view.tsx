@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { motion } from 'framer-motion'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/use-supabase-auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -133,7 +133,7 @@ const EVENT_META: Record<TimelineEvent['type'], { icon: React.ReactNode; color: 
 /* ------------------------------------------------------------------ */
 
 export function TimelineView() {
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const token = session?.accessToken
   const [loading, setLoading] = React.useState(true)
   const [events, setEvents] = React.useState<TimelineEvent[]>([])

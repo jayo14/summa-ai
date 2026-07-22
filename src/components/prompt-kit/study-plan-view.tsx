@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/lib/use-supabase-auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -51,7 +51,7 @@ function generateDefaultSessions(days: number, title: string) {
 }
 
 export function StudyPlanView() {
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const token = session?.accessToken as string | undefined
   const [plan, setPlan] = React.useState<StudyPlan>(SAMPLE_PLAN)
   const [loading, setLoading] = React.useState(true)

@@ -23,7 +23,7 @@ import {
   Sparkles,
   FileType2,
 } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/use-supabase-auth'
 import { fetchMaterials, fetchConcepts } from '@/lib/api'
 import type { Material as ApiMaterial, Concept as ApiConcept } from '@/lib/api'
 
@@ -109,7 +109,7 @@ const MASTERY_BADGE: Record<Concept['mastery'], string> = {
 /* ------------------------------------------------------------------ */
 
 export function KnowledgeBaseView() {
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const token = session?.accessToken
   const [loading, setLoading] = React.useState(true)
   const [materials, setMaterials] = React.useState<ApiMaterial[]>([])

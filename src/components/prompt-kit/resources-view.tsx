@@ -33,7 +33,7 @@ import {
   Circle,
   Upload,
 } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/use-supabase-auth'
 import { fetchArtifacts, deleteArtifact, type Artifact } from '@/lib/api'
 
 /* ------------------------------------------------------------------ */
@@ -100,7 +100,7 @@ export function ResourcesView() {
   const [statusFilter, setStatusFilter] = React.useState<ResourceStatus | 'all'>('all')
   const [sort, setSort] = React.useState<'recent' | 'title' | 'score'>('recent')
 
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const token = session?.accessToken
   const [loading, setLoading] = React.useState(true)
   const [artifacts, setArtifacts] = React.useState<Artifact[]>([])

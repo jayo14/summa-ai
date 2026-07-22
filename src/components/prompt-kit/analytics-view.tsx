@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/use-supabase-auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -138,7 +138,7 @@ const evolutionChartConfig: ChartConfig = {
 /* ------------------------------------------------------------------ */
 
 export function AnalyticsView() {
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const token = session?.accessToken
   const [loading, setLoading] = React.useState(true)
   const [hexagonData, setHexagonData] = React.useState<HexagonDim[] | null>(null)

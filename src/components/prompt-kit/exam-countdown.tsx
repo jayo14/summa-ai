@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/lib/use-supabase-auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -34,7 +34,7 @@ function daysUntil(dateStr: string) {
 }
 
 export function ExamCountdown() {
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const token = session?.accessToken as string | undefined
   const [exams, setExams] = React.useState<Exam[]>(SAMPLE_EXAMS)
   const [loading, setLoading] = React.useState(true)
