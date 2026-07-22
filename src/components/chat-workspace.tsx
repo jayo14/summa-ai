@@ -167,14 +167,18 @@ export function ChatWorkspace() {
     if (!userId) return
     setLoadingConversations(true)
     try {
-      const data = await fastapiFetch<FastapiConversation[]>(`/conversations?user_id=${encodeURIComponent(userId)}`)
+      const data = await fastapiFetch<FastapiConversation[]>(
+        `/conversations?user_id=${encodeURIComponent(userId)}`,
+        undefined,
+        accessToken,
+      )
       setConversations(data)
     } catch {
       setConversations([])
     } finally {
       setLoadingConversations(false)
     }
-  }, [userId])
+  }, [accessToken, userId])
 
   const persistMessage = React.useCallback(
     async (conversationId: string, message: UseChatMessage) => {
@@ -271,7 +275,8 @@ export function ChatWorkspace() {
 
   React.useEffect(() => {
     if (status !== "authenticated") return
-    const userId = session?.user?.id || session?.user?.email || ""
+  const userId = session?.user?.id || session?.user?.email || ""
+  const accessToken = session?.accessToken
     if (userId && !isOnboarded(userId)) {
       router.replace("/onboarding")
       return
