@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { SummaLogo } from "@/components/prompt-kit/summa-logo"
+import { createClient } from "@/lib/supabase"
 
 export function ForgotPasswordScreen() {
   const [email, setEmail] = React.useState("")
@@ -23,9 +24,19 @@ export function ForgotPasswordScreen() {
     }
     setLoading(true)
     setError(null)
-    await new Promise((r) => setTimeout(r, 1200))
-    setLoading(false)
-    setSent(true)
+    try {
+      const supabase = createClient()
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        { redirectTo: `${window.location.origin}/auth/callback?next=/reset-password` },
+      )
+      if (resetError) throw resetError
+      setSent(true)
+    } catch {
+      setError("Could not send reset link. Please check your email and try again.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
