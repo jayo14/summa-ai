@@ -156,6 +156,7 @@ export function ChatWorkspace() {
   const [onboardingData, setOnboardingState] = React.useState<OnboardingData | null>(null)
 
   const userId = session?.user?.id || session?.user?.email || ""
+  const accessToken = session?.accessToken
   const activeConversationFromQuery = searchParams.get("id")
   const conversationIdRef = React.useRef<string | null>(null)
   const skipNextMessageLoadRef = React.useRef(false)
@@ -279,8 +280,6 @@ export function ChatWorkspace() {
 
   React.useEffect(() => {
     if (status !== "authenticated") return
-  const userId = session?.user?.id || session?.user?.email || ""
-  const accessToken = session?.accessToken
     if (userId && !isOnboarded(userId)) {
       router.replace("/onboarding")
       return
