@@ -190,9 +190,9 @@ export function ChatWorkspace() {
           reasoning: message.reasoning ?? null,
           components: message.components ?? null,
         }),
-      })
+      }, accessToken)
     },
-    [],
+    [accessToken],
   )
 
   const {
