@@ -6,6 +6,7 @@ actually work. They run in CI (where DATABASE_URL points at the postgres
 service and `alembic upgrade head` has created the schema) and are skipped
 locally when no real Postgres is configured.
 """
+
 from __future__ import annotations
 
 import os
@@ -79,7 +80,9 @@ async def test_create_and_list_study_plan(store):
 
 @pytest.mark.asyncio
 async def test_update_and_delete_study_plan(store):
-    created = await store.create_study_plan(USER_ID, {"title": "Plan A", "sessions": []})
+    created = await store.create_study_plan(
+        USER_ID, {"title": "Plan A", "sessions": []}
+    )
     pid = created["id"]
 
     updated = await store.update_study_plan(pid, {"progress": 0.5, "streak": 2})
@@ -123,6 +126,8 @@ async def test_create_list_delete_exam(store):
 
 @pytest.mark.asyncio
 async def test_timeline_event_created_on_study_plan(store):
-    await store.create_study_plan(USER_ID, {"title": "Plan with timeline", "sessions": []})
+    await store.create_study_plan(
+        USER_ID, {"title": "Plan with timeline", "sessions": []}
+    )
     events = await store.list_timeline_events(USER_ID)
     assert any(e["type"] == "study_plan" for e in events)
