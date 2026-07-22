@@ -314,7 +314,7 @@ export function ChatWorkspace() {
           title: titleFromPrompt(prompt),
           snippet: prompt.slice(0, 120),
         }),
-      })
+      }, accessToken)
       setConversations((prev) => [created, ...prev.filter((item) => item.id !== created.id)])
       skipNextMessageLoadRef.current = true
       setActiveConversationId(created.id)
@@ -322,7 +322,7 @@ export function ChatWorkspace() {
       router.replace(`/chat?id=${encodeURIComponent(created.id)}`)
       return created
     },
-    [router, userId],
+    [accessToken, router, userId],
   )
 
   const handleSubmit = React.useCallback(async () => {
