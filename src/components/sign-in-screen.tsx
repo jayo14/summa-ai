@@ -16,7 +16,7 @@ import { fetchCurrentUserProfile } from "@/lib/onboarding"
 
 export function SignInScreen() {
   const router = useRouter()
-  const { session, status } = useAuth()
+  const { session, status, signIn } = useAuth()
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [showPw, setShowPw] = React.useState(false)
@@ -75,8 +75,6 @@ export function SignInScreen() {
       </div>
     )
   }
-
-  const { signIn } = useAuth()
 
   const handleSummaStudy = async () => {
     safe.setLoading("summa")
