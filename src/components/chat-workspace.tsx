@@ -245,13 +245,17 @@ export function ChatWorkspace() {
   const loadConversationMessages = React.useCallback(
     async (conversationId: string) => {
       try {
-        const data = await fastapiFetch<FastapiMessage[]>(`/conversations/${conversationId}/messages`)
+        const data = await fastapiFetch<FastapiMessage[]>(
+          `/conversations/${conversationId}/messages`,
+          undefined,
+          accessToken,
+        )
         setMessages(mapBackendMessages(data))
       } catch {
         setMessages([])
       }
     },
-    [],
+    [accessToken],
   )
 
   React.useEffect(() => {
