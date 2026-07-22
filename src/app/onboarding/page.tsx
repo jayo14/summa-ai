@@ -26,12 +26,12 @@ export default function OnboardingPage() {
     }
     const userId = session?.user?.id || session?.user?.email
     if (!userId) return
-    if (isOnboarded(userId)) {
+    if (session?.user?.onboarded || isOnboarded(userId)) {
       router.replace("/chat")
       return
     }
     setReady(true)
-  }, [router, session?.user?.email, session?.user?.id, status])
+  }, [router, session?.user?.email, session?.user?.id, session?.user?.onboarded, status])
 
   const userId = session?.user?.id || session?.user?.email || ""
   const initialData = React.useMemo(() => {
