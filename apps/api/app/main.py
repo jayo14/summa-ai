@@ -90,6 +90,19 @@ _rate_limit_store: Dict[str, list] = {}
 
 
 @app.middleware("http")
+async def cors_error_middleware(request: Request, call_next):
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        response = JSONResponse({"detail": f"Internal Server Error"}, status_code=500)
+    origin = request.headers.get("origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+
+@app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     if not settings.is_production:
         return await call_next(request)
