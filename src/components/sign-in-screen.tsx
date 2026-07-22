@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { signIn, useSession } from "next-auth/react"
+import { useAuth } from "@/lib/use-supabase-auth"
 import { motion } from "framer-motion"
 import { ArrowRight, BookOpen, CheckCircle2, Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react"
 
@@ -16,7 +16,7 @@ import { fetchCurrentUserProfile } from "@/lib/onboarding"
 
 export function SignInScreen() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { session, status } = useAuth()
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [showPw, setShowPw] = React.useState(false)
@@ -76,32 +76,27 @@ export function SignInScreen() {
     )
   }
 
+  const { signIn } = useAuth()
+
   const handleSummaStudy = async () => {
     safe.setLoading("summa")
     safe.setError(null)
-    const result = await signIn("credentials", {
-      email,
-      password,
-      callbackUrl: "/onboarding",
-      redirect: false,
-    })
-    if (!mounted.current) return
-    safe.setLoading(null)
-
-    if (result?.error) {
+    try {
+      await signIn("credentials", { email, password })
+      if (!mounted.current) return
+      safe.setLoading(null)
+      startOnboarding()
+    } catch {
+      if (!mounted.current) return
+      safe.setLoading(null)
       safe.setError("We could not start your account. Please check your details and try again.")
-      return
     }
-
-    startOnboarding()
   }
 
   const handleGoogle = async () => {
     safe.setLoading("google")
     safe.setError(null)
-    await signIn("google", {
-      callbackUrl: "/onboarding",
-    })
+    await signIn("google")
     if (mounted.current) safe.setLoading(null)
   }
 

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/lib/use-supabase-auth"
 
 import { Loader } from "@/components/prompt-kit/loader"
 import { OnboardingFlow, type OnboardingData } from "@/components/prompt-kit/onboarding-flow"
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic"
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { session, status } = useAuth()
   const [ready, setReady] = React.useState(false)
 
   React.useEffect(() => {

@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useSession, signIn } from "next-auth/react"
+import { useAuth } from "@/lib/use-supabase-auth"
 import { motion } from "framer-motion"
 import {
   ArrowRight,
@@ -43,7 +43,7 @@ function passwordStrength(pw: string): { label: string; color: string; width: st
 
 export function SignUpScreen() {
   const router = useRouter()
-  const { status } = useSession()
+  const { status, signIn } = useAuth()
   const [name, setName] = React.useState("")
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
@@ -121,21 +121,10 @@ export function SignUpScreen() {
       }
 
       // 2. Sign in with the new credentials
-      const result = await signIn("credentials", {
-        email,
-        password,
-        callbackUrl: "/onboarding",
-        redirect: false,
-      })
+      await signIn("credentials", { email, password })
 
       if (!mounted.current) return
       safeSetLoading(null)
-
-      if (result?.error) {
-        safeSetError("Account created but sign-in failed. Please try signing in.")
-        return
-      }
-
       startOnboarding()
     } catch {
       if (mounted.current) {
@@ -148,9 +137,7 @@ export function SignUpScreen() {
   const handleGoogle = async () => {
     safeSetLoading("google")
     safeSetError(null)
-    await signIn("google", {
-      callbackUrl: "/onboarding",
-    })
+    await signIn("google")
     if (mounted.current) safeSetLoading(null)
   }
 

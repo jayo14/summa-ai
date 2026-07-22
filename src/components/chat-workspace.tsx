@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import { useAuth } from "@/lib/use-supabase-auth"
 import { motion } from "framer-motion"
 import {
   ArrowUp,
@@ -145,7 +145,7 @@ export function ChatWorkspace() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { data: session, status } = useSession()
+  const { session, status, signOut } = useAuth()
   const { isDark, toggleTheme } = useThemeMode()
   const [conversations, setConversations] = React.useState<FastapiConversation[]>([])
   const [activeConversationId, setActiveConversationId] = React.useState<string | null>(null)

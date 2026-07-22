@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import { useAuth } from "@/lib/use-supabase-auth"
 import { BarChart3, BookOpen, Calendar, FolderOpen, Layers, LogOut, Moon, Plus, Settings, Sparkles, Sun, Trophy, Workflow } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -79,7 +79,7 @@ function initials(name?: string | null, email?: string | null) {
 
 export function DashboardPageShell({ title, description, activePath, children }: DashboardPageShellProps) {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { session, status, signOut } = useAuth()
   const { isDark, toggleTheme } = useThemeMode()
   const [settingsOpen, setSettingsOpen] = React.useState(false)
 
@@ -175,6 +175,7 @@ export function DashboardPageShell({ title, description, activePath, children }:
               {isDark ? "Light" : "Dark"}
             </Button>
             <Button variant="ghost" size="sm" className="gap-2 rounded-[8px] h-8 text-xs" onClick={() => void signOut({ callbackUrl: "/home" })} aria-label="Sign out">
+
               <LogOut className="size-3.5" />
             </Button>
           </div>
@@ -218,6 +219,7 @@ export function DashboardPageShell({ title, description, activePath, children }:
           avatar: currentUser.image ?? undefined,
         }}
         onLogout={() => void signOut({ callbackUrl: "/home" })}
+
       />
     </SidebarProvider>
   )
