@@ -65,12 +65,10 @@ These are the settings defined in `apps/api/app/config.py`:
 
 ### Frontend auth env vars
 
-If you want the sign-in flow to use the backend auth endpoint and Google OAuth, the frontend code also reads:
+Authentication is handled by **Supabase Auth** directly on the frontend. Required:
 
-- `FASTAPI_AUTH_LOGIN_URL` or `NEXT_PUBLIC_FASTAPI_AUTH_LOGIN_URL`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `NEXTAUTH_SECRET`
+- `NEXT_PUBLIC_SUPABASE_URL` — your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — your Supabase anon/public key
 
 ## Cognee integration
 

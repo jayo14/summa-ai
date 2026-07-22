@@ -8,7 +8,7 @@
 src/                          Next.js frontend
   app/                        chat, concept-map, forgot-password, home, onboarding,
                                progress, saved-materials, sign-in, sign-up, study-timeline, tokens
-  app/api/auth/[...nextauth]  NextAuth route
+   auth/callback                Supabase Auth OAuth callback handler
   app/api/chat                frontend-side chat API route
   components/, hooks/, lib/, types/
 
@@ -28,7 +28,7 @@ apps/api/                     FastAPI backend
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js, NextAuth (`src/app/api/auth/[...nextauth]`, `src/lib/auth.ts`), Google OAuth support |
+| Frontend | Next.js, Supabase Auth (`@supabase/ssr`, `@supabase/supabase-js`), Google OAuth support |
 | Backend | FastAPI, Supabase Auth JWT verification (`PyJWT`) — shares identity with SummaStudy |
 | Data | `asyncpg` to Supabase Postgres (`summa_ai.user_profiles` + `summa_ai.settings`) via `user_store.py`; Cognee datasets for memory/exams/progress/artifacts. In-memory dicts in `data_routes.py` for artifacts/conversations/messages/timeline/materials/concepts (demo-only). |
 | Memory | Cognee (managed memory layer), falls back to in-memory storage when `COGNEE_API_KEY` is unset |
@@ -38,8 +38,10 @@ apps/api/                     FastAPI backend
 
 ## 3. Authentication Flow
 
-- Two separate auth surfaces exist: NextAuth on the frontend (Google OAuth capable) and a self-issued JWT system on the backend (`create_access_token`/`verify_access_token` in `core/security.py`), with no visible bridge connecting the two into one identity. This needs direct tracing to confirm whether NextAuth session tokens are exchanged for backend JWTs anywhere, or whether these are two independent, currently-disconnected auth states.
-- Backend verifies Supabase JWTs via `verify_supabase_jwt()` in `core/security.py`, using `SUPABASE_JWT_SECRET`. No self-issued JWTs. The old `JWT_SECRET_KEY` system was removed in Milestone 3.
+- Frontend uses **Supabase Auth** directly via `@supabase/ssr` (`src/lib/supabase.ts`). Users sign in with email/password or Google OAuth. The Supabase JWT is stored and passed to the FastAPI backend as a `Bearer` token.
+- Backend verifies Supabase JWTs via `verify_supabase_jwt()` in `core/security.py`, using `SUPABASE_JWT_SECRET`.
+- Google OAuth callback is handled by `src/app/auth/callback/route.ts`.
+- User profiles are auto-created by a `on_auth_user_created` trigger on `auth.users`.
 
 ## 4. Database Architecture
 
@@ -72,4 +74,4 @@ apps/api/                     FastAPI backend
 
 ## 8. External Integrations
 
-- Cognee Cloud (memory), Qdrant (vector store, via Cognee), Google OAuth (via NextAuth), Z.ai (chat completions, hardcoded).
+- Cognee Cloud (memory), Qdrant (vector store, via Cognee), Google OAuth (via Supabase Auth), Z.ai (chat completions, hardcoded).
