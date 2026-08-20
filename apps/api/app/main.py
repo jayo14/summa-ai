@@ -94,6 +94,7 @@ async def cors_error_middleware(request: Request, call_next):
     try:
         response = await call_next(request)
     except Exception as exc:
+        logger.exception("Unhandled exception processing %s %s", request.method, request.url.path)
         response = JSONResponse({"detail": f"Internal Server Error"}, status_code=500)
     origin = request.headers.get("origin")
     if origin:

@@ -26,6 +26,7 @@ export interface UseChatOptions {
   enableThinking?: boolean
   userId?: string
   conversationId?: string
+  accessToken?: string
   onDone?: (messages: UseChatMessage[]) => void
   onError?: (err: string) => void
   onArtifact?: (artifact: ChatArtifactEvent) => void
@@ -48,7 +49,7 @@ export interface UseChatReturn {
  * Designed to plug into prompt-kit components.
  */
 export function useChat(opts: UseChatOptions = {}): UseChatReturn {
-  const { api = '/api/chat', enableThinking = true, userId, conversationId, onDone, onError, onArtifact } = opts
+  const { api = '/api/chat', enableThinking = true, userId, conversationId, accessToken, onDone, onError, onArtifact } = opts
   const [messages, setMessages] = React.useState<UseChatMessage[]>([])
   const [status, setStatus] = React.useState<'ready' | 'submitted' | 'streaming' | 'error'>('ready')
   const abortRef = React.useRef<AbortController | null>(null)
@@ -91,7 +92,10 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
       try {
         const res = await fetch(api, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
+          },
           body: JSON.stringify({
             user_id: userId ?? 'anonymous',
             conversation_id: requestConversationId ?? conversationId ?? null,
@@ -212,7 +216,7 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
         abortRef.current = null
       }
     },
-    [api, conversationId, enableThinking, onDone, onError, userId],
+    [accessToken, api, conversationId, enableThinking, onDone, onError, userId],
   )
 
   const send = React.useCallback(

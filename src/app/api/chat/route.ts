@@ -7,11 +7,13 @@ export const dynamic = "force-dynamic"
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
+  const authHeader = req.headers.get("authorization") ?? ""
 
   const upstream = await fetch(fastapiUrl("/chat/stream"), {
     method: "POST",
     headers: {
       "content-type": "application/json",
+      ...(authHeader ? { authorization: authHeader } : {}),
     },
     body,
   })

@@ -205,6 +205,7 @@ export function ChatWorkspace() {
   } = useChat({
     api: "/api/chat",
     userId,
+    accessToken,
     conversationId: activeConversationId ?? undefined,
     onArtifact: (artifact: ChatArtifactEvent) => {
       const artifactType = artifact.type as ChatComponentType
