@@ -128,7 +128,6 @@ export function KnowledgeBaseView() {
 
   const [search, setSearch] = React.useState('')
   const [typeFilter, setTypeFilter] = React.useState<MaterialType | 'all'>('all')
-  const fileRef = React.useRef<HTMLInputElement>(null)
 
   const displayMaterials = React.useMemo(() => {
     if (materials.length === 0) return SAMPLE_MATERIALS
@@ -193,16 +192,13 @@ export function KnowledgeBaseView() {
               Uploaded materials and the concepts Summa AI has extracted from them.
             </p>
           </div>
-          <Button onClick={() => fileRef.current?.click()} className="gap-2">
-            <Upload className="size-4" /> Upload material
+          <Button
+            disabled
+            title="File upload isn't wired to a real ingestion pipeline yet — coming soon."
+            className="gap-2"
+          >
+            <Upload className="size-4" /> Upload material (coming soon)
           </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pdf,.doc,.docx,.txt,.md,image/*,video/*"
-            multiple
-            className="hidden"
-          />
         </div>
 
         {/* Stats */}
