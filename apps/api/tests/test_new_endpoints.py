@@ -93,3 +93,44 @@ class TestAnalyticsHonesty:
             }
             for field in body["demo_fields"]:
                 assert body[field] == []
+
+
+class TestExportMyData:
+    def test_export_aggregates_cognee_and_postgres_data(self):
+        """The 'Export my data' privacy control used to download a hardcoded
+        stub blob. It now calls a real endpoint that pulls from both Cognee
+        and every Postgres-backed table."""
+        with patch(
+            "app.routes.memory.resolve_user_id", return_value="user-1"
+        ), patch("app.routes.memory.cognee") as mock_cognee, patch(
+            "app.routes.memory.summastudy_memory"
+        ) as mock_hybrid, patch(
+            "app.routes.memory.DataStore"
+        ) as MockDataStore:
+            mock_cognee.recall_context = AsyncMock(return_value={"results": [{"text": "convo"}]})
+            mock_cognee.recall_exams = AsyncMock(return_value={"exams": [{"name": "Final"}]})
+            mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
+            mock_cognee.recall_artifacts = AsyncMock(return_value={"artifacts": []})
+            mock_cognee._dataset = MagicMock(return_value="user_user-1_sessions")
+            mock_cognee.list_memories = AsyncMock(return_value=[])
+            mock_hybrid.retrieve_relevant_memories = AsyncMock(
+                return_value=[{"content": "likes short summaries", "type": "preference"}]
+            )
+            mock_store = MockDataStore.return_value
+            mock_store.list_artifacts = AsyncMock(return_value=[{"id": "a1"}])
+            mock_store.list_conversations = AsyncMock(return_value=[])
+            mock_store.list_timeline_events = AsyncMock(return_value=[])
+            mock_store.list_materials = AsyncMock(return_value=[])
+            mock_store.list_concepts = AsyncMock(return_value=[])
+            mock_store.list_study_plans = AsyncMock(return_value=[])
+            mock_store.list_flashcards = AsyncMock(return_value=[])
+            mock_store.list_exams = AsyncMock(return_value=[])
+
+            response = client.get("/api/v1/memory/export", headers=_auth_headers())
+            assert response.status_code == 200
+            body = response.json()
+            assert body["user_id"] == "user-1"
+            assert "exported_at" in body
+            assert body["cognee_memory"]["conversations"] == [{"text": "convo"}]
+            assert body["atomic_facts"][0]["content"] == "likes short summaries"
+            assert body["postgres_data"]["artifacts"] == [{"id": "a1"}]

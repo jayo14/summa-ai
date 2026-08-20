@@ -1,7 +1,9 @@
 """Memory route — full Cognee + hybrid SummaStudy memory endpoints."""
 
+from datetime import datetime, timezone
 from fastapi import APIRouter, Query, Body
 from typing import Optional
+from app.services.data_store import DataStore
 from app.models.memory import (
     RememberTextRequest,
     RememberExamRequest,
@@ -269,6 +271,62 @@ async def get_full_context(
         ),
     }
     return {"status": "success", "user_id": user_id, "context": context}
+
+
+@router.get(
+    "/memory/export",
+    summary="Export all user data",
+    description=(
+        "Export everything Summa AI has stored about the current user — Cognee "
+        "memory across every dataset, SummaStudy atomic facts, and every "
+        "Postgres-backed record (artifacts, conversations, materials, concepts, "
+        "study plans, flashcards, exams) — as one downloadable JSON document. "
+        "Backs the 'Export my data' privacy control."
+    ),
+)
+async def export_my_data():
+    user_id = resolve_user_id()
+    store = DataStore()
+
+    cognee_memory = {
+        "conversations": (
+            await cognee.recall_context(
+                user_id, "all conversations", dataset_name="conversations", limit=200
+            )
+        ).get("results", []),
+        "exams": (await cognee.recall_exams(user_id, upcoming_only=False)).get(
+            "exams", []
+        ),
+        "progress": (
+            await cognee.recall_learning_progress(user_id, limit=500)
+        ).get("progress", []),
+        "artifacts": (await cognee.recall_artifacts(user_id, limit=500)).get(
+            "artifacts", []
+        ),
+        "sessions": await cognee.list_memories(cognee._dataset(user_id, "sessions")),
+    }
+    atomic_facts = await summastudy_memory.retrieve_relevant_memories(
+        user_id, limit=500
+    )
+
+    postgres_data = {
+        "artifacts": await store.list_artifacts(user_id),
+        "conversations": await store.list_conversations(user_id),
+        "timeline_events": await store.list_timeline_events(user_id, limit=1000),
+        "materials": await store.list_materials(user_id),
+        "concepts": await store.list_concepts(user_id),
+        "study_plans": await store.list_study_plans(user_id),
+        "flashcards": await store.list_flashcards(user_id),
+        "exams": await store.list_exams(user_id),
+    }
+
+    return {
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "user_id": user_id,
+        "cognee_memory": cognee_memory,
+        "atomic_facts": atomic_facts,
+        "postgres_data": postgres_data,
+    }
 
 
 @router.get(
