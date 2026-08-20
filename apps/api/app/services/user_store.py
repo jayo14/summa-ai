@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 import asyncpg
 
-from app.config import settings
+from app.services.db_pool import get_pool
 
 
 class UserStore:
@@ -20,18 +20,11 @@ class UserStore:
         return cls._instance
 
     async def _get_pool(self) -> asyncpg.Pool:
-        if self._pool is None:
-            self._pool = await asyncpg.create_pool(
-                settings.DATABASE_URL,
-                min_size=2,
-                max_size=10,
-            )
-        return self._pool
-
-    async def close(self):
-        if self._pool:
-            await self._pool.close()
-            self._pool = None
+        # An explicitly-assigned instance pool (e.g. injected by tests) wins;
+        # otherwise share the process-wide pool.
+        if self._pool is not None:
+            return self._pool
+        return await get_pool()
 
     async def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()
