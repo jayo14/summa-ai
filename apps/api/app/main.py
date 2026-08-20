@@ -54,8 +54,8 @@ async def lifespan(app: FastAPI):
     if settings.is_production:
         if not settings.SUPABASE_JWT_SECRET:
             missing.append("SUPABASE_JWT_SECRET")
-        if not settings.COGNEE_API_KEY:
-            missing.append("COGNEE_API_KEY")
+        if not (settings.OPENAI_API_KEY or settings.LLM_API_KEY):
+            missing.append("OPENAI_API_KEY or LLM_API_KEY")
         if not settings.SUPABASE_URL:
             missing.append("SUPABASE_URL")
         if not settings.SUPABASE_ANON_KEY:
