@@ -10,6 +10,7 @@ from app.models.timeline import TimelineEventCreate, MaterialCreate, ConceptCrea
 from app.core.security import resolve_user_id
 from app.services.user_store import UserStore
 from app.services.data_store import DataStore
+from app.services.cognee_service import CogneeService
 
 _store = DataStore()
 
@@ -416,9 +417,14 @@ analytics_router = APIRouter()
     description="Get aggregated learning analytics and insights for the user",
 )
 async def get_analytics():
+    """Real data where the DB/memory layer can back it; explicitly `demo: true`
+    where no source of truth exists yet (per-quiz score history and monthly
+    hexagon snapshots aren't persisted anywhere — see PHASE 4/6 in the build plan).
+    Never cached as if fresh, since parts of this response are honestly synthetic.
+    """
     user_id = resolve_user_id()
-    hexagon = await _store._get_pool()
-    async with hexagon.acquire() as conn:
+    pool = await _store._get_pool()
+    async with pool.acquire() as conn:
         concepts_row = await conn.fetchrow(
             "SELECT count(*) as total, count(*) FILTER (WHERE mastery = 'mastered') as mastered FROM summa_ai.concepts WHERE user_id = $1",
             user_id,
@@ -427,98 +433,70 @@ async def get_analytics():
             "SELECT type, count(*) as cnt FROM summa_ai.timeline_events WHERE user_id = $1 GROUP BY type",
             user_id,
         )
+        concept_rows = await conn.fetch(
+            "SELECT name, mastery FROM summa_ai.concepts WHERE user_id = $1 ORDER BY created_at DESC LIMIT 12",
+            user_id,
+        )
+        exam_rows = await conn.fetch(
+            "SELECT name, exam_date, readiness FROM summa_ai.exams WHERE user_id = $1 AND exam_date >= NOW() ORDER BY exam_date ASC LIMIT 10",
+            user_id,
+        )
     total = concepts_row["total"] if concepts_row else 0
     mastered = concepts_row["mastered"] if concepts_row else 0
     quiz_count = sum(r["cnt"] for r in events if r["type"] == "quiz-completed")
     study_count = sum(r["cnt"] for r in events if r["type"] == "study-session")
+
+    mastery_to_score = {"mastered": 90, "practicing": 60, "learning": 30}
+    topic_mastery = [
+        {
+            "topic": r["name"],
+            "mastery": mastery_to_score.get(r["mastery"], 30),
+            "trend": "up" if r["mastery"] == "mastered" else "flat",
+        }
+        for r in concept_rows
+    ]
+
+    today = datetime.now(timezone.utc).date()
+    exam_readiness = [
+        {
+            "exam": r["name"],
+            "readiness": r["readiness"] or 0,
+            "daysLeft": max(0, (r["exam_date"] - today).days) if r["exam_date"] else None,
+        }
+        for r in exam_rows
+    ]
+
+    cognee = CogneeService()
+    hexagon_raw = await cognee.get_hexagon_dimensions(user_id)
+    hexagon_dimensions = [
+        {"dimension": label, "score": round(hexagon_raw.get(key, 0.0) * 100)}
+        for key, label in [
+            ("depth", "Depth"),
+            ("problem_solving", "Problem-Solving"),
+            ("speed", "Speed"),
+            ("consistency", "Consistency"),
+            ("confidence", "Confidence"),
+            ("creativity", "Creativity"),
+        ]
+    ]
+
     payload = {
-        "hexagon_dimensions": [
-            {"dimension": "Depth", "score": 78},
-            {"dimension": "Problem-Solving", "score": 65},
-            {"dimension": "Speed", "score": 42},
-            {"dimension": "Consistency", "score": 80},
-            {"dimension": "Confidence", "score": 55},
-            {"dimension": "Creativity", "score": 70},
-        ],
-        "hexagon_evolution": [
-            {
-                "month": "Jan",
-                "Depth": 45,
-                "Problem-Solving": 38,
-                "Speed": 30,
-                "Consistency": 50,
-                "Confidence": 35,
-                "Creativity": 40,
-            },
-            {
-                "month": "Feb",
-                "Depth": 55,
-                "Problem-Solving": 45,
-                "Speed": 35,
-                "Consistency": 58,
-                "Confidence": 42,
-                "Creativity": 48,
-            },
-            {
-                "month": "Mar",
-                "Depth": 65,
-                "Problem-Solving": 55,
-                "Speed": 38,
-                "Consistency": 65,
-                "Confidence": 50,
-                "Creativity": 55,
-            },
-            {
-                "month": "Apr",
-                "Depth": 78,
-                "Problem-Solving": 65,
-                "Speed": 42,
-                "Consistency": 80,
-                "Confidence": 55,
-                "Creativity": 70,
-            },
-        ],
-        "quiz_scores": [
-            {"date": "Apr 1", "score": 65, "topic": "LA"},
-            {"date": "Apr 8", "score": 72, "topic": "Calc"},
-            {"date": "Apr 15", "score": 85, "topic": "NLP"},
-            {"date": "Apr 22", "score": 60, "topic": "Prob"},
-            {"date": "Apr 29", "score": 88, "topic": "Embed"},
-            {"date": "May 6", "score": 92, "topic": "LA"},
-            {"date": "May 13", "score": 78, "topic": "Attn"},
-        ],
-        "study_time": [
-            {"topic": "NLP", "hours": 12},
-            {"topic": "Calculus", "hours": 6},
-            {"topic": "LA", "hours": 4},
-            {"topic": "Prob", "hours": 3},
-            {"topic": "Music", "hours": 2},
-        ],
-        "topic_mastery": [
-            {"topic": "LA", "mastery": 92, "trend": "up"},
-            {"topic": "Prob", "mastery": 85, "trend": "up"},
-            {"topic": "Embed", "mastery": 75, "trend": "up"},
-            {"topic": "RNN", "mastery": 60, "trend": "up"},
-            {"topic": "Attention", "mastery": 45, "trend": "up"},
-            {"topic": "Transformers", "mastery": 20, "trend": "down"},
-        ],
-        "exam_readiness": [
-            {"exam": "NLP Final", "readiness": 62, "daysLeft": 14},
-            {"exam": "DL Final", "readiness": 78, "daysLeft": 17},
-            {"exam": "Calc II", "readiness": 88, "daysLeft": 21},
-        ],
+        "hexagon_dimensions": hexagon_dimensions,
+        "topic_mastery": topic_mastery,
+        "exam_readiness": exam_readiness,
         "summary": {
-            "avg_quiz_score": 78,
-            "total_study_hours": 27,
-            "avg_exam_readiness": 76,
-            "quizzes_taken": max(quiz_count, 7),
-            "insight": "Your Speed dimension is lagging. Consider adding timed quizzes.",
             "concepts_total": total,
             "concepts_mastered": mastered,
             "quiz_count": quiz_count,
             "study_sessions": study_count,
         },
+        # No per-quiz score history or monthly hexagon snapshots are persisted
+        # yet (tracked in PHASE 4 quiz_results table / PHASE 6 usage tracking).
+        # Everything else above is a real DB/memory aggregate; these three are
+        # empty (not fabricated) until that storage exists.
+        "demo_fields": ["hexagon_evolution", "quiz_scores", "study_time"],
+        "hexagon_evolution": [],
+        "quiz_scores": [],
+        "study_time": [],
     }
-    return JSONResponse(
-        content=payload, headers={"Cache-Control": "public, max-age=30"}
-    )
+    return JSONResponse(content=payload)
