@@ -227,6 +227,8 @@ export function ChatWorkspace() {
           pinned: false,
         },
         `Summa AI generated: ${artifact.title}`,
+        accessToken,
+        conversationIdRef.current ?? undefined,
       )
     },
     onDone: async (history) => {

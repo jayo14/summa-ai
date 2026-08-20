@@ -1,8 +1,10 @@
 'use client'
 
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { useShallow } from 'zustand/react/shallow'
 import type { ChatComponentData, ChatComponentType } from '@/components/prompt-kit/chat-components'
+import { createArtifact as persistArtifactRemote } from '@/lib/api'
 
 /* ------------------------------------------------------------------ */
 /* Artifact model                                                      */
@@ -80,6 +82,11 @@ interface WorkspaceState {
     sourceLabel?: string
     parentArtifactId?: string
     changeNote?: string
+    /** When provided, the artifact is also persisted via POST /artifacts
+        (fire-and-forget — local state is already authoritative for this
+        session; failure is logged, never blocks the UI). */
+    accessToken?: string
+    conversationId?: string
   }) => string
 
   /** Update the active artifact with a new component, creating a new version. */
@@ -107,8 +114,9 @@ interface WorkspaceState {
   togglePin: (id: string) => void
 
   /* Actions — suggestions */
-  /** Add a suggestion (artifact generated but not yet opened). */
-  addSuggestion: (artifact: Artifact, message: string) => void
+  /** Add a suggestion (artifact generated but not yet opened). When
+      accessToken is provided, also persists via POST /artifacts. */
+  addSuggestion: (artifact: Artifact, message: string, accessToken?: string, conversationId?: string) => void
   /** Open a suggestion (set as active, remove from suggestions). */
   acceptSuggestion: (id: string) => void
   /** Save for later (move to history without opening). */
@@ -125,7 +133,40 @@ function generateId() {
   return `art-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 }
 
-export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
+/** Fire-and-forget POST /artifacts for a locally-created artifact. Local
+    state is already the source of truth for this session (optimistic), so
+    a failure here is logged and otherwise swallowed — never blocks or
+    rolls back the UI. This is what makes chat-/quick-add-generated
+    artifacts queryable via GET /artifacts and visible on /saved-materials. */
+function persistArtifactInBackground(
+  artifact: Artifact,
+  accessToken?: string,
+  conversationId?: string,
+) {
+  if (!accessToken) return
+  const initialVersion = artifact.versions[0]
+  persistArtifactRemote(
+    {
+      title: artifact.title,
+      type: artifact.type,
+      component: initialVersion.component,
+      source: artifact.source,
+      source_label: artifact.sourceLabel ?? null,
+      parent_artifact_id: artifact.parentArtifactId ?? null,
+      conversation_id: conversationId ?? null,
+      change_note: initialVersion.changeNote ?? null,
+    },
+    accessToken,
+  ).then((saved) => {
+    if (!saved) {
+      console.warn(`[workspace] failed to persist artifact "${artifact.title}" (${artifact.id}) to backend`)
+    }
+  })
+}
+
+export const useWorkspaceStore = create<WorkspaceState>()(
+  persist(
+    (set, get) => ({
   isOpen: false,
   activeArtifactId: null,
   artifacts: [],
@@ -136,7 +177,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   close: () => set({ isOpen: false }),
   toggle: () => set((s) => ({ isOpen: !s.isOpen })),
 
-  createArtifact: ({ title, component, source = 'conversation', sourceLabel, parentArtifactId, changeNote }) => {
+  createArtifact: ({ title, component, source = 'conversation', sourceLabel, parentArtifactId, changeNote, accessToken, conversationId }) => {
     const id = generateId()
     const now = Date.now()
     const artifact: Artifact = {
@@ -158,6 +199,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       activeArtifactId: id,
       artifacts: [artifact, ...s.artifacts],
     }))
+    persistArtifactInBackground(artifact, accessToken, conversationId)
     return id
   },
 
@@ -251,11 +293,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }))
   },
 
-  addSuggestion: (artifact, message) => {
+  addSuggestion: (artifact, message, accessToken, conversationId) => {
     set((s) => ({
       artifacts: [artifact, ...s.artifacts],
       suggestions: [{ id: artifact.id, artifact, message, createdAt: Date.now() }, ...s.suggestions],
     }))
+    persistArtifactInBackground(artifact, accessToken, conversationId)
   },
 
   acceptSuggestion: (id) => {
@@ -279,7 +322,21 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       pinned: s.pinned.filter((p) => p !== id),
     }))
   },
-}))
+    }),
+    {
+      name: 'summa-workspace',
+      storage: createJSONStorage(() => localStorage),
+      // Only persist data, not the action functions — and not `isOpen`,
+      // which should always start closed on a fresh load.
+      partialize: (s) => ({
+        activeArtifactId: s.activeArtifactId,
+        artifacts: s.artifacts,
+        suggestions: s.suggestions,
+        pinned: s.pinned,
+      }),
+    },
+  ),
+)
 
 /* ------------------------------------------------------------------ */
 /* Selectors / helpers                                                 */

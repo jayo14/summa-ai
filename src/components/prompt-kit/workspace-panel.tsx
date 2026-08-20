@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { FocusRing } from '@/components/focus-ring'
+import { useAuth } from '@/lib/use-supabase-auth'
 import {
   useWorkspaceStore,
   useActiveArtifact,
@@ -414,6 +415,8 @@ function SuggestionStack() {
 
 function WorkspaceEmptyState() {
   const { createArtifact } = useWorkspaceStore()
+  const { session } = useAuth()
+  const accessToken = session?.accessToken
   const recent = useRecentArtifacts(3)
   const { switchToArtifact } = useWorkspaceStore()
 
@@ -490,6 +493,7 @@ function WorkspaceEmptyState() {
                 title: q.label,
                 component: SAMPLE_COMPONENTS[q.type],
                 source: 'manual-input',
+                accessToken,
               })
             }
             className="flex flex-col items-center gap-1 rounded-xl border bg-card p-2.5 text-center transition-all hover:scale-[1.03] hover:border-primary/40"

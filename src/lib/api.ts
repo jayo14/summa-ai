@@ -194,6 +194,24 @@ export async function fetchArtifacts(token: string, type?: string): Promise<Arti
   return apiGet<Artifact[]>(`/artifacts${qs}`, token)
 }
 
+export interface ArtifactCreatePayload {
+  title: string
+  type: string
+  component: unknown
+  source?: string
+  source_label?: string | null
+  parent_artifact_id?: string | null
+  conversation_id?: string | null
+  change_note?: string | null
+}
+
+export async function createArtifact(
+  payload: ArtifactCreatePayload,
+  token: string,
+): Promise<Artifact | null> {
+  return apiPost<Artifact>("/artifacts", payload, token)
+}
+
 export async function deleteArtifact(id: string, token: string): Promise<boolean> {
   return apiDelete(`/artifacts/${id}`, token)
 }
