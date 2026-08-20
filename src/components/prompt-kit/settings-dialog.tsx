@@ -54,7 +54,7 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react'
-import { fetchMemoryFacts, forgetMemoryTopic, forgetDataset } from '@/lib/api'
+import { fetchMemoryFacts, forgetMemoryTopic, forgetDataset, exportMyData } from '@/lib/api'
 import type { OnboardingData } from './onboarding-flow'
 
 /* ------------------------------------------------------------------ */
@@ -331,6 +331,7 @@ export function SettingsDialog({
                 update={update}
                 onForgetAll={handleForgetAll}
                 onLogout={onLogout}
+                token={token}
               />
             </TabsContent>
             <TabsContent value="notifications" className="mt-0">
@@ -900,28 +901,37 @@ function PrivacyControlsTab({
   update,
   onForgetAll,
   onLogout,
+  token,
 }: {
   settings: SettingsState
   update: (patch: Partial<SettingsState>) => void
   onForgetAll: () => void
   onLogout: () => void
+  token?: string
 }) {
-  const [exported, setExported] = React.useState(false)
+  const [exportState, setExportState] = React.useState<'idle' | 'loading' | 'done' | 'error'>('idle')
 
-  const handleExport = () => {
-    // In production this would call the Cognee recall() API and download a JSON.
-    const blob = new Blob(
-      [JSON.stringify({ exportedAt: new Date().toISOString(), note: 'Memory export stub' }, null, 2)],
-      { type: 'application/json' },
-    )
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'summa-memory-export.json'
-    a.click()
-    URL.revokeObjectURL(url)
-    setExported(true)
-    setTimeout(() => setExported(false), 2000)
+  const handleExport = async () => {
+    if (!token) {
+      setExportState('error')
+      return
+    }
+    setExportState('loading')
+    try {
+      const data = await exportMyData(token)
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `summa-data-export-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      setExportState('done')
+      setTimeout(() => setExportState('idle'), 2000)
+    } catch (error) {
+      console.error('Data export failed:', error)
+      setExportState('error')
+    }
   }
 
   return (
@@ -957,15 +967,30 @@ function PrivacyControlsTab({
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-4 rounded-xl border bg-card p-4">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">Export your memory</p>
+              <p className="text-sm font-medium">Export your data</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Download a JSON file of everything Summa AI remembers about you.
+                {exportState === 'error'
+                  ? 'Export failed — check your connection and try again.'
+                  : 'Download a JSON file of everything Summa AI has stored about you.'}
               </p>
             </div>
-            <Button variant="outline" onClick={handleExport} className="gap-1.5 shrink-0">
-              {exported ? (
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              disabled={exportState === 'loading'}
+              className="gap-1.5 shrink-0"
+            >
+              {exportState === 'loading' ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" /> Exporting
+                </>
+              ) : exportState === 'done' ? (
                 <>
                   <Check className="size-4" /> Exported
+                </>
+              ) : exportState === 'error' ? (
+                <>
+                  <AlertTriangle className="size-4" /> Retry
                 </>
               ) : (
                 <>

@@ -250,6 +250,19 @@ export async function forgetDataset(token: string, dataset = "main"): Promise<bo
   return forgetMemoryTopic(token, dataset)
 }
 
+export interface DataExport {
+  exported_at: string
+  user_id: string
+  cognee_memory: Record<string, unknown>
+  atomic_facts: unknown[]
+  postgres_data: Record<string, unknown>
+}
+
+/** Throws on failure — a broken export must surface as an error, not a silently empty download. */
+export async function exportMyData(token: string): Promise<DataExport> {
+  return apiGetOrThrow<DataExport>("/memory/export", token)
+}
+
 /* ── Study Plan ───────────────────────────────────────────────────── */
 
 export interface StudySession {
