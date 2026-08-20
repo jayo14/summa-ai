@@ -61,8 +61,13 @@ class TestRateLimiting:
         assert response.headers.get("X-XSS-Protection") == "1; mode=block"
 
 
-class TestAnalyticsCacheHeaders:
-    def test_analytics_cache_control(self):
+class TestAnalyticsHonesty:
+    def test_analytics_not_cached_as_fresh_and_flags_demo_fields(self):
+        """Analytics used to ship a hardcoded fixture payload with a
+        Cache-Control header implying it was live data. It's now real
+        DB/memory aggregates, with the still-unbacked series (no per-quiz
+        score history or monthly hexagon snapshots exist yet) explicitly
+        named in `demo_fields` instead of faked."""
         with patch(
             "app.routes.data_routes.resolve_user_id", return_value="test-user"
         ), patch("app.routes.data_routes._store") as mock_store:
@@ -77,4 +82,14 @@ class TestAnalyticsCacheHeaders:
             mock_store._get_pool = AsyncMock(return_value=mock_pool)
             response = client.get("/api/v1/analytics", headers=_auth_headers())
             assert response.status_code == 200
-            assert "Cache-Control" in response.headers
+            assert "Cache-Control" not in response.headers
+            body = response.json()
+            assert body["summary"]["concepts_total"] == 10
+            assert body["summary"]["concepts_mastered"] == 3
+            assert set(body["demo_fields"]) == {
+                "hexagon_evolution",
+                "quiz_scores",
+                "study_time",
+            }
+            for field in body["demo_fields"]:
+                assert body[field] == []
