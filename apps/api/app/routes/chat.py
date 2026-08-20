@@ -4,7 +4,6 @@ import asyncio
 import json, logging, re
 from datetime import datetime
 from typing import AsyncGenerator, Optional
-import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from app.config import settings
@@ -14,6 +13,7 @@ from app.services.cognee_service import CogneeService
 from app.services.summastudy_memory import summastudy_memory
 from app.services.user_store import UserStore
 from app.services.data_store import DataStore
+from app.services import zai_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -163,58 +163,14 @@ async def build_orchestrator_prompt(
 async def _stream_zai(
     messages: list[dict], enable_thinking: bool = True, context: str = ""
 ) -> AsyncGenerator[str, None]:
-    try:
-        async with httpx.AsyncClient(
-            timeout=httpx.Timeout(120.0, connect=10.0)
-        ) as client:
-            async with client.stream(
-                "POST",
-                f"{settings.ZAI_API_BASE}/chat/completions",
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {settings.ZAI_API_KEY}",
-                    "X-Z-AI-From": "Z",
-                    "X-Token": settings.ZAI_TOKEN,
-                    "X-User-Id": settings.ZAI_USER_ID,
-                },
-                json={
-                    "model": settings.ZAI_MODEL,
-                    "messages": [
-                        {"role": "system", "content": context},
-                        *messages,
-                    ],
-                    "stream": True,
-                    "thinking": {"type": "enabled" if enable_thinking else "disabled"},
-                },
-            ) as response:
-                response.raise_for_status()
-                async for line in response.aiter_lines():
-                    if not line.startswith("data: "):
-                        continue
-                    payload = line[6:].strip()
-                    if not payload or payload == "[DONE]":
-                        continue
-                    try:
-                        chunk = json.loads(payload)
-                        delta = chunk.get("choices", [{}])[0].get("delta", {})
-                        reasoning = (
-                            delta.get("reasoning_content")
-                            or delta.get("reasoning")
-                            or delta.get("thinking")
-                        )
-                        content = delta.get("content")
-                        if reasoning:
-                            yield f"data: {json.dumps({'type': 'thinking', 'delta': reasoning})}\n\n"
-                        if content:
-                            yield f"data: {json.dumps({'type': 'content', 'delta': content})}\n\n"
-                    except json.JSONDecodeError:
-                        continue
-        yield "data: [DONE]\n\n"
-    except Exception as e:
-        error_msg = str(e) or "Z.ai stream failed"
-        logger.error(f"Z.ai stream failed: {error_msg}")
-        yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
-        yield "data: [DONE]\n\n"
+    async for chunk in zai_client.stream_completion(messages, context, enable_thinking):
+        if chunk["type"] == "done":
+            yield "data: [DONE]\n\n"
+        elif chunk["type"] == "error":
+            yield f"data: {json.dumps({'type': 'error', 'message': chunk['message']})}\n\n"
+            yield "data: [DONE]\n\n"
+        else:
+            yield f"data: {json.dumps(chunk)}\n\n"
 
 
 @router.post("/chat/stream", summary="Chat (streaming)")

@@ -14,9 +14,8 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import httpx
-
-from app.config import settings
+from app.services.db_pool import get_pool
+from app.services.zai_client import call_zai_completion
 
 logger = logging.getLogger(__name__)
 
@@ -58,28 +57,15 @@ class SummaStudyMemoryClient:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance._pool = None
         return cls._instance
 
     async def _get_conn(self):
-        if self._pool is None:
-            import asyncpg
-
-            self._pool = await asyncpg.create_pool(
-                settings.DATABASE_URL,
-                min_size=1,
-                max_size=5,
-            )
-        return await self._pool.acquire()
+        pool = await get_pool()
+        return await pool.acquire()
 
     async def _release_conn(self, conn):
-        if self._pool:
-            await self._pool.release(conn)
-
-    async def close(self):
-        if self._pool:
-            await self._pool.close()
-            self._pool = None
+        pool = await get_pool()
+        await pool.release(conn)
 
     @staticmethod
     def _is_noise(message: str) -> bool:
@@ -93,33 +79,10 @@ class SummaStudyMemoryClient:
     async def _call_llm(self, prompt: str) -> str:
         """Call Z.ai (non-streaming) for fact extraction."""
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(
-                    f"{settings.ZAI_API_BASE}/chat/completions",
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {settings.ZAI_API_KEY}",
-                        "X-Z-AI-From": "Z",
-                        "X-Token": settings.ZAI_TOKEN,
-                        "X-User-Id": settings.ZAI_USER_ID,
-                    },
-                    json={
-                        "model": settings.ZAI_MODEL,
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": "You are a memory extraction assistant. Extract atomic facts from student messages.",
-                            },
-                            {"role": "user", "content": prompt},
-                        ],
-                        "stream": False,
-                        "temperature": 0.2,
-                        "max_tokens": 500,
-                    },
-                )
-                resp.raise_for_status()
-                data = resp.json()
-                return data["choices"][0]["message"]["content"]
+            return await call_zai_completion(
+                system_prompt="You are a memory extraction assistant. Extract atomic facts from student messages.",
+                user_prompt=prompt,
+            )
         except Exception as e:
             logger.warning("LLM call for memory extraction failed: %s", e)
             return "[]"
