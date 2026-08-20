@@ -348,6 +348,7 @@ function Quiz({ data }: { data: QuizComponent }) {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+        <p className="text-sm font-medium">{q.question}</p>
         <div className="space-y-2">
           {q.options.map((opt, idx) => {
             const isAnswered = revealed[q.id]
@@ -984,48 +985,6 @@ export const SAMPLE_COMPONENTS: Record<ChatComponentType, ChatComponentData> = {
       },
     ],
   },
-}
-
-/* ------------------------------------------------------------------ */
-/* Intent detection                                                    */
-/* ------------------------------------------------------------------ */
-
-const INTENT_KEYWORDS: { type: ChatComponentType; patterns: RegExp[] }[] = [
-  {
-    type: 'hexagon',
-    patterns: [/\b(show|view|see)\b.*\b(progress|mastery|hexagon|proficien)/i, /\bmy (progress|proficien|mastery)\b/i],
-  },
-  {
-    type: 'quiz',
-    patterns: [/\bquiz me\b/i, /\btest me\b/i, /\bpractice (questions|quiz)\b/i, /\bgive me a quiz\b/i],
-  },
-  {
-    type: 'flashcards',
-    patterns: [/\b(make|create|generate)\b.*\bflash ?cards?\b/i, /\bstudy cards\b/i, /\bflash ?cards?\b/i],
-  },
-  {
-    type: 'study-plan',
-    patterns: [/\b(plan|create|build|make)\b.*\b(study|exam)\b/i, /\bstudy plan\b/i, /\bexam prep\b/i],
-  },
-  {
-    type: 'graph',
-    patterns: [/\b(show|view)\b.*\b(knowledge )?graph\b/i, /\bmy graph\b/i, /\bconnect concepts\b/i, /\bwhat do i know\b/i],
-  },
-  {
-    type: 'timeline',
-    patterns: [/\b(schedule|timeline|calendar)\b/i, /\bexam dates\b/i, /\bwhat.?s on my\b/i, /\bupcoming (exams|events)\b/i],
-  },
-  {
-    type: 'gap-analysis',
-    patterns: [/\b(find|show|identify) my gaps\b/i, /\bwhat (do i need|am i missing|to learn)\b/i, /\bgap analysis\b/i, /\bprerequisite/i],
-  },
-]
-
-export function detectIntent(message: string): ChatComponentType | null {
-  for (const { type, patterns } of INTENT_KEYWORDS) {
-    if (patterns.some((p) => p.test(message))) return type
-  }
-  return null
 }
 
 /* ------------------------------------------------------------------ */

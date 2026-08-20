@@ -59,7 +59,7 @@ import { FocusRing } from "@/components/focus-ring"
 import type { OnboardingData } from "@/components/prompt-kit/onboarding-flow"
 import { useChat, type UseChatMessage, type ChatArtifactEvent } from "@/hooks/use-chat"
 import { useWorkspaceStore, type ArtifactSource } from "@/hooks/use-workspace"
-import type { ChatComponentData, ChatComponentType } from "@/components/prompt-kit/chat-components"
+import { ChatComponentRenderer, type ChatComponentType } from "@/components/prompt-kit/chat-components"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { fastapiFetch, type FastapiConversation, type FastapiMessage } from "@/lib/fastapi"
@@ -208,14 +208,17 @@ export function ChatWorkspace() {
     accessToken,
     conversationId: activeConversationId ?? undefined,
     onArtifact: (artifact: ChatArtifactEvent) => {
+      // `artifact.data` is only present once it's passed zod validation
+      // (see use-chat.ts) — a skeleton event (generation unavailable) has no
+      // real component data, so there's nothing safe to add as a suggestion.
+      if (!artifact.data) return
       const artifactType = artifact.type as ChatComponentType
-      const component = { type: artifactType, title: artifact.title } as ChatComponentData
       useWorkspaceStore.getState().addSuggestion(
         {
           id: artifact.id,
           title: artifact.title,
           type: artifactType,
-          versions: [{ version: 1, createdAt: Date.now(), component }],
+          versions: [{ version: 1, createdAt: Date.now(), component: artifact.data }],
           currentVersion: 1,
           source: 'conversation' as ArtifactSource,
           createdAt: Date.now(),
@@ -741,6 +744,10 @@ function ChatBubble({ message, isLast }: { message: UseChatMessage; isLast: bool
             {message.content}
           </MessageContent>
         ) : null}
+
+        {message.components?.map((component, i) => (
+          <ChatComponentRenderer key={i} data={component} />
+        ))}
 
         {message.error ? (
           <div className="rounded-[8px] border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">

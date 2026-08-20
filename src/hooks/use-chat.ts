@@ -82,6 +82,7 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
       const assistantIndex = history.length
       let assistantContent = ''
       let assistantReasoning = ''
+      let assistantComponents: ChatComponentData[] | undefined = components
       setMessages([
         ...history,
         {
@@ -155,6 +156,10 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
                 if (!validated) {
                   continue // malformed AI-sourced payload — dropped, never rendered
                 }
+                assistantComponents = [...(assistantComponents ?? []), validated.data]
+                setMessages((prev) =>
+                  prev.map((m, i) => (i === assistantIndex ? { ...m, components: assistantComponents } : m)),
+                )
                 onArtifact?.(validated)
               } else {
                 // Skeleton event (no data yet, or generation unavailable) — safe
@@ -202,7 +207,7 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
             reasoning: assistantReasoning || undefined,
             reasoningActive: false,
             streaming: false,
-            components,
+            components: assistantComponents,
           },
         ])
         setStatus('ready')

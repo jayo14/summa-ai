@@ -56,6 +56,14 @@ class TestGenerateComponentPayloadRoundTrip:
         assert serialized["questions"][0]["correctIndex"] == 0
         assert client.chat.completions.create.await_count == 2
 
+        # The detected intent ("quiz") must actually shape what's requested
+        # from the LLM, not just be computed and discarded — both calls'
+        # system prompts and the second call's response_model reflect it.
+        first_call, second_call = client.chat.completions.create.await_args_list
+        assert "quiz" in first_call.kwargs["messages"][0]["content"]
+        assert "quiz" in second_call.kwargs["messages"][0]["content"]
+        assert second_call.kwargs["response_model"] is QuizComponent
+
     @pytest.mark.asyncio
     async def test_gap_analysis_round_trips(self):
         brief = GenerationBrief(topic="Prerequisites")

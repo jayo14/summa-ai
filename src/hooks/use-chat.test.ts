@@ -81,6 +81,12 @@ describe('useChat SSE parsing + artifact validation', () => {
 
     await waitFor(() => expect(onArtifact).toHaveBeenCalledTimes(1))
     expect(onArtifact).toHaveBeenCalledWith(goodArtifact)
+
+    // The validated component must land on the assistant message itself so
+    // ChatBubble can render it inline via ChatComponentRenderer — not just
+    // reach the onArtifact side-channel.
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    expect(result.current.messages.at(-1)?.components).toEqual([goodArtifact.data])
   })
 
   it('drops a malformed artifact payload without throwing and without calling onArtifact', async () => {
