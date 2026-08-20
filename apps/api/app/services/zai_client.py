@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, AsyncGenerator, Dict, List
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import httpx
+import instructor
+from openai import AsyncOpenAI
 
 from app.config import settings
 
@@ -24,6 +26,33 @@ STREAM_TIMEOUT = httpx.Timeout(120.0, connect=10.0)
 # Non-streaming calls (fact extraction, structured generation) should return
 # quickly or not at all.
 REQUEST_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
+
+_instructor_client: Optional["instructor.client.AsyncInstructor"] = None
+
+
+def get_instructor_client() -> "instructor.client.AsyncInstructor":
+    """Lazily-built singleton `instructor`-patched async client for
+    schema-constrained generation (see app.services.component_generation).
+    Uses `Mode.JSON` (prompt-engineered JSON + validation/retry) rather than
+    a provider-native structured-output mode, since Z.ai's support for
+    `tools`/`response_format` is unconfirmed — this degrades the same way
+    whether or not the provider turns out to support it natively."""
+    global _instructor_client
+    if _instructor_client is None:
+        raw_client = AsyncOpenAI(
+            api_key=settings.ZAI_API_KEY,
+            base_url=settings.ZAI_API_BASE,
+            timeout=REQUEST_TIMEOUT,
+            default_headers={
+                "X-Z-AI-From": "Z",
+                "X-Token": settings.ZAI_TOKEN,
+                "X-User-Id": settings.ZAI_USER_ID,
+            },
+        )
+        _instructor_client = instructor.from_openai(
+            raw_client, mode=instructor.Mode.JSON
+        )
+    return _instructor_client
 
 
 def _headers() -> Dict[str, str]:

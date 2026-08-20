@@ -190,8 +190,14 @@ class TestChatStreamEndpoint:
                 reset_current_user_id(token)
 
     @pytest.mark.asyncio
+    @patch("app.routes.chat.generate_component_payload", new_callable=AsyncMock)
     @patch("app.routes.chat.cognee")
-    async def test_stream_emits_artifact_on_intent(self, mock_cognee):
+    async def test_stream_emits_artifact_on_intent(
+        self, mock_cognee, mock_generate
+    ):
+        # Component generation unavailable/mocked out here (round-trip success
+        # path is covered separately below and in test_component_generation.py)
+        mock_generate.return_value = None
         mock_cognee.recall_context = AsyncMock(return_value={"results": []})
         mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
         mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
@@ -220,8 +226,68 @@ class TestChatStreamEndpoint:
                 reset_current_user_id(token)
 
     @pytest.mark.asyncio
+    @patch("app.routes.chat.generate_component_payload", new_callable=AsyncMock)
     @patch("app.routes.chat.cognee")
-    async def test_stream_handles_zai_error(self, mock_cognee):
+    async def test_stream_emits_full_artifact_payload_when_generation_succeeds(
+        self, mock_cognee, mock_generate
+    ):
+        from app.models.artifact import ArtifactPayload
+        from app.models.components import QuizComponent
+
+        mock_cognee.recall_context = AsyncMock(return_value={"results": []})
+        mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
+        mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
+        mock_cognee.detect_knowledge_gaps = AsyncMock(return_value=None)
+        mock_cognee.remember_conversation = AsyncMock()
+
+        mock_generate.return_value = ArtifactPayload(
+            id="artifact-1",
+            title="Recursion Quiz",
+            type="quiz",
+            data=QuizComponent(
+                title="Recursion Quiz",
+                questions=[
+                    {
+                        "id": "q1",
+                        "question": "What stops recursion?",
+                        "options": ["Base case", "Loop", "Pointer", "Stack overflow"],
+                        "correctIndex": 0,
+                    }
+                ],
+            ),
+        )
+
+        async def fake_stream(*args, **kwargs):
+            yield 'data: {"type": "content", "delta": "Here you go"}\n\n'
+            yield "data: [DONE]\n\n"
+
+        with patch("app.routes.chat._stream_zai", side_effect=fake_stream):
+            token = set_current_user_id("user-1")
+            try:
+                response = client.post(
+                    "/api/v1/chat/stream",
+                    headers=_auth_headers(),
+                    json={
+                        "user_id": "user-1",
+                        "messages": [{"role": "user", "content": "quiz me on recursion"}],
+                    },
+                )
+                assert response.status_code == 200
+                body = b"".join(response.iter_bytes()).decode("utf-8")
+                artifact_line = next(
+                    line for line in body.splitlines() if '"type": "artifact"' in line
+                )
+                event = json.loads(artifact_line[len("data: "):])
+                assert event["artifact"]["data"]["questions"][0]["id"] == "q1"
+                assert event["artifact"]["data"]["questions"][0]["correctIndex"] == 0
+            finally:
+                reset_current_user_id(token)
+
+    @pytest.mark.asyncio
+    @patch("app.routes.chat.generate_component_payload", new_callable=AsyncMock)
+    @patch("app.routes.chat.cognee")
+    async def test_stream_handles_zai_error(self, mock_cognee, mock_generate):
+        mock_generate.return_value = None
         mock_cognee.recall_context = AsyncMock(return_value={"results": []})
         mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
         mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})

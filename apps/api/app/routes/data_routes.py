@@ -43,7 +43,7 @@ async def get_artifacts(
 )
 async def create_artifact(data: ArtifactCreate, user_id: str = Query(default="demo")):
     user_id = resolve_user_id()
-    return await _store.create_artifact(user_id, data.model_dump())
+    return await _store.create_artifact(user_id, data.model_dump(by_alias=True))
 
 
 @artifacts_router.get(
@@ -66,7 +66,7 @@ async def get_artifact(aid: str):
 )
 async def update_artifact(aid: str, data: ArtifactUpdate):
     resolve_user_id()
-    a = await _store.update_artifact(aid, data.model_dump(exclude_unset=True))
+    a = await _store.update_artifact(aid, data.model_dump(exclude_unset=True, by_alias=True))
     if a is None:
         raise HTTPException(404, "Not found")
     return a

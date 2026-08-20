@@ -814,8 +814,19 @@ export function ChatComponentRenderer({ data }: { data: ChatComponentData }) {
       return <Timeline data={data} />
     case 'gap-analysis':
       return <GapAnalysis data={data} />
-    default:
-      return null
+    default: {
+      // Unknown/future component type slipped past validation upstream —
+      // degrade to a plain message instead of throwing.
+      const unknownType = (data as { type?: string })?.type ?? 'unknown'
+      console.warn(`[ChatComponentRenderer] unrecognized component type: ${unknownType}`)
+      return (
+        <Card className="w-full">
+          <CardContent className="py-4 text-sm text-muted-foreground">
+            Couldn&apos;t build that component ({unknownType}).
+          </CardContent>
+        </Card>
+      )
+    }
   }
 }
 

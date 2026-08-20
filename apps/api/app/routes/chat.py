@@ -14,6 +14,7 @@ from app.services.summastudy_memory import summastudy_memory
 from app.services.user_store import UserStore
 from app.services.data_store import DataStore
 from app.services import zai_client
+from app.services.component_generation import generate_component_payload
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -183,7 +184,27 @@ async def chat_stream(request: ChatRequest):
 
     async def generate():
         if intent:
-            yield f"data: {json.dumps({'type': 'artifact', 'artifact': {'id': f'pending-{intent}', 'title': intent.replace('-', ' ').title(), 'type': intent}})}\n\n"
+            payload = await generate_component_payload(intent, last_query, orch_prompt)
+            if payload is not None:
+                artifact_event = {
+                    "id": payload.id,
+                    "title": payload.title,
+                    "type": payload.type,
+                    "data": payload.data.model_dump(by_alias=True, mode="json"),
+                }
+            else:
+                logger.info(
+                    "Component generation unavailable for intent=%s; emitting "
+                    "skeleton artifact event with no data (frontend renders "
+                    "plain text only).",
+                    intent,
+                )
+                artifact_event = {
+                    "id": f"pending-{intent}",
+                    "title": intent.replace("-", " ").title(),
+                    "type": intent,
+                }
+            yield f"data: {json.dumps({'type': 'artifact', 'artifact': artifact_event})}\n\n"
 
         full_response = ""
         async for event in _stream_zai(

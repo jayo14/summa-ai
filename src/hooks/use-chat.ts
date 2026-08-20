@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import type { ChatComponentData } from '@/components/prompt-kit/chat-components'
+import { parseArtifactEvent } from '@/lib/chat-component-schemas'
 
 export interface UseChatMessage {
   role: 'user' | 'assistant'
@@ -14,11 +15,15 @@ export interface UseChatMessage {
   components?: ChatComponentData[]
 }
 
+/** A validated artifact — `data` is only present once it has passed
+ * `parseArtifactEvent`'s zod check; a skeleton event (generation unavailable
+ * server-side) carries no `data` and callers should not attempt to render it
+ * as a component. */
 export interface ChatArtifactEvent {
   id: string
   title: string
   type: string
-  data?: unknown
+  data?: ChatComponentData
 }
 
 export interface UseChatOptions {
@@ -145,7 +150,17 @@ export function useChat(opts: UseChatOptions = {}): UseChatReturn {
               continue
             }
             if (event.type === 'artifact' && event.artifact) {
-              onArtifact?.(event.artifact)
+              if (event.artifact.data !== undefined) {
+                const validated = parseArtifactEvent(event.artifact)
+                if (!validated) {
+                  continue // malformed AI-sourced payload — dropped, never rendered
+                }
+                onArtifact?.(validated)
+              } else {
+                // Skeleton event (no data yet, or generation unavailable) — safe
+                // to pass through as-is, nothing to validate.
+                onArtifact?.(event.artifact as ChatArtifactEvent)
+              }
               continue
             }
             if (event.type === 'thinking' && event.delta) {
