@@ -63,6 +63,22 @@ function Router() {
         {() => <PublicAuthRoute component={ResetPassword} />}
       </Route>
 
+      <Route path="/learning">
+        {() => <ProtectedRoute component={Home} />}
+      </Route>
+      <Route path="/activities">
+        {() => <ProtectedRoute component={Home} />}
+      </Route>
+      <Route path="/progress">
+        {() => <ProtectedRoute component={Home} />}
+      </Route>
+      <Route path="/sources">
+        {() => <ProtectedRoute component={Home} />}
+      </Route>
+      <Route path="/settings">
+        {() => <ProtectedRoute component={Home} />}
+      </Route>
+
       <Route path="/">
         {() => <ProtectedRoute component={Home} />}
       </Route>
