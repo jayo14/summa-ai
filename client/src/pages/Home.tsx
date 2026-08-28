@@ -1,5 +1,6 @@
 /* Aetheris Glassmorphism reminder: this page is an airy, orb-led chat canvas inside an inset glass shell; learning tools should feel like native conversation objects, never a separate dashboard. */
 
+import { useLocation } from "wouter";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
@@ -156,11 +157,32 @@ export default function Home() {
       registerEvent("practice", "New learning intent captured");
     }, 650);
   }
+  const [location, setLocation] = useLocation();
+
+  const activeView: ViewName = useMemo(() => {
+    if (location === "/learning" || location === "/activities") return "learning";
+    if (location === "/progress") return "progress";
+    if (location === "/sources") return "sources";
+    if (location === "/settings") return "settings";
+    return "workspace";
+  }, [location]);
+
   function startNewSession() {
-    setActiveView("workspace"); setSessionStarted(false); setMessages([]); setComposerValue(""); setSidebarOpen(false);
+    setLocation("/"); setSessionStarted(false); setMessages([]); setComposerValue(""); setSidebarOpen(false);
     toast("New learning space ready", { description: "Tell Summa what you want to understand." });
   }
-  function selectView(view: ViewName) { setActiveView(view); setSidebarOpen(false); }
+
+  function selectView(view: ViewName) {
+    const routeMap: Record<ViewName, string> = {
+      workspace: "/",
+      learning: "/learning",
+      progress: "/progress",
+      sources: "/sources",
+      settings: "/settings",
+    };
+    setLocation(routeMap[view] || "/");
+    setSidebarOpen(false);
+  }
 
   const { user, logout } = useAuth();
 
@@ -222,9 +244,9 @@ export default function Home() {
         <header className="app-header"><div className="header-left"><button type="button" className="header-icon-button mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation"><Menu size={19} /></button><div className="header-crumbs"><span>Summa AI</span><ChevronRight size={13} /><strong>{activeView === "workspace" ? "Summa AI Chat" : activeView === "learning" ? "My learning" : activeView === "progress" ? "Learning progress" : activeView === "sources" ? "Academic sources" : "Learning settings"}</strong><ChevronDown size={12} /></div></div><div className="header-actions">{activeView === "workspace" && sessionStarted && <button type="button" className="context-toggle" onClick={() => setContextOpen((value) => !value)}><PanelRight size={16} /><span>{contextOpen ? "Hide context" : "Context"}</span></button>}<button type="button" className="theme-toggle" onClick={() => setTheme((value) => value === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>{theme === "light" ? <Moon size={15} /> : <Sun size={15} />}<span>{theme === "light" ? "Dark" : "Light"}</span></button><button type="button" className="header-icon-button" onClick={() => toast("No new learning reminders.")} aria-label="Open notifications"><Bell size={17} /></button><button type="button" className="header-icon-button" onClick={() => toast("Need a hand? Summa can help you choose the next learning action.")} aria-label="Open help"><CircleHelp size={17} /></button></div></header>
         <main className="product-stage">
           {activeView === "workspace" && <WorkspaceView sessionStarted={sessionStarted} onStart={() => setSessionStarted(true)} composerValue={composerValue} setComposerValue={setComposerValue} sendMessage={sendMessage} messages={messages} isResponding={isResponding} mastery={mastery} updateMastery={updateMastery} registerEvent={registerEvent} setSourceTrayOpen={setSourceTrayOpen} />}
-          {activeView === "learning" && <LearningLibrary onResume={() => { setActiveView("workspace"); setSessionStarted(true); }} favorites={favorites} onToggleFavorite={toggleFavorite} favoriteFolders={favoriteFolders} onAssignFolder={assignFavoriteFolder} />}
-          {activeView === "progress" && <ProgressView mastery={mastery} onContinue={() => { setActiveView("workspace"); setSessionStarted(true); }} />}
-          {activeView === "sources" && <SourcesView onUseSource={() => { setActiveView("workspace"); setSessionStarted(true); setSourceTrayOpen(true); }} />}
+          {activeView === "learning" && <LearningLibrary onResume={() => { selectView("workspace"); setSessionStarted(true); }} favorites={favorites} onToggleFavorite={toggleFavorite} favoriteFolders={favoriteFolders} onAssignFolder={assignFavoriteFolder} />}
+          {activeView === "progress" && <ProgressView mastery={mastery} onContinue={() => { selectView("workspace"); setSessionStarted(true); }} />}
+          {activeView === "sources" && <SourcesView onUseSource={() => { selectView("workspace"); setSessionStarted(true); setSourceTrayOpen(true); }} />}
           {activeView === "settings" && <SettingsView memoryEnabled={memoryEnabled} setMemoryEnabled={setMemoryEnabled} />}
         </main>
       </section>
