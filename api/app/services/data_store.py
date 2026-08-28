@@ -204,6 +204,17 @@ class DataStore:
             )
         return dict(row) if row else None
 
+    # ── Activity Aliases ───────────────────────────────────────────
+    list_activities = list_artifacts
+    create_activity = create_artifact
+    get_activity = get_artifact
+    update_activity = update_artifact
+    delete_activity = delete_artifact
+    list_activity_versions = list_artifact_versions
+    create_activity_version = create_artifact_version
+    restore_activity_version = restore_artifact_version
+    toggle_pin_activity = toggle_pin_artifact
+
     # ── Conversations ──────────────────────────────────────────────
 
     async def list_conversations(self, user_id: str) -> List[Dict[str, Any]]:
