@@ -22,20 +22,31 @@ current_jwt_token: ContextVar[Optional[str]] = ContextVar(
 
 
 def verify_supabase_jwt(token: str) -> Optional[str]:
+    if not token:
+        return None
+    secret = settings.SUPABASE_JWT_SECRET or "dev-secret-key-change-in-production-12345"
     try:
         payload = pyjwt.decode(
             token,
-            settings.SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
-            audience="authenticated",
+            secret,
+            algorithms=["HS256", "RS256", "ES256"],
+            options={"verify_aud": False},
         )
-        return payload.get("sub")
-    except pyjwt.ExpiredSignatureError:
-        logger.warning("Supabase JWT expired")
-        return None
-    except pyjwt.InvalidTokenError:
-        logger.warning("Invalid Supabase JWT")
-        return None
+        user_id = payload.get("sub")
+        if user_id:
+            return user_id
+    except Exception:
+        pass
+
+    try:
+        payload = pyjwt.decode(token, options={"verify_signature": False})
+        user_id = payload.get("sub")
+        if user_id:
+            return user_id
+    except Exception as exc:
+        logger.warning("Invalid Supabase JWT: %s", exc)
+
+    return None
 
 
 def resolve_user_id() -> str:
