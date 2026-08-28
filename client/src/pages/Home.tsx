@@ -1,0 +1,245 @@
+/* Aetheris Glassmorphism reminder: this page is an airy, orb-led chat canvas inside an inset glass shell; learning tools should feel like native conversation objects, never a separate dashboard. */
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
+  Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, Paperclip, PanelRight,
+  Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck,
+} from "lucide-react";
+import { toast } from "sonner";
+import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/components/LearningInteractives";
+import { SummaLogo } from "@/components/SummaLogo";
+
+type ViewName = "workspace" | "learning" | "progress" | "sources" | "settings";
+type ConversationMessage = { id: number; role: "student" | "summa"; content: string };
+
+const navItems: Array<{ id: ViewName; label: string; icon: typeof LayoutPanelTop }> = [
+  { id: "workspace", label: "Workspace", icon: LayoutPanelTop },
+  { id: "learning", label: "My learning", icon: Archive },
+  { id: "progress", label: "Progress", icon: Brain },
+  { id: "sources", label: "Sources", icon: FolderOpen },
+];
+
+const chatHistory = [
+  { title: "Polymorphism, continued", time: "Now", active: true },
+  { title: "Trace recursive calls", time: "Yesterday", active: false },
+  { title: "CSC 203 exam map", time: "Tue", active: false },
+  { title: "Review database keys", time: "Mon", active: false },
+];
+
+const sourceItems = [
+  { title: "CSC 201 · Lecture 06", detail: "Polymorphism & inheritance", type: "Lecture", selected: true },
+  { title: "Object-Oriented Programming Notes", detail: "Methods, dispatch, abstract classes", type: "Notes", selected: true },
+  { title: "2025 Past Questions", detail: "Section B · Q2", type: "Past paper", selected: true },
+];
+
+const suggestedPrompts = ["Quiz me on polymorphism", "Build a study plan", "Explain this with an example", "Find my weak areas"];
+
+type SortMode = "recent" | "oldest" | "topic";
+const learningObjects = [
+  { type: "RETRIEVAL SET", title: "Polymorphism recall", description: "3 prompts · weak concepts prioritized", meta: "Review due Saturday", action: "Review", accent: "coral", topic: "CSC 201", date: "2026-08-26" },
+  { type: "GUIDED PRACTICE", title: "Tracing method dispatch", description: "2 attempts · 1 scaffold used", meta: "Continue the reasoning", action: "Continue", accent: "blue", topic: "CSC 201", date: "2026-08-24" },
+  { type: "PRACTICE QUIZ", title: "CSC 203 · Candidate keys", description: "5 questions · post-test feedback saved", meta: "Last opened Tuesday", action: "Open", accent: "ink", topic: "CSC 203", date: "2026-08-20" },
+  { type: "STUDY GUIDE", title: "Database normalization", description: "1NF, 2NF, dependencies, 3NF", meta: "Functional dependencies developing", action: "Resume", accent: "sand", topic: "CSC 203", date: "2026-08-18" },
+];
+const milestoneData = [
+  { title: "Polymorphism foundations", detail: "Definitions + identification", objective: "Recognize one interface supporting different concrete behavior and distinguish it from overloading.", state: "complete", date: "Aug 18" },
+  { title: "Runtime dispatch", detail: "Explain the runtime object", objective: "Predict which override runs by naming the runtime object, not just the reference type.", state: "current", date: "In progress" },
+  { title: "Implement overriding", detail: "Write the same-signature override", objective: "Write a child-class method with the same signature and explain the behavior it replaces.", state: "next", date: "Next up" },
+  { title: "Apply to unfamiliar designs", detail: "Transfer the idea to a new class", objective: "Use runtime dispatch to reason about a new class hierarchy without relying on a memorized example.", state: "next", date: "Later" },
+];
+const sourceCatalog = [
+  { title: "CSC 201 · Lecture 06", detail: "Polymorphism & inheritance", type: "Lecture", topic: "CSC 201", date: "2026-08-25", selected: true },
+  { title: "Object-Oriented Programming Notes", detail: "Methods, dispatch, abstract classes", type: "Notes", topic: "CSC 201", date: "2026-08-21", selected: true },
+  { title: "2025 Past Questions", detail: "Section B · Q2", type: "Past paper", topic: "CSC 203", date: "2026-08-16", selected: true },
+];
+
+async function shareText(title: string, text: string, filename: string) {
+  try {
+    if (navigator.share) {
+      await navigator.share({ title, text });
+      toast("Shared successfully.");
+      return;
+    }
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      toast("Copied to clipboard", { description: "You can paste this learning note into another app." });
+      return;
+    }
+  } catch {
+    toast("Share cancelled.");
+    return;
+  }
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+  toast("Downloaded learning note.");
+}
+
+function exportText(title: string, text: string, filename: string) {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+  toast(`${title} exported.`);
+}
+
+function getTutorResponse(prompt: string) {
+  const lower = prompt.toLowerCase();
+  if (lower.includes("weak")) return "Your strongest evidence is on identifying polymorphism. The weaker signal is tracing which implementation runs at runtime, so I would practise two short prediction questions next.";
+  if (lower.includes("plan") || lower.includes("prepare")) return "For CSC 201, I would begin with runtime polymorphism because it is active but not yet stable. We can spend 15 minutes on prediction and explanation, then return to class design practice.";
+  if (lower.includes("quiz")) return "Good choice. I’ll keep this diagnostic: first recall the distinction, then explain how the runtime object selects an override. Your result will update the objective estimate—not mark the topic complete.";
+  return "Let’s use your CSC 201 materials and start from what you can already explain. I’ll ask for a prediction before adding another explanation, so we can identify the most useful next step.";
+}
+
+export default function Home() {
+  const [activeView, setActiveView] = useState<ViewName>("workspace");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [contextOpen, setContextOpen] = useState(false);
+  const [sessionStarted, setSessionStarted] = useState(false);
+  const [composerValue, setComposerValue] = useState("");
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [isResponding, setIsResponding] = useState(false);
+  const [mastery, setMastery] = useState(() => {
+    const saved = window.localStorage.getItem("summa-mastery-runtime-dispatch");
+    return saved ? Number(saved) : 61;
+  });
+  const [events, setEvents] = useState<string[]>(["Session resumed", "3 approved sources in scope", "Last review: yesterday"]);
+  const [memoryEnabled, setMemoryEnabled] = useState(() => window.localStorage.getItem("summa-memory-enabled") !== "false");
+  const [sourceTrayOpen, setSourceTrayOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(() => window.localStorage.getItem("summa-theme") === "dark" ? "dark" : "light");
+  const [favorites, setFavorites] = useState<string[]>(() => JSON.parse(window.localStorage.getItem("summa-favorites") || "[]"));
+  const [favoriteFolders, setFavoriteFolders] = useState<Record<string, string>>(() => JSON.parse(window.localStorage.getItem("summa-favorite-folders") || "{}"));
+
+  useEffect(() => { window.localStorage.setItem("summa-mastery-runtime-dispatch", String(mastery)); }, [mastery]);
+  useEffect(() => { window.localStorage.setItem("summa-memory-enabled", String(memoryEnabled)); }, [memoryEnabled]);
+  useEffect(() => { window.localStorage.setItem("summa-theme", theme); }, [theme]);
+  useEffect(() => { window.localStorage.setItem("summa-favorites", JSON.stringify(favorites)); }, [favorites]);
+  useEffect(() => { window.localStorage.setItem("summa-favorite-folders", JSON.stringify(favoriteFolders)); }, [favoriteFolders]);
+  function assignFavoriteFolder(title: string, folder: string) { setFavoriteFolders((items) => ({ ...items, [title]: folder })); }
+  function toggleFavorite(title: string) { setFavorites((items) => items.includes(title) ? items.filter((item) => item !== title) : [...items, title]); }
+  const contextSummary = useMemo(() => `${sourceItems.length} approved resources`, []);
+
+  function updateMastery(amount: number) { setMastery((value) => Math.min(91, value + amount)); }
+  function registerEvent(kind: string, detail: string) {
+    const label = `${kind === "retrieval" ? "Retrieval" : kind === "confidence" ? "Review" : kind === "hint" ? "Scaffold" : "Practice"}: ${detail}`;
+    setEvents((current) => [label, ...current].slice(0, 4));
+  }
+  function sendMessage(message = composerValue) {
+    const clean = message.trim();
+    if (!clean || isResponding) return;
+    const messageId = Date.now();
+    setSessionStarted(true);
+    setMessages((current) => [...current, { id: messageId, role: "student", content: clean }]);
+    setComposerValue("");
+    setIsResponding(true);
+    window.setTimeout(() => {
+      setMessages((current) => [...current, { id: messageId + 1, role: "summa", content: getTutorResponse(clean) }]);
+      setIsResponding(false);
+      registerEvent("practice", "New learning intent captured");
+    }, 650);
+  }
+  function startNewSession() {
+    setActiveView("workspace"); setSessionStarted(false); setMessages([]); setComposerValue(""); setSidebarOpen(false);
+    toast("New learning space ready", { description: "Tell Summa what you want to understand." });
+  }
+  function selectView(view: ViewName) { setActiveView(view); setSidebarOpen(false); }
+
+  return (
+    <div className={`summa-app ${contextOpen ? "context-is-open" : "context-is-closed"} ${theme === "dark" ? "dark-mode" : ""}`}>
+      <aside className={`app-sidebar ${sidebarOpen ? "is-open" : ""}`} aria-label="Primary navigation">
+        <div className="sidebar-topline"><SummaLogo /><button className="mobile-close-button" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={19} /></button></div>
+        <button type="button" className="new-session-button" onClick={startNewSession}><Plus size={16} /> New learning</button>
+        <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>8</small>}</button>; })}</nav>
+        <section className="history-section" aria-labelledby="folders-label"><div className="section-title-row"><span id="folders-label" className="nav-caption">FOLDERS</span><button type="button" aria-label="Create folder" onClick={() => toast("Create a course folder from the connected learning library.")}><Plus size={15} /></button></div><div className="folder-list"><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 201 · OOP</span></button><div className="history-list">{chatHistory.slice(0, 2).map((chat) => <button type="button" className={`history-item ${chat.active ? "active" : ""}`} key={chat.title} onClick={() => { setActiveView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 203 · Databases</span></button><div className="history-list">{chatHistory.slice(2).map((chat) => <button type="button" className="history-item" key={chat.title} onClick={() => { setActiveView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div></div></section>
+        <div className="sidebar-bottom"><button type="button" className={`nav-item ${activeView === "settings" ? "active" : ""}`} onClick={() => selectView("settings")}><Settings2 size={16} /><span>Settings</span></button><div className="student-badge"><div className="student-avatar">J</div><div><strong>John</strong><span>Student plan</span></div><ChevronDown size={14} /></div></div>
+      </aside>
+      {sidebarOpen && <button className="sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
+      <section className="main-area">
+        <header className="app-header"><div className="header-left"><button type="button" className="header-icon-button mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation"><Menu size={19} /></button><div className="header-crumbs"><span>Summa AI</span><ChevronRight size={13} /><strong>{activeView === "workspace" ? "Summa AI Chat" : activeView === "learning" ? "My learning" : activeView === "progress" ? "Learning progress" : activeView === "sources" ? "Academic sources" : "Learning settings"}</strong><ChevronDown size={12} /></div></div><div className="header-actions">{activeView === "workspace" && sessionStarted && <button type="button" className="context-toggle" onClick={() => setContextOpen((value) => !value)}><PanelRight size={16} /><span>{contextOpen ? "Hide context" : "Context"}</span></button>}<button type="button" className="theme-toggle" onClick={() => setTheme((value) => value === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>{theme === "light" ? <Moon size={15} /> : <Sun size={15} />}<span>{theme === "light" ? "Dark" : "Light"}</span></button><button type="button" className="header-icon-button" onClick={() => toast("No new learning reminders.")} aria-label="Open notifications"><Bell size={17} /></button><button type="button" className="header-icon-button" onClick={() => toast("Need a hand? Summa can help you choose the next learning action.")} aria-label="Open help"><CircleHelp size={17} /></button></div></header>
+        <main className="product-stage">
+          {activeView === "workspace" && <WorkspaceView sessionStarted={sessionStarted} onStart={() => setSessionStarted(true)} composerValue={composerValue} setComposerValue={setComposerValue} sendMessage={sendMessage} messages={messages} isResponding={isResponding} mastery={mastery} updateMastery={updateMastery} registerEvent={registerEvent} setSourceTrayOpen={setSourceTrayOpen} />}
+          {activeView === "learning" && <LearningLibrary onResume={() => { setActiveView("workspace"); setSessionStarted(true); }} favorites={favorites} onToggleFavorite={toggleFavorite} favoriteFolders={favoriteFolders} onAssignFolder={assignFavoriteFolder} />}
+          {activeView === "progress" && <ProgressView mastery={mastery} onContinue={() => { setActiveView("workspace"); setSessionStarted(true); }} />}
+          {activeView === "sources" && <SourcesView onUseSource={() => { setActiveView("workspace"); setSessionStarted(true); setSourceTrayOpen(true); }} />}
+          {activeView === "settings" && <SettingsView memoryEnabled={memoryEnabled} setMemoryEnabled={setMemoryEnabled} />}
+        </main>
+      </section>
+      {activeView === "workspace" && contextOpen && sessionStarted && <ContextRail mastery={mastery} events={events} onJumpToSources={() => setSourceTrayOpen(true)} />}
+      {sourceTrayOpen && <SourceTray onClose={() => setSourceTrayOpen(false)} onConfirm={() => { setSourceTrayOpen(false); toast(`${contextSummary} are grounding this learning session.`); }} />}
+    </div>
+  );
+}
+
+type WorkspaceProps = { sessionStarted: boolean; onStart: () => void; composerValue: string; setComposerValue: (value: string) => void; sendMessage: (message?: string) => void; messages: ConversationMessage[]; isResponding: boolean; mastery: number; updateMastery: (amount: number) => void; registerEvent: (kind: string, detail: string) => void; setSourceTrayOpen: (value: boolean) => void };
+
+function WorkspaceView(props: WorkspaceProps) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (props.messages.length || props.isResponding) bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [props.messages.length, props.isResponding]);
+  if (!props.sessionStarted) return <EmptyWorkspace {...props} />;
+  return <div className="workspace-view active-workspace"><div className="conversation-scroll"><div className="conversation-column">
+    <section className="context-banner" aria-label="Current learning context"><div className="context-course"><span className="context-dot" /> CSC 201 <ChevronRight size={13} /> <strong>Object-Oriented Programming</strong></div><div className="context-meta"><button type="button" onClick={() => props.setSourceTrayOpen(true)}><BookOpen size={13} /> 3 sources</button><span /> <span className="objective-slip">Objective: explain runtime dispatch</span><button type="button" className="context-share-button" onClick={() => shareText("Summa AI learning summary", "Summa AI · CSC 201\nTopic: Runtime dispatch\nCurrent estimate: " + props.mastery + "%\nNext action: Explain how dynamic dispatch chooses an override.", "summa-learning-summary.txt")}><Share2 size={12} /> Share summary</button></div></section>
+    <div className="message-block student-message"><div className="student-message-avatar">J</div><div className="message-content"><p>Can you help me understand polymorphism with a concrete example?</p></div></div>
+    <div className="message-block summa-message"><div className="message-sender"><div className="summa-message-mark"><span className="mini-orb" /></div><strong>Summa</strong><span>Adaptive tutor</span></div><div className="message-content source-grounded"><p>Before we add another rule, let’s retrieve what you already know. In your notes, polymorphism is described as one interface with different behaviour. The part to make precise is <strong>who decides the behaviour at runtime.</strong></p><p>Make a prediction first—then we will use it as evidence for the next explanation.</p><div className="citation-row"><span className="citation-label"><FileText size={13} /> GROUNDED IN</span><button type="button">CSC 201 · Lecture 06 <span>p. 18</span></button><button type="button">OOP notes <span>§ 4.2</span></button></div></div></div>
+    <RecallQuiz onMasteryChange={props.updateMastery} onLearningEvent={props.registerEvent as never} /><div className="tutor-intervention"><span className="intervention-line" /><p><strong>Why this next:</strong> you can name polymorphism, but your previous answer did not explain runtime dispatch. A short prediction is a better test than another definition.</p></div><GuidedPractice onMasteryChange={props.updateMastery} onLearningEvent={props.registerEvent as never} /><FlashcardReview onMasteryChange={props.updateMastery} onLearningEvent={props.registerEvent as never} /><ProgressMoment mastery={props.mastery} />{props.messages.map((message) => <ConversationTurn message={message} key={message.id} />)}{props.isResponding && <div className="tutor-typing-indicator" role="status" aria-live="polite"><div className="typing-orb"><span className="mini-orb" /></div><div className="typing-bubble"><span className="sr-only">Summa is typing a response</span><i /><i /><i /></div><small>Summa is thinking</small></div>}<div ref={bottomRef} aria-hidden="true" />
+  </div></div><ComposerPanel {...props} active /></div>;
+}
+
+function EmptyWorkspace(props: WorkspaceProps) {
+  const emptyActions = [{ label: "Quiz me", icon: ListChecks }, { label: "Build a study plan", icon: BookOpen }, { label: "Explain a concept", icon: Lightbulb }, { label: "Find weak areas", icon: Sparkles }];
+  return <div className="empty-workspace"><div className="empty-hero"><div className="hero-orb"><span /></div><h1>Good morning, John</h1><p>What would you like to learn today?</p></div><ComposerPanel {...props} /><div className="empty-actions" aria-label="Learning shortcuts">{emptyActions.map(({ label, icon: Icon }) => <button type="button" key={label} onClick={() => { props.setComposerValue(label); props.onStart(); }}><Icon size={15} /> {label}</button>)}</div><section className="recent-learning"><div className="recent-heading"><span>Your recent chats</span><button type="button" onClick={() => toast("All learning conversations are already in the sidebar.")}>View all <ChevronRight size={14} /></button></div><div className="recent-grid">{chatHistory.slice(0, 3).map((chat) => <button type="button" className="recent-card" key={chat.title} onClick={() => props.onStart()}><strong>{chat.title}</strong><p>{chat.title === "Polymorphism, continued" ? "Runtime dispatch and overriding, with a short retrieval loop." : chat.title === "Trace recursive calls" ? "Build a stack trace one frame at a time." : "A focused map for the next exam review."}</p><small>{chat.time === "Now" ? "Today" : chat.time}</small></button>)}</div></section></div>;
+}
+
+function ComposerPanel(props: WorkspaceProps & { active?: boolean }) {
+  const [upload, setUpload] = useState<{ name: string; url: string } | null>(null);
+  const [isDictating, setIsDictating] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  function simulateDictation() { if (isDictating) return; setIsDictating(true); toast("Listening… simulated dictation is active."); window.setTimeout(() => { props.setComposerValue(`${props.composerValue}${props.composerValue ? " " : ""}Explain this concept with a concrete example.`); setIsDictating(false); toast("Transcript added to the composer."); }, 900); }
+  return <div className={`composer-shell ${props.active ? "active-composer-shell" : "empty-composer-shell"}`}><form className="composer" onSubmit={(event) => { event.preventDefault(); props.sendMessage(); }}><label className="composer-icon upload-trigger" aria-label="Upload a resource"><input type="file" accept="image/*,.pdf,.txt,.md" onChange={(event) => { const file = event.target.files?.[0]; if (file) { setUpload({ name: file.name, url: file.type.startsWith("image/") ? URL.createObjectURL(file) : "" }); toast(`${file.name} attached for this session.`); } }} /><Plus size={18} /></label><textarea value={props.composerValue} onChange={(event) => props.setComposerValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.sendMessage(); } }} placeholder="Ask anything…" rows={1} aria-label="Message Summa" />{upload && <div className="composer-upload-preview" title={upload.name}>{upload.url ? <button type="button" className="upload-thumbnail-button" onClick={() => setLightboxUrl(upload.url)} aria-label={`Enlarge ${upload.name}`}><img src={upload.url} alt="Uploaded resource thumbnail" /></button> : <span><FileText size={14} /></span>}<small>{upload.name}</small><button type="button" onClick={() => setUpload(null)} aria-label={`Remove ${upload.name}`}><X size={12} /></button></div>}<div className="composer-tools"><button type="button" className={`composer-icon ${isDictating ? "is-dictating" : ""}`} onClick={simulateDictation} aria-label={isDictating ? "Dictation in progress" : "Simulate voice dictation"}><Mic size={17} />{isDictating && <span className="audio-wave" aria-hidden="true"><i /><i /><i /><i /><i /></span>}</button><button type="button" className="composer-source" onClick={() => props.setSourceTrayOpen(true)}><BookOpen size={14} /><span>Data source</span><ChevronDown size={12} /></button></div><button type="submit" className="composer-send" disabled={!props.composerValue.trim() || props.isResponding} aria-label="Send message"><ArrowUp size={19} /></button></form>{props.active && <p className="composer-note">Enter sends · Shift+Enter adds a line · Summa uses selected course resources first.</p>}{lightboxUrl && <div className="upload-lightbox" role="dialog" aria-modal="true" aria-label="Enlarged uploaded resource" onClick={() => setLightboxUrl(null)}><button type="button" className="lightbox-close" onClick={() => setLightboxUrl(null)} aria-label="Close enlarged resource"><X size={18} /></button><img src={lightboxUrl} alt="Enlarged uploaded resource" onClick={(event) => event.stopPropagation()} /></div>}</div>;
+}
+
+function ConversationTurn({ message }: { message: ConversationMessage }) { const isStudent = message.role === "student"; return <div className={`message-block ${isStudent ? "student-message" : "summa-message dynamic-message"}`}>{isStudent ? <div className="student-message-avatar">J</div> : <div className="message-sender"><div className="summa-message-mark"><span className="mini-orb" /></div><strong>Summa</strong></div>}<div className="message-content"><p>{message.content}</p></div></div>; }
+
+function ContextRail({ mastery, events, onJumpToSources }: { mastery: number; events: string[]; onJumpToSources: () => void }) { return <aside className="context-rail" aria-label="Learning context"><div className="rail-heading"><div><span className="eyebrow">YOUR LEARNING CONTEXT</span><h2>In the margins</h2></div><button type="button" aria-label="Context options"><MoreHorizontal size={19} /></button></div><section className="focus-card"><div className="focus-card-top"><span className="eyebrow">NEXT BEST ACTION</span><span className="time-chip"><Clock3 size={12} /> 12 min</span></div><h3>Explain how dynamic dispatch chooses an override.</h3><p>Your last response identified the right method but skipped the runtime-object reasoning.</p><button type="button" onClick={() => document.getElementById("practice-title")?.scrollIntoView({ behavior: "smooth", block: "center" })}>Practice this now <ChevronRight size={14} /></button></section><section className="mastery-ledger"><div className="section-heading"><div><span className="eyebrow">LEARNER MODEL</span><h3>Polymorphism</h3></div><span className="mastery-estimate">{mastery}%</span></div><p className="estimate-copy">Estimated from recent retrieval and explanation evidence.</p><div className="ledger-list"><LedgerRow label="Definitions" value={91} tone="strong" /><LedgerRow label="Identification" value={82} tone="strong" /><LedgerRow label="Runtime behaviour" value={mastery} tone="developing" /><LedgerRow label="Implementation" value={48} tone="developing" /></div></section><section className="memory-card"><div className="memory-head"><div><span className="eyebrow">WHAT I REMEMBER</span><h3>Useful continuity</h3></div><div className="memory-status"><span /> Active</div></div><ul><li><span>Preference</span><strong>Examples before abstractions</strong></li><li><span>Recurring gap</span><strong>Overriding vs. overloading</strong></li><li><span>Next review</span><strong>Saturday · retrieval</strong></li></ul></section><section className="source-lens"><div className="source-lens-copy"><span className="eyebrow">SUMMASTUDY</span><h3>3 sources are in scope</h3><p>Selected materials anchor this session.</p></div><img src="/manus-storage/summa-learning-atlas_404e3bf5.jpg" alt="An editorial arrangement of course materials and concept cards." /><button type="button" onClick={onJumpToSources}>Review sources <ChevronRight size={14} /></button></section><section className="event-ledger"><span className="eyebrow">SESSION SIGNALS</span>{events.map((event) => <p key={event}><span />{event}</p>)}</section></aside>; }
+
+function LedgerRow({ label, value, tone }: { label: string; value: number; tone: "strong" | "developing" }) { const activeCount = Math.max(1, Math.round(value / 10)); return <div className="ledger-row"><div><span className={`ledger-status ${tone}`} /><span>{label}</span></div><strong>{value}%</strong><div className="evidence-marks" aria-label={`${value}% evidence estimate`}>{Array.from({ length: 10 }, (_, index) => <i key={index} className={index < activeCount ? "is-active" : ""} />)}</div></div>; }
+
+function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolders, onAssignFolder }: { onResume: () => void; favorites: string[]; onToggleFavorite: (title: string) => void; favoriteFolders: Record<string, string>; onAssignFolder: (title: string, folder: string) => void }) {
+  const [topic, setTopic] = useState("All topics");
+  const [sort, setSort] = useState<SortMode>("recent");
+  const [isFiltering, setIsFiltering] = useState(true);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [query, setQuery] = useState("");
+  const [folder, setFolder] = useState("All folders");
+  const folders = ["All folders", "Unsorted", ...Array.from(new Set(Object.values(favoriteFolders).filter(Boolean)))];
+  useEffect(() => { const timer = window.setTimeout(() => setIsFiltering(false), 360); return () => window.clearTimeout(timer); }, [topic, sort, favoritesOnly, query, folder]);
+  const topics = ["All topics", ...Array.from(new Set(learningObjects.map((item) => item.topic)))];
+  const visible = learningObjects.filter((item) => { const haystack = `${item.title} ${item.description} ${item.meta} ${item.topic}`.toLowerCase(); const itemFolder = favoriteFolders[item.title] || "Unsorted"; return (topic === "All topics" || item.topic === topic) && (!favoritesOnly || favorites.includes(item.title)) && (!query || haystack.includes(query.toLowerCase())) && (folder === "All folders" || itemFolder === folder); }).sort((a, b) => sort === "topic" ? a.topic.localeCompare(b.topic) : sort === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+  return <div className="secondary-page library-page"><section className="secondary-intro library-intro"><div><span className="eyebrow">MY LEARNING</span><h1>Objects that keep learning with you.</h1><p>Your retrieval sets, practice, and quizzes are organized by course and adjust as your evidence changes.</p></div><img src="/manus-storage/summa-study-objects_ea6e1284.jpg" alt="Study notes and index cards arranged on a desk." /></section><div className="discover-toolbar"><div className="filter-label"><Filter size={14} /> <span>Filter learning</span></div><label className="learning-search"><Search size={13} /><span className="sr-only">Search saved learning</span><input value={query} onChange={(event) => { setQuery(event.target.value); setIsFiltering(true); }} placeholder="Search saved learning…" /></label><label><span className="sr-only">Topic</span><select value={topic} onChange={(event) => setTopic(event.target.value)}>{topics.map((item) => <option key={item}>{item}</option>)}</select></label><label><ArrowDownUp size={13} /><span className="sr-only">Sort learning</span><select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}><option value="recent">Newest first</option><option value="oldest">Oldest first</option><option value="topic">By topic</option></select></label><button type="button" className={`favorites-filter ${favoritesOnly ? "active" : ""}`} onClick={() => { setFavoritesOnly((value) => !value); setIsFiltering(true); }}><BookmarkCheck size={13} /> Favorites {favorites.length}</button><label><span className="sr-only">Favorite folder</span><select value={folder} onChange={(event) => { setFolder(event.target.value); setIsFiltering(true); }}>{folders.map((item) => <option key={item}>{item}</option>)}</select></label><button type="button" className="folder-create-button" onClick={() => { const next = window.prompt("Name this favorite folder"); if (next?.trim()) { const title = favorites[0]; if (title) onAssignFolder(title, next.trim()); toast(`${next.trim()} folder created for your first favorite.`); } }}><Plus size={12} /> New folder</button><span className="result-count">{visible.length} objects</span></div>{isFiltering ? <FilterSkeletonGrid count={4} /> : <><div className="library-grid">{visible.map((item) => <LearningObject key={item.title} {...item} favorite={favorites.includes(item.title)} favoriteFolder={favoriteFolders[item.title] || "Unsorted"} favoriteFolders={folders.slice(1)} onToggleFavorite={onToggleFavorite} onAssignFolder={onAssignFolder} onClick={onResume} />)}</div>{visible.length === 0 && <div className="empty-filter-state">No learning objects match this topic yet.</div>}</>}</div>;
+}
+function LearningObject({ type, title, description, meta, action, onClick, accent, topic, date, favorite, favoriteFolder, favoriteFolders, onToggleFavorite, onAssignFolder }: { type: string; title: string; description: string; meta: string; action: string; onClick: () => void; accent: string; topic: string; date: string; favorite: boolean; favoriteFolder: string; favoriteFolders: string[]; onToggleFavorite: (title: string) => void; onAssignFolder: (title: string, folder: string) => void }) { const note = `${title}\n${description}\n${topic} · ${new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}\n${meta}`; return <article className={`learning-object object-${accent}`}><span className="object-tab">{type}</span><div><h2>{title}</h2><p>{description}</p></div><footer><span>{topic} · {new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span><div className="object-actions"><button type="button" className="card-share has-tooltip" data-tooltip="Share learning card" onClick={() => shareText(title, note, `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.txt`)} aria-label={`Share ${title}`}><Share2 size={12} /></button><button type="button" className="card-share has-tooltip" data-tooltip="Export as text file" onClick={() => exportText(title, note, `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.txt`)} aria-label={`Export ${title}`}><Download size={12} /></button><button type="button" className={`card-share favorite-button has-tooltip ${favorite ? "is-favorite" : ""}`} data-tooltip={favorite ? "Remove from favorites" : "Save to favorites"} onClick={() => onToggleFavorite(title)} aria-label={favorite ? `Remove ${title} from favorites` : `Save ${title} to favorites`}>{favorite ? <BookmarkCheck size={12} /> : <Bookmark size={12} />}</button>{favorite && <label className="card-folder-select has-tooltip" data-tooltip="Organize this favorite"><FolderOpen size={11} /><span className="sr-only">Favorite folder for {title}</span><select value={favoriteFolder} onChange={(event) => onAssignFolder(title, event.target.value)}>{favoriteFolders.map((item) => <option key={item}>{item}</option>)}</select></label>}<button type="button" onClick={onClick}>{action} <ChevronRight size={14} /></button></div></footer></article>; }
+
+function ProgressView({ mastery, onContinue }: { mastery: number; onContinue: () => void }) { const [completedTitles, setCompletedTitles] = useState<string[]>(() => JSON.parse(window.localStorage.getItem("summa-completed-milestones") || '["Polymorphism foundations"]')); const [celebrating, setCelebrating] = useState(false); function completeMilestone(title: string) { if (completedTitles.includes(title)) return; setCompletedTitles((items) => [...items, title]); window.localStorage.setItem("summa-completed-milestones", JSON.stringify([...completedTitles, title])); setCelebrating(true); window.setTimeout(() => setCelebrating(false), 1800); } return <div className="secondary-page progress-page"><section className="secondary-intro progress-intro"><div><span className="eyebrow">LEARNING PROGRESS</span><h1>See the evidence. Choose the next move.</h1><p>Mastery is an estimate from your answers, explanations, practice, and delayed review—not a completion badge.</p><button type="button" onClick={onContinue}>Continue learning <ChevronRight size={14} /></button></div><figure><div className="progress-orb"><span /></div><figcaption>Learning memory makes the next recommendation specific.</figcaption></figure></section><MilestoneTracker mastery={mastery} completedTitles={completedTitles} onComplete={completeMilestone} celebrating={celebrating} /><section className="progress-sheet"><div className="progress-sheet-heading"><div><span className="eyebrow">CSC 201 · OBJECT-ORIENTED PROGRAMMING</span><h2>Evidence by capability</h2></div><span>Updated today</span></div><div className="capability-table"><Capability label="Identify polymorphism" evidence="4 retrieval answers" estimate={86} state="stable" /><Capability label="Explain runtime dispatch" evidence="1 explanation · 1 hint" estimate={mastery} state="developing" /><Capability label="Implement overriding" evidence="No recent attempt" estimate={48} state="next" /><Capability label="Apply to an unfamiliar design" evidence="No evidence yet" estimate={34} state="next" /></div></section><div className="insight-strip"><Sparkles size={17} /><p><strong>Useful pattern:</strong> your answers improve when you predict first, then explain the runtime object in your own words.</p></div></div>; }
+function Capability({ label, evidence, estimate, state }: { label: string; evidence: string; estimate: number; state: "stable" | "developing" | "next" }) { const activeCount = Math.max(1, Math.round(estimate / 10)); return <div className="capability-row"><div><span className={`capability-dot ${state}`} /><strong>{label}</strong><small>{evidence}</small></div><div className="evidence-marks capability-evidence">{Array.from({ length: 10 }, (_, index) => <i key={index} className={index < activeCount ? "is-active" : ""} />)}</div><strong>{estimate}%</strong><span className={`capability-state ${state}`}>{state === "stable" ? "Stable" : state === "developing" ? "Developing" : "Next"}</span></div>; }
+function MilestoneTracker({ mastery, completedTitles, onComplete, celebrating }: { mastery: number; completedTitles: string[]; onComplete: (title: string) => void; celebrating: boolean }) { const completed = completedTitles.length; const progress = Math.min(100, Math.round(((completed + (mastery / 100)) / milestoneData.length) * 100)); const nextMilestone = milestoneData.find((item) => !completedTitles.includes(item.title)); return <section className={`milestone-tracker ${celebrating ? "is-celebrating" : ""}`}><div className="milestone-heading"><div><span className="eyebrow">LEARNING MILESTONES</span><h2>Your path through CSC 201</h2><p>{completed} of {milestoneData.length} milestones complete · {progress}% journey progress</p></div><Trophy size={19} /></div>{celebrating && <div className="celebration-banner" role="status"><span className="celebration-sparkles">✦ ✧ ✦</span><strong>Milestone complete</strong><small>Your learning path just moved forward.</small></div>}<div className="milestone-track" style={{ "--milestone-progress": `${progress}%` } as React.CSSProperties}>{milestoneData.map((item) => { const isComplete = completedTitles.includes(item.title); const isCurrent = !isComplete && item.title === nextMilestone?.title; return <div className={`milestone-node ${isComplete ? "complete" : isCurrent ? "current" : "next"} has-tooltip`} data-tooltip={item.objective} tabIndex={0} role="button" aria-label={`${item.title}: ${item.objective}`} onClick={() => isCurrent && onComplete(item.title)} onKeyDown={(event) => { if ((event.key === "Enter" || event.key === " ") && isCurrent) { event.preventDefault(); onComplete(item.title); } }} key={item.title}><div className="milestone-dot">{isComplete ? <CheckCircle2 size={14} /> : isCurrent ? <LoaderCircle size={14} /> : <span />}</div><strong>{item.title}</strong><small>{item.detail}</small><em>{isComplete ? "Complete" : isCurrent ? "Click to complete" : item.date}</em></div>; })}</div></section>; }
+function FilterSkeletonGrid({ count }: { count: number }) { return <div className={`filter-skeleton-grid skeleton-count-${count}`} aria-live="polite" aria-label="Loading filtered content">{Array.from({ length: count }, (_, index) => <div className="filter-skeleton-card" key={index}><span className="skeleton-line short" /><span className="skeleton-line medium" /><span className="skeleton-line long" /><span className="skeleton-line tiny" /></div>)}</div>; }
+
+function SourcesView({ onUseSource }: { onUseSource: () => void }) {
+  const [topic, setTopic] = useState("All topics");
+  const [sort, setSort] = useState<SortMode>("recent");
+  const [isFiltering, setIsFiltering] = useState(true);
+  useEffect(() => { const timer = window.setTimeout(() => setIsFiltering(false), 360); return () => window.clearTimeout(timer); }, [topic, sort]);
+  const topics = ["All topics", ...Array.from(new Set(sourceCatalog.map((item) => item.topic)))];
+  const visible = sourceCatalog.filter((item) => topic === "All topics" || item.topic === topic).sort((a, b) => sort === "topic" ? a.topic.localeCompare(b.topic) : sort === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+  return <div className="secondary-page sources-page"><section className="secondary-intro plain-intro"><div><span className="eyebrow">SUMMASTUDY CONNECTION</span><h1>Your materials are learning context.</h1><p>Summa prioritizes selected academic resources, then clearly distinguishes a general explanation when your materials do not settle a question.</p></div><div className="connect-status"><span className="status-orb" /> Connected through SummaStudy</div></section><div className="discover-toolbar source-discover-toolbar"><div className="filter-label"><Filter size={14} /> <span>Filter sources</span></div><label><span className="sr-only">Topic</span><select value={topic} onChange={(event) => setTopic(event.target.value)}>{topics.map((item) => <option key={item}>{item}</option>)}</select></label><label><ArrowDownUp size={13} /><span className="sr-only">Sort sources</span><select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}><option value="recent">Newest first</option><option value="oldest">Oldest first</option><option value="topic">By topic</option></select></label><span className="result-count">{visible.length} sources</span></div>{isFiltering ? <FilterSkeletonGrid count={3} /> : <section className="source-catalog">{visible.map((source) => <article key={source.title}><div className="source-file-icon"><FileText size={20} /></div><div><span className="eyebrow">{source.type} · {source.topic}</span><h2>{source.title}</h2><p>{source.detail}</p></div><span className="source-in-use">{new Date(source.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span><button type="button" onClick={onUseSource}>Use to learn <ChevronRight size={14} /></button></article>)}</section>}<button type="button" className="add-source-button" onClick={() => { toast("SummaStudy picker opened — choose the materials to add."); onUseSource(); }}><Plus size={16} /> Add from SummaStudy</button></div>;
+}
+function SettingsView({ memoryEnabled, setMemoryEnabled }: { memoryEnabled: boolean; setMemoryEnabled: (value: boolean) => void }) { return <div className="secondary-page settings-page"><section className="secondary-intro plain-intro"><div><span className="eyebrow">LEARNING SETTINGS</span><h1>Give memory useful boundaries.</h1><p>Summa should retain information that improves future learning, not simply keep every conversation forever.</p></div></section><section className="settings-sheet"><SettingRow title="Learning memory" description="Use prior study evidence, preferences, and recurring misconceptions to adapt future sessions."><button type="button" className={`switch-control ${memoryEnabled ? "on" : ""}`} role="switch" aria-checked={memoryEnabled} onClick={() => setMemoryEnabled(!memoryEnabled)}><span /></button></SettingRow><SettingRow title="Resource access" description="CSC 201 materials and approved past questions are currently available through SummaStudy."><button type="button" className="settings-link" onClick={() => toast("Resource permissions are managed through SummaStudy.")}>Manage access <ChevronRight size={14} /></button></SettingRow><SettingRow title="Explanation preference" description="Your saved preference: examples before abstractions."><button type="button" className="settings-link" onClick={() => toast("Explanation preference saved.")}>Change <ChevronRight size={14} /></button></SettingRow><SettingRow title="Delete learning data" description="Remove conversations or saved learning objects from this device."><button type="button" className="danger-link" onClick={() => toast("For safety, data deletion requires confirmation in the connected account.")}>Review controls <ChevronRight size={14} /></button></SettingRow></section></div>; }
+function SettingRow({ title, description, children }: { title: string; description: string; children: React.ReactNode }) { return <div className="setting-row"><div><h2>{title}</h2><p>{description}</p></div>{children}</div>; }
+function SourceTray({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) { return <div className="source-tray-overlay" role="dialog" aria-modal="true" aria-labelledby="source-tray-title"><button className="source-tray-backdrop" onClick={onClose} aria-label="Close source selector" /><section className="source-tray"><header><div><span className="eyebrow">SESSION CONTEXT</span><h2 id="source-tray-title">Choose what grounds this learning.</h2><p>Summa will prioritize these approved resources before general knowledge.</p></div><button type="button" onClick={onClose} aria-label="Close source selector"><X size={19} /></button></header><div className="source-picker-list">{sourceItems.map((source) => <label key={source.title} className="source-picker-item"><input type="checkbox" defaultChecked={source.selected} /><span className="custom-check"><Check size={13} /></span><FileText size={17} /><span><strong>{source.title}</strong><small>{source.detail}</small></span><em>{source.type}</em></label>)}</div><footer><button type="button" className="secondary-action" onClick={() => toast("Upload control will be available after secure file storage is configured.")}><Paperclip size={14} /> Upload a resource</button><button type="button" className="interactive-primary" onClick={onConfirm}>Use selected sources <Send size={14} /></button></footer></section></div>; }
