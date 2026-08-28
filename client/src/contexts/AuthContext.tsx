@@ -6,6 +6,7 @@ export interface User {
   email: string;
   name?: string;
   avatar?: string;
+  bio?: string;
   provider?: string;
   onboarded?: boolean;
 }
@@ -19,6 +20,7 @@ interface AuthContextType {
   signup: (email: string, password?: string, name?: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<string>;
   resetPassword: (password: string) => Promise<string>;
+  updateUser: (data: Partial<User>) => Promise<User>;
   logout: () => void;
 }
 
@@ -104,6 +106,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return res.message;
   };
 
+  const updateUser = async (data: Partial<User>): Promise<User> => {
+    const updatedUser = await fetchApi<User>("/user", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
   const logout = () => {
     localStorage.removeItem("summa_access_token");
     setToken(null);
@@ -121,6 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signup,
         forgotPassword,
         resetPassword,
+        updateUser,
         logout,
       }}
     >
