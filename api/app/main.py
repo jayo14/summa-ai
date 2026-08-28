@@ -127,6 +127,7 @@ async def rate_limit_middleware(request: Request, call_next):
 PUBLIC_PATHS = {
     "/",
     "/health",
+    "/health/connections",
     "/docs",
     "/openapi.json",
     "/redoc",
@@ -134,6 +135,7 @@ PUBLIC_PATHS = {
     f"{settings.API_V1_STR}/auth/signup",
     f"{settings.API_V1_STR}/auth/forgot-password",
     f"{settings.API_V1_STR}/auth/reset-password",
+    f"{settings.API_V1_STR}/health/connections",
 }
 
 
@@ -240,6 +242,65 @@ async def health_check():
         "version": "1.0.0",
         "service": "summa-ai-api",
         "online_connections": manager.get_online_count(),
+    }
+
+
+@app.get(
+    "/health/connections",
+    tags=["health"],
+    summary="3rd party service & DB connections check",
+)
+async def check_connections():
+    import httpx
+    import asyncpg
+
+    results = {}
+
+    # 1. Database Connection
+    try:
+        if settings.DATABASE_URL:
+            conn = await asyncpg.connect(settings.DATABASE_URL, timeout=5)
+            await conn.fetchval("SELECT 1")
+            await conn.close()
+            results["database_postgres"] = {
+                "status": "connected",
+                "provider": "Supabase Postgres",
+            }
+        else:
+            results["database_postgres"] = {"status": "not_configured"}
+    except Exception as exc:
+        results["database_postgres"] = {"status": "error", "error": str(exc)}
+
+    # 2. Supabase Auth REST Service
+    try:
+        if settings.SUPABASE_URL:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(
+                    f"{settings.SUPABASE_URL}/auth/v1/health",
+                    headers={"apikey": settings.SUPABASE_ANON_KEY},
+                )
+                results["supabase_auth"] = {
+                    "status": "connected" if res.status_code < 500 else "degraded",
+                    "status_code": res.status_code,
+                    "url": settings.SUPABASE_URL,
+                }
+        else:
+            results["supabase_auth"] = {"status": "not_configured"}
+    except Exception as exc:
+        results["supabase_auth"] = {"status": "error", "error": str(exc)}
+
+    # 3. LLM AI Service Configuration
+    if settings.OPENAI_API_KEY or settings.ZAI_API_KEY:
+        results["llm_service"] = {
+            "status": "configured",
+            "provider": "Z.ai" if settings.ZAI_API_KEY else "OpenAI",
+        }
+    else:
+        results["llm_service"] = {"status": "not_configured"}
+
+    return {
+        "status": "ok",
+        "connections": results,
     }
 
 

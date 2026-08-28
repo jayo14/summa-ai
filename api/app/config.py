@@ -7,7 +7,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+        env_file=[
+            os.path.join(os.path.dirname(__file__), "..", "..", ".env"),
+            os.path.join(os.path.dirname(__file__), "..", ".env"),
+            ".env",
+        ],
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",
     )
 
     API_V1_STR: str = "/api/v1"
@@ -17,33 +24,45 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
     # Cognee configuration
-    COGNEE_API_KEY: str = ""
-    COGNEE_API_URL: str = "https://api.cognee.ai"
-    LLM_API_KEY: str = ""
-    LLM_PROVIDER: str = "openai"
-    LLM_MODEL: str = "openai/gpt-4o-mini"
-    EMBEDDING_PROVIDER: str = "openai"
-    EMBEDDING_MODEL: str = "openai/text-embedding-3-large"
-    EMBEDDING_API_KEY: str = ""
+    COGNEE_API_KEY: str = os.getenv("COGNEE_API_KEY", "")
+    COGNEE_API_URL: str = os.getenv("COGNEE_API_URL", "https://api.cognee.ai")
+    LLM_API_KEY: str = os.getenv("LLM_API_KEY", "")
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "openai")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
+    EMBEDDING_PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "openai")
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "openai/text-embedding-3-large")
+    EMBEDDING_API_KEY: str = os.getenv("EMBEDDING_API_KEY", "")
 
     # OpenAI configuration
-    OPENAI_API_KEY: str = ""
-    OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
     # Qdrant configuration
-    QDRANT_API_KEY: str = ""
-    QDRANT_CLUSTER_ENDPOINT: str = ""
-    VECTOR_DB_URL: str = ""
-    VECTOR_DB_KEY: str = ""
-    VECTOR_DB_PROVIDER: str = ""
+    QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")
+    QDRANT_CLUSTER_ENDPOINT: str = os.getenv("QDRANT_CLUSTER_ENDPOINT", "")
+    VECTOR_DB_URL: str = os.getenv("VECTOR_DB_URL", "")
+    VECTOR_DB_KEY: str = os.getenv("VECTOR_DB_KEY", "")
+    VECTOR_DB_PROVIDER: str = os.getenv("VECTOR_DB_PROVIDER", "")
 
     # Database
-    DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/postgres"
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql://postgres:2qLyQMkGqFokNinC@db.qzynckcdexotmoxtgzuz.supabase.co:5432/postgres",
+    )
 
     # Supabase Auth
-    SUPABASE_URL: str = ""
-    SUPABASE_ANON_KEY: str = ""
-    SUPABASE_JWT_SECRET: str = ""
+    SUPABASE_URL: str = os.getenv(
+        "SUPABASE_URL",
+        os.getenv("NEXT_PUBLIC_SUPABASE_URL", "https://qzynckcdexotmoxtgzuz.supabase.co"),
+    )
+    SUPABASE_ANON_KEY: str = os.getenv(
+        "SUPABASE_ANON_KEY",
+        os.getenv(
+            "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6eW5ja2NkZXhvdG1veHRgzuzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MTUyODMsImV4cCI6MjA2NzE5MTI4M30.H1leHnvBUUR8s4qqJIGFqFVJMw54TOfs3xWDpyaQc9I",
+        ),
+    )
+    SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
 
     # CORS - Allow production frontend URLs
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
