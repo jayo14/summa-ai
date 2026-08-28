@@ -12,8 +12,15 @@ import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import httpx
-import instructor
-from openai import AsyncOpenAI
+
+try:
+    import instructor
+    from openai import AsyncOpenAI
+    _has_instructor = True
+except ImportError:
+    instructor = None
+    AsyncOpenAI = None
+    _has_instructor = False
 
 from app.config import settings
 
@@ -27,17 +34,13 @@ STREAM_TIMEOUT = httpx.Timeout(120.0, connect=10.0)
 # quickly or not at all.
 REQUEST_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
-_instructor_client: Optional["instructor.client.AsyncInstructor"] = None
+_instructor_client: Any = None
 
 
-def get_instructor_client() -> "instructor.client.AsyncInstructor":
-    """Lazily-built singleton `instructor`-patched async client for
-    schema-constrained generation (see app.services.component_generation).
-    Uses `Mode.JSON` (prompt-engineered JSON + validation/retry) rather than
-    a provider-native structured-output mode, since Z.ai's support for
-    `tools`/`response_format` is unconfirmed — this degrades the same way
-    whether or not the provider turns out to support it natively."""
+def get_instructor_client() -> Any:
     global _instructor_client
+    if not _has_instructor:
+        raise RuntimeError("instructor or openai library is not installed in current environment")
     if _instructor_client is None:
         raw_client = AsyncOpenAI(
             api_key=settings.ZAI_API_KEY,
