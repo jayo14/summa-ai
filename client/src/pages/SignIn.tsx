@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { ArrowRight, Eye, EyeOff, Lock, Mail, Sparkles } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, Sparkles } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 
 export default function SignIn() {
@@ -26,9 +26,11 @@ export default function SignIn() {
       await login(email, password);
       toast.success("Welcome back!");
       setLocation("/");
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 100);
     } catch (err: any) {
       toast.error(err.message || "Failed to sign in");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -115,7 +117,10 @@ export default function SignIn() {
           className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50"
         >
           {isSubmitting ? (
-            <Sparkles className="size-4 animate-spin" />
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              <span>Signing in...</span>
+            </>
           ) : (
             <>
               Sign in
