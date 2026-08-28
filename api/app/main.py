@@ -132,6 +132,8 @@ PUBLIC_PATHS = {
     "/redoc",
     f"{settings.API_V1_STR}/auth/login",
     f"{settings.API_V1_STR}/auth/signup",
+    f"{settings.API_V1_STR}/auth/forgot-password",
+    f"{settings.API_V1_STR}/auth/reset-password",
 }
 
 

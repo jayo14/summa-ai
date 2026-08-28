@@ -4,11 +4,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
   Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, Paperclip, PanelRight,
-  Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck,
+  Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck, LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/components/LearningInteractives";
 import { SummaLogo } from "@/components/SummaLogo";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ViewName = "workspace" | "learning" | "progress" | "sources" | "settings";
 type ConversationMessage = { id: number; role: "student" | "summa"; content: string };
@@ -152,6 +161,8 @@ export default function Home() {
   }
   function selectView(view: ViewName) { setActiveView(view); setSidebarOpen(false); }
 
+  const { user, logout } = useAuth();
+
   return (
     <div className={`summa-app ${contextOpen ? "context-is-open" : "context-is-closed"} ${theme === "dark" ? "dark-mode" : ""}`}>
       <aside className={`app-sidebar ${sidebarOpen ? "is-open" : ""}`} aria-label="Primary navigation">
@@ -159,7 +170,46 @@ export default function Home() {
         <button type="button" className="new-session-button" onClick={startNewSession}><Plus size={16} /> New learning</button>
         <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>8</small>}</button>; })}</nav>
         <section className="history-section" aria-labelledby="folders-label"><div className="section-title-row"><span id="folders-label" className="nav-caption">FOLDERS</span><button type="button" aria-label="Create folder" onClick={() => toast("Create a course folder from the connected learning library.")}><Plus size={15} /></button></div><div className="folder-list"><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 201 · OOP</span></button><div className="history-list">{chatHistory.slice(0, 2).map((chat) => <button type="button" className={`history-item ${chat.active ? "active" : ""}`} key={chat.title} onClick={() => { setActiveView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 203 · Databases</span></button><div className="history-list">{chatHistory.slice(2).map((chat) => <button type="button" className="history-item" key={chat.title} onClick={() => { setActiveView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div></div></section>
-        <div className="sidebar-bottom"><button type="button" className={`nav-item ${activeView === "settings" ? "active" : ""}`} onClick={() => selectView("settings")}><Settings2 size={16} /><span>Settings</span></button><div className="student-badge"><div className="student-avatar">J</div><div><strong>John</strong><span>Student plan</span></div><ChevronDown size={14} /></div></div>
+        <div className="sidebar-bottom">
+          <button type="button" className={`nav-item ${activeView === "settings" ? "active" : ""}`} onClick={() => selectView("settings")}><Settings2 size={16} /><span>Settings</span></button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="student-badge w-full text-left cursor-pointer hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors border-0">
+                <div className="student-avatar">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <strong className="block truncate">{user?.name || "Student User"}</strong>
+                  <span className="block truncate text-xs text-slate-500">{user?.email || "student@summa.ai"}</span>
+                </div>
+                <ChevronDown size={14} className="text-slate-400 flex-shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl z-50">
+              <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-slate-500">
+                Account Overview
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => selectView("settings")}
+                className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-600 dark:hover:text-purple-400"
+              >
+                <Settings2 size={14} />
+                <span>Account & Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="my-1 border-slate-100 dark:border-slate-800" />
+              <DropdownMenuItem
+                onClick={() => {
+                  logout();
+                  toast.success("Signed out successfully");
+                }}
+                className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium"
+              >
+                <LogOut size={14} />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </aside>
       {sidebarOpen && <button className="sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
       <section className="main-area">

@@ -72,3 +72,12 @@ class AuthLoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: User
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    password: str
+
