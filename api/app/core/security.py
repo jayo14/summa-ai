@@ -22,7 +22,7 @@ current_jwt_token: ContextVar[Optional[str]] = ContextVar(
 
 
 def verify_supabase_jwt(token: str) -> Optional[str]:
-    if not token:
+    if not token or token in ("null", "undefined") or len(token.split(".")) != 3:
         return None
     secret = settings.SUPABASE_JWT_SECRET or "dev-secret-key-change-in-production-12345"
     try:
