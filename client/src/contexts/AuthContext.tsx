@@ -32,7 +32,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     async function verifyAuth() {
       const storedToken = localStorage.getItem("summa_access_token");
-      if (!storedToken) {
+      if (!storedToken || storedToken === "undefined" || storedToken === "null" || storedToken.trim() === "") {
+        localStorage.removeItem("summa_access_token");
+        setToken(null);
+        setUser(null);
         setIsLoading(false);
         return;
       }
