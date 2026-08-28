@@ -44,8 +44,9 @@ async function startServer() {
       });
 
       res.status(proxyResp.status);
+      const hopByHopHeaders = ["transfer-encoding", "content-encoding", "content-length"];
       proxyResp.headers.forEach((val, key) => {
-        if (key.toLowerCase() !== "transfer-encoding") {
+        if (!hopByHopHeaders.includes(key.toLowerCase())) {
           res.setHeader(key, val);
         }
       });
