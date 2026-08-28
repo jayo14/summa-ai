@@ -24,11 +24,15 @@ async def get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
         try:
+            kwargs = {}
+            if "supabase" in settings.DATABASE_URL:
+                kwargs["ssl"] = "require"
             _pool = await asyncpg.create_pool(
                 settings.DATABASE_URL,
                 min_size=1,
                 max_size=10,
                 timeout=5.0,
+                **kwargs,
             )
             logger.info("Shared asyncpg pool created")
         except Exception as exc:

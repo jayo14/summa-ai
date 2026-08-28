@@ -259,7 +259,10 @@ async def check_connections():
     # 1. Database Connection
     try:
         if settings.DATABASE_URL:
-            conn = await asyncpg.connect(settings.DATABASE_URL, timeout=5)
+            kwargs = {}
+            if "supabase" in settings.DATABASE_URL:
+                kwargs["ssl"] = "require"
+            conn = await asyncpg.connect(settings.DATABASE_URL, timeout=5, **kwargs)
             await conn.fetchval("SELECT 1")
             await conn.close()
             results["database_postgres"] = {
