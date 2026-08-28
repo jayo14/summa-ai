@@ -185,7 +185,12 @@ export default function Home() {
                 <ChevronDown size={14} className="text-slate-400 flex-shrink-0" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl z-50">
+            <DropdownMenuContent
+              side="top"
+              align="start"
+              sideOffset={8}
+              className="w-56 p-1.5 shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl z-[999]"
+            >
               <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-slate-500">
                 Account Overview
               </DropdownMenuLabel>
