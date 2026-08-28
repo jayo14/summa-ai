@@ -1,8 +1,10 @@
-"""Security, JWT verification, and WebSocket utilities."""
-
+import logging
 from contextvars import ContextVar
-from typing import Optional
+from typing import Dict, List, Optional
 import jwt as pyjwt
+from fastapi import HTTPException, WebSocket
+from app.config import settings
+
 try:
     from passlib.context import CryptContext
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -11,11 +13,6 @@ except ImportError:
     import hashlib
     import secrets
     _has_passlib = False
-
-import logging
-from typing import Dict, List, Optional
-from fastapi import HTTPException, WebSocket
-from app.config import settings
 
 logger = logging.getLogger(__name__)
 current_user_id: ContextVar[Optional[str]] = ContextVar("current_user_id", default=None)
