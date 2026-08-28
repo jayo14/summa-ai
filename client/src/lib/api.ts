@@ -3,7 +3,7 @@
  * Automatically attaches Authorization header when token is present in localStorage.
  */
 
-const API_BASE = "/api";
+const API_BASE = "/api/v1";
 
 export async function fetchApi<T = any>(
   endpoint: string,
