@@ -1,0 +1,21 @@
+# Python virtual environments
+venv/
+api/venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Tests & Dev Artifacts
+tests/
+api/tests/
+.pytest_cache/
+download/
+scripts/
+
+# Misc
+.git/
+.github/
+.vscode/
+.gemini/
