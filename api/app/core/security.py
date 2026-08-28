@@ -3,14 +3,20 @@
 from contextvars import ContextVar
 from typing import Optional
 import jwt as pyjwt
-from passlib.context import CryptContext
-from fastapi import HTTPException
-from app.config import settings
-import logging
-from typing import Dict, List
-from fastapi import WebSocket
+try:
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    _has_passlib = True
+except ImportError:
+    import hashlib
+    import secrets
+    _has_passlib = False
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import logging
+from typing import Dict, List, Optional
+from fastapi import HTTPException, WebSocket
+from app.config import settings
+
 logger = logging.getLogger(__name__)
 current_user_id: ContextVar[Optional[str]] = ContextVar("current_user_id", default=None)
 current_jwt_token: ContextVar[Optional[str]] = ContextVar(
@@ -72,11 +78,24 @@ def reset_current_jwt_token(token):
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    if _has_passlib:
+        return pwd_context.hash(password)
+    salt = secrets.token_hex(16)
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
+    return f"pbkdf2:{salt}:{key.hex()}"
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    if _has_passlib:
+        return pwd_context.verify(plain, hashed)
+    if not hashed.startswith("pbkdf2:"):
+        return False
+    parts = hashed.split(":")
+    if len(parts) != 3:
+        return False
+    salt, key = parts[1], parts[2]
+    check_key = hashlib.pbkdf2_hmac("sha256", plain.encode("utf-8"), salt.encode("utf-8"), 100000)
+    return check_key.hex() == key
 
 
 class ConnectionManager:
