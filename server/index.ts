@@ -20,7 +20,8 @@ async function startServer() {
   // Proxy /api requests to FastAPI backend
   app.use("/api", async (req, res) => {
     try {
-      const targetUrl = `${apiUrl.replace(/\/+$/, "")}/api${req.url}`;
+      const subPath = req.url.startsWith("/v1") ? req.url : `/v1${req.url.startsWith("/") ? "" : "/"}${req.url}`;
+      const targetUrl = `${apiUrl.replace(/\/+$/, "")}/api${subPath}`;
       const headers: Record<string, string> = {};
       for (const [key, value] of Object.entries(req.headers)) {
         if (value && key.toLowerCase() !== "host") {
