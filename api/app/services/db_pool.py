@@ -23,12 +23,17 @@ _pool: Optional[asyncpg.Pool] = None
 async def get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
-        _pool = await asyncpg.create_pool(
-            settings.DATABASE_URL,
-            min_size=2,
-            max_size=20,
-        )
-        logger.info("Shared asyncpg pool created (min=2, max=20)")
+        try:
+            _pool = await asyncpg.create_pool(
+                settings.DATABASE_URL,
+                min_size=1,
+                max_size=10,
+                timeout=5.0,
+            )
+            logger.info("Shared asyncpg pool created")
+        except Exception as exc:
+            logger.warning("Shared asyncpg pool connection skipped: %s", exc)
+            raise exc
     return _pool
 
 
