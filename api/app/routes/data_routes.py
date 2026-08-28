@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import JSONResponse
-from app.models.artifact import ArtifactCreate, ArtifactUpdate, ArtifactVersionRestore
+from app.models.activity import ActivityCreate, ActivityUpdate, ActivityVersionRestore
 from app.models.chat import ConversationCreate, MessageCreate
 from app.models.timeline import TimelineEventCreate, MaterialCreate, ConceptCreate
 from app.core.security import resolve_user_id
@@ -14,107 +14,116 @@ from app.services.cognee_service import CogneeService
 
 _store = DataStore()
 
-# ========== ARTIFACTS ==========
-artifacts_router = APIRouter()
+# ========== ACTIVITIES ==========
+activities_router = APIRouter()
+artifacts_router = activities_router
 
 
-@artifacts_router.get(
-    "/artifacts",
-    summary="List artifacts",
-    description="Get artifacts for a user, filterable by type and pinned status",
+@activities_router.get(
+    "/activities",
+    summary="List activities",
+    description="Get activities for a user, filterable by type and pinned status",
 )
-async def get_artifacts(
+@activities_router.get("/artifacts", include_in_schema=False)
+async def get_activities(
     user_id: str = Query(default="demo"),
     type: Optional[str] = None,
     pinned: Optional[bool] = None,
     archived: bool = False,
 ):
     user_id = resolve_user_id()
-    return await _store.list_artifacts(
+    return await _store.list_activities(
         user_id, type=type, pinned=pinned, archived=archived
     )
 
 
-@artifacts_router.post(
-    "/artifacts",
+@activities_router.post(
+    "/activities",
     status_code=201,
-    summary="Create artifact",
-    description="Create a new artifact for a user",
+    summary="Create activity",
+    description="Create a new activity for a user",
 )
-async def create_artifact(data: ArtifactCreate, user_id: str = Query(default="demo")):
+@activities_router.post("/artifacts", status_code=201, include_in_schema=False)
+async def create_activity(data: ActivityCreate, user_id: str = Query(default="demo")):
     user_id = resolve_user_id()
-    return await _store.create_artifact(user_id, data.model_dump(by_alias=True))
+    return await _store.create_activity(user_id, data.model_dump(by_alias=True))
 
 
-@artifacts_router.get(
-    "/artifacts/{aid}",
-    summary="Get artifact",
-    description="Get a specific artifact by ID",
+@activities_router.get(
+    "/activities/{aid}",
+    summary="Get activity",
+    description="Get a specific activity by ID",
 )
-async def get_artifact(aid: str):
+@activities_router.get("/artifacts/{aid}", include_in_schema=False)
+async def get_activity(aid: str):
     resolve_user_id()
-    a = await _store.get_artifact(aid)
+    a = await _store.get_activity(aid)
     if a is None:
         raise HTTPException(404, "Not found")
     return a
 
 
-@artifacts_router.patch(
-    "/artifacts/{aid}",
-    summary="Update artifact",
-    description="Update an artifact's metadata, pin status, archive status, or component",
+@activities_router.patch(
+    "/activities/{aid}",
+    summary="Update activity",
+    description="Update an activity's metadata, pin status, archive status, or component",
 )
-async def update_artifact(aid: str, data: ArtifactUpdate):
+@activities_router.patch("/artifacts/{aid}", include_in_schema=False)
+async def update_activity(aid: str, data: ActivityUpdate):
     resolve_user_id()
-    a = await _store.update_artifact(aid, data.model_dump(exclude_unset=True, by_alias=True))
+    a = await _store.update_activity(aid, data.model_dump(exclude_unset=True, by_alias=True))
     if a is None:
         raise HTTPException(404, "Not found")
     return a
 
 
-@artifacts_router.delete(
-    "/artifacts/{aid}",
-    summary="Delete artifact",
-    description="Permanently delete an artifact by ID",
+@activities_router.delete(
+    "/activities/{aid}",
+    summary="Delete activity",
+    description="Permanently delete an activity by ID",
 )
-async def delete_artifact(aid: str):
+@activities_router.delete("/artifacts/{aid}", include_in_schema=False)
+async def delete_activity(aid: str):
     resolve_user_id()
-    if not await _store.delete_artifact(aid):
+    if not await _store.delete_activity(aid):
         raise HTTPException(404, "Not found")
     return {"status": "success"}
 
 
-@artifacts_router.post(
-    "/artifacts/{aid}/pin",
-    summary="Toggle artifact pin",
-    description="Toggle the pinned state of an artifact",
+@activities_router.post(
+    "/activities/{aid}/pin",
+    summary="Toggle activity pin",
+    description="Toggle the pinned state of an activity",
 )
-async def pin_artifact(aid: str):
+@activities_router.post("/artifacts/{aid}/pin", include_in_schema=False)
+async def pin_activity(aid: str):
     resolve_user_id()
-    a = await _store.toggle_pin_artifact(aid)
+    a = await _store.toggle_pin_activity(aid)
     if a is None:
         raise HTTPException(404, "Not found")
     return a
 
 
-@artifacts_router.get(
-    "/artifacts/{aid}/versions",
-    summary="List artifact versions",
-    description="Get version history for an artifact",
+@activities_router.get(
+    "/activities/{aid}/versions",
+    summary="List activity versions",
+    description="Get version history for an activity",
 )
-async def list_artifact_versions(aid: str):
+@activities_router.get("/artifacts/{aid}/versions", include_in_schema=False)
+async def list_activity_versions(aid: str):
     resolve_user_id()
-    return await _store.list_artifact_versions(aid)
+    return await _store.list_activity_versions(aid)
 
 
-@artifacts_router.post(
-    "/artifacts/{aid}/versions",
+@activities_router.post(
+    "/activities/{aid}/versions",
     summary="Restore version",
-    description="Restore a previous version of an artifact",
+    description="Restore a previous version of an activity",
 )
-async def restore_version(aid: str, data: ArtifactVersionRestore):
+@activities_router.post("/artifacts/{aid}/versions", include_in_schema=False)
+async def restore_version(aid: str, data: ActivityVersionRestore):
     resolve_user_id()
-    restored = await _store.restore_artifact_version(aid, data.version)
+    restored = await _store.restore_activity_version(aid, data.version)
     if restored is None:
         raise HTTPException(404, "Version not found")
     return restored

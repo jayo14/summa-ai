@@ -21,7 +21,7 @@ from app.core.security import (
 from app.services.cognee_service import CogneeService
 from app.routes import auth, chat, memory
 from app.routes.data_routes import (
-    artifacts_router,
+    activities_router,
     conv_router,
     timeline_router,
     user_router,
@@ -214,7 +214,7 @@ for r, tag in [
     (auth.router, "auth"),
     (chat.router, "chat"),
     (memory.router, "memory"),
-    (artifacts_router, "artifacts"),
+    (activities_router, "activities"),
     (conv_router, "conversations"),
     (timeline_router, "timeline"),
     (user_router, "user"),
