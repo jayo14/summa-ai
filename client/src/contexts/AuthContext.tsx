@@ -32,30 +32,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    let isMounted = true;
     async function verifyAuth() {
       const storedToken = localStorage.getItem("summa_access_token");
       if (!storedToken || storedToken === "undefined" || storedToken === "null" || storedToken.trim() === "") {
         localStorage.removeItem("summa_access_token");
-        setToken(null);
-        setUser(null);
-        setIsLoading(false);
+        if (isMounted) {
+          setToken(null);
+          setUser(null);
+          setIsLoading(false);
+        }
         return;
       }
 
       try {
         const userData = await fetchApi<User>("/user");
-        setUser(userData);
+        if (isMounted) {
+          setUser(userData);
+        }
       } catch (err) {
         console.warn("Auth token verification failed, clearing session:", err);
         localStorage.removeItem("summa_access_token");
-        setToken(null);
-        setUser(null);
+        if (isMounted) {
+          setToken(null);
+          setUser(null);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
     verifyAuth();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (email: string, password?: string) => {
