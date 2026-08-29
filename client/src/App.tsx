@@ -17,7 +17,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#f8fafc] dark:bg-[#0f172a]">
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#f8fafc] dark:bg-[#0f172a]" role="status" aria-label="Loading Summa AI">
         <div className="flex flex-col items-center gap-3">
           <div className="size-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin" />
           <span className="text-xs font-semibold text-slate-500">Loading Summa AI...</span>
