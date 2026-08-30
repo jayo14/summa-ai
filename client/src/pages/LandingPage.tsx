@@ -676,10 +676,6 @@ export default function LandingPage() {
                     </>
                   )}
                 </button>
-
-                <p className="text-[11px] text-[#6D7E78] font-mono text-center">
-                  🔒 No credit card required. Priority access invites are sent in batches weekly.
-                </p>
               </form>
             )}
           </div>
