@@ -152,16 +152,82 @@ export default function Home() {
   function sendMessage(message = composerValue) {
     const clean = message.trim();
     if (!clean || isResponding) return;
-    const messageId = Date.now();
+    const studentMsgId = Date.now();
+    const summaMsgId = studentMsgId + 1;
     setSessionStarted(true);
-    setMessages((current) => [...current, { id: messageId, role: "student", content: clean }]);
+    const updatedMessages = [...messages, { id: studentMsgId, role: "student" as const, content: clean }];
+    setMessages(updatedMessages);
     setComposerValue("");
     setIsResponding(true);
-    window.setTimeout(() => {
-      setMessages((current) => [...current, { id: messageId + 1, role: "summa", content: getTutorResponse(clean) }]);
-      setIsResponding(false);
-      registerEvent("practice", "New learning intent captured");
-    }, 650);
+
+    const historyForBackend = updatedMessages.map((m) => ({
+      role: m.role === "student" ? "user" : "assistant",
+      content: m.content,
+    }));
+
+    setMessages((prev) => [...prev, { id: summaMsgId, role: "summa" as const, content: "" }]);
+
+    fetch("/api/v1/chat/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: historyForBackend,
+        conversation_id: "default-session",
+        enable_thinking: true,
+      }),
+    })
+      .then(async (response) => {
+        if (!response.ok || !response.body) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith("data: ")) continue;
+            const dataStr = trimmed.slice(6).trim();
+            if (dataStr === "[DONE]") break;
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (parsed.type === "content" && parsed.delta) {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === summaMsgId
+                      ? { ...msg, content: msg.content + parsed.delta }
+                      : msg
+                  )
+                );
+              } else if (parsed.type === "error") {
+                toast.error(parsed.message || "AI response error");
+              }
+            } catch (err) {
+              // ignore json parse errors for partial lines
+            }
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn("Live SSE stream failed, falling back to tutor response:", err);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === summaMsgId ? { ...msg, content: getTutorResponse(clean) } : msg
+          )
+        );
+      })
+      .finally(() => {
+        setIsResponding(false);
+        registerEvent("practice", "New learning intent captured");
+      });
   }
   const [location, setLocation] = useLocation();
 

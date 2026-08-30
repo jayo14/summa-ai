@@ -13,7 +13,7 @@ from app.services.cognee_service import CogneeService
 from app.services.summastudy_memory import summastudy_memory
 from app.services.user_store import UserStore
 from app.services.data_store import DataStore
-from app.services import zai_client
+from app.services import zai_client, google_ai
 from app.services.component_generation import generate_component_payload
 
 logger = logging.getLogger(__name__)
@@ -57,10 +57,6 @@ async def detect_knowledge_gaps(user_id: str) -> Optional[dict]:
         entries = progress_data.get("progress", [])
         gaps = []
         for entry in entries:
-            # `score` lives under metadata (see CogneeService.remember_learning_progress) —
-            # entries never carry a top-level "score" key, so reading it directly
-            # always silently fell through to the 100 default and gap detection
-            # never fired. Verified via CogneeService's actual entry shape, not assumed.
             score = entry.get("metadata", {}).get("score", 100)
             topic = entry.get("metadata", {}).get("topic") or entry.get("text", "")
             if isinstance(score, (int, float)) and score < WEAK_SCORE_THRESHOLD:
@@ -165,17 +161,30 @@ async def build_orchestrator_prompt(
     return "\n".join(parts)
 
 
-async def _stream_zai(
+async def _stream_ai_response(
     messages: list[dict], enable_thinking: bool = True, context: str = ""
 ) -> AsyncGenerator[str, None]:
-    async for chunk in zai_client.stream_completion(messages, context, enable_thinking):
-        if chunk["type"] == "done":
-            yield "data: [DONE]\n\n"
-        elif chunk["type"] == "error":
-            yield f"data: {json.dumps({'type': 'error', 'message': chunk['message']})}\n\n"
-            yield "data: [DONE]\n\n"
-        else:
-            yield f"data: {json.dumps(chunk)}\n\n"
+    """Streams completion chunks from Google AI (Gemini) if configured, or Z.ai (GLM)."""
+    if google_ai.is_gemini_configured():
+        logger.info("Using Google AI (Gemini %s) for chat stream", settings.GEMINI_MODEL)
+        async for chunk in google_ai.stream_gemini_completion(messages, context):
+            if chunk["type"] == "done":
+                yield "data: [DONE]\n\n"
+            elif chunk["type"] == "error":
+                yield f"data: {json.dumps({'type': 'error', 'message': chunk['message']})}\n\n"
+                yield "data: [DONE]\n\n"
+            else:
+                yield f"data: {json.dumps(chunk)}\n\n"
+    else:
+        logger.info("Using Z.ai (GLM) for chat stream")
+        async for chunk in zai_client.stream_completion(messages, context, enable_thinking):
+            if chunk["type"] == "done":
+                yield "data: [DONE]\n\n"
+            elif chunk["type"] == "error":
+                yield f"data: {json.dumps({'type': 'error', 'message': chunk['message']})}\n\n"
+                yield "data: [DONE]\n\n"
+            else:
+                yield f"data: {json.dumps(chunk)}\n\n"
 
 
 @router.post("/chat/stream", summary="Chat (streaming)")
@@ -211,7 +220,7 @@ async def chat_stream(request: ChatRequest):
             yield f"data: {json.dumps({'type': 'artifact', 'artifact': artifact_event})}\n\n"
 
         full_response = ""
-        async for event in _stream_zai(
+        async for event in _stream_ai_response(
             messages, request.enable_thinking, context=orch_prompt
         ):
             yield event
