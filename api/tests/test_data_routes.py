@@ -30,27 +30,27 @@ class TestHealthCheck:
 class TestArtifacts:
     @patch("app.routes.data_routes._store")
     def test_list_artifacts(self, mock_store):
-        mock_store.list_artifacts = AsyncMock(return_value=[{"id": "a1"}])
+        mock_store.list_activities = AsyncMock(return_value=[{"id": "a1"}])
         response = client.get("/api/v1/artifacts", headers=_auth_headers())
         assert response.status_code == 200
         assert response.json() == [{"id": "a1"}]
 
     @patch("app.routes.data_routes._store")
     def test_get_artifact_found(self, mock_store):
-        mock_store.get_artifact = AsyncMock(return_value={"id": "a1", "title": "Note"})
+        mock_store.get_activity = AsyncMock(return_value={"id": "a1", "title": "Note"})
         response = client.get("/api/v1/artifacts/a1", headers=_auth_headers())
         assert response.status_code == 200
         assert response.json()["id"] == "a1"
 
     @patch("app.routes.data_routes._store")
     def test_get_artifact_not_found(self, mock_store):
-        mock_store.get_artifact = AsyncMock(return_value=None)
+        mock_store.get_activity = AsyncMock(return_value=None)
         response = client.get("/api/v1/artifacts/missing", headers=_auth_headers())
         assert response.status_code == 404
 
     @patch("app.routes.data_routes._store")
     def test_update_artifact(self, mock_store):
-        mock_store.update_artifact = AsyncMock(
+        mock_store.update_activity = AsyncMock(
             return_value={"id": "a1", "title": "Updated"}
         )
         response = client.patch(
@@ -61,20 +61,20 @@ class TestArtifacts:
 
     @patch("app.routes.data_routes._store")
     def test_delete_artifact_success(self, mock_store):
-        mock_store.delete_artifact = AsyncMock(return_value=True)
+        mock_store.delete_activity = AsyncMock(return_value=True)
         response = client.delete("/api/v1/artifacts/a1", headers=_auth_headers())
         assert response.status_code == 200
 
     @patch("app.routes.data_routes._store")
     def test_list_versions(self, mock_store):
-        mock_store.list_artifact_versions = AsyncMock(return_value=[{"version": 1}])
+        mock_store.list_activity_versions = AsyncMock(return_value=[{"version": 1}])
         response = client.get("/api/v1/artifacts/a1/versions", headers=_auth_headers())
         assert response.status_code == 200
         assert response.json() == [{"version": 1}]
 
     @patch("app.routes.data_routes._store")
     def test_restore_version_success(self, mock_store):
-        mock_store.restore_artifact_version = AsyncMock(
+        mock_store.restore_activity_version = AsyncMock(
             return_value={"id": "a1", "title": "Restored"}
         )
         response = client.post(
@@ -86,7 +86,7 @@ class TestArtifacts:
 
     @patch("app.routes.data_routes._store")
     def test_restore_version_not_found(self, mock_store):
-        mock_store.restore_artifact_version = AsyncMock(return_value=None)
+        mock_store.restore_activity_version = AsyncMock(return_value=None)
         response = client.post(
             "/api/v1/artifacts/a1/versions",
             headers=_auth_headers(),
