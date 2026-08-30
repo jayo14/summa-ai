@@ -12,6 +12,7 @@ import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/c
 import { SummaLogo } from "@/components/SummaLogo";
 import { SettingsView } from "@/components/SettingsView";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchApi } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,6 +129,38 @@ export default function Home() {
   const [favorites, setFavorites] = useState<string[]>(() => JSON.parse(window.localStorage.getItem("summa-favorites") || "[]"));
   const [favoriteFolders, setFavoriteFolders] = useState<Record<string, string>>(() => JSON.parse(window.localStorage.getItem("summa-favorite-folders") || "{}"));
 
+  const [dbConversations, setDbConversations] = useState<Array<{ id: string; title: string; created_at: string }>>([]);
+  const [dbMaterials, setDbMaterials] = useState<Array<{ id: string; title: string; type: string; description?: string }>>([]);
+  const [dbActivities, setDbActivities] = useState<Array<any>>([]);
+
+  useEffect(() => {
+    fetchApi<{ conversations: Array<{ id: string; title: string; created_at: string }> }>("/conversations")
+      .then((data) => {
+        if (data && Array.isArray(data.conversations)) {
+          setDbConversations(data.conversations);
+        } else if (Array.isArray(data)) {
+          setDbConversations(data as any);
+        }
+      })
+      .catch((err) => console.debug("Fetch conversations error:", err));
+
+    fetchApi<{ materials: Array<{ id: string; title: string; type: string; description?: string }> }>("/materials")
+      .then((data) => {
+        if (data && Array.isArray(data.materials)) {
+          setDbMaterials(data.materials);
+        } else if (Array.isArray(data)) {
+          setDbMaterials(data as any);
+        }
+      })
+      .catch((err) => console.debug(err));
+
+    fetchApi<Array<any>>("/activities")
+      .then((data) => {
+        if (Array.isArray(data)) setDbActivities(data);
+      })
+      .catch((err) => console.debug(err));
+  }, []);
+
   useEffect(() => { window.localStorage.setItem("summa-mastery-runtime-dispatch", String(mastery)); }, [mastery]);
   useEffect(() => { window.localStorage.setItem("summa-memory-enabled", String(memoryEnabled)); }, [memoryEnabled]);
   useEffect(() => {
@@ -142,7 +175,7 @@ export default function Home() {
   useEffect(() => { window.localStorage.setItem("summa-favorite-folders", JSON.stringify(favoriteFolders)); }, [favoriteFolders]);
   function assignFavoriteFolder(title: string, folder: string) { setFavoriteFolders((items) => ({ ...items, [title]: folder })); }
   function toggleFavorite(title: string) { setFavorites((items) => items.includes(title) ? items.filter((item) => item !== title) : [...items, title]); }
-  const contextSummary = useMemo(() => `${sourceItems.length} approved resources`, []);
+  const contextSummary = useMemo(() => `${dbMaterials.length || sourceItems.length} approved resources`, [dbMaterials.length]);
 
   function updateMastery(amount: number) { setMastery((value) => Math.min(91, value + amount)); }
   function registerEvent(kind: string, detail: string) {
@@ -167,9 +200,15 @@ export default function Home() {
 
     setMessages((prev) => [...prev, { id: summaMsgId, role: "summa" as const, content: "" }]);
 
+    const token = localStorage.getItem("summa_access_token");
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token && token !== "undefined" && token !== "null" && token.trim() !== "") {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     fetch("/api/v1/chat/stream", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         messages: historyForBackend,
         conversation_id: "default-session",
@@ -264,7 +303,7 @@ export default function Home() {
         <div className="sidebar-topline"><SummaLogo /><button className="mobile-close-button" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={19} /></button></div>
         <button type="button" className="new-session-button" onClick={startNewSession}><Plus size={16} /> New learning</button>
         <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>8</small>}</button>; })}</nav>
-        <section className="history-section" aria-labelledby="folders-label"><div className="section-title-row"><span id="folders-label" className="nav-caption">FOLDERS</span><button type="button" aria-label="Create folder" onClick={() => toast("Create a course folder from the connected learning library.")}><Plus size={15} /></button></div><div className="folder-list"><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 201 · OOP</span></button><div className="history-list">{chatHistory.slice(0, 2).map((chat) => <button type="button" className={`history-item ${chat.active ? "active" : ""}`} key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 203 · Databases</span></button><div className="history-list">{chatHistory.slice(2).map((chat) => <button type="button" className="history-item" key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div></div></section>
+        <section className="history-section" aria-labelledby="folders-label"><div className="section-title-row"><span id="folders-label" className="nav-caption">FOLDERS</span><button type="button" aria-label="Create folder" onClick={() => toast("Create a course folder from the connected learning library.")}><Plus size={15} /></button></div><div className="folder-list"><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 201 · OOP</span></button><div className="history-list">{dbConversations.length > 0 ? dbConversations.map((chat) => <button type="button" className="history-item" key={chat.id} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>Live</small></button>) : chatHistory.slice(0, 2).map((chat) => <button type="button" className={`history-item ${chat.active ? "active" : ""}`} key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 203 · Databases</span></button><div className="history-list">{chatHistory.slice(2).map((chat) => <button type="button" className="history-item" key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div></div></section>
         <div className="sidebar-bottom">
           <button type="button" className={`nav-item ${activeView === "settings" ? "active" : ""}`} onClick={() => selectView("settings")}><Settings2 size={16} /><span>Settings</span></button>
           <DropdownMenu>
