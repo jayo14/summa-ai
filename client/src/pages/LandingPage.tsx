@@ -379,7 +379,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Asymmetric Bento Cards with Generated 3D Assets */}
+            {/* Asymmetric Bento Cards with 2D Editorial Brand Illustrations */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Card 1: Adaptive AI Tutoring */}
               <div className="md:col-span-7 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-xl transition-all group overflow-hidden relative">
@@ -388,16 +388,16 @@ export default function LandingPage() {
                     <div className="size-12 rounded-2xl bg-[#003F3F] text-[#B8FF4D] flex items-center justify-center">
                       <MessageSquare className="size-6" />
                     </div>
-                    <span className="text-[11px] font-mono text-[#005A57] bg-[#E7EFE7] px-3 py-1 rounded-full font-bold">3D Visual Model</span>
+                    <span className="text-[11px] font-mono text-[#005A57] bg-[#E7EFE7] px-3 py-1 rounded-full font-bold">Interactive Model</span>
                   </div>
                   <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Adaptive AI Tutoring</h3>
                   <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed max-w-md">
                     Matches your course difficulty in real-time. Explains complex topics using analogies tailored to your learning pace and exam format.
                   </p>
                   
-                  {/* 3D Asset Preview */}
+                  {/* 2D Editorial Asset Preview */}
                   <div className="mt-6 my-2 rounded-2xl overflow-hidden border border-[#DDE8DF] shadow-md bg-white group-hover:scale-[1.01] transition-transform">
-                    <img src="/assets/3d-adaptive-conversations.jpg" alt="3D Adaptive AI Tutor Node with glowing glass recall bubbles" className="w-full h-48 sm:h-56 object-cover" />
+                    <img src="/assets/2d-adaptive-tutoring.jpg" alt="2D Editorial Vector illustration of AI logic diagram breakdown and citation checkmarks" className="w-full h-48 sm:h-56 object-cover" />
                   </div>
                 </div>
                 <div className="mt-6 pt-5 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
@@ -423,9 +423,9 @@ export default function LandingPage() {
                     Upload lecture PDFs, slides, and syllabus notes. Summa AI links every answer directly to your exact course citations.
                   </p>
 
-                  {/* 3D Asset Preview */}
+                  {/* 2D Editorial Asset Preview */}
                   <div className="mt-6 my-2 rounded-2xl overflow-hidden border border-[#DDE8DF] shadow-md bg-white group-hover:scale-[1.01] transition-transform">
-                    <img src="/assets/3d-multisource-sync.jpg" alt="3D Multi-Source Sync folder with citation tags and stacked lecture booklets" className="w-full h-48 sm:h-56 object-cover" />
+                    <img src="/assets/2d-course-vault.jpg" alt="2D Swiss-style editorial illustration of fanned lecture booklets connecting into an archive binder" className="w-full h-48 sm:h-56 object-cover" />
                   </div>
                 </div>
                 <div className="mt-6 pt-5 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#005A57] font-mono">
@@ -470,9 +470,9 @@ export default function LandingPage() {
                     </p>
                   </div>
 
-                  {/* 3D Asset Preview */}
+                  {/* 2D Editorial Asset Preview */}
                   <div className="sm:col-span-5 rounded-2xl overflow-hidden border border-[#DDE8DF] shadow-md bg-white group-hover:scale-[1.01] transition-transform">
-                    <img src="/assets/3d-zero-hallucination.jpg" alt="3D Zero Hallucination Guardrail shield over verified syllabus booklet" className="w-full h-44 object-cover" />
+                    <img src="/assets/2d-ground-truth.jpg" alt="2D Editorial vector graphic of verified syllabus compliance seal on lecture notes" className="w-full h-44 object-cover" />
                   </div>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
