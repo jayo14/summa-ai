@@ -143,19 +143,19 @@ export default function LandingPage() {
               Summa AI brings your lectures, syllabus, active recall quizzes, and tutor support into one quiet, high-signal workspace.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-16">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto mb-16">
               <Link
                 href="/sign-up"
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-sm font-bold shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-sm font-bold shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 group"
               >
-                <span>Build Your Study Workspace</span>
-                <ArrowRight className="size-4" />
+                <span>Start Studying Free — No Card Needed</span>
+                <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <a
-                href="#how-it-works"
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#005A57]/60 hover:bg-[#005A57] border border-[#6D7E78]/40 text-sm font-medium text-[#F5F3EC] transition-all"
+                href="#product"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#005A57]/60 hover:bg-[#005A57] border border-[#6D7E78]/40 text-sm font-medium text-[#F5F3EC] transition-all flex items-center justify-center gap-2"
               >
-                See How It Works
+                <span>Watch 2-Min Demo</span>
               </a>
             </div>
 
