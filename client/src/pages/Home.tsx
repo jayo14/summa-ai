@@ -130,7 +130,14 @@ export default function Home() {
 
   useEffect(() => { window.localStorage.setItem("summa-mastery-runtime-dispatch", String(mastery)); }, [mastery]);
   useEffect(() => { window.localStorage.setItem("summa-memory-enabled", String(memoryEnabled)); }, [memoryEnabled]);
-  useEffect(() => { window.localStorage.setItem("summa-theme", theme); }, [theme]);
+  useEffect(() => {
+    window.localStorage.setItem("summa-theme", theme);
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
   useEffect(() => { window.localStorage.setItem("summa-favorites", JSON.stringify(favorites)); }, [favorites]);
   useEffect(() => { window.localStorage.setItem("summa-favorite-folders", JSON.stringify(favoriteFolders)); }, [favoriteFolders]);
   function assignFavoriteFolder(title: string, folder: string) { setFavoriteFolders((items) => ({ ...items, [title]: folder })); }
