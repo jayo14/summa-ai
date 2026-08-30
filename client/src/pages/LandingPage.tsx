@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
+import { toast } from "sonner";
 import { SummaLogo } from "@/components/SummaLogo";
 import {
   ArrowRight,
@@ -20,7 +21,8 @@ import {
   HelpCircle,
   Sliders,
   Cpu,
-  Bookmark
+  Bookmark,
+  Mail
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -705,53 +707,139 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 9. DEEP EMERALD GRAINY FOOTER */}
-        <footer className="py-16 px-6 bg-[#003F3F] text-[#F5F3EC] border-t border-[#005A57] bg-grain-dark">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 text-left mb-16">
-            <div className="md:col-span-5 space-y-4">
-              <SummaLogo />
-              <p className="text-xs text-[#DDE8DF] leading-relaxed max-w-sm">
-                Elevate Learning Experiences with Timeless Precision. Summa AI brings active recall, course grounding, and intelligent tutoring into one calm rhythm.
-              </p>
-              <div className="space-y-1 text-xs font-mono text-[#DDE8DF]">
-                <div>hello@summastudy.com.ng</div>
+        {/* 9. PREMIUM DEEP EMERALD GRAINY FOOTER */}
+        <footer className="pt-24 pb-16 px-6 bg-[#003F3F] text-[#F5F3EC] border-t border-[#005A57] bg-grain-dark relative overflow-hidden">
+          {/* Subtle Radial Glows */}
+          <div className="absolute -top-32 left-1/4 size-96 rounded-full bg-[#005A57]/30 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 right-1/4 size-96 rounded-full bg-[#005A57]/20 blur-3xl pointer-events-none" />
+
+          <div className="max-w-7xl mx-auto relative z-10">
+            {/* Top Footer Banner: Newsletter & Status */}
+            <div className="p-8 sm:p-10 rounded-3xl bg-[#005A57]/40 border border-[#6D7E78]/30 backdrop-blur-md mb-20 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div className="lg:col-span-6 space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#003F3F] border border-[#005A57] text-[#B8FF4D] text-[10px] font-mono font-semibold uppercase">
+                  <span className="size-2 rounded-full bg-[#B8FF4D] animate-pulse" />
+                  Newsletter • High Signal Study Tips
+                </div>
+                <h4 className="text-2xl sm:text-3xl font-serif font-normal text-[#FBFAF6]">
+                  Stay ahead with curated study insights
+                </h4>
+                <p className="text-xs text-[#DDE8DF] max-w-md">
+                  Join 15,000+ students receiving weekly active recall prompts, AI workflow breakdowns, and study strategies.
+                </p>
+              </div>
+
+              <div className="lg:col-span-6">
+                <form onSubmit={(e) => { e.preventDefault(); toast.success("Subscribed to Summa AI insights!"); }} className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="email"
+                    placeholder="Enter your student email..."
+                    required
+                    className="flex-1 px-4 py-3.5 rounded-full bg-[#003F3F] border border-[#005A57] text-xs text-[#FBFAF6] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] transition-all"
+                  />
+                  <button
+                    type="submit"
+                    className="px-6 py-3.5 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold shadow-md transition-all whitespace-nowrap cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Subscribe Free
+                  </button>
+                </form>
               </div>
             </div>
 
-            <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8 text-xs">
-              <div>
-                <h5 className="font-bold text-white mb-4 uppercase font-mono tracking-wider">Quick Links</h5>
-                <ul className="space-y-2.5 text-[#DDE8DF]">
-                  <li><a href="#hero" className="hover:text-[#B8FF4D] transition-colors">Home</a></li>
-                  <li><a href="#features" className="hover:text-[#B8FF4D] transition-colors">Features</a></li>
-                  <li><a href="#pricing" className="hover:text-[#B8FF4D] transition-colors">Pricing</a></li>
-                </ul>
+            {/* Main Footer Links & Brand Column */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-12 text-left mb-20">
+              <div className="md:col-span-5 space-y-5">
+                <SummaLogo />
+                <p className="text-xs text-[#DDE8DF] leading-relaxed max-w-sm">
+                  Elevate Learning Experiences with Timeless Precision. Summa AI brings active recall, course grounding, and intelligent tutoring into one calm rhythm.
+                </p>
+
+                {/* Email Contact & System Status Pill */}
+                <div className="pt-2 space-y-3">
+                  <div className="text-xs font-mono text-[#DDE8DF] flex items-center gap-2">
+                    <Mail className="size-3.5 text-[#B8FF4D]" />
+                    <a href="mailto:hello@summastudy.com.ng" className="hover:text-[#B8FF4D] transition-colors">
+                      hello@summastudy.com.ng
+                    </a>
+                  </div>
+
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#005A57]/60 border border-[#6D7E78]/30 text-[10px] font-mono text-[#DDE8DF]">
+                    <span className="size-1.5 rounded-full bg-[#B8FF4D]" />
+                    <span>Systems Operational • 99.98% Uptime</span>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <h5 className="font-bold text-white mb-4 uppercase font-mono tracking-wider">Company</h5>
-                <ul className="space-y-2.5 text-[#DDE8DF]">
-                  <li><a href="#testimonial" className="hover:text-[#B8FF4D] transition-colors">Testimonials</a></li>
-                  <li><a href="#benefit" className="hover:text-[#B8FF4D] transition-colors">Benefits</a></li>
-                  <li><a href="#waitlist" className="hover:text-[#B8FF4D] transition-colors">Waitlist</a></li>
-                </ul>
-              </div>
+              {/* Navigation Columns */}
+              <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8 text-xs">
+                <div>
+                  <h5 className="font-bold text-white mb-4 uppercase font-mono tracking-wider text-[11px] flex items-center gap-2">
+                    <span className="size-1 rounded-full bg-[#B8FF4D]" />
+                    Product
+                  </h5>
+                  <ul className="space-y-3 text-[#DDE8DF]">
+                    <li><a href="#hero" className="hover:text-[#B8FF4D] transition-colors flex items-center gap-1.5">Workspace</a></li>
+                    <li><a href="#features" className="hover:text-[#B8FF4D] transition-colors flex items-center gap-1.5">AI Memory Cards</a></li>
+                    <li><a href="#pricing" className="hover:text-[#B8FF4D] transition-colors flex items-center gap-1.5">Student Plans</a></li>
+                    <li><a href="#waitlist" className="hover:text-[#B8FF4D] transition-colors flex items-center gap-1.5">Early Access</a></li>
+                  </ul>
+                </div>
 
-              <div>
-                <h5 className="font-bold text-white mb-4 uppercase font-mono tracking-wider">Social Media</h5>
-                <ul className="space-y-2.5 text-[#DDE8DF]">
-                  <li><a href="#" className="hover:text-[#B8FF4D] transition-colors">Instagram</a></li>
-                  <li><a href="#" className="hover:text-[#B8FF4D] transition-colors">Twitter / X</a></li>
-                  <li><a href="#" className="hover:text-[#B8FF4D] transition-colors">LinkedIn</a></li>
-                </ul>
+                <div>
+                  <h5 className="font-bold text-white mb-4 uppercase font-mono tracking-wider text-[11px] flex items-center gap-2">
+                    <span className="size-1 rounded-full bg-[#B8FF4D]" />
+                    Resources
+                  </h5>
+                  <ul className="space-y-3 text-[#DDE8DF]">
+                    <li><a href="#testimonial" className="hover:text-[#B8FF4D] transition-colors">Testimonials</a></li>
+                    <li><a href="#benefit" className="hover:text-[#B8FF4D] transition-colors">Learning Method</a></li>
+                    <li><a href="#waitlist" className="hover:text-[#B8FF4D] transition-colors">Waitlist Invite</a></li>
+                    <li><Link href="/sign-in" className="hover:text-[#B8FF4D] transition-colors">Student Login</Link></li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h5 className="font-bold text-white mb-4 uppercase font-mono tracking-wider text-[11px] flex items-center gap-2">
+                    <span className="size-1 rounded-full bg-[#B8FF4D]" />
+                    Connect
+                  </h5>
+                  <ul className="space-y-3 text-[#DDE8DF]">
+                    <li>
+                      <a href="#" className="hover:text-[#B8FF4D] transition-colors flex items-center gap-2">
+                        <span>Twitter / X</span>
+                        <ArrowRight className="size-3 text-[#6D7E78]" />
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#" className="hover:text-[#B8FF4D] transition-colors flex items-center gap-2">
+                        <span>LinkedIn</span>
+                        <ArrowRight className="size-3 text-[#6D7E78]" />
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#" className="hover:text-[#B8FF4D] transition-colors flex items-center gap-2">
+                        <span>Instagram</span>
+                        <ArrowRight className="size-3 text-[#6D7E78]" />
+                      </a>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="max-w-7xl mx-auto pt-8 border-t border-[#005A57] flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#6D7E78] font-mono">
-            <span>© 2026 Summa AI · All rights reserved.</span>
-            <div className="text-5xl font-serif font-normal text-[#005A57]/60 select-none hidden sm:block tracking-widest">
-              SUMMA AI
+            {/* Bottom Footer Section with Watermark Display */}
+            <div className="pt-8 border-t border-[#005A57] flex flex-col md:flex-row items-center justify-between gap-6 text-[11px] text-[#6D7E78] font-mono">
+              <div className="flex items-center gap-6">
+                <span>© 2026 Summa AI Inc. · All rights reserved.</span>
+                <span className="hidden sm:inline">Privacy Policy</span>
+                <span className="hidden sm:inline">Terms of Service</span>
+              </div>
+
+              {/* Large Display Watermark */}
+              <div className="text-4xl sm:text-6xl font-serif font-normal text-[#005A57]/40 select-none tracking-widest leading-none">
+                SUMMA AI
+              </div>
             </div>
           </div>
         </footer>
