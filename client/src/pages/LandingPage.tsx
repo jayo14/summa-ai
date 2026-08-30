@@ -31,6 +31,15 @@ export default function LandingPage() {
   const [major, setMajor] = useState("");
   const [isWaitlistLoading, setIsWaitlistLoading] = useState(false);
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,14 +55,22 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen w-full bg-[#FBFAF6] text-[#102B2B] font-sans selection:bg-[#B8FF4D] selection:text-[#003F3F] relative antialiased">
       
-      {/* 1. STICKY NAVIGATION HEADER */}
-      <header className="sticky top-0 z-50 w-full bg-[#003F3F] text-[#F5F3EC] border-b border-[#005A57]/60 shadow-md bg-grain-dark">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      {/* 1. FLOATING STICKY NAVIGATION HEADER */}
+      <header
+        className={`sticky z-50 transition-all duration-300 ease-out bg-[#003F3F] text-[#F5F3EC] bg-grain-dark ${
+          isScrolled
+            ? "top-4 mx-auto w-[92%] sm:w-[82%] md:w-[75%] rounded-full border border-[#005A57] shadow-2xl backdrop-blur-xl bg-opacity-95"
+            : "top-0 w-full border-b border-[#005A57]/60 shadow-md"
+        }`}
+      >
+        <div className={`mx-auto px-6 flex items-center justify-between transition-all duration-300 ${
+          isScrolled ? "h-16 max-w-full" : "h-20 max-w-7xl"
+        }`}>
           <div className="flex items-center gap-3">
             <SummaLogo />
           </div>
 
-          <nav className="hidden md:flex items-center gap-9 text-xs font-medium tracking-wide text-[#DDE8DF]">
+          <nav className="hidden md:flex items-center gap-8 text-xs font-medium tracking-wide text-[#DDE8DF]">
             <a href="#product" className="hover:text-[#B8FF4D] transition-colors">Product</a>
             <a href="#features" className="hover:text-[#B8FF4D] transition-colors">Features</a>
             <a href="#benefit" className="hover:text-[#B8FF4D] transition-colors">Benefits</a>
