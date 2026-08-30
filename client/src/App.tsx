@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import ForgotPassword from "@/pages/ForgotPassword";
 import Home from "@/pages/Home";
+import LandingPage from "@/pages/LandingPage";
 import NotFound from "@/pages/NotFound";
 import ResetPassword from "@/pages/ResetPassword";
 import SignIn from "@/pages/SignIn";
@@ -62,6 +63,8 @@ function Router() {
       <Route path="/reset-password">
         {() => <PublicAuthRoute component={ResetPassword} />}
       </Route>
+
+      <Route path="/welcome" component={LandingPage} />
 
       <Route path="/learning">
         {() => <ProtectedRoute component={Home} />}
