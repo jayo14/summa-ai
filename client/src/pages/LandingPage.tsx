@@ -379,20 +379,28 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Asymmetric Bento Cards */}
+            {/* Asymmetric Bento Cards with Generated 3D Assets */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              {/* Card 1 */}
-              <div className="md:col-span-7 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-lg transition-all group">
+              {/* Card 1: Adaptive AI Tutoring */}
+              <div className="md:col-span-7 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-xl transition-all group overflow-hidden relative">
                 <div>
-                  <div className="size-12 rounded-2xl bg-[#003F3F] text-[#B8FF4D] flex items-center justify-center mb-6">
-                    <MessageSquare className="size-6" />
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="size-12 rounded-2xl bg-[#003F3F] text-[#B8FF4D] flex items-center justify-center">
+                      <MessageSquare className="size-6" />
+                    </div>
+                    <span className="text-[11px] font-mono text-[#005A57] bg-[#E7EFE7] px-3 py-1 rounded-full font-bold">3D Visual Model</span>
                   </div>
                   <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Adaptive AI Tutoring</h3>
                   <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed max-w-md">
                     Matches your course difficulty in real-time. Explains complex topics using analogies tailored to your learning pace and exam format.
                   </p>
+                  
+                  {/* 3D Asset Preview */}
+                  <div className="mt-6 my-2 rounded-2xl overflow-hidden border border-[#DDE8DF] shadow-md bg-white group-hover:scale-[1.01] transition-transform">
+                    <img src="/assets/3d-adaptive-conversations.jpg" alt="3D Adaptive AI Tutor Node with glowing glass recall bubbles" className="w-full h-48 sm:h-56 object-cover" />
+                  </div>
                 </div>
-                <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
+                <div className="mt-6 pt-5 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
                   <span className="font-semibold flex items-center gap-1.5">
                     <Zap className="size-3.5 text-[#005A57]" />
                     <span>Real-Time Concept Breakdown</span>
@@ -401,18 +409,26 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Card 2 */}
-              <div className="md:col-span-5 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-lg transition-all group">
+              {/* Card 2: All-in-One Course Vault */}
+              <div className="md:col-span-5 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-xl transition-all group overflow-hidden">
                 <div>
-                  <div className="size-12 rounded-2xl bg-[#005A57] text-[#F5F3EC] flex items-center justify-center mb-6">
-                    <Layers className="size-6" />
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="size-12 rounded-2xl bg-[#005A57] text-[#F5F3EC] flex items-center justify-center">
+                      <Layers className="size-6" />
+                    </div>
+                    <span className="text-[11px] font-mono text-[#005A57] bg-[#E7EFE7] px-3 py-1 rounded-full font-bold">Sync Vault</span>
                   </div>
                   <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">All-in-One Course Vault</h3>
                   <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed">
                     Upload lecture PDFs, slides, and syllabus notes. Summa AI links every answer directly to your exact course citations.
                   </p>
+
+                  {/* 3D Asset Preview */}
+                  <div className="mt-6 my-2 rounded-2xl overflow-hidden border border-[#DDE8DF] shadow-md bg-white group-hover:scale-[1.01] transition-transform">
+                    <img src="/assets/3d-multisource-sync.jpg" alt="3D Multi-Source Sync folder with citation tags and stacked lecture booklets" className="w-full h-48 sm:h-56 object-cover" />
+                  </div>
                 </div>
-                <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#005A57] font-mono">
+                <div className="mt-6 pt-5 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#005A57] font-mono">
                   <span className="font-semibold flex items-center gap-1.5">
                     <FolderOpen className="size-3.5 text-[#005A57]" />
                     <span>PDFs • Slides • Syllabi</span>
@@ -421,8 +437,8 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Card 3 */}
-              <div className="md:col-span-5 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-lg transition-all group">
+              {/* Card 3: Stress-Free Study Coach */}
+              <div className="md:col-span-5 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-xl transition-all group">
                 <div>
                   <div className="size-12 rounded-2xl bg-[#E9DED0] text-[#003F3F] flex items-center justify-center mb-6">
                     <Heart className="size-6" />
@@ -441,16 +457,23 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Card 4 */}
-              <div className="md:col-span-7 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-lg transition-all group">
-                <div>
-                  <div className="size-12 rounded-2xl bg-[#003F3F] text-[#B8FF4D] flex items-center justify-center mb-6">
-                    <Cpu className="size-6" />
+              {/* Card 4: Ground Truth Guarantee */}
+              <div className="md:col-span-7 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-xl transition-all group overflow-hidden">
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+                  <div className="sm:col-span-7">
+                    <div className="size-12 rounded-2xl bg-[#003F3F] text-[#B8FF4D] flex items-center justify-center mb-6">
+                      <Cpu className="size-6" />
+                    </div>
+                    <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Ground Truth Guarantee</h3>
+                    <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed">
+                      Strict zero-hallucination guardrails ensure every AI flashcard, quiz question, and explanation is 100% verified against your syllabus.
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Ground Truth Guarantee</h3>
-                  <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed max-w-md">
-                    Strict zero-hallucination guardrails ensure every AI flashcard, quiz question, and explanation is 100% verified against your syllabus.
-                  </p>
+
+                  {/* 3D Asset Preview */}
+                  <div className="sm:col-span-5 rounded-2xl overflow-hidden border border-[#DDE8DF] shadow-md bg-white group-hover:scale-[1.01] transition-transform">
+                    <img src="/assets/3d-zero-hallucination.jpg" alt="3D Zero Hallucination Guardrail shield over verified syllabus booklet" className="w-full h-44 object-cover" />
+                  </div>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
                   <span className="font-semibold flex items-center gap-1.5">
