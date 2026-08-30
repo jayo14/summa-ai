@@ -171,89 +171,107 @@ export default function LandingPage() {
             </div>
 
             {/* Hero Product Showcase Panel */}
-            <div id="product" className="relative rounded-3xl bg-[#005A57]/40 border border-[#6D7E78]/40 p-4 sm:p-6 shadow-2xl backdrop-blur-md max-w-5xl mx-auto text-left">
+            <div id="product" className="relative rounded-3xl bg-[#005A57]/30 border border-[#6D7E78]/30 p-4 sm:p-7 shadow-2xl backdrop-blur-xl max-w-5xl mx-auto text-left group transition-all hover:border-[#6D7E78]/50">
+              {/* Decorative Glass Glows */}
+              <div className="absolute -top-20 -right-20 size-64 rounded-full bg-[#B8FF4D]/10 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-20 -left-20 size-64 rounded-full bg-[#005A57]/30 blur-3xl pointer-events-none" />
+
               {/* Product Chrome Top Bar */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[#005A57] mb-6 bg-[#003F3F]/80 rounded-2xl">
+              <div className="relative z-10 flex items-center justify-between px-5 py-3.5 border border-[#005A57] mb-6 bg-[#003F3F]/90 rounded-2xl shadow-inner backdrop-blur-md">
                 <div className="flex items-center gap-2">
-                  <div className="size-3 rounded-full bg-[#6D7E78]/40" />
-                  <div className="size-3 rounded-full bg-[#6D7E78]/40" />
-                  <div className="size-3 rounded-full bg-[#6D7E78]/40" />
+                  <div className="size-3 rounded-full bg-[#E9B8A7]/70" />
+                  <div className="size-3 rounded-full bg-[#B8FF4D]/70" />
+                  <div className="size-3 rounded-full bg-[#6D7E78]/50" />
                 </div>
-                <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-[#003F3F] border border-[#005A57] text-[11px] font-mono text-[#DDE8DF]">
-                  <Sparkles className="size-3 text-[#B8FF4D]" />
-                  <span>summa-ai.app/csc-201/active-recall</span>
+                <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#005A57]/60 border border-[#6D7E78]/40 text-[11px] font-mono text-[#DDE8DF] shadow-sm">
+                  <Sparkles className="size-3.5 text-[#B8FF4D] animate-pulse" />
+                  <span className="tracking-tight text-white font-medium">summa-ai.app/csc-201/active-recall</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-[#DDE8DF] font-mono">
-                  <span className="inline-block size-2 rounded-full bg-[#B8FF4D]" />
-                  <span>Active Session</span>
+                <div className="flex items-center gap-2 text-xs text-[#DDE8DF] font-mono bg-[#005A57]/40 px-3 py-1 rounded-full border border-[#005A57]">
+                  <span className="inline-block size-2 rounded-full bg-[#B8FF4D] animate-ping" />
+                  <span className="font-semibold text-white">Active Session</span>
                 </div>
               </div>
 
               {/* Grid Content */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6">
                 {/* Left Active Conversation */}
-                <div className="md:col-span-7 bg-[#003F3F] border border-[#005A57] rounded-2xl p-5 space-y-4">
-                  <div className="flex items-center justify-between text-xs text-[#6D7E78] border-b border-[#005A57] pb-2 font-mono">
-                    <span className="text-[#DDE8DF] font-sans font-semibold">CSC 201 — Data Structures</span>
-                    <span>Context: 4 Lectures Loaded</span>
+                <div className="md:col-span-7 bg-[#003F3F]/90 border border-[#005A57] rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between text-xs border-b border-[#005A57] pb-3">
+                    <div className="flex items-center gap-2 font-mono text-[#DDE8DF]">
+                      <span className="size-2 rounded-full bg-[#B8FF4D]" />
+                      <span className="font-bold text-white text-xs">CSC 201 — Data Structures</span>
+                    </div>
+                    <span className="text-[11px] font-mono text-[#6D7E78] bg-[#005A57]/40 px-2.5 py-0.5 rounded-full border border-[#005A57]">
+                      Context: 4 Lectures Loaded
+                    </span>
                   </div>
 
-                  <div className="bg-[#005A57]/40 border border-[#005A57] rounded-2xl p-3.5 text-xs text-[#F5F3EC] max-w-[85%] ml-auto">
+                  {/* Student Prompt Bubble */}
+                  <div className="bg-[#005A57] border border-[#6D7E78]/40 rounded-2xl rounded-tr-sm p-4 text-xs text-white max-w-[88%] ml-auto shadow-md leading-relaxed font-medium">
                     Can you explain how AVL tree self-balancing works before tomorrow's midterm?
                   </div>
 
-                  <div className="bg-[#F5F3EC] text-[#102B2B] rounded-2xl p-4 text-xs space-y-2 max-w-[90%] shadow-lg">
-                    <div className="flex items-center gap-2 font-bold text-[#003F3F]">
-                      <Sparkles className="size-3.5 text-[#005A57]" />
-                      <span>Summa Intelligent Recall</span>
+                  {/* AI Response Card */}
+                  <div className="bg-[#FBFAF6] text-[#102B2B] rounded-2xl p-5 text-xs space-y-3 max-w-[95%] shadow-2xl border border-[#DDE8DF] relative overflow-hidden">
+                    <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-[#005A57]" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-[#003F3F]">
+                        <Sparkles className="size-4 text-[#005A57]" />
+                        <span className="text-xs uppercase tracking-wide font-mono">Summa Intelligent Recall</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-[#005A57] bg-[#E7EFE7] px-2 py-0.5 rounded-full font-bold">100% Grounded</span>
                     </div>
-                    <p className="leading-relaxed">
-                      AVL trees maintain height balance by checking the balance factor: <code className="font-mono bg-[#DDE8DF] px-1 py-0.5 rounded text-[#003F3F]">BF = height(Left) - height(Right)</code>. If |BF| &gt; 1, it executes a single or double rotation.
+                    <p className="leading-relaxed text-[#102B2B] text-xs">
+                      AVL trees maintain height balance by checking the balance factor: <code className="font-mono bg-[#DDE8DF] px-2 py-0.5 rounded text-[#003F3F] font-bold">BF = height(Left) - height(Right)</code>. If <code className="font-mono bg-[#DDE8DF] px-1.5 py-0.5 rounded text-[#003F3F]">|BF| &gt; 1</code>, it executes a single or double rotation.
                     </p>
-                    <div className="pt-2 flex items-center gap-2 text-[10px] text-[#6D7E78] border-t border-[#DDE8DF]">
-                      <CheckCircle2 className="size-3 text-[#005A57]" />
-                      <span>Grounded in Lecture 7: Tree Rotations (Slide 14)</span>
+                    <div className="pt-2.5 flex items-center gap-2 text-[10px] text-[#6D7E78] border-t border-[#DDE8DF] font-mono">
+                      <CheckCircle2 className="size-3.5 text-[#005A57]" />
+                      <span className="font-medium text-[#102B2B]">Grounded in Lecture 7: Tree Rotations (Slide 14)</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Right Context Cards */}
                 <div className="md:col-span-5 space-y-4">
-                  <div className="p-5 rounded-2xl bg-[#005A57]/60 border border-[#6D7E78]/30">
+                  {/* Course Mastery Metric Card */}
+                  <div className="p-5 rounded-2xl bg-[#003F3F]/90 border border-[#005A57] shadow-xl relative overflow-hidden">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold text-[#DDE8DF]">Course Mastery Score</span>
-                      <span className="text-xs font-mono font-bold text-[#B8FF4D]">+14% this week</span>
+                      <span className="text-xs font-mono font-bold text-[#B8FF4D] bg-[#005A57] px-2 py-0.5 rounded-full">+14% this week</span>
                     </div>
-                    <div className="text-3xl font-serif font-normal text-white mb-2">88%</div>
-                    <div className="w-full bg-[#003F3F] rounded-full h-2 overflow-hidden">
-                      <div className="bg-[#B8FF4D] h-full w-[88%]" />
+                    <div className="text-4xl font-serif font-normal text-white mb-3 tracking-tight">88%</div>
+                    <div className="w-full bg-[#005A57] rounded-full h-2.5 overflow-hidden p-0.5 border border-[#6D7E78]/30">
+                      <div className="bg-[#B8FF4D] h-full rounded-full w-[88%] transition-all duration-1000" />
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#003F3F] border border-[#005A57] flex items-center justify-between">
+                  {/* Active Recall Card Status */}
+                  <div className="p-4 rounded-2xl bg-[#003F3F]/90 border border-[#005A57] flex items-center justify-between shadow-xl">
                     <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-xl bg-[#005A57] text-[#B8FF4D] flex items-center justify-center font-bold">
-                        <Brain className="size-4" />
+                      <div className="size-10 rounded-xl bg-[#005A57] text-[#B8FF4D] flex items-center justify-center font-bold shadow-sm">
+                        <Brain className="size-5" />
                       </div>
                       <div>
-                        <strong className="block text-xs text-[#F5F3EC]">Active Recall Cards</strong>
-                        <span className="text-[11px] text-[#6D7E78]">14 new cards generated</span>
+                        <strong className="block text-xs text-white font-semibold">Active Recall Cards</strong>
+                        <span className="text-[11px] text-[#DDE8DF]/80 font-mono">14 new cards generated</span>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full bg-[#B8FF4D]/20 text-[#B8FF4D] text-[10px] font-mono">Ready</span>
+                    <span className="px-3 py-1 rounded-full bg-[#B8FF4D] text-[#003F3F] text-[10px] font-mono font-bold shadow-sm">Ready</span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#003F3F] border border-[#005A57] flex items-center justify-between">
+                  {/* Connected Sources Status */}
+                  <div className="p-4 rounded-2xl bg-[#003F3F]/90 border border-[#005A57] flex items-center justify-between shadow-xl">
                     <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-xl bg-[#005A57] text-[#DDE8DF] flex items-center justify-center font-bold">
-                        <BookOpen className="size-4" />
+                      <div className="size-10 rounded-xl bg-[#005A57] text-[#B8FF4D] flex items-center justify-center font-bold shadow-sm">
+                        <BookOpen className="size-5" />
                       </div>
                       <div>
-                        <strong className="block text-xs text-[#F5F3EC]">Connected Sources</strong>
-                        <span className="text-[11px] text-[#6D7E78]">Syllabus + 12 PDFs</span>
+                        <strong className="block text-xs text-white font-semibold">Connected Sources</strong>
+                        <span className="text-[11px] text-[#DDE8DF]/80 font-mono">Syllabus + 12 PDFs</span>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full bg-[#DDE8DF]/20 text-[#DDE8DF] text-[10px] font-mono">Synced</span>
+                    <span className="px-3 py-1 rounded-full bg-[#005A57] text-[#DDE8DF] text-[10px] font-mono font-bold border border-[#6D7E78]/40">Synced</span>
                   </div>
                 </div>
               </div>
@@ -735,39 +753,6 @@ export default function LandingPage() {
           <div className="absolute -bottom-32 right-1/4 size-96 rounded-full bg-[#005A57]/20 blur-3xl pointer-events-none" />
 
           <div className="max-w-7xl mx-auto relative z-10">
-            {/* Top Footer Banner: Newsletter & Status */}
-            <div className="p-8 sm:p-10 rounded-3xl bg-[#005A57]/40 border border-[#6D7E78]/30 backdrop-blur-md mb-20 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-6 space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#003F3F] border border-[#005A57] text-[#B8FF4D] text-[10px] font-mono font-semibold uppercase">
-                  <span className="size-2 rounded-full bg-[#B8FF4D] animate-pulse" />
-                  Newsletter • High Signal Study Tips
-                </div>
-                <h4 className="text-2xl sm:text-3xl font-serif font-normal text-[#FBFAF6]">
-                  Stay ahead with curated study insights
-                </h4>
-                <p className="text-xs text-[#DDE8DF] max-w-md">
-                  Join 15,000+ students receiving weekly active recall prompts, AI workflow breakdowns, and study strategies.
-                </p>
-              </div>
-
-              <div className="lg:col-span-6">
-                <form onSubmit={(e) => { e.preventDefault(); toast.success("Subscribed to Summa AI insights!"); }} className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="email"
-                    placeholder="Enter your student email..."
-                    required
-                    className="flex-1 px-4 py-3.5 rounded-full bg-[#003F3F] border border-[#005A57] text-xs text-[#FBFAF6] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] transition-all"
-                  />
-                  <button
-                    type="submit"
-                    className="px-6 py-3.5 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold shadow-md transition-all whitespace-nowrap cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    Subscribe Free
-                  </button>
-                </form>
-              </div>
-            </div>
-
             {/* Main Footer Links & Brand Column */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12 text-left mb-20">
               <div className="md:col-span-5 space-y-5">
