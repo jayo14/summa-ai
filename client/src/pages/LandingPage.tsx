@@ -438,7 +438,7 @@ export default function LandingPage() {
               </div>
 
               {/* Card 3: Stress-Free Study Coach */}
-              <div className="md:col-span-5 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-xl transition-all group">
+              <div className="md:col-span-5 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] p-8 flex flex-col justify-between hover:shadow-xl transition-all group overflow-hidden">
                 <div>
                   <div className="size-12 rounded-2xl bg-[#E9DED0] text-[#003F3F] flex items-center justify-center mb-6">
                     <Heart className="size-6" />
@@ -447,8 +447,13 @@ export default function LandingPage() {
                   <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed">
                     Goes beyond rigid Q&amp;A. Provides encouraging active-recall prompts, confidence scores, and step-by-step guidance when exam stress builds.
                   </p>
+
+                  {/* 2D Editorial Asset Preview */}
+                  <div className="mt-6 my-2 rounded-2xl overflow-hidden border border-[#DDE8DF] shadow-md bg-white group-hover:scale-[1.01] transition-transform">
+                    <img src="/assets/2d-study-coach.jpg" alt="2D Editorial vector illustration of study journal, confidence meter slider, and active recall card" className="w-full h-44 object-cover" />
+                  </div>
                 </div>
-                <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
+                <div className="mt-6 pt-5 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
                   <span className="font-semibold flex items-center gap-1.5">
                     <Heart className="size-3.5 text-[#005A57] fill-[#005A57]" />
                     <span>Personalized Encouragement</span>
@@ -514,20 +519,8 @@ export default function LandingPage() {
                   <ArrowRight className="size-3.5" />
                 </Link>
               </div>
-              <div className="md:col-span-6 bg-[#FBFAF6] rounded-2xl border border-[#DDE8DF] p-6">
-                <div className="flex items-center justify-between mb-4 border-b border-[#DDE8DF] pb-3 text-xs text-[#6D7E78] font-mono">
-                  <span>Habit Consistency Tracker</span>
-                  <span className="text-[#005A57] font-bold">12 Day Streak 🔥</span>
-                </div>
-                <div className="grid grid-cols-7 gap-2 text-center text-[10px] font-mono text-[#6D7E78]">
-                  <div className="p-2 rounded-lg bg-[#DDE8DF] text-[#003F3F] font-bold">MON</div>
-                  <div className="p-2 rounded-lg bg-[#DDE8DF] text-[#003F3F] font-bold">TUE</div>
-                  <div className="p-2 rounded-lg bg-[#DDE8DF] text-[#003F3F] font-bold">WED</div>
-                  <div className="p-2 rounded-lg bg-[#DDE8DF] text-[#003F3F] font-bold">THU</div>
-                  <div className="p-2 rounded-lg bg-[#DDE8DF] text-[#003F3F] font-bold">FRI</div>
-                  <div className="p-2 rounded-lg bg-[#DDE8DF] text-[#003F3F] font-bold">SAT</div>
-                  <div className="p-2 rounded-lg bg-[#003F3F] text-[#B8FF4D] font-bold">SUN</div>
-                </div>
+              <div className="md:col-span-6 bg-[#FBFAF6] rounded-2xl border border-[#DDE8DF] p-2 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                <img src="/assets/2d-habit-streak.jpg" alt="2D Editorial flatlay vector illustration of 7-day study habit grid notebook and fountain pen" className="w-full h-64 object-cover rounded-xl" />
               </div>
             </div>
           </div>
