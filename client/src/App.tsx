@@ -13,18 +13,13 @@ import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
+import { SummaPreloader } from "@/components/SummaPreloader";
+
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#f8fafc] dark:bg-[#0f172a]" role="status" aria-label="Loading Summa AI">
-        <div className="flex flex-col items-center gap-3">
-          <div className="size-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs font-semibold text-slate-500">Loading Summa AI...</span>
-        </div>
-      </div>
-    );
+    return <SummaPreloader />;
   }
 
   if (!isAuthenticated) {
@@ -38,7 +33,7 @@ function PublicAuthRoute({ component: Component }: { component: React.ComponentT
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return null;
+    return <SummaPreloader />;
   }
 
   if (isAuthenticated) {
@@ -52,14 +47,7 @@ function IndexRoute() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#f8fafc] dark:bg-[#0f172a]" role="status" aria-label="Loading Summa AI">
-        <div className="flex flex-col items-center gap-3">
-          <div className="size-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs font-semibold text-slate-500">Loading Summa AI...</span>
-        </div>
-      </div>
-    );
+    return <SummaPreloader />;
   }
 
   if (isAuthenticated) {
