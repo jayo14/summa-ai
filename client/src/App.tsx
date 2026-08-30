@@ -48,6 +48,27 @@ function PublicAuthRoute({ component: Component }: { component: React.ComponentT
   return <Component />;
 }
 
+function IndexRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#f8fafc] dark:bg-[#0f172a]" role="status" aria-label="Loading Summa AI">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-semibold text-slate-500">Loading Summa AI...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Home />;
+  }
+
+  return <LandingPage />;
+}
+
 function Router() {
   return (
     <Switch>
@@ -82,9 +103,7 @@ function Router() {
         {() => <ProtectedRoute component={Home} />}
       </Route>
 
-      <Route path="/">
-        {() => <ProtectedRoute component={Home} />}
-      </Route>
+      <Route path="/" component={IndexRoute} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
