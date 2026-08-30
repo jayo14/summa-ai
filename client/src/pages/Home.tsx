@@ -111,7 +111,6 @@ function getTutorResponse(prompt: string) {
 }
 
 export default function Home() {
-  const [activeView, setActiveView] = useState<ViewName>("workspace");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [contextOpen, setContextOpen] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
