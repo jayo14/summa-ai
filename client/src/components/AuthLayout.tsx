@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { Link } from "wouter";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Sparkles } from "lucide-react";
 import { SummaLogo } from "@/components/SummaLogo";
 
 interface AuthLayoutProps {
@@ -16,99 +16,85 @@ interface AuthLayoutProps {
 export function AuthLayout({
   children,
   topRightLink,
-  heroHeadline = "Teaching, learning, and family updates in one rhythm.",
+  heroHeadline = "Teaching, learning, and study recall in one rhythm.",
   heroDescription = "Summa AI brings the essential learning day into a shared, focused place—without relying on fragmented conversations.",
 }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen w-full bg-[#eef0f3] dark:bg-[#0b0f19] flex flex-col items-center justify-center p-4 lg:p-8 font-sans">
-      <div className="w-full max-w-[1160px] bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-200/70 dark:border-slate-800 min-h-[690px]">
-        {/* Left Panel - Dark Hero */}
-        <div className="lg:col-span-5 bg-[#121929] text-white p-8 lg:p-11 flex flex-col justify-between relative overflow-hidden">
-          {/* Top Background Geometric Accent */}
-          <div className="absolute -top-16 -right-16 size-72 rounded-full border-[36px] border-blue-600/15 pointer-events-none" />
-          <div className="absolute top-8 right-8 size-48 rounded-full border-[24px] border-blue-500/10 pointer-events-none" />
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] dark:from-[#090d16] dark:via-[#0f172a] dark:to-[#1e293b] flex flex-col justify-between p-4 sm:p-6 md:p-10 font-sans text-slate-800 dark:text-slate-100 relative overflow-hidden">
+      {/* Background Decorative Aether Orbs */}
+      <div className="absolute top-[-100px] left-[-80px] w-96 h-96 rounded-full bg-gradient-to-br from-purple-500/20 via-blue-500/15 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-120px] right-[-100px] w-[30rem] h-[30rem] rounded-full bg-gradient-to-tl from-indigo-500/20 via-pink-500/15 to-transparent blur-3xl pointer-events-none" />
 
-          {/* Branding Top */}
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-600/30 font-extrabold text-lg tracking-tighter">
-              S
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                SUMMA AI
-              </span>
-              <strong className="block text-sm font-bold text-white leading-tight">
-                Learning hub
-              </strong>
-            </div>
-          </div>
+      {/* Navigation Header - Matches Dashboard Header Bar */}
+      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between py-2 px-1">
+        <SummaLogo />
 
-          {/* Hero Main Copy */}
-          <div className="relative z-10 my-10 max-w-sm">
-            <span className="inline-block text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-3">
-              A CLEARER LEARNING DAY
-            </span>
-            <h2 className="text-3xl lg:text-[34px] font-serif font-bold text-white tracking-tight leading-[1.2] mb-4">
-              {heroHeadline}
-            </h2>
-            <p className="text-xs lg:text-sm text-slate-300/90 leading-relaxed font-normal">
-              {heroDescription}
-            </p>
-          </div>
-
-          {/* Bottom Security Card */}
-          <div className="relative z-10 bg-slate-800/60 backdrop-blur-md border border-slate-700/60 rounded-2xl p-4 flex gap-3.5 items-start">
-            <div className="size-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <ShieldCheck className="size-4" />
-            </div>
-            <div>
-              <span className="block text-[9px] font-bold tracking-widest text-slate-400 uppercase mb-0.5">
-                SECURE ACCESS
-              </span>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Use a unique password. Your account role determines the classes, records, and controls you can access.
-              </p>
-            </div>
-          </div>
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:inline-block text-xs text-slate-500 dark:text-slate-400 font-medium">
+            {topRightLink.label === "Create account" ? "Need an account?" : "Already have an account?"}
+          </span>
+          <Link
+            href={topRightLink.href}
+            className="px-4 py-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 hover:bg-white dark:hover:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white shadow-xs backdrop-blur-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            {topRightLink.label}
+          </Link>
         </div>
+      </header>
 
-        {/* Right Panel - Form */}
-        <div className="lg:col-span-7 bg-white dark:bg-slate-900 p-8 lg:p-12 flex flex-col justify-between">
-          {/* Header Row */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
-                S
+      {/* Main Grid Shell (No outer box container wrapper) */}
+      <main className="relative z-10 w-full max-w-6xl mx-auto my-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        {/* Left Side Hero Panel - Dashboard Glass Aesthetic */}
+        <div className="lg:col-span-6 flex flex-col justify-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold w-fit backdrop-blur-sm">
+            <Sparkles className="size-3.5" />
+            <span className="tracking-wide uppercase text-[10px]">Summa AI Workspace</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+            {heroHeadline}
+          </h1>
+
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed font-normal">
+            {heroDescription}
+          </p>
+
+          <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
+            <div className="p-3.5 rounded-2xl bg-white/50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-md shadow-xs flex items-start gap-3">
+              <div className="size-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">
+                AI
               </div>
               <div>
-                <span className="block text-[9px] font-bold tracking-widest text-slate-400 uppercase">
-                  SUMMA AI
-                </span>
-                <strong className="block text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Learning hub
-                </strong>
+                <strong className="block text-xs font-semibold text-slate-900 dark:text-white">Smart Recall</strong>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">Contextual study cards</span>
               </div>
             </div>
 
-            <Link
-              href={topRightLink.href}
-              className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-            >
-              {topRightLink.label}
-            </Link>
-          </div>
-
-          {/* Form Content */}
-          <div className="w-full max-w-[420px] mx-auto my-auto py-6">
-            {children}
-          </div>
-
-          {/* Footer */}
-          <div className="text-center text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-            © 2026 Summa AI · Secure learning access
+            <div className="p-3.5 rounded-2xl bg-white/50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-md shadow-xs flex items-start gap-3">
+              <div className="size-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <ShieldCheck className="size-4" />
+              </div>
+              <div>
+                <strong className="block text-xs font-semibold text-slate-900 dark:text-white">Protected Hub</strong>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">Encrypted security</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Right Side - Interactive Glass Card Form Shell */}
+        <div className="lg:col-span-6 w-full max-w-md mx-auto">
+          <div className="p-6 sm:p-8 md:p-9 rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-white/90 dark:border-slate-800/90 shadow-2xl backdrop-blur-xl transition-all">
+            {children}
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 w-full max-w-7xl mx-auto py-3 text-center text-xs text-slate-500 dark:text-slate-400 font-medium">
+        © 2026 Summa AI · Intelligent Learning & Study Workspace
+      </footer>
     </div>
   );
 }
+
