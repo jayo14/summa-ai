@@ -51,13 +51,13 @@ export default function ResetPassword() {
       heroDescription="Update your account credentials to maintain secure access to your AI memory workspace."
     >
       <div className="mb-6">
-        <span className="block text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">
+        <span className="block text-[10px] font-bold tracking-widest text-indigo-600 dark:text-indigo-400 uppercase mb-1.5 font-mono">
           UPDATE PASSWORD
         </span>
-        <h1 className="text-3xl lg:text-[32px] font-serif font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
-          Set a new password for your account.
-        </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+        <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
+          Set a new password
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
           {isSuccess
             ? "Your password has been updated successfully."
             : "Enter your new password below."}
@@ -66,14 +66,14 @@ export default function ResetPassword() {
 
       {isSuccess ? (
         <div className="space-y-6">
-          <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-xs text-emerald-900 dark:text-emerald-200 flex items-center gap-2.5">
+          <div className="p-4 bg-emerald-50/80 dark:bg-emerald-900/30 border border-emerald-200/80 dark:border-emerald-800/80 rounded-2xl text-xs text-emerald-900 dark:text-emerald-200 flex items-center gap-2.5">
             <CheckCircle className="size-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
             <span>Password successfully reset! You can now sign in.</span>
           </div>
 
           <button
             onClick={() => setLocation("/sign-in")}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition-all"
+            className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             Sign in with new password
           </button>
@@ -81,7 +81,7 @@ export default function ResetPassword() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               New password
             </label>
             <div className="relative">
@@ -91,7 +91,7 @@ export default function ResetPassword() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 6 characters"
-                className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 transition-all shadow-xs"
+                className="w-full pl-10 pr-10 py-2.5 bg-white/70 dark:bg-slate-800/70 border border-slate-200/90 dark:border-slate-700/90 rounded-2xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all shadow-xs"
                 required
               />
               <button
@@ -106,7 +106,7 @@ export default function ResetPassword() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Confirm new password
             </label>
             <div className="relative">
@@ -116,7 +116,7 @@ export default function ResetPassword() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repeat your new password"
-                className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 transition-all shadow-xs"
+                className="w-full pl-10 pr-10 py-2.5 bg-white/70 dark:bg-slate-800/70 border border-slate-200/90 dark:border-slate-700/90 rounded-2xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all shadow-xs"
                 required
               />
               <button
@@ -133,7 +133,7 @@ export default function ResetPassword() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 mt-2"
+            className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer"
           >
             {isSubmitting ? (
               <Sparkles className="size-4 animate-spin" />
@@ -145,7 +145,7 @@ export default function ResetPassword() {
           <div className="pt-2 text-center">
             <Link
               href="/sign-in"
-              className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold hover:text-slate-900 dark:hover:text-white"
+              className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <ArrowLeft className="size-3.5" />
               Back to Sign In
