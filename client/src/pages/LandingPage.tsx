@@ -756,7 +756,7 @@ export default function LandingPage() {
             {/* Main Footer Links & Brand Column */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12 text-left mb-20">
               <div className="md:col-span-5 space-y-5">
-                <SummaLogo />
+                <SummaLogo inverse />
                 <p className="text-xs text-[#DDE8DF] leading-relaxed max-w-sm">
                   Elevate Learning Experiences with Timeless Precision. Summa AI brings active recall, course grounding, and intelligent tutoring into one calm rhythm.
                 </p>

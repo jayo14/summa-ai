@@ -10,7 +10,7 @@ export function SummaLogo({ compact = false, inverse = false }: SummaLogoProps) 
   return (
     <div
       className={`inline-flex items-center gap-2.5 select-none font-sans ${
-        inverse ? "text-[#FBFAF6]" : "text-[#FBFAF6]"
+        inverse ? "text-[#FBFAF6]" : "text-[#102B2B] dark:text-[#FBFAF6]"
       }`}
       aria-label="Summa AI"
     >
@@ -21,7 +21,9 @@ export function SummaLogo({ compact = false, inverse = false }: SummaLogoProps) 
       </div>
 
       {!compact && (
-        <span className="font-serif font-normal text-2xl tracking-tight text-[#FBFAF6] flex items-baseline drop-shadow-xs">
+        <span className={`font-serif font-normal text-2xl tracking-tight flex items-baseline drop-shadow-xs ${
+          inverse ? "text-[#FBFAF6]" : "text-[#102B2B] dark:text-[#FBFAF6]"
+        }`}>
           summa
           <span className="font-sans font-extrabold text-[11px] tracking-wider uppercase text-[#003F3F] bg-[#B8FF4D] px-1.5 py-0.5 rounded-md ml-1.5 shadow-sm">
             AI
