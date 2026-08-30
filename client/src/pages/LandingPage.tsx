@@ -22,7 +22,8 @@ import {
   Sliders,
   Cpu,
   Bookmark,
-  Mail
+  Mail,
+  Play
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -96,9 +97,7 @@ export default function LandingPage() {
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-xs font-medium tracking-wide text-[#DDE8DF]">
-            <a href="#product" className="hover:text-[#B8FF4D] transition-colors">Product</a>
             <a href="#features" className="hover:text-[#B8FF4D] transition-colors">Features</a>
-            <a href="#benefit" className="hover:text-[#B8FF4D] transition-colors">Benefits</a>
             <a href="#pricing" className="hover:text-[#B8FF4D] transition-colors">Pricing</a>
             <a href="#testimonial" className="hover:text-[#B8FF4D] transition-colors">Testimonials</a>
             <a href="#waitlist" className="hover:text-[#B8FF4D] transition-colors">Waitlist</a>
@@ -155,8 +154,9 @@ export default function LandingPage() {
               </Link>
               <a
                 href="#product"
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#005A57]/60 hover:bg-[#005A57] border border-[#6D7E78]/40 text-sm font-medium text-[#F5F3EC] transition-all flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#005A57]/60 hover:bg-[#005A57] border border-[#6D7E78]/40 text-sm font-medium text-[#F5F3EC] transition-all flex items-center justify-center gap-2.5 group"
               >
+                <Play className="size-4 text-[#B8FF4D] fill-[#B8FF4D] group-hover:scale-110 transition-transform" />
                 <span>Watch Demo</span>
               </a>
             </div>
