@@ -25,12 +25,22 @@ import {
 
 export default function LandingPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [waitlistName, setWaitlistName] = useState("");
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [university, setUniversity] = useState("");
+  const [major, setMajor] = useState("");
+  const [isWaitlistLoading, setIsWaitlistLoading] = useState(false);
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setContactSubmitted(true);
-    setTimeout(() => setContactSubmitted(false), 5000);
+    if (!waitlistEmail) return;
+
+    setIsWaitlistLoading(true);
+    // Simulate waitlist API registration delay
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setIsWaitlistLoading(false);
+    setWaitlistSubmitted(true);
   };
 
   return (
@@ -49,7 +59,7 @@ export default function LandingPage() {
             <a href="#benefit" className="hover:text-[#B8FF4D] transition-colors">Benefits</a>
             <a href="#pricing" className="hover:text-[#B8FF4D] transition-colors">Pricing</a>
             <a href="#testimonial" className="hover:text-[#B8FF4D] transition-colors">Testimonials</a>
-            <a href="#contact" className="hover:text-[#B8FF4D] transition-colors">Contact</a>
+            <a href="#waitlist" className="hover:text-[#B8FF4D] transition-colors">Waitlist</a>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -562,62 +572,97 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 8. CONTACT FORM SECTION */}
-        <section id="contact" className="py-28 px-6 max-w-4xl mx-auto text-center">
+        {/* 8. WAITLIST EARLY ACCESS SECTION */}
+        <section id="waitlist" className="py-28 px-6 max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DDE8DF] text-[#003F3F] text-[11px] font-mono font-semibold mb-4">
-            CONTACT US
+            EARLY ACCESS
           </div>
           <h2 className="text-3xl sm:text-5xl font-serif font-normal text-[#102B2B] mb-4">
-            Get in touch, let us know how we can help
+            Join the Summa AI Early Access Waitlist
           </h2>
-          <p className="text-[#6D7E78] text-sm mb-12">
-            Our dedicated student support team is just a message away.
+          <p className="text-[#6D7E78] text-sm max-w-xl mx-auto mb-12 leading-relaxed">
+            Reserve your spot for priority access to AI course memory indexing, active recall decks, and personalized semester study tools.
           </p>
 
           <div className="p-8 sm:p-10 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] text-left shadow-md">
-            {contactSubmitted ? (
-              <div className="p-6 rounded-2xl bg-[#DDE8DF] text-[#003F3F] text-center font-medium text-sm">
-                Thank you! Your message has been received. Our team will get back to you shortly.
+            {waitlistSubmitted ? (
+              <div className="p-8 rounded-2xl bg-[#DDE8DF] border border-[#005A57]/20 text-[#003F3F] text-center space-y-3">
+                <div className="inline-flex items-center justify-center size-12 rounded-full bg-[#003F3F] text-[#B8FF4D] mx-auto">
+                  <CheckCircle2 className="size-6" />
+                </div>
+                <h3 className="text-xl font-serif font-normal text-[#003F3F]">You're on the waitlist!</h3>
+                <p className="text-xs text-[#6D7E78] max-w-md mx-auto leading-relaxed">
+                  Thank you, <strong>{waitlistName || "Scholar"}</strong>! We've reserved your priority access spot. We'll send invite code details to <strong>{waitlistEmail}</strong> soon.
+                </p>
               </div>
             ) : (
-              <form onSubmit={handleContactSubmit} className="space-y-6">
+              <form onSubmit={handleWaitlistSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-semibold text-[#102B2B] mb-2">Name</label>
+                    <label className="block text-xs font-semibold text-[#102B2B] mb-2">Full Name</label>
                     <input
                       type="text"
-                      placeholder="e.g. John Doe"
+                      value={waitlistName}
+                      onChange={(e) => setWaitlistName(e.target.value)}
+                      placeholder="e.g. Alex Johnson"
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-[#FBFAF6] border border-[#DDE8DF] text-xs text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57]"
+                      className="w-full px-4 py-3.5 rounded-xl bg-[#FBFAF6] border border-[#DDE8DF] text-xs text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57] transition-all shadow-xs"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#102B2B] mb-2">Email</label>
+                    <label className="block text-xs font-semibold text-[#102B2B] mb-2">Student / Academic Email</label>
                     <input
                       type="email"
-                      placeholder="e.g. johndoe@gmail.com"
+                      value={waitlistEmail}
+                      onChange={(e) => setWaitlistEmail(e.target.value)}
+                      placeholder="alex@university.edu"
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-[#FBFAF6] border border-[#DDE8DF] text-xs text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57]"
+                      className="w-full px-4 py-3.5 rounded-xl bg-[#FBFAF6] border border-[#DDE8DF] text-xs text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57] transition-all shadow-xs"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-[#102B2B] mb-2">Message</label>
-                  <textarea
-                    rows={4}
-                    placeholder="Type your message..."
-                    required
-                    className="w-full px-4 py-3 rounded-xl bg-[#FBFAF6] border border-[#DDE8DF] text-xs text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57] resize-none"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#102B2B] mb-2">University / Institution</label>
+                    <input
+                      type="text"
+                      value={university}
+                      onChange={(e) => setUniversity(e.target.value)}
+                      placeholder="e.g. Stanford University"
+                      className="w-full px-4 py-3.5 rounded-xl bg-[#FBFAF6] border border-[#DDE8DF] text-xs text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57] transition-all shadow-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#102B2B] mb-2">Primary Major / Major Field</label>
+                    <input
+                      type="text"
+                      value={major}
+                      onChange={(e) => setMajor(e.target.value)}
+                      placeholder="e.g. Computer Science / Pre-Med"
+                      className="w-full px-4 py-3.5 rounded-xl bg-[#FBFAF6] border border-[#DDE8DF] text-xs text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57] transition-all shadow-xs"
+                    />
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-full bg-[#003F3F] hover:bg-[#005A57] text-[#F5F3EC] text-xs font-bold shadow-md transition-all hover:scale-[1.01]"
+                  disabled={isWaitlistLoading}
+                  className="w-full py-4 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold shadow-md transition-all hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  Submit Message
+                  {isWaitlistLoading ? (
+                    <span>Processing Reservation...</span>
+                  ) : (
+                    <>
+                      <span>Join Early Access Waitlist</span>
+                      <ArrowRight className="size-4 text-[#003F3F]" />
+                    </>
+                  )}
                 </button>
+
+                <p className="text-[11px] text-[#6D7E78] font-mono text-center">
+                  🔒 No credit card required. Priority access invites are sent in batches weekly.
+                </p>
               </form>
             )}
           </div>
@@ -652,7 +697,7 @@ export default function LandingPage() {
                 <ul className="space-y-2.5 text-[#DDE8DF]">
                   <li><a href="#testimonial" className="hover:text-[#B8FF4D] transition-colors">Testimonials</a></li>
                   <li><a href="#benefit" className="hover:text-[#B8FF4D] transition-colors">Benefits</a></li>
-                  <li><a href="#contact" className="hover:text-[#B8FF4D] transition-colors">Contact</a></li>
+                  <li><a href="#waitlist" className="hover:text-[#B8FF4D] transition-colors">Waitlist</a></li>
                 </ul>
               </div>
 
