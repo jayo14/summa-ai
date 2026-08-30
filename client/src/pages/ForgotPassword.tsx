@@ -37,13 +37,13 @@ export default function ForgotPassword() {
       heroDescription="We send encrypted, time-sensitive verification links to confirm identity before resetting your password."
     >
       <div className="mb-6">
-        <span className="block text-[10px] font-bold tracking-widest text-indigo-600 dark:text-indigo-400 uppercase mb-1.5 font-mono">
+        <span className="block text-[10px] font-bold tracking-widest text-[#005A57] uppercase mb-1.5 font-mono">
           RECOVER ACCESS
         </span>
-        <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
+        <h2 className="text-2xl sm:text-3xl font-serif font-normal text-[#102B2B] tracking-tight leading-snug">
           Recover your workspace
         </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+        <p className="text-xs text-[#6D7E78] mt-1.5">
           {isSent
             ? "Check your email inbox for instructions."
             : "Enter your email address to receive password reset instructions."}
@@ -52,32 +52,32 @@ export default function ForgotPassword() {
 
       {isSent ? (
         <div className="space-y-6">
-          <div className="p-4 bg-indigo-50/80 dark:bg-indigo-900/30 border border-indigo-200/80 dark:border-indigo-800/80 rounded-2xl text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed">
+          <div className="p-4 bg-[#DDE8DF]/80 border border-[#DDE8DF] rounded-2xl text-xs text-[#003F3F] leading-relaxed">
             Password reset instructions have been sent to <strong>{email}</strong>.
           </div>
 
           <Link
             href="/sign-in"
-            className="w-full py-3 px-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all hover:bg-slate-800 dark:hover:bg-slate-100 cursor-pointer"
+            className="w-full py-3 px-4 bg-[#003F3F] hover:bg-[#005A57] text-[#F5F3EC] text-sm font-bold rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-4 text-[#F5F3EC]" />
             Back to Sign In
           </Link>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-[#102B2B] mb-1.5">
               Email address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6D7E78] size-4" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full pl-10 pr-4 py-2.5 bg-white/70 dark:bg-slate-800/70 border border-slate-200/90 dark:border-slate-700/90 rounded-2xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all shadow-xs"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#FBFAF6] border border-[#DDE8DF] rounded-2xl text-sm text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57] transition-all shadow-xs"
                 required
               />
             </div>
@@ -86,14 +86,14 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-bold rounded-2xl shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            className="w-full py-3 px-4 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-sm font-bold rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
           >
             {isSubmitting ? (
-              <Sparkles className="size-4 animate-spin" />
+              <Sparkles className="size-4 animate-spin text-[#003F3F]" />
             ) : (
               <>
                 Send Reset Link
-                <Send className="size-4" />
+                <Send className="size-4 text-[#003F3F]" />
               </>
             )}
           </button>
@@ -101,7 +101,7 @@ export default function ForgotPassword() {
           <div className="pt-2 text-center">
             <Link
               href="/sign-in"
-              className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-[#6D7E78] font-bold hover:text-[#102B2B] transition-colors"
             >
               <ArrowLeft className="size-3.5" />
               Back to Sign In
