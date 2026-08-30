@@ -714,8 +714,7 @@ export default function LandingPage() {
                 Elevate Learning Experiences with Timeless Precision. Summa AI brings active recall, course grounding, and intelligent tutoring into one calm rhythm.
               </p>
               <div className="space-y-1 text-xs font-mono text-[#DDE8DF]">
-                <div>hello@summa-ai.com</div>
-                <div>+1 (509) 121-2909</div>
+                <div>hello@summastudy.com.ng</div>
               </div>
             </div>
 
