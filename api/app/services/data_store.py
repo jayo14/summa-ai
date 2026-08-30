@@ -211,7 +211,6 @@ class DataStore:
     update_activity = update_artifact
     delete_activity = delete_artifact
     list_activity_versions = list_artifact_versions
-    create_activity_version = create_artifact_version
     restore_activity_version = restore_artifact_version
     toggle_pin_activity = toggle_pin_artifact
 
