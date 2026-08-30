@@ -25,7 +25,9 @@ import {
   Mail,
   Play,
   FolderOpen,
-  ShieldCheck
+  ShieldCheck,
+  Menu,
+  X
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -37,6 +39,7 @@ export default function LandingPage() {
   const [isWaitlistLoading, setIsWaitlistLoading] = useState(false);
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -62,25 +65,26 @@ export default function LandingPage() {
     setWaitlistSubmitted(true);
   };
 
-  // Interpolate dynamic styles based on continuous scroll progress
-  const headerWidth = 100 - scrollProgress * 25; // 100% -> 75%
-  const headerMarginTop = scrollProgress * 16; // 0px -> 16px
+  // Interpolate dynamic styles based on continuous scroll progress (on desktop)
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const headerWidth = isMobile ? 94 : (100 - scrollProgress * 20); // Responsive width bound
+  const headerMarginTop = scrollProgress * 12; // 0px -> 12px
   const headerBorderRadius = scrollProgress * 9999; // 0px -> 9999px
-  const headerHeight = 80 - scrollProgress * 16; // 80px -> 64px
-  const headerPx = 32 - scrollProgress * 8; // 32px -> 24px
+  const headerHeight = 72 - scrollProgress * 12; // 72px -> 60px
+  const headerPx = 24 - scrollProgress * 8; // 24px -> 16px
 
   return (
-    <div className="min-h-screen w-full bg-[#FBFAF6] text-[#102B2B] font-sans selection:bg-[#B8FF4D] selection:text-[#003F3F] relative antialiased">
+    <div className="min-h-screen w-full bg-[#FBFAF6] text-[#102B2B] font-sans selection:bg-[#B8FF4D] selection:text-[#003F3F] relative antialiased overflow-x-hidden">
       
-      {/* 1. FLOATING STICKY NAVIGATION HEADER WITH CONTINUOUS FLUID INTERPOLATION */}
-      <div className="sticky top-0 z-50 w-full pointer-events-none flex justify-center">
+      {/* 1. FLOATING STICKY NAVIGATION HEADER WITH RESPONSIVE INTERPOLATION */}
+      <div className="sticky top-0 z-50 w-full pointer-events-none flex justify-center pt-2">
         <header
           style={{
             width: `${headerWidth}%`,
             marginTop: `${headerMarginTop}px`,
             borderRadius: `${headerBorderRadius}px`,
           }}
-          className={`pointer-events-auto bg-[#003F3F] text-[#F5F3EC] bg-grain-dark transition-shadow duration-300 ease-out ${
+          className={`pointer-events-auto bg-[#003F3F] text-[#F5F3EC] bg-grain-dark transition-all duration-300 ease-out ${
             scrollProgress > 0.1
               ? "border border-[#005A57] shadow-2xl backdrop-blur-xl bg-opacity-95"
               : "border-b border-[#005A57]/60 shadow-md"
@@ -94,34 +98,97 @@ export default function LandingPage() {
             }}
             className="mx-auto flex items-center justify-between max-w-7xl"
           >
-          <div className="flex items-center gap-3">
-            <SummaLogo />
+            <div className="flex items-center gap-3">
+              <SummaLogo />
+            </div>
+
+            <nav className="hidden md:flex items-center gap-8 text-xs font-medium tracking-wide text-[#DDE8DF]">
+              <a href="#features" className="hover:text-[#B8FF4D] transition-colors">Features</a>
+              <a href="#pricing" className="hover:text-[#B8FF4D] transition-colors">Pricing</a>
+              <a href="#testimonial" className="hover:text-[#B8FF4D] transition-colors">Testimonials</a>
+              <a href="#waitlist" className="hover:text-[#B8FF4D] transition-colors">Waitlist</a>
+            </nav>
+
+            <div className="hidden sm:flex items-center gap-4">
+              <Link
+                href="/sign-in"
+                className="text-xs font-semibold text-[#DDE8DF] hover:text-white px-3 py-2 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/sign-up"
+                className="px-5 py-2.5 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Start Free Trial
+              </Link>
+            </div>
+
+            {/* Mobile Hamburger Menu Toggle Button */}
+            <div className="flex md:hidden items-center gap-2">
+              <Link
+                href="/sign-in"
+                className="text-xs font-semibold text-[#DDE8DF] hover:text-white px-2 py-1"
+              >
+                Sign In
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-xl bg-[#005A57]/60 text-[#FBFAF6] hover:bg-[#005A57] transition-colors border border-[#6D7E78]/30"
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-xs font-medium tracking-wide text-[#DDE8DF]">
-            <a href="#features" className="hover:text-[#B8FF4D] transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-[#B8FF4D] transition-colors">Pricing</a>
-            <a href="#testimonial" className="hover:text-[#B8FF4D] transition-colors">Testimonials</a>
-            <a href="#waitlist" className="hover:text-[#B8FF4D] transition-colors">Waitlist</a>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href="/sign-in"
-              className="text-xs font-semibold text-[#DDE8DF] hover:text-white px-3 py-2 transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/sign-up"
-              className="px-5 py-2.5 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Start Free Trial
-            </Link>
-          </div>
-        </div>
-      </header>
-    </div>
+          {/* Mobile Navigation Drawer Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-[#005A57] p-5 space-y-4 bg-[#003F3F] rounded-b-2xl animate-in slide-in-from-top-2 duration-200">
+              <nav className="flex flex-col space-y-3 text-sm font-medium text-[#DDE8DF]">
+                <a
+                  href="#features"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-[#B8FF4D] py-1 transition-colors"
+                >
+                  Features
+                </a>
+                <a
+                  href="#pricing"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-[#B8FF4D] py-1 transition-colors"
+                >
+                  Pricing
+                </a>
+                <a
+                  href="#testimonial"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-[#B8FF4D] py-1 transition-colors"
+                >
+                  Testimonials
+                </a>
+                <a
+                  href="#waitlist"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-[#B8FF4D] py-1 transition-colors"
+                >
+                  Waitlist
+                </a>
+              </nav>
+              <div className="pt-3 border-t border-[#005A57] flex flex-col gap-2.5">
+                <Link
+                  href="/sign-up"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-3 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold text-center shadow-md transition-all"
+                >
+                  Start Free Trial
+                </Link>
+              </div>
+            </div>
+          )}
+        </header>
+      </div>
 
       {/* MAIN CONTENT AREA */}
       <main>
