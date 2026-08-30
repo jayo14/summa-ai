@@ -137,10 +137,10 @@ export default function SignIn() {
           <span>Sign in with Google</span>
         </button>
 
-        <div className="relative flex items-center justify-center my-3">
-          <div className="border-t border-slate-200 dark:border-slate-700 w-full" />
-          <span className="bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wider relative z-10">
-            or continue with email
+        <div className="relative flex items-center justify-center my-4">
+          <div className="border-t border-slate-200/80 dark:border-slate-800 w-full" />
+          <span className="bg-slate-50/90 dark:bg-slate-900/90 px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest relative z-10 whitespace-nowrap rounded-full border border-slate-200/50 dark:border-slate-800">
+            or email
           </span>
         </div>
 
@@ -162,11 +162,11 @@ export default function SignIn() {
           )}
         </button>
 
-        {/* Security Info Callout Box */}
-        <div className="bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 rounded-2xl p-3.5 flex gap-3 items-start text-xs text-slate-600 dark:text-slate-300 mt-5 leading-relaxed">
+        {/* Student-centric benefit callout box */}
+        <div className="bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl p-3.5 flex gap-3 items-start text-xs text-indigo-950 dark:text-indigo-200 mt-5 leading-relaxed">
           <Sparkles className="size-4 text-indigo-500 flex-shrink-0 mt-0.5" />
           <p>
-            Secure access protected with encrypted backend sessions and real-time context verification.
+            Welcome back! Your study notes, interactive quizzes, and AI flashcards are right where you left them.
           </p>
         </div>
       </form>
