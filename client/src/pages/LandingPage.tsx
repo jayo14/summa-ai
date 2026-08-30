@@ -276,19 +276,19 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 4. FEATURES SECTION - SOFT CREAM BACKGROUND */}
+        {/* 4. FEATURES SECTION - HIGH CONVERSION STUDENT VALUE GRID */}
         <section id="features" className="py-28 px-6 bg-[#FBFAF6] text-[#102B2B]">
           <div className="max-w-7xl mx-auto">
             <div className="max-w-3xl mb-16 text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DDE8DF] text-[#003F3F] text-[11px] font-mono font-semibold mb-4">
-                FEATURES
+                FEATURES • ENGINEERED FOR ACADEMIC EXCELLENCE
               </div>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-normal text-[#102B2B] tracking-tight leading-[1.12]">
-                Everything You Need to Build <br />
-                <span className="italic text-[#005A57]">Intelligent Study Workspaces</span>
+                Everything You Need to <br />
+                <span className="italic text-[#005A57]">Master Any Course Faster</span>
               </h2>
               <p className="text-[#6D7E78] text-sm sm:text-base mt-4 max-w-2xl leading-relaxed">
-                Every element is crafted to make AI-driven study experiences feel calm, warm, and highly effective.
+                Turn overwhelming lectures, heavy textbooks, and dense slide decks into structured active recall decks and 24/7 exam prep tools.
               </p>
             </div>
 
@@ -300,14 +300,14 @@ export default function LandingPage() {
                   <div className="size-12 rounded-2xl bg-[#003F3F] text-[#B8FF4D] flex items-center justify-center mb-6">
                     <MessageSquare className="size-6" />
                   </div>
-                  <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Adaptive Conversations</h3>
+                  <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Adaptive AI Tutoring</h3>
                   <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed max-w-md">
-                    Adjusts responses in real-time to match your course depth. Feels natural, precise, and completely aligned with your exam topics.
+                    Matches your course difficulty in real-time. Explains complex topics using analogies tailored to your learning pace and exam format.
                   </p>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
-                  <span>Real-time Context Matching</span>
-                  <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                  <span className="font-semibold">⚡ Real-Time Concept Breakdown</span>
+                  <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform text-[#005A57]" />
                 </div>
               </div>
 
@@ -317,13 +317,13 @@ export default function LandingPage() {
                   <div className="size-12 rounded-2xl bg-[#005A57] text-[#F5F3EC] flex items-center justify-center mb-6">
                     <Layers className="size-6" />
                   </div>
-                  <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Multi-Source Sync</h3>
+                  <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">All-in-One Course Vault</h3>
                   <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed">
-                    Connect Summa AI effortlessly across PDFs, slides, and notes. Keep your study context consistent everywhere.
+                    Upload lecture PDFs, slides, and syllabus notes. Summa AI links every answer directly to your exact course citations.
                   </p>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#005A57] font-mono">
-                  <span>PDFs • Slides • Syllabi</span>
+                  <span className="font-semibold">📁 PDFs • Slides • Syllabi</span>
                   <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
@@ -334,14 +334,14 @@ export default function LandingPage() {
                   <div className="size-12 rounded-2xl bg-[#E9DED0] text-[#003F3F] flex items-center justify-center mb-6">
                     <Heart className="size-6" />
                   </div>
-                  <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Empathetic Tutoring</h3>
+                  <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Stress-Free Study Coach</h3>
                   <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed">
-                    Goes beyond rigid Q&amp;A. Formats responses with encouraging feedback and tailored pace adjustments when exam stress builds up.
+                    Goes beyond rigid Q&amp;A. Provides encouraging active-recall prompts, confidence scores, and step-by-step guidance when exam stress builds.
                   </p>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
-                  <span>Personalized Guidance</span>
-                  <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                  <span className="font-semibold">💚 Personalized Encouragement</span>
+                  <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform text-[#005A57]" />
                 </div>
               </div>
 
@@ -351,14 +351,14 @@ export default function LandingPage() {
                   <div className="size-12 rounded-2xl bg-[#003F3F] text-[#B8FF4D] flex items-center justify-center mb-6">
                     <Cpu className="size-6" />
                   </div>
-                  <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Knowledge-Driven Intelligence</h3>
+                  <h3 className="text-2xl font-serif font-normal text-[#102B2B] mb-3">Ground Truth Guarantee</h3>
                   <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed max-w-md">
-                    Powered by your exact course material and active memory indexing. Answers evolve continuously as your course catalog grows.
+                    Strict zero-hallucination guardrails ensure every AI flashcard, quiz question, and explanation is 100% verified against your syllabus.
                   </p>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
-                  <span>Zero Hallucination Guardrails</span>
-                  <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                  <span className="font-semibold">🛡️ Zero Hallucination Guardrails</span>
+                  <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform text-[#005A57]" />
                 </div>
               </div>
             </div>
