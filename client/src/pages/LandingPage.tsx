@@ -55,17 +55,18 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen w-full bg-[#FBFAF6] text-[#102B2B] font-sans selection:bg-[#B8FF4D] selection:text-[#003F3F] relative antialiased">
       
-      {/* 1. FLOATING STICKY NAVIGATION HEADER */}
-      <header
-        className={`sticky z-50 transition-all duration-300 ease-out bg-[#003F3F] text-[#F5F3EC] bg-grain-dark ${
-          isScrolled
-            ? "top-4 mx-auto w-[92%] sm:w-[82%] md:w-[75%] rounded-full border border-[#005A57] shadow-2xl backdrop-blur-xl bg-opacity-95"
-            : "top-0 w-full border-b border-[#005A57]/60 shadow-md"
-        }`}
-      >
-        <div className={`mx-auto px-6 flex items-center justify-between transition-all duration-300 ${
-          isScrolled ? "h-16 max-w-full" : "h-20 max-w-7xl"
-        }`}>
+      {/* 1. FLOATING STICKY NAVIGATION HEADER WITH SEAMLESS FLUID TRANSITIONS */}
+      <div className="sticky top-0 z-50 w-full pointer-events-none flex justify-center">
+        <header
+          className={`pointer-events-auto transition-[width,max-width,top,margin,padding,border-radius,box-shadow,background-color] duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] bg-[#003F3F] text-[#F5F3EC] bg-grain-dark ${
+            isScrolled
+              ? "mt-4 w-[92%] sm:w-[82%] md:w-[75%] max-w-6xl rounded-full border border-[#005A57] shadow-2xl backdrop-blur-xl bg-opacity-95 px-2"
+              : "mt-0 w-full max-w-full rounded-none border-b border-[#005A57]/60 shadow-md px-0"
+          }`}
+        >
+          <div className={`mx-auto flex items-center justify-between transition-[height,padding,max-width] duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
+            isScrolled ? "h-16 px-6 max-w-full" : "h-20 px-8 max-w-7xl"
+          }`}>
           <div className="flex items-center gap-3">
             <SummaLogo />
           </div>
@@ -95,6 +96,7 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
+    </div>
 
       {/* MAIN CONTENT AREA */}
       <main>
