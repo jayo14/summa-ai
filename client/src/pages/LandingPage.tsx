@@ -31,13 +31,18 @@ export default function LandingPage() {
   const [major, setMajor] = useState("");
   const [isWaitlistLoading, setIsWaitlistLoading] = useState(false);
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   React.useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      // Smoothly interpolate scroll progress from 0 (at top) to 1 (scrolled 60px)
+      const currentScroll = window.scrollY;
+      const progress = Math.min(Math.max(currentScroll / 60, 0), 1);
+      setScrollProgress(progress);
     };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -52,21 +57,38 @@ export default function LandingPage() {
     setWaitlistSubmitted(true);
   };
 
+  // Interpolate dynamic styles based on continuous scroll progress
+  const headerWidth = 100 - scrollProgress * 25; // 100% -> 75%
+  const headerMarginTop = scrollProgress * 16; // 0px -> 16px
+  const headerBorderRadius = scrollProgress * 9999; // 0px -> 9999px
+  const headerHeight = 80 - scrollProgress * 16; // 80px -> 64px
+  const headerPx = 32 - scrollProgress * 8; // 32px -> 24px
+
   return (
     <div className="min-h-screen w-full bg-[#FBFAF6] text-[#102B2B] font-sans selection:bg-[#B8FF4D] selection:text-[#003F3F] relative antialiased">
       
-      {/* 1. FLOATING STICKY NAVIGATION HEADER WITH SEAMLESS FLUID TRANSITIONS */}
+      {/* 1. FLOATING STICKY NAVIGATION HEADER WITH CONTINUOUS FLUID INTERPOLATION */}
       <div className="sticky top-0 z-50 w-full pointer-events-none flex justify-center">
         <header
-          className={`pointer-events-auto transition-[width,max-width,top,margin,padding,border-radius,box-shadow,background-color] duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] bg-[#003F3F] text-[#F5F3EC] bg-grain-dark ${
-            isScrolled
-              ? "mt-4 w-[92%] sm:w-[82%] md:w-[75%] max-w-6xl rounded-full border border-[#005A57] shadow-2xl backdrop-blur-xl bg-opacity-95 px-2"
-              : "mt-0 w-full max-w-full rounded-none border-b border-[#005A57]/60 shadow-md px-0"
+          style={{
+            width: `${headerWidth}%`,
+            marginTop: `${headerMarginTop}px`,
+            borderRadius: `${headerBorderRadius}px`,
+          }}
+          className={`pointer-events-auto bg-[#003F3F] text-[#F5F3EC] bg-grain-dark transition-shadow duration-300 ease-out ${
+            scrollProgress > 0.1
+              ? "border border-[#005A57] shadow-2xl backdrop-blur-xl bg-opacity-95"
+              : "border-b border-[#005A57]/60 shadow-md"
           }`}
         >
-          <div className={`mx-auto flex items-center justify-between transition-[height,padding,max-width] duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
-            isScrolled ? "h-16 px-6 max-w-full" : "h-20 px-8 max-w-7xl"
-          }`}>
+          <div
+            style={{
+              height: `${headerHeight}px`,
+              paddingLeft: `${headerPx}px`,
+              paddingRight: `${headerPx}px`,
+            }}
+            className="mx-auto flex items-center justify-between max-w-7xl"
+          >
           <div className="flex items-center gap-3">
             <SummaLogo />
           </div>
