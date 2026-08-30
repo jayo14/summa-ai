@@ -130,19 +130,26 @@ export default function LandingPage() {
             {/* Branded Signal Tagline Badge */}
             <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#005A57]/60 border border-[#6D7E78]/30 text-[#DDE8DF] text-xs font-medium mb-8 backdrop-blur-md">
               <span className="size-2 rounded-full bg-[#B8FF4D] animate-pulse" />
-              <span>Summa AI 2.0 • Intelligent Recall Workspace</span>
+              <span>Summa AI 2.0 • Effortless Exam Preparation</span>
               <ArrowRight className="size-3 text-[#B8FF4D]" />
             </div>
 
             {/* Instrument Serif Hero Display Headline */}
             <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-normal text-[#FBFAF6] tracking-tight leading-[1.08] mb-8">
-              Elevate <em className="italic font-serif font-normal text-[#B8FF4D]">Learning &amp; Study Recall</em> <br className="hidden sm:inline" />
-              with Calm Precision
+              Study <em className="italic font-serif font-normal text-[#B8FF4D]">2x Faster,</em> <br className="hidden sm:inline" />
+              Remember 10x More
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl text-[#DDE8DF]/90 max-w-2xl mx-auto leading-relaxed mb-10 font-normal">
-              Summa AI brings your lectures, syllabus, active recall quizzes, and tutor support into one quiet, high-signal workspace.
+              Say goodbye to cramming. Turn your lectures, PDFs, and syllabus into instant AI flashcards, active recall quizzes, and 24/7 tutor support.
             </p>
+
+            {/* Student Social Proof Pill */}
+            <div className="inline-flex items-center gap-2 text-xs text-[#DDE8DF] font-mono mb-8 bg-[#003F3F]/60 px-4 py-1.5 rounded-full border border-[#005A57]">
+              <span className="text-[#B8FF4D] font-bold">★ 4.9/5</span>
+              <span className="text-[#6D7E78]">|</span>
+              <span>Trusted by 15,000+ Students at Stanford, Berkeley & MIT</span>
+            </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-16">
               <Link
