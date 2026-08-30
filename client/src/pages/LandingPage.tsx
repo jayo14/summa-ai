@@ -23,7 +23,9 @@ import {
   Cpu,
   Bookmark,
   Mail,
-  Play
+  Play,
+  FolderOpen,
+  ShieldCheck
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -306,7 +308,10 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
-                  <span className="font-semibold">⚡ Real-Time Concept Breakdown</span>
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <Zap className="size-3.5 text-[#005A57]" />
+                    <span>Real-Time Concept Breakdown</span>
+                  </span>
                   <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform text-[#005A57]" />
                 </div>
               </div>
@@ -323,7 +328,10 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#005A57] font-mono">
-                  <span className="font-semibold">📁 PDFs • Slides • Syllabi</span>
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <FolderOpen className="size-3.5 text-[#005A57]" />
+                    <span>PDFs • Slides • Syllabi</span>
+                  </span>
                   <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
@@ -340,7 +348,10 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
-                  <span className="font-semibold">💚 Personalized Encouragement</span>
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <Heart className="size-3.5 text-[#005A57] fill-[#005A57]" />
+                    <span>Personalized Encouragement</span>
+                  </span>
                   <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform text-[#005A57]" />
                 </div>
               </div>
@@ -357,7 +368,10 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="mt-8 pt-6 border-t border-[#DDE8DF] flex items-center justify-between text-xs text-[#003F3F] font-mono">
-                  <span className="font-semibold">🛡️ Zero Hallucination Guardrails</span>
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <ShieldCheck className="size-3.5 text-[#005A57]" />
+                    <span>Zero Hallucination Guardrails</span>
+                  </span>
                   <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform text-[#005A57]" />
                 </div>
               </div>
