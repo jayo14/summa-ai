@@ -16,40 +16,46 @@
 :is(.dark-mode, .dark, html.dark) .app-sidebar { border-right-color: #2A3838; background: #181E1E; color: #F5F3EC; }
 :is(.dark-mode, .dark, html.dark) .app-header { border-bottom-color: #2A3838; background: #121616; color: #F5F3EC; }
 :is(.dark-mode, .dark, html.dark) .context-rail { border-left-color: #2A3838; background: #181E1E; color: #F5F3EC; }
-:is(.dark-mode, .dark, html.dark) .summa-wordmark, :is(.dark-mode, .dark, html.dark) .header-crumbs strong, :is(.dark-mode, .dark, html.dark) .empty-hero h1, :is(.dark-mode, .dark, html.dark) .secondary-intro h1, :is(.dark-mode, .dark, html.dark) .progress-sheet-heading h2, :is(.dark-mode, .dark, html.dark) .learning-object h2, :is(.dark-mode, .dark, html.dark) .source-catalog h2, :is(.dark-mode, .dark, html.dark) .setting-row h2, :is(.dark-mode, .dark, html.dark) .source-tray h2, :is(.dark-mode, .dark, html.dark) .interactive-heading h3, :is(.dark-mode, .dark, html.dark) .flashcard-stage strong { color: #F5F3EC; }
-:is(.dark-mode, .dark, html.dark) .nav-caption, :is(.dark-mode, .dark, html.dark) .eyebrow { color: #8FA29B; }
-:is(.dark-mode, .dark, html.dark) .nav-item, :is(.dark-mode, .dark, html.dark) .history-item, :is(.dark-mode, .dark, html.dark) .folder-heading, :is(.dark-mode, .dark, html.dark) .header-crumbs, :is(.dark-mode, .dark, html.dark) .empty-hero p, :is(.dark-mode, .dark, html.dark) .message-content, :is(.dark-mode, .dark, html.dark) .interactive-instruction, :is(.dark-mode, .dark, html.dark) .practice-question, :is(.dark-mode, .dark, html.dark) .learning-object p, :is(.dark-mode, .dark, html.dark) .source-catalog p, :is(.dark-mode, .dark, html.dark) .setting-row p, :is(.dark-mode, .dark, html.dark) .secondary-intro p, :is(.dark-mode, .dark, html.dark) .progress-intro figcaption, :is(.dark-mode, .dark, html.dark) .estimate-copy { color: #DDE8DF; }
+:is(.dark-mode, .dark, html.dark) .summa-wordmark, :is(.dark-mode, .dark, html.dark) .header-crumbs strong, :is(.dark-mode, .dark, html.dark) .empty-hero h1, :is(.dark-mode, .dark, html.dark) .secondary-intro h1, :is(.dark-mode, .dark, html.dark) .progress-sheet-heading h2, :is(.dark-mode, .dark, html.dark) .learning-object h2, :is(.dark-mode, .dark, html.dark) .source-catalog h2, :is(.dark-mode, .dark, html.dark) .setting-row h2, :is(.dark-mode, .dark, html.dark) .source-tray h2, :is(.dark-mode, .dark, html.dark) .interactive-heading h3, :is(.dark-mode, .dark, html.dark) .flashcard-stage strong, :is(.dark-mode, .dark, html.dark) .message-sender strong, :is(.dark-mode, .dark, html.dark) .context-course strong { color: #F5F3EC !important; }
+:is(.dark-mode, .dark, html.dark) .nav-caption, :is(.dark-mode, .dark, html.dark) .eyebrow, :is(.dark-mode, .dark, html.dark) .message-sender span, :is(.dark-mode, .dark, html.dark) .citation-label { color: #8FA29B !important; }
+:is(.dark-mode, .dark, html.dark) .nav-item, :is(.dark-mode, .dark, html.dark) .history-item, :is(.dark-mode, .dark, html.dark) .folder-heading, :is(.dark-mode, .dark, html.dark) .header-crumbs, :is(.dark-mode, .dark, html.dark) .empty-hero p, :is(.dark-mode, .dark, html.dark) .message-content, :is(.dark-mode, .dark, html.dark) .interactive-instruction, :is(.dark-mode, .dark, html.dark) .practice-question, :is(.dark-mode, .dark, html.dark) .learning-object p, :is(.dark-mode, .dark, html.dark) .source-catalog p, :is(.dark-mode, .dark, html.dark) .setting-row p, :is(.dark-mode, .dark, html.dark) .secondary-intro p, :is(.dark-mode, .dark, html.dark) .progress-intro figcaption, :is(.dark-mode, .dark, html.dark) .estimate-copy, :is(.dark-mode, .dark, html.dark) .context-course, :is(.dark-mode, .dark, html.dark) .context-meta { color: #DDE8DF !important; }
 :is(.dark-mode, .dark, html.dark) .nav-item.active, :is(.dark-mode, .dark, html.dark) .history-item.active { color: #F5F3EC; background: #232D2D; }
 :is(.dark-mode, .dark, html.dark) .new-session-button, :is(.dark-mode, .dark, html.dark) .student-badge { border-color: #2A3838; color: #F5F3EC; background: #1C2323; }
 :is(.dark-mode, .dark, html.dark) .header-icon-button, :is(.dark-mode, .dark, html.dark) .context-toggle, :is(.dark-mode, .dark, html.dark) .theme-toggle { color: #DDE8DF; border-color: #2A3838; background: #1C2323; }
 :is(.dark-mode, .dark, html.dark) .header-icon-button:hover, :is(.dark-mode, .dark, html.dark) .context-toggle:hover, :is(.dark-mode, .dark, html.dark) .theme-toggle:hover { color: #B8FF4D; background: #232D2D; }
-:is(.dark-mode, .dark, html.dark) .context-banner, :is(.dark-mode, .dark, html.dark) .recent-card, :is(.dark-mode, .dark, html.dark) .interactive-card, :is(.dark-mode, .dark, html.dark) .learning-object, :is(.dark-mode, .dark, html.dark) .source-catalog article, :is(.dark-mode, .dark, html.dark) .progress-sheet, :is(.dark-mode, .dark, html.dark) .discover-toolbar, :is(.dark-mode, .dark, html.dark) .composer, :is(.dark-mode, .dark, html.dark) .source-tray { border-color: #2A3838; background: #1C2323; box-shadow: 0 12px 28px rgba(0,0,0,.25); }
+:is(.dark-mode, .dark, html.dark) .context-banner, :is(.dark-mode, .dark, html.dark) .recent-card, :is(.dark-mode, .dark, html.dark) .interactive-card, :is(.dark-mode, .dark, html.dark) .learning-object, :is(.dark-mode, .dark, html.dark) .source-catalog article, :is(.dark-mode, .dark, html.dark) .progress-sheet, :is(.dark-mode, .dark, html.dark) .discover-toolbar, :is(.dark-mode, .dark, html.dark) .composer, :is(.dark-mode, .dark, html.dark) .source-tray { border-color: #2A3838 !important; background: #1C2323 !important; box-shadow: 0 12px 28px rgba(0,0,0,.25); }
 :is(.dark-mode, .dark, html.dark) .context-course, :is(.dark-mode, .dark, html.dark) .context-meta, :is(.dark-mode, .dark, html.dark) .recent-heading, :is(.dark-mode, .dark, html.dark) .recent-card strong, :is(.dark-mode, .dark, html.dark) .filter-label, :is(.dark-mode, .dark, html.dark) .discover-toolbar select, :is(.dark-mode, .dark, html.dark) .result-count, :is(.dark-mode, .dark, html.dark) .source-catalog article button, :is(.dark-mode, .dark, html.dark) .learning-object footer button, :is(.dark-mode, .dark, html.dark) .settings-link, :is(.dark-mode, .dark, html.dark) .add-source-button { color: #DDE8DF; }
-:is(.dark-mode, .dark, html.dark) .objective-slip, :is(.dark-mode, .dark, html.dark) .citation-row button, :is(.dark-mode, .dark, html.dark) .composer-source { color: #003F3F; background: #B8FF4D; border-color: #2A3838; }
-:is(.dark-mode, .dark, html.dark) .message-content strong { color: #F5F3EC; }
-:is(.dark-mode, .dark, html.dark) .source-grounded { border-left-color: #B8FF4D; }
-:is(.dark-mode, .dark, html.dark) .student-message .message-content { color: #F5F3EC; background: #232D2D; border-color: #2A3838; box-shadow: 0 9px 22px rgba(0,0,0,.25); }
-:is(.dark-mode, .dark, html.dark) .interactive-card:hover { background: #232D2D; }
-:is(.dark-mode, .dark, html.dark) .quiz-option, :is(.dark-mode, .dark, html.dark) .practice-input, :is(.dark-mode, .dark, html.dark) .source-picker-item, :is(.dark-mode, .dark, html.dark) .discover-toolbar select { color: #F5F3EC; border-color: #2A3838; background: #181E1E; }
-:is(.dark-mode, .dark, html.dark) .quiz-option:hover, :is(.dark-mode, .dark, html.dark) .source-picker-item:hover { background: #232D2D; }
-:is(.dark-mode, .dark, html.dark) .flashcard-stage { color: #F5F3EC; background: #1C2323; }
-:is(.dark-mode, .dark, html.dark) .progress-moment { color: #F5F3EC; border-color: #2A3838; background: #1C2323; }
-:is(.dark-mode, .dark, html.dark) .progress-copy h3, :is(.dark-mode, .dark, html.dark) .ledger-row>div:first-child, :is(.dark-mode, .dark, html.dark) .ledger-row>strong, :is(.dark-mode, .dark, html.dark) .section-heading h3, :is(.dark-mode, .dark, html.dark) .memory-head h3, :is(.dark-mode, .dark, html.dark) .source-lens h3 { color: #F5F3EC; }
-:is(.dark-mode, .dark, html.dark) .focus-card { background: #232D2D; border-color: #2A3838; }
-:is(.dark-mode, .dark, html.dark) .source-lens { border-color: #2A3838; background: #1C2323; }
-:is(.dark-mode, .dark, html.dark) .memory-card, :is(.dark-mode, .dark, html.dark) .mastery-ledger, :is(.dark-mode, .dark, html.dark) .setting-row, :is(.dark-mode, .dark, html.dark) .progress-sheet-heading, :is(.dark-mode, .dark, html.dark) .secondary-toolbar { border-color: #2A3838; }
-:is(.dark-mode, .dark, html.dark) .insight-strip { color: #DDE8DF; background: #232D2D; }
-:is(.dark-mode, .dark, html.dark) .connect-status { color: #B8FF4D; border-color: #2A3838; background: #232D2D; }
-:is(.dark-mode, .dark, html.dark) .source-in-use { color: #003F3F; background: #B8FF4D; }
-:is(.dark-mode, .dark, html.dark) .source-file-icon { color: #B8FF4D; background: #232D2D; }
-:is(.dark-mode, .dark, html.dark) .composer textarea, :is(.dark-mode, .dark, html.dark) .composer textarea::placeholder { color: #F5F3EC; }
-:is(.dark-mode, .dark, html.dark) .composer textarea::placeholder { color: #8FA29B; }
-:is(.dark-mode, .dark, html.dark) .composer-note { color: #8FA29B; }
+:is(.dark-mode, .dark, html.dark) .objective-slip { color: #003F3F !important; background: #B8FF4D !important; border-color: #2A3838; }
+:is(.dark-mode, .dark, html.dark) .context-meta button, :is(.dark-mode, .dark, html.dark) .context-share-button { color: #B8FF4D !important; }
+:is(.dark-mode, .dark, html.dark) .citation-row button, :is(.dark-mode, .dark, html.dark) .composer-source { color: #B8FF4D !important; background: #232D2D !important; border-color: #2A3838 !important; }
+:is(.dark-mode, .dark, html.dark) .message-content strong { color: #FBFAF6 !important; }
+:is(.dark-mode, .dark, html.dark) .source-grounded { border-left-color: #B8FF4D !important; }
+:is(.dark-mode, .dark, html.dark) .student-message .message-content { color: #F5F3EC !important; background: #232D2D !important; border-color: #2A3838 !important; box-shadow: 0 9px 22px rgba(0,0,0,.25); }
+:is(.dark-mode, .dark, html.dark) .tutor-intervention { color: #DDE8DF !important; }
+:is(.dark-mode, .dark, html.dark) .tutor-intervention strong { color: #B8FF4D !important; }
+:is(.dark-mode, .dark, html.dark) .tutor-intervention .intervention-line { background: #B8FF4D !important; }
+:is(.dark-mode, .dark, html.dark) .interactive-card:hover { background: #232D2D !important; }
+:is(.dark-mode, .dark, html.dark) .quiz-option, :is(.dark-mode, .dark, html.dark) .practice-input, :is(.dark-mode, .dark, html.dark) .source-picker-item, :is(.dark-mode, .dark, html.dark) .discover-toolbar select { color: #F5F3EC !important; border-color: #2A3838 !important; background: #181E1E !important; }
+:is(.dark-mode, .dark, html.dark) .quiz-option:hover, :is(.dark-mode, .dark, html.dark) .source-picker-item:hover { background: #232D2D !important; }
+:is(.dark-mode, .dark, html.dark) .flashcard-stage { color: #F5F3EC !important; background: #1C2323 !important; }
+:is(.dark-mode, .dark, html.dark) .progress-moment { color: #F5F3EC !important; border-color: #2A3838 !important; background: #1C2323 !important; }
+:is(.dark-mode, .dark, html.dark) .progress-copy h3, :is(.dark-mode, .dark, html.dark) .ledger-row>div:first-child, :is(.dark-mode, .dark, html.dark) .ledger-row>strong, :is(.dark-mode, .dark, html.dark) .section-heading h3, :is(.dark-mode, .dark, html.dark) .memory-head h3, :is(.dark-mode, .dark, html.dark) .source-lens h3 { color: #F5F3EC !important; }
+:is(.dark-mode, .dark, html.dark) .focus-card { background: #232D2D !important; border-color: #2A3838 !important; }
+:is(.dark-mode, .dark, html.dark) .source-lens { border-color: #2A3838 !important; background: #1C2323 !important; }
+:is(.dark-mode, .dark, html.dark) .memory-card, :is(.dark-mode, .dark, html.dark) .mastery-ledger, :is(.dark-mode, .dark, html.dark) .setting-row, :is(.dark-mode, .dark, html.dark) .progress-sheet-heading, :is(.dark-mode, .dark, html.dark) .secondary-toolbar, :is(.dark-mode, .dark, html.dark) .interactive-footer { border-color: #2A3838 !important; color: #8FA29B !important; }
+:is(.dark-mode, .dark, html.dark) .insight-strip { color: #DDE8DF !important; background: #232D2D !important; }
+:is(.dark-mode, .dark, html.dark) .connect-status { color: #B8FF4D !important; border-color: #2A3838 !important; background: #232D2D !important; }
+:is(.dark-mode, .dark, html.dark) .source-in-use { color: #003F3F !important; background: #B8FF4D !important; }
+:is(.dark-mode, .dark, html.dark) .source-file-icon { color: #B8FF4D !important; background: #232D2D !important; }
+:is(.dark-mode, .dark, html.dark) .composer textarea, :is(.dark-mode, .dark, html.dark) .composer textarea::placeholder { color: #F5F3EC !important; }
+:is(.dark-mode, .dark, html.dark) .composer textarea::placeholder { color: #8FA29B !important; }
+:is(.dark-mode, .dark, html.dark) .composer-note { color: #8FA29B !important; }
 :is(.dark-mode, .dark, html.dark) .progress-orb { box-shadow: 15px 15px 0 #2A3838; }
 :is(.dark-mode, .dark, html.dark) .source-tray-backdrop { background: rgba(0,0,0,.6); }
-:is(.dark-mode, .dark, html.dark) .source-tray p, :is(.dark-mode, .dark, html.dark) .source-picker-item small { color: #8FA29B; }
-:is(.dark-mode, .dark, html.dark) .source-tray header button { color: #DDE8DF; }
-:is(.dark-mode, .dark, html.dark) .empty-filter-state { color: #8FA29B; border-color: #2A3838; }
+:is(.dark-mode, .dark, html.dark) .source-tray p, :is(.dark-mode, .dark, html.dark) .source-picker-item small { color: #8FA29B !important; }
+:is(.dark-mode, .dark, html.dark) .source-tray header button { color: #DDE8DF !important; }
+:is(.dark-mode, .dark, html.dark) .empty-filter-state { color: #8FA29B !important; border-color: #2A3838 !important; }
+:is(.dark-mode, .dark, html.dark) .interactive-card,.dark-mode .progress-moment { border-color: #2A3838 !important; background: #1C2323 !important; }
 @media(max-width:720px){.theme-toggle span{display:none}.theme-toggle{width:29px;padding:0;justify-content:center}.discover-toolbar{display:grid;grid-template-columns:1fr 1fr;margin-top:26px}.discover-toolbar .filter-label{grid-column:1/-1;margin:0}.discover-toolbar label{min-width:0}.discover-toolbar select{width:100%}.result-count{justify-self:end;grid-column:1/-1}.dark-mode .app-sidebar{background:linear-gradient(170deg,rgba(30,39,75,.94),rgba(28,43,75,.88))}}
 @media(prefers-reduced-motion:reduce){.learning-object,.interactive-card,.student-message .message-content,.recent-card,.dynamic-message,.composer,.theme-toggle{animation:none!important;transition:none!important}.learning-object:hover,.interactive-card:hover,.student-message .message-content:hover,.recent-card:hover,.composer:focus-within{transform:none!important}}
 
