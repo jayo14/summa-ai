@@ -11,7 +11,7 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    user_id: str
+    user_id: Optional[str] = "demo"
     messages: List[ChatMessage]
     enable_thinking: bool = True
     conversation_id: Optional[str] = None
