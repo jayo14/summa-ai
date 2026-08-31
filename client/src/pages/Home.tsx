@@ -256,12 +256,9 @@ export default function Home() {
         }
       })
       .catch((err) => {
-        console.warn("Live SSE stream failed, falling back to tutor response:", err);
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === summaMsgId ? { ...msg, content: getTutorResponse(clean) } : msg
-          )
-        );
+        console.error("Live SSE stream error:", err);
+        toast.error("Failed to connect to Summa AI backend.");
+        setMessages((prev) => prev.filter((msg) => msg.id !== summaMsgId));
       })
       .finally(() => {
         setIsResponding(false);
@@ -375,9 +372,7 @@ function WorkspaceView(props: WorkspaceProps) {
   if (!props.sessionStarted) return <EmptyWorkspace {...props} />;
   return <div className="workspace-view active-workspace"><div className="conversation-scroll"><div className="conversation-column">
     <section className="context-banner" aria-label="Current learning context"><div className="context-course"><span className="context-dot" /> CSC 201 <ChevronRight size={13} /> <strong>Object-Oriented Programming</strong></div><div className="context-meta"><button type="button" onClick={() => props.setSourceTrayOpen(true)}><BookOpen size={13} /> 3 sources</button><span /> <span className="objective-slip">Objective: explain runtime dispatch</span><button type="button" className="context-share-button" onClick={() => shareText("Summa AI learning summary", "Summa AI · CSC 201\nTopic: Runtime dispatch\nCurrent estimate: " + props.mastery + "%\nNext action: Explain how dynamic dispatch chooses an override.", "summa-learning-summary.txt")}><Share2 size={12} /> Share summary</button></div></section>
-    <div className="message-block student-message"><div className="student-message-avatar">J</div><div className="message-content"><p>Can you help me understand polymorphism with a concrete example?</p></div></div>
-    <div className="message-block summa-message"><div className="message-sender"><div className="summa-message-mark"><span className="mini-orb" /></div><strong>Summa</strong><span>Adaptive tutor</span></div><div className="message-content source-grounded"><p>Before we add another rule, let’s retrieve what you already know. In your notes, polymorphism is described as one interface with different behaviour. The part to make precise is <strong>who decides the behaviour at runtime.</strong></p><p>Make a prediction first—then we will use it as evidence for the next explanation.</p><div className="citation-row"><span className="citation-label"><FileText size={13} /> GROUNDED IN</span><button type="button">CSC 201 · Lecture 06 <span>p. 18</span></button><button type="button">OOP notes <span>§ 4.2</span></button></div></div></div>
-    <RecallQuiz onMasteryChange={props.updateMastery} onLearningEvent={props.registerEvent as never} /><div className="tutor-intervention"><span className="intervention-line" /><p><strong>Why this next:</strong> you can name polymorphism, but your previous answer did not explain runtime dispatch. A short prediction is a better test than another definition.</p></div><GuidedPractice onMasteryChange={props.updateMastery} onLearningEvent={props.registerEvent as never} /><FlashcardReview onMasteryChange={props.updateMastery} onLearningEvent={props.registerEvent as never} /><ProgressMoment mastery={props.mastery} />{props.messages.map((message) => <ConversationTurn message={message} key={message.id} />)}{props.isResponding && <div className="tutor-typing-indicator" role="status" aria-live="polite"><div className="typing-orb"><span className="mini-orb" /></div><div className="typing-bubble"><span className="sr-only">Summa is typing a response</span><i /><i /><i /></div><small>Summa is thinking</small></div>}<div ref={bottomRef} aria-hidden="true" />
+    {props.messages.map((message) => <ConversationTurn message={message} key={message.id} />)}{props.isResponding && <div className="tutor-typing-indicator" role="status" aria-live="polite"><div className="typing-orb"><span className="mini-orb" /></div><div className="typing-bubble"><span className="sr-only">Summa is typing a response</span><i /><i /><i /></div><small>Summa is thinking</small></div>}<div ref={bottomRef} aria-hidden="true" />
   </div></div><ComposerPanel {...props} active /></div>;
 }
 
