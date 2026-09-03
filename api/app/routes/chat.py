@@ -73,7 +73,7 @@ async def detect_knowledge_gaps(user_id: str) -> Optional[dict]:
 
 
 async def build_orchestrator_prompt(
-    user_id: str, query: str, messages: list[dict]
+    user_id: str, query: str, messages: list[dict], request: Optional[ChatRequest] = None
 ) -> str:
     memory_context = await cognee.recall_context(user_id, query)
     exams_context = await cognee.recall_exams(user_id)
@@ -81,9 +81,34 @@ async def build_orchestrator_prompt(
     gaps = await detect_knowledge_gaps(user_id)
 
     parts = [
-        "You are Summa AI, an adaptive learning companion. "
-        "Keep explanations concise, friendly, and well-structured with Markdown.",
+        "You are Summa AI, an expert, encouraging, and highly adaptive academic learning companion. "
+        "Your mission is to help students truly master their subjects by remembering their knowledge graph across sessions, "
+        "tracking gaps, and tailoring explanations to their academic level and style. "
+        "Keep explanations clear, engaging, concise, and formatted with Markdown. Use analogies and step-by-step logic."
     ]
+
+    # Injected ChatRequest personalization parameters
+    if request:
+        req_parts = []
+        if request.subject:
+            req_parts.append(f"Active Course / Subject: {request.subject}")
+        if request.degree:
+            req_parts.append(f"Degree / Level: {request.degree}")
+        if request.field_of_study:
+            req_parts.append(f"Field of Study: {request.field_of_study}")
+        if request.learning_style:
+            req_parts.append(f"Preferred Learning Style: {request.learning_style}")
+        if request.proficiency_level:
+            req_parts.append(f"Target Proficiency Level: {request.proficiency_level}")
+        if request.selected_sources:
+            req_parts.append(f"Grounding Materials in Scope: {', '.join(request.selected_sources)}")
+        if req_parts:
+            parts.append(
+                _section(
+                    "\nSESSION PERSONALIZATION & CONTEXT:\n" + "\n".join(req_parts) +
+                    "\nCalibrate tone, depth, difficulty, and examples strictly to these student parameters."
+                )
+            )
 
     try:
         user_store = UserStore()
@@ -137,6 +162,20 @@ async def build_orchestrator_prompt(
             )
         )
 
+    try:
+        materials_mem = await cognee._recall(query, cognee._dataset(user_id, "materials"), limit=5)
+        if materials_mem:
+            parts.append(_section(f"\nCONNECTED STUDY MATERIALS (from Cognee memory):\n{json.dumps(materials_mem, indent=2)}"))
+    except Exception as exc:
+        logger.debug("Materials recall skipped: %s", exc)
+
+    try:
+        concepts_mem = await cognee._recall(query, cognee._dataset(user_id, "concepts"), limit=5)
+        if concepts_mem:
+            parts.append(_section(f"\nMASTERED & TARGET CONCEPTS (from Cognee memory):\n{json.dumps(concepts_mem, indent=2)}"))
+    except Exception as exc:
+        logger.debug("Concepts recall skipped: %s", exc)
+
     if settings.HYBRID_MEMORY_ENABLED:
         try:
             atomic_facts = await summastudy_memory.retrieve_relevant_memories(
@@ -154,7 +193,7 @@ async def build_orchestrator_prompt(
 
     parts.append(
         "\nIf the user asks about a concept, first explain it clearly, "
-        "then check their understanding. "
+        "then check their understanding with a quick follow-up question. "
         "When you spot a prerequisite they might be missing, flag it gently. "
         "If they mention an exam, help them build a study schedule and recall key topics."
     )
@@ -193,7 +232,7 @@ async def chat_stream(request: ChatRequest):
     last_query = request.messages[-1].content if request.messages else ""
     messages = [{"role": m.role, "content": m.content} for m in request.messages]
     intent = detect_intent(last_query)
-    orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages)
+    orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages, request=request)
 
     async def generate():
         if intent:

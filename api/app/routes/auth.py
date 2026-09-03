@@ -49,7 +49,7 @@ async def signup(payload: AuthLoginRequest):
 
     if SUPABASE_AUTH_URL and not settings.SUPABASE_URL.startswith("https://xxx"):
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=2.0) as client:
                 resp = await client.post(
                     f"{SUPABASE_AUTH_URL}/signup",
                     headers={"apikey": settings.SUPABASE_ANON_KEY},
@@ -119,7 +119,7 @@ async def login(payload: AuthLoginRequest):
 
     if SUPABASE_AUTH_URL and not settings.SUPABASE_URL.startswith("https://xxx"):
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=2.0) as client:
                 if payload.provider == "credentials":
                     if not payload.password:
                         raise HTTPException(

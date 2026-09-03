@@ -19,7 +19,8 @@ from app.core.security import (
     verify_supabase_jwt,
 )
 from app.services.cognee_service import CogneeService
-from app.routes import auth, chat, memory
+from app.core.logging_system import setup_system_logging
+from app.routes import auth, chat, memory, logs, admin
 from app.routes.data_routes import (
     activities_router,
     conv_router,
@@ -45,6 +46,7 @@ if settings.SENTRY_DSN:
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
+setup_system_logging()
 logger = logging.getLogger(__name__)
 manager = ConnectionManager()
 
@@ -131,11 +133,14 @@ PUBLIC_PATHS = {
     "/docs",
     "/openapi.json",
     "/redoc",
+    "/__manus__/logs",
     f"{settings.API_V1_STR}/auth/login",
     f"{settings.API_V1_STR}/auth/signup",
     f"{settings.API_V1_STR}/auth/forgot-password",
     f"{settings.API_V1_STR}/auth/reset-password",
     f"{settings.API_V1_STR}/health/connections",
+    f"{settings.API_V1_STR}/system/logs",
+    f"{settings.API_V1_STR}/system/logs/clear",
 }
 
 
@@ -226,8 +231,12 @@ for r, tag in [
     (flashcards_router, "flashcards"),
     (exams_router, "exams"),
     (interactions_router, "interactions"),
+    (logs.router, "system"),
+    (admin.router, "admin"),
 ]:
     app.include_router(r, prefix=settings.API_V1_STR, tags=[tag])
+
+app.include_router(logs.router, tags=["system"])
 
 
 @app.get(

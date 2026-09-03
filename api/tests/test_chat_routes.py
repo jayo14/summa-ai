@@ -8,7 +8,7 @@ from app.routes.chat import (
     detect_intent,
     _section,
     build_orchestrator_prompt,
-    _stream_zai,
+    _stream_ai_response,
 )
 from app.main import app
 from app.core.security import (
@@ -170,7 +170,7 @@ class TestChatStreamEndpoint:
             yield 'data: {"type": "content", "delta": "Hello"}\n\n'
             yield "data: [DONE]\n\n"
 
-        with patch("app.routes.chat._stream_zai", side_effect=fake_stream):
+        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
             token = set_current_user_id("user-1")
             try:
                 response = client.post(
@@ -208,7 +208,7 @@ class TestChatStreamEndpoint:
             yield 'data: {"type": "content", "delta": "Quiz ready"}\n\n'
             yield "data: [DONE]\n\n"
 
-        with patch("app.routes.chat._stream_zai", side_effect=fake_stream):
+        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
             token = set_current_user_id("user-1")
             try:
                 response = client.post(
@@ -261,7 +261,7 @@ class TestChatStreamEndpoint:
             yield 'data: {"type": "content", "delta": "Here you go"}\n\n'
             yield "data: [DONE]\n\n"
 
-        with patch("app.routes.chat._stream_zai", side_effect=fake_stream):
+        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
             token = set_current_user_id("user-1")
             try:
                 response = client.post(
@@ -298,7 +298,7 @@ class TestChatStreamEndpoint:
             yield 'data: {"type": "error", "message": "Z.ai down"}\n\n'
             yield "data: [DONE]\n\n"
 
-        with patch("app.routes.chat._stream_zai", side_effect=fake_stream):
+        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
             token = set_current_user_id("user-1")
             try:
                 response = client.post(

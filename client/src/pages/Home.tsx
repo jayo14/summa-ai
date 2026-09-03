@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
   Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, Paperclip, PanelRight,
-  Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck, LogOut,
+  Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck, LogOut, Terminal, Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/components/LearningInteractives";
@@ -182,7 +182,9 @@ export default function Home() {
     const label = `${kind === "retrieval" ? "Retrieval" : kind === "confidence" ? "Review" : kind === "hint" ? "Scaffold" : "Practice"}: ${detail}`;
     setEvents((current) => [label, ...current].slice(0, 4));
   }
-  function sendMessage(message = composerValue) {
+  const activeSources = useMemo(() => sourceItems.filter((s) => s.selected).map((s) => s.title), []);
+
+  async function sendMessage(message = composerValue) {
     const clean = message.trim();
     if (!clean || isResponding) return;
     const studentMsgId = Date.now();
@@ -192,6 +194,28 @@ export default function Home() {
     setMessages(updatedMessages);
     setComposerValue("");
     setIsResponding(true);
+
+    let activeCid = "default-session";
+    try {
+      if (dbConversations.length === 0) {
+        const newConv = await fetchApi<{ id: string }>("/conversations", {
+          method: "POST",
+          body: JSON.stringify({ title: clean.slice(0, 35) }),
+        });
+        if (newConv && newConv.id) {
+          activeCid = newConv.id;
+          setDbConversations((prev) => [{ id: newConv.id, title: clean.slice(0, 35), created_at: new Date().toISOString() }, ...prev]);
+        }
+      } else {
+        activeCid = dbConversations[0].id;
+      }
+      fetchApi(`/conversations/${activeCid}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ role: "user", content: clean }),
+      }).catch(() => {});
+    } catch (err) {
+      console.debug("Conversation sync skipped:", err);
+    }
 
     const historyForBackend = updatedMessages.map((m) => ({
       role: m.role === "student" ? "user" : "assistant",
@@ -206,13 +230,21 @@ export default function Home() {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
+    let fullAiResponse = "";
+
     fetch("/api/v1/chat/stream", {
       method: "POST",
       headers,
       body: JSON.stringify({
         messages: historyForBackend,
-        conversation_id: "default-session",
+        conversation_id: activeCid,
         enable_thinking: true,
+        subject: "CSC 201 · Object-Oriented Programming",
+        degree: user?.bio || "Undergraduate",
+        field_of_study: "Computer Science",
+        learning_style: "Examples before abstractions",
+        proficiency_level: `${mastery}% mastery`,
+        selected_sources: activeSources,
       }),
     })
       .then(async (response) => {
@@ -239,6 +271,7 @@ export default function Home() {
             try {
               const parsed = JSON.parse(dataStr);
               if (parsed.type === "content" && parsed.delta) {
+                fullAiResponse += parsed.delta;
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === summaMsgId
@@ -263,6 +296,12 @@ export default function Home() {
       .finally(() => {
         setIsResponding(false);
         registerEvent("practice", "New learning intent captured");
+        if (fullAiResponse && activeCid !== "default-session") {
+          fetchApi(`/conversations/${activeCid}/messages`, {
+            method: "POST",
+            body: JSON.stringify({ role: "assistant", content: fullAiResponse }),
+          }).catch(() => {});
+        }
       });
   }
   const [location, setLocation] = useLocation();
@@ -302,6 +341,8 @@ export default function Home() {
         <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>8</small>}</button>; })}</nav>
         <section className="history-section" aria-labelledby="folders-label"><div className="section-title-row"><span id="folders-label" className="nav-caption">FOLDERS</span><button type="button" aria-label="Create folder" onClick={() => toast("Create a course folder from the connected learning library.")}><Plus size={15} /></button></div><div className="folder-list"><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 201 · OOP</span></button><div className="history-list">{dbConversations.length > 0 ? dbConversations.map((chat) => <button type="button" className="history-item" key={chat.id} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>Live</small></button>) : chatHistory.slice(0, 2).map((chat) => <button type="button" className={`history-item ${chat.active ? "active" : ""}`} key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 203 · Databases</span></button><div className="history-list">{chatHistory.slice(2).map((chat) => <button type="button" className="history-item" key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div></div></section>
         <div className="sidebar-bottom">
+          <button type="button" className="nav-item" onClick={() => window.location.href = "/admin"}><Shield size={16} /><span>Admin Dashboard</span></button>
+          <button type="button" className="nav-item" onClick={() => window.location.href = "/__manus__/logs"}><Terminal size={16} /><span>System Diagnostics</span></button>
           <button type="button" className={`nav-item ${activeView === "settings" ? "active" : ""}`} onClick={() => selectView("settings")}><Settings2 size={16} /><span>Settings</span></button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -377,8 +418,10 @@ function WorkspaceView(props: WorkspaceProps) {
 }
 
 function EmptyWorkspace(props: WorkspaceProps) {
+  const { user } = useAuth();
+  const userName = user?.name ? user.name.split(" ")[0] : "Student";
   const emptyActions = [{ label: "Quiz me", icon: ListChecks }, { label: "Build a study plan", icon: BookOpen }, { label: "Explain a concept", icon: Lightbulb }, { label: "Find weak areas", icon: Sparkles }];
-  return <div className="empty-workspace"><div className="empty-hero"><div className="hero-orb"><span /></div><h1>Good morning, John</h1><p>What would you like to learn today?</p></div><ComposerPanel {...props} /><div className="empty-actions" aria-label="Learning shortcuts">{emptyActions.map(({ label, icon: Icon }) => <button type="button" key={label} onClick={() => { props.setComposerValue(label); props.onStart(); }}><Icon size={15} /> {label}</button>)}</div><section className="recent-learning"><div className="recent-heading"><span>Your recent chats</span><button type="button" onClick={() => toast("All learning conversations are already in the sidebar.")}>View all <ChevronRight size={14} /></button></div><div className="recent-grid">{chatHistory.slice(0, 3).map((chat) => <button type="button" className="recent-card" key={chat.title} onClick={() => props.onStart()}><strong>{chat.title}</strong><p>{chat.title === "Polymorphism, continued" ? "Runtime dispatch and overriding, with a short retrieval loop." : chat.title === "Trace recursive calls" ? "Build a stack trace one frame at a time." : "A focused map for the next exam review."}</p><small>{chat.time === "Now" ? "Today" : chat.time}</small></button>)}</div></section></div>;
+  return <div className="empty-workspace"><div className="empty-hero"><div className="hero-orb"><span /></div><h1>Good day, {userName}</h1><p>What would you like to learn today?</p></div><ComposerPanel {...props} /><div className="empty-actions" aria-label="Learning shortcuts">{emptyActions.map(({ label, icon: Icon }) => <button type="button" key={label} onClick={() => { props.setComposerValue(label); props.onStart(); }}><Icon size={15} /> {label}</button>)}</div><section className="recent-learning"><div className="recent-heading"><span>Your recent chats</span><button type="button" onClick={() => toast("All learning conversations are in the sidebar.")}>View all <ChevronRight size={14} /></button></div><div className="recent-grid">{chatHistory.slice(0, 3).map((chat) => <button type="button" className="recent-card" key={chat.title} onClick={() => props.onStart()}><strong>{chat.title}</strong><p>{chat.title === "Polymorphism, continued" ? "Runtime dispatch and overriding, with a short retrieval loop." : chat.title === "Trace recursive calls" ? "Build a stack trace one frame at a time." : "A focused map for the next exam review."}</p><small>{chat.time === "Now" ? "Today" : chat.time}</small></button>)}</div></section></div>;
 }
 
 function ComposerPanel(props: WorkspaceProps & { active?: boolean }) {
@@ -389,7 +432,133 @@ function ComposerPanel(props: WorkspaceProps & { active?: boolean }) {
   return <div className={`composer-shell ${props.active ? "active-composer-shell" : "empty-composer-shell"}`}><form className="composer" onSubmit={(event) => { event.preventDefault(); props.sendMessage(); }}><label className="composer-icon upload-trigger" aria-label="Upload a resource"><input type="file" accept="image/*,.pdf,.txt,.md" onChange={(event) => { const file = event.target.files?.[0]; if (file) { setUpload({ name: file.name, url: file.type.startsWith("image/") ? URL.createObjectURL(file) : "" }); toast(`${file.name} attached for this session.`); } }} /><Plus size={18} /></label><textarea value={props.composerValue} onChange={(event) => props.setComposerValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.sendMessage(); } }} placeholder="Ask anything…" rows={1} aria-label="Message Summa" />{upload && <div className="composer-upload-preview" title={upload.name}>{upload.url ? <button type="button" className="upload-thumbnail-button" onClick={() => setLightboxUrl(upload.url)} aria-label={`Enlarge ${upload.name}`}><img src={upload.url} alt="Uploaded resource thumbnail" /></button> : <span><FileText size={14} /></span>}<small>{upload.name}</small><button type="button" onClick={() => setUpload(null)} aria-label={`Remove ${upload.name}`}><X size={12} /></button></div>}<div className="composer-tools"><button type="button" className={`composer-icon ${isDictating ? "is-dictating" : ""}`} onClick={simulateDictation} aria-label={isDictating ? "Dictation in progress" : "Simulate voice dictation"}><Mic size={17} />{isDictating && <span className="audio-wave" aria-hidden="true"><i /><i /><i /><i /><i /></span>}</button><button type="button" className="composer-source" onClick={() => props.setSourceTrayOpen(true)}><BookOpen size={14} /><span>Data source</span><ChevronDown size={12} /></button></div><button type="submit" className="composer-send" disabled={!props.composerValue.trim() || props.isResponding} aria-label="Send message"><ArrowUp size={19} /></button></form>{props.active && <p className="composer-note">Enter sends · Shift+Enter adds a line · Summa uses selected course resources first.</p>}{lightboxUrl && <div className="upload-lightbox" role="dialog" aria-modal="true" aria-label="Enlarged uploaded resource" onClick={() => setLightboxUrl(null)}><button type="button" className="lightbox-close" onClick={() => setLightboxUrl(null)} aria-label="Close enlarged resource"><X size={18} /></button><img src={lightboxUrl} alt="Enlarged uploaded resource" onClick={(event) => event.stopPropagation()} /></div>}</div>;
 }
 
-function ConversationTurn({ message }: { message: ConversationMessage }) { const isStudent = message.role === "student"; return <div className={`message-block ${isStudent ? "student-message" : "summa-message dynamic-message"}`}>{isStudent ? <div className="student-message-avatar">J</div> : <div className="message-sender"><div className="summa-message-mark"><span className="mini-orb" /></div><strong>Summa</strong></div>}<div className="message-content"><p>{message.content}</p></div></div>; }
+function FormattedMarkdown({ content }: { content: string }) {
+  if (!content) return null;
+
+  // Split into code blocks vs text blocks
+  const parts = content.split(/(```[\s\S]*?```)/g);
+
+  return (
+    <div className="markdown-body text-xs sm:text-sm leading-relaxed space-y-2 text-slate-800 dark:text-slate-200">
+      {parts.map((part, index) => {
+        if (part.startsWith("```")) {
+          const firstLineEnd = part.indexOf("\n");
+          const lang = part.slice(3, firstLineEnd > 3 ? firstLineEnd : 3).trim();
+          const code = firstLineEnd !== -1 ? part.slice(firstLineEnd + 1, -3).trim() : part.slice(3, -3).trim();
+          return (
+            <div key={index} className="my-2.5 rounded-xl border border-slate-700/80 bg-slate-900 text-slate-100 overflow-hidden shadow-sm">
+              {lang && (
+                <div className="px-3 py-1 bg-slate-800/80 border-b border-slate-700/60 text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                  {lang}
+                </div>
+              )}
+              <pre className="p-3 text-xs font-mono overflow-x-auto whitespace-pre leading-normal">
+                <code>{code}</code>
+              </pre>
+            </div>
+          );
+        }
+
+        // Process line-by-line for headings, lists, bold
+        const lines = part.split("\n");
+        return (
+          <div key={index} className="space-y-1.5">
+            {lines.map((line, lineIdx) => {
+              const trimmed = line.trim();
+              if (!trimmed) return <div key={lineIdx} className="h-1" />;
+
+              // Headings
+              if (trimmed.startsWith("### ")) {
+                return (
+                  <h3 key={lineIdx} className="text-sm font-bold text-slate-900 dark:text-white mt-3 mb-1">
+                    {parseInlineMarkdown(trimmed.slice(4))}
+                  </h3>
+                );
+              }
+              if (trimmed.startsWith("## ")) {
+                return (
+                  <h2 key={lineIdx} className="text-base font-bold text-slate-900 dark:text-white mt-3.5 mb-1">
+                    {parseInlineMarkdown(trimmed.slice(3))}
+                  </h2>
+                );
+              }
+              if (trimmed.startsWith("# ")) {
+                return (
+                  <h1 key={lineIdx} className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-1.5">
+                    {parseInlineMarkdown(trimmed.slice(2))}
+                  </h1>
+                );
+              }
+
+              // Lists
+              if (trimmed.startsWith("1. ") || trimmed.startsWith("2. ") || trimmed.startsWith("3. ") || trimmed.startsWith("4. ") || trimmed.startsWith("5. ")) {
+                const num = trimmed.slice(0, 3);
+                return (
+                  <div key={lineIdx} className="flex items-start gap-2 pl-2">
+                    <span className="font-bold text-purple-600 dark:text-purple-400 text-xs shrink-0">{num}</span>
+                    <span>{parseInlineMarkdown(trimmed.slice(3))}</span>
+                  </div>
+                );
+              }
+              if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+                return (
+                  <div key={lineIdx} className="flex items-start gap-2 pl-2">
+                    <span className="text-purple-500 font-bold shrink-0">•</span>
+                    <span>{parseInlineMarkdown(trimmed.slice(2))}</span>
+                  </div>
+                );
+              }
+
+              return <p key={lineIdx}>{parseInlineMarkdown(trimmed)}</p>;
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function parseInlineMarkdown(text: string) {
+  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
+      return <strong key={idx} className="font-bold text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("*") && part.endsWith("*") && part.length >= 2) {
+      return <em key={idx} className="italic">{part.slice(1, -1)}</em>;
+    }
+    if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
+      return <code key={idx} className="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 text-purple-600 dark:text-purple-300 font-mono text-[11px] rounded">{part.slice(1, -1)}</code>;
+    }
+    return part;
+  });
+}
+
+function ConversationTurn({ message }: { message: ConversationMessage }) {
+  const isStudent = message.role === "student";
+  const { user } = useAuth();
+  const initials = (user?.name || user?.email || "Student").split(" ").map((p) => p[0]).join("").toUpperCase().slice(0, 2);
+
+  return (
+    <div className={`message-block ${isStudent ? "student-message" : "summa-message dynamic-message"}`}>
+      {isStudent ? (
+        <div className="student-message-avatar bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center rounded-xl size-7 shadow-sm">
+          {initials}
+        </div>
+      ) : (
+        <div className="message-sender">
+          <div className="summa-message-mark">
+            <span className="mini-orb" />
+          </div>
+          <strong>Summa AI</strong>
+        </div>
+      )}
+      <div className="message-content">
+        {isStudent ? <p>{message.content}</p> : <FormattedMarkdown content={message.content} />}
+      </div>
+    </div>
+  );
+}
 
 function ContextRail({ mastery, events, onJumpToSources }: { mastery: number; events: string[]; onJumpToSources: () => void }) { return <aside className="context-rail" aria-label="Learning context"><div className="rail-heading"><div><span className="eyebrow">YOUR LEARNING CONTEXT</span><h2>In the margins</h2></div><button type="button" aria-label="Context options"><MoreHorizontal size={19} /></button></div><section className="focus-card"><div className="focus-card-top"><span className="eyebrow">NEXT BEST ACTION</span><span className="time-chip"><Clock3 size={12} /> 12 min</span></div><h3>Explain how dynamic dispatch chooses an override.</h3><p>Your last response identified the right method but skipped the runtime-object reasoning.</p><button type="button" onClick={() => document.getElementById("practice-title")?.scrollIntoView({ behavior: "smooth", block: "center" })}>Practice this now <ChevronRight size={14} /></button></section><section className="mastery-ledger"><div className="section-heading"><div><span className="eyebrow">LEARNER MODEL</span><h3>Polymorphism</h3></div><span className="mastery-estimate">{mastery}%</span></div><p className="estimate-copy">Estimated from recent retrieval and explanation evidence.</p><div className="ledger-list"><LedgerRow label="Definitions" value={91} tone="strong" /><LedgerRow label="Identification" value={82} tone="strong" /><LedgerRow label="Runtime behaviour" value={mastery} tone="developing" /><LedgerRow label="Implementation" value={48} tone="developing" /></div></section><section className="memory-card"><div className="memory-head"><div><span className="eyebrow">WHAT I REMEMBER</span><h3>Useful continuity</h3></div><div className="memory-status"><span /> Active</div></div><ul><li><span>Preference</span><strong>Examples before abstractions</strong></li><li><span>Recurring gap</span><strong>Overriding vs. overloading</strong></li><li><span>Next review</span><strong>Saturday · retrieval</strong></li></ul></section><section className="source-lens"><div className="source-lens-copy"><span className="eyebrow">SUMMASTUDY</span><h3>3 sources are in scope</h3><p>Selected materials anchor this session.</p></div><img src="/manus-storage/summa-learning-atlas_404e3bf5.jpg" alt="An editorial arrangement of course materials and concept cards." /><button type="button" onClick={onJumpToSources}>Review sources <ChevronRight size={14} /></button></section><section className="event-ledger"><span className="eyebrow">SESSION SIGNALS</span>{events.map((event) => <p key={event}><span />{event}</p>)}</section></aside>; }
 

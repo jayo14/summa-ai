@@ -15,6 +15,12 @@ class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     enable_thinking: bool = True
     conversation_id: Optional[str] = None
+    degree: Optional[str] = None
+    field_of_study: Optional[str] = None
+    learning_style: Optional[str] = None
+    subject: Optional[str] = None
+    selected_sources: Optional[List[str]] = None
+    proficiency_level: Optional[str] = None
 
 
 class ArtifactRef(BaseModel):

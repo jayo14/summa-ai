@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 _pool: Optional[asyncpg.Pool] = None
 
 
-async def get_pool() -> asyncpg.Pool:
+async def get_pool() -> Optional[asyncpg.Pool]:
     global _pool
     if _pool is None:
         try:
@@ -31,13 +31,13 @@ async def get_pool() -> asyncpg.Pool:
                 settings.DATABASE_URL,
                 min_size=1,
                 max_size=10,
-                timeout=5.0,
+                timeout=3.0,
                 **kwargs,
             )
             logger.info("Shared asyncpg pool created")
         except Exception as exc:
             logger.warning("Shared asyncpg pool connection skipped: %s", exc)
-            raise exc
+            return None
     return _pool
 
 

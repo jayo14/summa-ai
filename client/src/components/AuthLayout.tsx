@@ -27,7 +27,7 @@ export function AuthLayout({
 
       {/* Navigation Header */}
       <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between py-2 px-1">
-        <SummaLogo />
+        <SummaLogo inverse />
 
         <div className="flex items-center gap-4">
           <span className="hidden sm:inline-block text-xs text-[#DDE8DF] font-medium">

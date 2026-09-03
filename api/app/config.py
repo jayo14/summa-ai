@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     # Google AI / Gemini configuration
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", os.getenv("GOOGLE_API_KEY", ""))
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 
     # Qdrant configuration
     QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")

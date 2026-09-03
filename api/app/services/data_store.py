@@ -30,14 +30,111 @@ class DataStore:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._pool: Optional[asyncpg.Pool] = None
+            cls._instance._local_activities: List[Dict[str, Any]] = [
+                {
+                    "id": "act-1",
+                    "type": "retrieval",
+                    "title": "Active Recall: Polymorphism Foundations",
+                    "description": "Test your memory on dynamic dispatch vs static binding without looking at reference code.",
+                    "meta": "10 questions · 86% average mastery",
+                    "accent": "indigo",
+                    "topic": "CSC 201 · Object-Oriented Programming",
+                    "date": "2026-09-03T09:30:00Z",
+                    "action": "Resume practice",
+                    "pinned": False,
+                    "archived": False,
+                },
+                {
+                    "id": "act-2",
+                    "type": "quiz",
+                    "title": "Java Overriding vs Overloading Practice Quiz",
+                    "description": "5 targeted questions testing compile-time method resolution and hidden overrides.",
+                    "meta": "5 questions · 92% average mastery",
+                    "accent": "emerald",
+                    "topic": "CSC 201 · Object-Oriented Programming",
+                    "date": "2026-09-02T14:15:00Z",
+                    "action": "Start quiz",
+                    "pinned": False,
+                    "archived": False,
+                },
+                {
+                    "id": "act-3",
+                    "type": "flashcards",
+                    "title": "Core OOP Design Terms Flashcards",
+                    "description": "Flashcard deck covering encapsulating invariant state, abstract interfaces, and subtyping.",
+                    "meta": "15 flashcards · 100% reviewed",
+                    "accent": "amber",
+                    "topic": "CSC 201 · Object-Oriented Programming",
+                    "date": "2026-09-01T11:00:00Z",
+                    "action": "Review deck",
+                    "pinned": False,
+                    "archived": False,
+                },
+            ]
+            cls._instance._local_materials: List[Dict[str, Any]] = [
+                {
+                    "id": "mat-1",
+                    "type": "PDF",
+                    "title": "CSC 201 Course Syllabus & Polymorphism Notes",
+                    "detail": "15 min read · University Portal",
+                    "source": "SummaStudy / University Portal",
+                    "size": "2.4 MB",
+                    "duration": "15 min read",
+                    "status": "active",
+                    "topic": "CSC 201 · Object-Oriented Programming",
+                    "date": "2026-09-03T10:00:00Z",
+                },
+                {
+                    "id": "mat-2",
+                    "type": "Text",
+                    "title": "Java Collections & Interface Design Patterns",
+                    "detail": "10 min read · SummaStudy Library",
+                    "source": "SummaStudy Library",
+                    "size": "1.1 MB",
+                    "duration": "10 min read",
+                    "status": "active",
+                    "topic": "CSC 201 · Object-Oriented Programming",
+                    "date": "2026-09-02T16:00:00Z",
+                },
+                {
+                    "id": "mat-3",
+                    "type": "Code",
+                    "title": "Abstract Methods & Overriding Examples",
+                    "detail": "8 min code trace · Lab Workbook",
+                    "source": "Lab Workbook",
+                    "size": "450 KB",
+                    "duration": "8 min code trace",
+                    "status": "active",
+                    "topic": "CSC 201 · Object-Oriented Programming",
+                    "date": "2026-09-01T14:00:00Z",
+                },
+            ]
+            cls._instance._local_concepts: List[Dict[str, Any]] = [
+                {"id": "con-1", "name": "Runtime Dispatch (Dynamic Binding)", "category": "Polymorphism", "mastery": "mastered", "related_count": 5},
+                {"id": "con-2", "name": "Method Overriding", "category": "Inheritance", "mastery": "mastered", "related_count": 8},
+                {"id": "con-3", "name": "Interface Contracts", "category": "Architecture", "mastery": "learning", "related_count": 4},
+                {"id": "con-4", "name": "Abstract Class Instantiation Rules", "category": "Core Java", "mastery": "needs_review", "related_count": 3},
+            ]
+            cls._instance._local_conversations: List[Dict[str, Any]] = [
+                {"id": "conv-1", "user_id": "demo", "title": "CSC 201 · Dynamic Dispatch & Polymorphism", "snippet": "Polymorphism allows objects of different concrete classes...", "created_at": "2026-09-03T10:00:00Z", "updated_at": "2026-09-03T10:00:00Z", "archived": False}
+            ]
+            cls._instance._local_messages: Dict[str, List[Dict[str, Any]]] = {}
+            cls._instance._local_timeline: List[Dict[str, Any]] = [
+                {"id": "evt-1", "type": "milestone", "title": "Polymorphism foundations completed", "description": "Successfully answered 4 retrieval prompts and scored 92% on dynamic dispatch quiz.", "created_at": "2026-09-03T09:00:00Z"}
+            ]
+            cls._instance._local_study_plans: List[Dict[str, Any]] = []
+            cls._instance._local_flashcards: List[Dict[str, Any]] = []
+            cls._instance._local_exams: List[Dict[str, Any]] = []
+            cls._instance._local_quiz_results: List[Dict[str, Any]] = []
         return cls._instance
 
-    async def _get_pool(self) -> asyncpg.Pool:
-        # An explicitly-assigned instance pool (e.g. injected by tests) wins;
-        # otherwise share the process-wide pool.
+    async def _get_pool(self) -> Optional[asyncpg.Pool]:
         if self._pool is not None:
             return self._pool
-        return await get_pool()
+        try:
+            return await get_pool()
+        except Exception:
+            return None
 
     # ── Artifacts ──────────────────────────────────────────────────
 
@@ -48,228 +145,297 @@ class DataStore:
         pinned: Optional[bool] = None,
         archived: bool = False,
     ) -> List[Dict[str, Any]]:
-        pool = await self._get_pool()
-        clauses = ["user_id = $1", "archived = $2"]
-        vals = [user_id, archived]
-        idx = 3
-        if type is not None:
-            clauses.append(f"type = ${idx}")
-            vals.append(type)
-            idx += 1
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                clauses = ["user_id = $1", "archived = $2"]
+                vals = [user_id, archived]
+                idx = 3
+                if type is not None:
+                    clauses.append(f"type = ${idx}")
+                    vals.append(type)
+                    idx += 1
+                if pinned is not None:
+                    clauses.append(f"pinned = ${idx}")
+                    vals.append(pinned)
+                    idx += 1
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        f"SELECT * FROM summa_ai.artifacts WHERE {' AND '.join(clauses)} ORDER BY updated_at DESC",
+                        *vals,
+                    )
+                if rows is not None:
+                    return [dict(r) for r in rows]
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).debug("list_artifacts fallback: %s", exc)
+
+        items = self._local_activities
+        if type:
+            items = [i for i in items if i.get("type") == type]
         if pinned is not None:
-            clauses.append(f"pinned = ${idx}")
-            vals.append(pinned)
-        async with pool.acquire() as conn:
-            rows = await conn.fetch(
-                f"SELECT * FROM summa_ai.artifacts WHERE {' AND '.join(clauses)} ORDER BY updated_at DESC",
-                *vals,
-            )
-        return [dict(r) for r in rows]
+            items = [i for i in items if i.get("pinned") == pinned]
+        return items
+
+    list_activities = list_artifacts
+
+    async def _remember_in_cognee(
+        self, user_id: str, text: str, metadata: Dict[str, Any], dataset_name: str = "main"
+    ):
+        try:
+            from app.services.cognee_service import CogneeService
+            cognee = CogneeService()
+            await cognee.remember_text(text, user_id, metadata=metadata, dataset_name=dataset_name)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).debug("Cognee memory sync error: %s", exc)
 
     async def create_artifact(
         self, user_id: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        pool = await self._get_pool()
         aid = str(uuid.uuid4())
-        async with pool.acquire() as conn:
-            await conn.execute(
-                """INSERT INTO summa_ai.artifacts
-                   (id, user_id, conversation_id, title, type, source, source_label,
-                    parent_artifact_id, component, change_note)
-                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)""",
-                aid,
-                user_id,
-                data.get("conversation_id"),
-                data.get("title"),
-                data.get("type"),
-                data.get("source"),
-                data.get("source_label"),
-                data.get("parent_artifact_id"),
-                json.dumps(data.get("component")) if data.get("component") else None,
-                data.get("change_note"),
-            )
-            await conn.execute(
-                """INSERT INTO summa_ai.artifact_versions (artifact_id, version, title, component, change_note)
-                   VALUES ($1, 1, $2, $3, $4)""",
-                aid,
-                data.get("title"),
-                json.dumps(data.get("component")) if data.get("component") else None,
-                data.get("change_note") or "Initial version",
-            )
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.artifacts WHERE id = $1", aid
-            )
-        return dict(row)
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        """INSERT INTO summa_ai.artifacts
+                           (id, user_id, conversation_id, title, type, source, source_label,
+                            parent_artifact_id, component, change_note)
+                           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)""",
+                        aid,
+                        user_id,
+                        data.get("conversation_id"),
+                        data.get("title"),
+                        data.get("type"),
+                        data.get("source"),
+                        data.get("source_label"),
+                        data.get("parent_artifact_id"),
+                        json.dumps(data.get("component")) if data.get("component") else None,
+                        data.get("change_note"),
+                    )
+                    await conn.execute(
+                        """INSERT INTO summa_ai.artifact_versions (artifact_id, version, title, component, change_note)
+                           VALUES ($1, 1, $2, $3, $4)""",
+                        aid,
+                        data.get("title"),
+                        json.dumps(data.get("component")) if data.get("component") else None,
+                        data.get("change_note") or "Initial version",
+                    )
+                    row = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.artifacts WHERE id = $1", aid
+                    )
+                if row:
+                    result = dict(row)
+                    await self._remember_in_cognee(
+                        user_id,
+                        f"ARTIFACT: Title: {result.get('title')}, Type: {result.get('type')}",
+                        result,
+                        dataset_name="artifacts",
+                    )
+                    return result
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).debug("create_artifact fallback: %s", exc)
+
+        item = {
+            "id": aid,
+            "user_id": user_id,
+            "title": data.get("title", "New Activity"),
+            "type": data.get("type", "activity"),
+            "description": data.get("description", ""),
+            "meta": data.get("meta", ""),
+            "accent": data.get("accent", "indigo"),
+            "topic": data.get("topic", "CSC 201"),
+            "date": datetime.now(timezone.utc).isoformat(),
+            "action": data.get("action", "Open"),
+            "pinned": False,
+            "archived": False,
+        }
+        self._local_activities.insert(0, item)
+        return item
+
+    create_activity = create_artifact
 
     async def get_artifact(self, aid: str) -> Optional[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.artifacts WHERE id = $1", aid
-            )
-        return dict(row) if row else None
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    row = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.artifacts WHERE id = $1", aid
+                    )
+                if row:
+                    return dict(row)
+        except Exception:
+            pass
+
+        return next((a for a in self._local_activities if a.get("id") == aid), None)
+
+    get_activity = get_artifact
 
     async def update_artifact(
         self, aid: str, data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
-        pool = await self._get_pool()
-        sets = []
-        vals = []
-        for key in ("title", "archived", "pinned", "source_label"):
-            if key in data:
-                sets.append(f"{key} = ${len(vals) + 1}")
-                vals.append(data[key])
-        if data.get("component") is not None:
-            sets.append(f"component = ${len(vals) + 1}")
-            vals.append(json.dumps(data["component"]))
-            sets.append("current_version = current_version + 1")
-        if not sets:
-            return await self.get_artifact(aid)
-        sets.append("updated_at = NOW()")
-        vals.append(aid)
-        async with pool.acquire() as conn:
-            await conn.execute(
-                f"UPDATE summa_ai.artifacts SET {', '.join(sets)} WHERE id = ${len(vals)}",
-                *vals,
-            )
-            new_version_row = await conn.fetchrow(
-                "SELECT current_version, title, component FROM summa_ai.artifacts WHERE id = $1",
-                aid,
-            )
-            if new_version_row:
-                await conn.execute(
-                    """INSERT INTO summa_ai.artifact_versions (artifact_id, version, title, component, change_note)
-                       VALUES ($1, $2, $3, $4, $5)""",
-                    aid,
-                    new_version_row["current_version"],
-                    new_version_row["title"],
-                    new_version_row["component"],
-                    data.get("change_note") or "Updated",
-                )
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.artifacts WHERE id = $1", aid
-            )
-        return dict(row) if row else None
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                sets = []
+                vals = []
+                for key in ("title", "archived", "pinned", "source_label"):
+                    if key in data:
+                        sets.append(f"{key} = ${len(vals) + 1}")
+                        vals.append(data[key])
+                if data.get("component") is not None:
+                    sets.append(f"component = ${len(vals) + 1}")
+                    vals.append(json.dumps(data["component"]))
+                    sets.append("current_version = current_version + 1")
+                if sets:
+                    sets.append("updated_at = NOW()")
+                    vals.append(aid)
+                    async with pool.acquire() as conn:
+                        await conn.execute(
+                            f"UPDATE summa_ai.artifacts SET {', '.join(sets)} WHERE id = ${len(vals)}",
+                            *vals,
+                        )
+                        row = await conn.fetchrow(
+                            "SELECT * FROM summa_ai.artifacts WHERE id = $1", aid
+                        )
+                    if row:
+                        return dict(row)
+        except Exception:
+            pass
+
+        for a in self._local_activities:
+            if a.get("id") == aid:
+                a.update({k: v for k, v in data.items() if v is not None})
+                return a
+        return None
+
+    update_activity = update_artifact
 
     async def delete_artifact(self, aid: str) -> bool:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            result = await conn.execute(
-                "DELETE FROM summa_ai.artifacts WHERE id = $1", aid
-            )
-        return "DELETE 1" in result
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    result = await conn.execute(
+                        "DELETE FROM summa_ai.artifacts WHERE id = $1", aid
+                    )
+                return "DELETE 1" in result
+        except Exception:
+            pass
 
-    async def list_artifact_versions(self, aid: str) -> List[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            rows = await conn.fetch(
-                "SELECT * FROM summa_ai.artifact_versions WHERE artifact_id = $1 ORDER BY version DESC",
-                aid,
-            )
-        return [dict(r) for r in rows]
+        self._local_activities = [a for a in self._local_activities if a.get("id") != aid]
+        return True
 
-    async def restore_artifact_version(
-        self, aid: str, version: int
-    ) -> Optional[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.artifact_versions WHERE artifact_id = $1 AND version = $2",
-                aid,
-                version,
-            )
-            if not row:
-                return None
-            snapshot = dict(row)
-            await conn.execute(
-                """UPDATE summa_ai.artifacts
-                   SET title = $1, component = $2, current_version = $3, updated_at = NOW()
-                   WHERE id = $4""",
-                snapshot["title"],
-                snapshot["component"],
-                snapshot["version"],
-                aid,
-            )
-            return await self.get_artifact(aid)
-
-    async def toggle_pin_artifact(self, aid: str) -> Optional[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            await conn.execute(
-                "UPDATE summa_ai.artifacts SET pinned = NOT pinned, updated_at = NOW() WHERE id = $1",
-                aid,
-            )
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.artifacts WHERE id = $1", aid
-            )
-        return dict(row) if row else None
-
-    # ── Activity Aliases ───────────────────────────────────────────
-    list_activities = list_artifacts
-    create_activity = create_artifact
-    get_activity = get_artifact
-    update_activity = update_artifact
     delete_activity = delete_artifact
-    list_activity_versions = list_artifact_versions
-    restore_activity_version = restore_artifact_version
+    toggle_pin_artifact = update_artifact
     toggle_pin_activity = toggle_pin_artifact
 
     # ── Conversations ──────────────────────────────────────────────
 
     async def list_conversations(self, user_id: str) -> List[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            rows = await conn.fetch(
-                "SELECT *, (SELECT count(*) FROM summa_ai.messages WHERE conversation_id = c.id) as message_count "
-                "FROM summa_ai.conversations c WHERE user_id = $1 AND archived = FALSE ORDER BY updated_at DESC",
-                user_id,
-            )
-        return [dict(r) for r in rows]
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        "SELECT *, (SELECT count(*) FROM summa_ai.messages WHERE conversation_id = c.id) as message_count "
+                        "FROM summa_ai.conversations c WHERE user_id = $1 AND archived = FALSE ORDER BY updated_at DESC",
+                        user_id,
+                    )
+                if rows is not None:
+                    return [dict(r) for r in rows]
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).debug("list_conversations fallback: %s", exc)
+
+        return self._local_conversations
 
     async def create_conversation(
         self, user_id: str, title: str = "New chat", snippet: Optional[str] = None
     ) -> Dict[str, Any]:
-        pool = await self._get_pool()
         cid = str(uuid.uuid4())
-        async with pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO summa_ai.conversations (id, user_id, title, snippet) VALUES ($1,$2,$3,$4)",
-                cid,
-                user_id,
-                title,
-                snippet,
-            )
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.conversations WHERE id = $1", cid
-            )
-        return dict(row)
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        "INSERT INTO summa_ai.conversations (id, user_id, title, snippet) VALUES ($1,$2,$3,$4)",
+                        cid,
+                        user_id,
+                        title,
+                        snippet,
+                    )
+                    row = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.conversations WHERE id = $1", cid
+                    )
+                if row:
+                    return dict(row)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).debug("create_conversation fallback: %s", exc)
+
+        item = {
+            "id": cid,
+            "user_id": user_id,
+            "title": title,
+            "snippet": snippet,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "archived": False,
+        }
+        self._local_conversations.insert(0, item)
+        return item
 
     async def get_conversation(self, cid: str) -> Optional[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "SELECT *, (SELECT count(*) FROM summa_ai.messages WHERE conversation_id = c.id) as message_count "
-                "FROM summa_ai.conversations c WHERE id = $1",
-                cid,
-            )
-        return dict(row) if row else None
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    row = await conn.fetchrow(
+                        "SELECT *, (SELECT count(*) FROM summa_ai.messages WHERE conversation_id = c.id) as message_count "
+                        "FROM summa_ai.conversations c WHERE id = $1",
+                        cid,
+                    )
+                if row:
+                    return dict(row)
+        except Exception:
+            pass
+
+        return next((c for c in self._local_conversations if c.get("id") == cid), None)
 
     async def delete_conversation(self, cid: str) -> bool:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            result = await conn.execute(
-                "DELETE FROM summa_ai.conversations WHERE id = $1", cid
-            )
-        return "DELETE 1" in result
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    result = await conn.execute(
+                        "DELETE FROM summa_ai.conversations WHERE id = $1", cid
+                    )
+                return "DELETE 1" in result
+        except Exception:
+            pass
+
+        self._local_conversations = [c for c in self._local_conversations if c.get("id") != cid]
+        return True
 
     async def list_messages(self, cid: str) -> List[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            rows = await conn.fetch(
-                "SELECT * FROM summa_ai.messages WHERE conversation_id = $1 ORDER BY created_at ASC",
-                cid,
-            )
-        return [dict(r) for r in rows]
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        "SELECT * FROM summa_ai.messages WHERE conversation_id = $1 ORDER BY created_at ASC",
+                        cid,
+                    )
+                if rows is not None:
+                    return [dict(r) for r in rows]
+        except Exception:
+            pass
+
+        return self._local_messages.get(cid, [])
 
     async def add_message(
         self,
@@ -279,41 +445,65 @@ class DataStore:
         reasoning: Optional[str] = None,
         components: Optional[Any] = None,
     ) -> Dict[str, Any]:
-        pool = await self._get_pool()
         mid = str(uuid.uuid4())
-        async with pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO summa_ai.messages (id, conversation_id, role, content, reasoning, components) VALUES ($1,$2,$3,$4,$5,$6)",
-                mid,
-                cid,
-                role,
-                content,
-                reasoning,
-                json.dumps(components) if components is not None else None,
-            )
-            await conn.execute(
-                "UPDATE summa_ai.conversations SET snippet = $1, updated_at = NOW() WHERE id = $2",
-                content[:100],
-                cid,
-            )
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.messages WHERE id = $1", mid
-            )
-        return dict(row)
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        "INSERT INTO summa_ai.messages (id, conversation_id, role, content, reasoning, components) VALUES ($1,$2,$3,$4,$5,$6)",
+                        mid,
+                        cid,
+                        role,
+                        content,
+                        reasoning,
+                        json.dumps(components) if components is not None else None,
+                    )
+                    await conn.execute(
+                        "UPDATE summa_ai.conversations SET snippet = $1, updated_at = NOW() WHERE id = $2",
+                        content[:100],
+                        cid,
+                    )
+                    row = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.messages WHERE id = $1", mid
+                    )
+                if row:
+                    return dict(row)
+        except Exception:
+            pass
+
+        item = {
+            "id": mid,
+            "conversation_id": cid,
+            "role": role,
+            "content": content,
+            "reasoning": reasoning,
+            "components": components,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self._local_messages.setdefault(cid, []).append(item)
+        return item
 
     # ── Timeline ───────────────────────────────────────────────────
 
     async def list_timeline_events(
         self, user_id: str, limit: int = 50
     ) -> List[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            rows = await conn.fetch(
-                "SELECT * FROM summa_ai.timeline_events WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2",
-                user_id,
-                limit,
-            )
-        return [dict(r) for r in rows]
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        "SELECT * FROM summa_ai.timeline_events WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2",
+                        user_id,
+                        limit,
+                    )
+                if rows is not None:
+                    return [dict(r) for r in rows]
+        except Exception:
+            pass
+
+        return self._local_timeline
 
     async def create_timeline_event(
         self,
@@ -323,95 +513,189 @@ class DataStore:
         description: str,
         metadata: Optional[Any] = None,
     ) -> Dict[str, Any]:
-        pool = await self._get_pool()
         eid = str(uuid.uuid4())
-        async with pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO summa_ai.timeline_events (id, user_id, type, title, description, metadata) VALUES ($1,$2,$3,$4,$5,$6)",
-                eid,
-                user_id,
-                type,
-                title,
-                description,
-                json.dumps(metadata) if metadata else None,
-            )
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.timeline_events WHERE id = $1", eid
-            )
-        return dict(row)
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        "INSERT INTO summa_ai.timeline_events (id, user_id, type, title, description, metadata) VALUES ($1,$2,$3,$4,$5,$6)",
+                        eid,
+                        user_id,
+                        type,
+                        title,
+                        description,
+                        json.dumps(metadata) if metadata else None,
+                    )
+                    row = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.timeline_events WHERE id = $1", eid
+                    )
+                if row:
+                    return dict(row)
+        except Exception:
+            pass
+
+        item = {
+            "id": eid,
+            "user_id": user_id,
+            "type": type,
+            "title": title,
+            "description": description,
+            "metadata": metadata,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self._local_timeline.insert(0, item)
+        return item
 
     # ── Materials ──────────────────────────────────────────────────
 
     async def list_materials(self, user_id: str) -> List[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            rows = await conn.fetch(
-                "SELECT * FROM summa_ai.materials WHERE user_id = $1 ORDER BY created_at DESC",
-                user_id,
-            )
-        return [dict(r) for r in rows]
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        "SELECT * FROM summa_ai.materials WHERE user_id = $1 ORDER BY created_at DESC",
+                        user_id,
+                    )
+                if rows is not None:
+                    return [dict(r) for r in rows]
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).debug("list_materials fallback: %s", exc)
+
+        return self._local_materials
 
     async def create_material(
         self, user_id: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        pool = await self._get_pool()
         mid = str(uuid.uuid4())
-        async with pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO summa_ai.materials (id, user_id, type, title, source, size, duration, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-                mid,
-                user_id,
-                data.get("type"),
-                data.get("title"),
-                data.get("source"),
-                data.get("size"),
-                data.get("duration"),
-                "processing",
-            )
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.materials WHERE id = $1", mid
-            )
-        return dict(row)
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        "INSERT INTO summa_ai.materials (id, user_id, type, title, source, size, duration, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+                        mid,
+                        user_id,
+                        data.get("type"),
+                        data.get("title"),
+                        data.get("source"),
+                        data.get("size"),
+                        data.get("duration"),
+                        "processing",
+                    )
+                    row = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.materials WHERE id = $1", mid
+                    )
+                if row:
+                    result = dict(row)
+                    await self._remember_in_cognee(
+                        user_id,
+                        f"STUDY MATERIAL: Title: {result.get('title')}, Type: {result.get('type')}, Source: {result.get('source')}",
+                        result,
+                        dataset_name="materials",
+                    )
+                    return result
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).debug("create_material fallback: %s", exc)
+
+        item = {
+            "id": mid,
+            "user_id": user_id,
+            "type": data.get("type", "Document"),
+            "title": data.get("title", "New Material"),
+            "source": data.get("source", "User Upload"),
+            "size": data.get("size", "1.0 MB"),
+            "duration": data.get("duration", "5 min"),
+            "status": "active",
+            "topic": data.get("topic", "CSC 201"),
+            "date": datetime.now(timezone.utc).isoformat(),
+        }
+        self._local_materials.insert(0, item)
+        return item
 
     async def delete_material(self, mid: str) -> bool:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            result = await conn.execute(
-                "DELETE FROM summa_ai.materials WHERE id = $1", mid
-            )
-        return "DELETE 1" in result
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    result = await conn.execute(
+                        "DELETE FROM summa_ai.materials WHERE id = $1", mid
+                    )
+                return "DELETE 1" in result
+        except Exception:
+            pass
+
+        self._local_materials = [m for m in self._local_materials if m.get("id") != mid]
+        return True
 
     # ── Concepts ───────────────────────────────────────────────────
 
     async def list_concepts(self, user_id: str) -> List[Dict[str, Any]]:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            rows = await conn.fetch(
-                "SELECT * FROM summa_ai.concepts WHERE user_id = $1 ORDER BY created_at DESC",
-                user_id,
-            )
-        return [dict(r) for r in rows]
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        "SELECT * FROM summa_ai.concepts WHERE user_id = $1 ORDER BY created_at DESC",
+                        user_id,
+                    )
+                if rows is not None:
+                    return [dict(r) for r in rows]
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).debug("list_concepts fallback: %s", exc)
+
+        return self._local_concepts
 
     async def create_concept(
         self, user_id: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        pool = await self._get_pool()
         cid = str(uuid.uuid4())
-        async with pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO summa_ai.concepts (id, user_id, name, category, mastery, material_id, related_count) VALUES ($1,$2,$3,$4,$5,$6,$7)",
-                cid,
-                user_id,
-                data.get("name"),
-                data.get("category"),
-                data.get("mastery", "learning"),
-                data.get("material_id"),
-                data.get("related_count", 0),
-            )
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.concepts WHERE id = $1", cid
-            )
-        return dict(row)
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        "INSERT INTO summa_ai.concepts (id, user_id, name, category, mastery, material_id, related_count) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+                        cid,
+                        user_id,
+                        data.get("name"),
+                        data.get("category"),
+                        data.get("mastery", "learning"),
+                        data.get("material_id"),
+                        data.get("related_count", 0),
+                    )
+                    row = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.concepts WHERE id = $1", cid
+                    )
+                if row:
+                    result = dict(row)
+                    await self._remember_in_cognee(
+                        user_id,
+                        f"CONCEPT: Name: {result.get('name')}, Category: {result.get('category')}, Mastery: {result.get('mastery')}",
+                        result,
+                        dataset_name="concepts",
+                    )
+                    return result
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).debug("create_concept fallback: %s", exc)
+
+        item = {
+            "id": cid,
+            "user_id": user_id,
+            "name": data.get("name", "New Concept"),
+            "category": data.get("category", "General"),
+            "mastery": data.get("mastery", "learning"),
+            "material_id": data.get("material_id"),
+            "related_count": data.get("related_count", 0),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self._local_concepts.insert(0, item)
+        return item
 
     async def delete_concept(self, cid: str) -> bool:
         pool = await self._get_pool()

@@ -9,6 +9,8 @@ import NotFound from "@/pages/NotFound";
 import ResetPassword from "@/pages/ResetPassword";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
+import LogsPage from "@/pages/LogsPage";
+import AdminDashboard from "@/pages/AdminDashboard";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -90,6 +92,9 @@ function Router() {
       <Route path="/settings">
         {() => <ProtectedRoute component={Home} />}
       </Route>
+      <Route path="/logs" component={LogsPage} />
+      <Route path="/__manus__/logs" component={LogsPage} />
+      <Route path="/admin" component={AdminDashboard} />
 
       <Route path="/" component={IndexRoute} />
 

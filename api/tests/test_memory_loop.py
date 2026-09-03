@@ -19,7 +19,7 @@ async def test_memory_loop_integration():
     cognee._cognee = mock_cognee_api
 
     with patch("app.routes.chat.resolve_user_id", return_value="test_user"), patch(
-        "app.routes.chat._stream_zai"
+        "app.routes.chat._stream_ai_response"
     ) as mock_stream:
 
         # Mock LLM stream
