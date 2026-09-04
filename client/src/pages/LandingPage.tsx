@@ -33,15 +33,13 @@ import {
 
 export default function LandingPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   React.useEffect(() => {
     const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      const progress = Math.min(Math.max(currentScroll / 60, 0), 1);
-      setScrollProgress(progress);
+      setIsScrolled(window.scrollY > 20);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -49,12 +47,6 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  const headerWidth = isMobile ? 94 : (100 - scrollProgress * 20);
-  const headerMarginTop = scrollProgress * 12;
-  const headerBorderRadius = scrollProgress * 9999;
-  const headerHeight = 72 - scrollProgress * 12;
-  const headerPx = 24 - scrollProgress * 8;
 
   const faqs = [
     {
@@ -82,27 +74,16 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen w-full bg-[#FBFAF6] text-[#102B2B] font-sans selection:bg-[#B8FF4D] selection:text-[#003F3F] relative antialiased overflow-x-hidden">
       
-      {/* 1. FLOATING STICKY NAVIGATION HEADER */}
-      <div className="sticky top-0 z-50 w-full pointer-events-none flex justify-center py-3 bg-[#FBFAF6]/90 backdrop-blur-md transition-all duration-300">
+      {/* 1. PERSISTENT SCROLL-REACTIVE NAVIGATION HEADER */}
+      <div className="sticky top-0 z-50 w-full pointer-events-none flex justify-center">
         <header
-          style={{
-            width: `${headerWidth}%`,
-            borderRadius: `${headerBorderRadius}px`,
-          }}
-          className={`pointer-events-auto bg-[#003F3F] text-[#F5F3EC] bg-grain-dark transition-all duration-300 ease-out ${
-            scrollProgress > 0.1
-              ? "border border-[#005A57] shadow-xl backdrop-blur-xl bg-opacity-98"
-              : "border border-[#005A57]/60 shadow-md"
+          className={`pointer-events-auto bg-[#003F3F] text-[#F5F3EC] bg-grain-dark transition-all duration-300 ease-in-out ${
+            isScrolled
+              ? "mt-4 w-[90%] md:w-[80%] rounded-full border border-[#005A57] shadow-xl"
+              : "mt-0 w-full rounded-none border-b border-[#005A57]/60 shadow-none"
           }`}
         >
-          <div
-            style={{
-              height: `${headerHeight}px`,
-              paddingLeft: `${headerPx}px`,
-              paddingRight: `${headerPx}px`,
-            }}
-            className="mx-auto flex items-center justify-between max-w-7xl"
-          >
+          <div className="mx-auto flex h-16 items-center justify-between px-6 max-w-7xl">
             <div className="flex items-center gap-3">
               <SummaLogo inverse />
             </div>
@@ -150,7 +131,7 @@ export default function LandingPage() {
 
           {/* Mobile Drawer */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t border-[#005A57] p-5 space-y-4 bg-[#003F3F] rounded-b-2xl animate-in slide-in-from-top-2 duration-200">
+            <div className={`md:hidden border-t border-[#005A57] p-5 space-y-4 bg-[#003F3F] ${isScrolled ? 'rounded-b-3xl' : 'rounded-b-none'} animate-in slide-in-from-top-2 duration-200`}>
               <nav className="flex flex-col space-y-3 text-sm font-medium text-[#DDE8DF]">
                 <a
                   href="#features"
