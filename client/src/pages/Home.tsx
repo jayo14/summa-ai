@@ -23,8 +23,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { ChatComponentRenderer, LearningActivityEnvelope } from "@/components/chat/ChatComponentRenderer";
+
 type ViewName = "workspace" | "learning" | "progress" | "sources" | "settings";
-type ConversationMessage = { id: number; role: "student" | "summa"; content: string };
+type ConversationMessage = { id: number; role: "student" | "summa"; content: string; activity?: LearningActivityEnvelope };
 
 const navItems: Array<{ id: ViewName; label: string; icon: typeof LayoutPanelTop }> = [
   { id: "workspace", label: "Workspace", icon: LayoutPanelTop },
@@ -277,6 +279,14 @@ export default function Home() {
                   prev.map((msg) =>
                     msg.id === summaMsgId
                       ? { ...msg, content: msg.content + parsed.delta }
+                      : msg
+                  )
+                );
+              } else if (parsed.type === "artifact" && parsed.data) {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === summaMsgId
+                      ? { ...msg, activity: { id: parsed.id, title: parsed.title, type: parsed.type, data: parsed.data } }
                       : msg
                   )
                 );
@@ -567,6 +577,11 @@ function ConversationTurn({ message }: { message: ConversationMessage }) {
       )}
       <div className="message-content">
         {isStudent ? <p>{message.content}</p> : <FormattedMarkdown content={message.content} />}
+        {message.activity && (
+          <div className="mt-3">
+            <ChatComponentRenderer activity={message.activity} />
+          </div>
+        )}
       </div>
     </div>
   );
