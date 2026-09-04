@@ -54,18 +54,21 @@ manager = ConnectionManager()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import os
     missing = []
     if settings.is_production:
-        if not settings.SUPABASE_JWT_SECRET:
+        raw_db_url = os.environ.get("DATABASE_URL", "").strip()
+        fallback_patterns = ["localhost", "127.0.0.1", "summa_dev", "your-project-ref"]
+        if not raw_db_url or any(pat in raw_db_url for pat in fallback_patterns):
+            missing.append("DATABASE_URL (must be explicitly provided in production environment)")
+        if not os.environ.get("SUPABASE_JWT_SECRET"):
             missing.append("SUPABASE_JWT_SECRET")
-        if not (settings.OPENAI_API_KEY or settings.LLM_API_KEY):
-            missing.append("OPENAI_API_KEY or LLM_API_KEY")
-        if not settings.SUPABASE_URL:
+        if not (os.environ.get("OPENAI_API_KEY") or os.environ.get("LLM_API_KEY") or os.environ.get("GEMINI_API_KEY")):
+            missing.append("LLM/API key (OPENAI_API_KEY, LLM_API_KEY, or GEMINI_API_KEY)")
+        if not os.environ.get("SUPABASE_URL"):
             missing.append("SUPABASE_URL")
-        if not settings.SUPABASE_ANON_KEY:
+        if not os.environ.get("SUPABASE_ANON_KEY"):
             missing.append("SUPABASE_ANON_KEY")
-        if not settings.DATABASE_URL:
-            missing.append("DATABASE_URL")
     if missing:
         raise RuntimeError(
             "Refusing to start in production without required config: "

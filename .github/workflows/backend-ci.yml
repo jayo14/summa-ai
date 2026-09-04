@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Check for committed secrets
+        run: ./scripts/check-secrets.sh
       - name: Install dependencies
         working-directory: apps/api
         run: |
