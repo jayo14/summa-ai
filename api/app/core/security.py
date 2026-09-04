@@ -53,21 +53,28 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
     """
     Verify a Supabase JWT and return the user's ``sub`` claim on success.
 
-    Verification order:
-    1. HS256 using ``SUPABASE_JWT_SECRET`` (legacy / local Supabase setups).
-    2. ES256 / RS256 using the public key from Supabase's JWKS endpoint.
-
     On any failure the function returns ``None`` — no silent fallback that
     accepts unsigned tokens.
     """
     if not token or token in ("null", "undefined") or len(token.split(".")) != 3:
         return None
 
-    # ------------------------------------------------------------------
-    # Attempt 1 — HS256 with the project's JWT secret (most common case
-    # for Supabase projects using the legacy shared secret).
-    # ------------------------------------------------------------------
-    if settings.SUPABASE_JWT_SECRET:
+    try:
+        header = pyjwt.get_unverified_header(token)
+    except Exception as exc:
+        logger.warning("Failed to decode JWT header: %s", exc)
+        return None
+
+    alg = header.get("alg", "")
+    if alg == "none":
+        logger.warning("Rejected JWT with alg: none")
+        return None
+
+    # 1. HS256 verification via SUPABASE_JWT_SECRET
+    if alg == "HS256":
+        if not settings.SUPABASE_JWT_SECRET:
+            logger.warning("Received HS256 JWT but SUPABASE_JWT_SECRET is not set")
+            return None
         try:
             payload = pyjwt.decode(
                 token,
@@ -75,46 +82,24 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
                 algorithms=["HS256"],
                 options={"verify_aud": False},
             )
-            user_id = payload.get("sub")
-            if user_id:
-                return user_id
+            return payload.get("sub")
         except pyjwt.ExpiredSignatureError:
             logger.warning("JWT has expired (HS256)")
             return None
-        except pyjwt.InvalidSignatureError:
-            # Not signed with the HS256 secret — fall through to JWKS path.
-            pass
         except Exception as exc:
             logger.warning("JWT HS256 decode error: %s", exc)
+            return None
 
-    # ------------------------------------------------------------------
-    # Attempt 2 — asymmetric key (ES256/RS256) via Supabase's JWKS.
-    # We peek at the header to find the key-id, then verify with the
-    # matching public key from the JWKS.
-    # ------------------------------------------------------------------
-    try:
-        header = pyjwt.get_unverified_header(token)
-        alg = header.get("alg", "")
+    # 2. RS256 / ES256 verification via JWKS
+    if alg in ("RS256", "ES256"):
+        from app.core.jwks import get_cached_jwks, invalidate_jwks_cache
+
+        jwks = get_cached_jwks()
+        if not jwks:
+            logger.warning("JWKS not cached; cannot verify asymmetric JWT '%s'", alg)
+            return None
+
         kid = header.get("kid")
-
-        if alg not in ("RS256", "ES256"):
-            # Unexpected algorithm and no valid HS256 match above → reject.
-            logger.warning("Unsupported JWT algorithm '%s'; rejecting token", alg)
-            return None
-
-        # Attempt to load JWKS synchronously from in-process cache.
-        # If not yet cached we must skip (caller is sync; async fetch is done
-        # at startup via the dedicated background task or on first async call).
-        if _jwks_cache is None:
-            # Last resort: try to decode without signature only to surface a
-            # clear diagnostic, then reject.
-            logger.warning(
-                "JWKS not yet loaded and HS256 secret absent/mismatch; "
-                "cannot verify asymmetric JWT. Call load_jwks_at_startup() during app lifespan."
-            )
-            return None
-
-        jwks = _jwks_cache
         keys = jwks.get("keys", [])
         matching_key = None
         for k in keys:
@@ -123,35 +108,35 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
                 break
 
         if matching_key is None:
-            # Key not in cache — invalidate cache and reject (don't silently accept)
-            global _jwks_cache
-            _jwks_cache = None
+            invalidate_jwks_cache()
             logger.warning("JWT kid '%s' not found in JWKS; cache invalidated", kid)
             return None
 
-        public_key = pyjwt.algorithms.get_default_algorithms()[alg].from_jwk(matching_key)
-        payload = pyjwt.decode(
-            token,
-            public_key,
-            algorithms=[alg],
-            options={"verify_aud": False},
-        )
-        user_id = payload.get("sub")
-        if user_id:
-            return user_id
-    except pyjwt.ExpiredSignatureError:
-        logger.warning("JWT has expired (asymmetric)")
-        return None
-    except Exception as exc:
-        logger.warning("JWT asymmetric decode error: %s", exc)
+        try:
+            public_key = pyjwt.algorithms.get_default_algorithms()[alg].from_jwk(matching_key)
+            payload = pyjwt.decode(
+                token,
+                public_key,
+                algorithms=[alg],
+                options={"verify_aud": False},
+            )
+            return payload.get("sub")
+        except pyjwt.ExpiredSignatureError:
+            logger.warning("JWT has expired (asymmetric)")
+            return None
+        except Exception as exc:
+            logger.warning("JWT asymmetric decode error: %s", exc)
+            return None
 
+    logger.warning("Unsupported JWT algorithm '%s'; rejecting token", alg)
     return None
 
 
 async def load_jwks_at_startup() -> None:
     """Eagerly fetch Supabase JWKS during app startup so the first request
     doesn't have to wait for an async HTTP call."""
-    await _fetch_jwks()
+    from app.core.jwks import fetch_jwks
+    await fetch_jwks()
 
 
 def resolve_user_id() -> str:
