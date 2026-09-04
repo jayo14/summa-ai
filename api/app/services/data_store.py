@@ -796,9 +796,10 @@ class DataStore:
             plans = []
             for row in rows:
                 p = dict(row)
+                p["id"] = str(p["id"])
                 sessions = await conn.fetch(
                     "SELECT * FROM summa_ai.study_sessions WHERE plan_id = $1 ORDER BY sort_order ASC",
-                    p["id"],
+                    row["id"],
                 )
                 p["sessions"] = [dict(s) for s in sessions]
                 plans.append(p)
@@ -837,7 +838,17 @@ class DataStore:
                         )
                     row = await conn.fetchrow("SELECT * FROM summa_ai.study_plans WHERE id = $1", pid)
                     if row:
-                        return dict(row)
+                        await self.create_timeline_event(
+                            user_id,
+                            {
+                                "type": "study_plan",
+                                "title": f"Study Plan Created: {data.get('title', 'Study Plan')}",
+                                "description": f"Created study plan with {len(sessions_data)} session(s)",
+                            },
+                        )
+                        d = dict(row)
+                        d["id"] = str(d["id"])
+                        return d
         except Exception:
             pass
 
@@ -1032,6 +1043,13 @@ class DataStore:
     async def create_exam(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         pool = await self._get_pool()
         eid = str(uuid.uuid4())
+        exam_date = data.get("exam_date")
+        if isinstance(exam_date, str):
+            try:
+                from datetime import date
+                exam_date = date.fromisoformat(exam_date)
+            except ValueError:
+                pass
         async with pool.acquire() as conn:
             await conn.execute(
                 """INSERT INTO summa_ai.exams (id, user_id, name, exam_date, readiness)
@@ -1039,7 +1057,7 @@ class DataStore:
                 eid,
                 user_id,
                 data.get("name"),
-                data.get("exam_date"),
+                exam_date,
                 data.get("readiness", 0),
             )
             row = await conn.fetchrow("SELECT * FROM summa_ai.exams WHERE id = $1", eid)

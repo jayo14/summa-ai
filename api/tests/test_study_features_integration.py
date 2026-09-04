@@ -53,6 +53,23 @@ async def _clean(store):
         await conn.execute("DELETE FROM summa_ai.flashcards")
         await conn.execute("DELETE FROM summa_ai.exams")
         await conn.execute("DELETE FROM summa_ai.timeline_events")
+        await conn.execute("DELETE FROM summa_ai.user_profiles WHERE id = $1", uuid.UUID(USER_ID))
+        try:
+            await conn.execute("DELETE FROM auth.users WHERE id = $1", uuid.UUID(USER_ID))
+            await conn.execute(
+                """INSERT INTO auth.users (id, email) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING""",
+                uuid.UUID(USER_ID),
+                f"test-{USER_ID[:8]}@example.com",
+            )
+        except Exception:
+            pass
+        await conn.execute(
+            """INSERT INTO summa_ai.user_profiles (id, email, name)
+               VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING""",
+            uuid.UUID(USER_ID),
+            f"test-{USER_ID[:8]}@example.com",
+            "Test User",
+        )
     yield
 
 
@@ -85,11 +102,11 @@ async def test_update_and_delete_study_plan(store):
     )
     pid = created["id"]
 
-    updated = await store.update_study_plan(pid, {"progress": 0.5, "streak": 2})
+    updated = await store.update_study_plan(pid, USER_ID, {"progress": 0.5, "streak": 2})
     assert updated["progress"] == 0.5
     assert updated["streak"] == 2
 
-    assert await store.delete_study_plan(pid) is True
+    assert await store.delete_study_plan(pid, USER_ID) is True
     assert await store.list_study_plans(USER_ID) == []
 
 
