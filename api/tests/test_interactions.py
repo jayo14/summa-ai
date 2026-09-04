@@ -33,21 +33,17 @@ _current_user = {"id": "unset"}
 
 def _post_quiz_result(user_id: str, topic: str, score: float, answers: dict | None = None):
     _current_user["id"] = user_id
-    token = set_current_user_id(user_id)
-    try:
-        with patch("app.main.verify_supabase_jwt", side_effect=lambda t: user_id):
-            with patch("app.routes.interactions._store") as mock_store:
-                mock_store.create_quiz_result = AsyncMock(
-                    return_value={"id": "qr-1", "user_id": user_id, "topic": topic, "score": score}
-                )
-                res = client.post(
-                    "/api/v1/interactions/quiz-result",
-                    headers=_auth_headers(),
-                    json={"topic": topic, "score": score, "answers": answers or {}},
-                )
-                return res
-    finally:
-        set_current_user_id(user_id)
+    with patch("app.main.verify_supabase_jwt", return_value=user_id):
+        with patch("app.routes.interactions._store") as mock_store:
+            mock_store.create_quiz_result = AsyncMock(
+                return_value={"id": "qr-1", "user_id": user_id, "topic": topic, "score": score}
+            )
+            res = client.post(
+                "/api/v1/interactions/quiz-result",
+                headers=_auth_headers(),
+                json={"topic": topic, "score": score, "answers": answers or {}},
+            )
+            return res
 
 
 class TestQuizResultFeedbackLoop:

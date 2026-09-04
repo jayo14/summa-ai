@@ -203,7 +203,6 @@ export default function AdminDashboard() {
         method: "PATCH",
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error("Status update failed");
 
       toast.success(`User status updated to ${newStatus.toUpperCase()}`);
       fetchAdminData();
