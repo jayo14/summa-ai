@@ -480,34 +480,37 @@ class CogneeService:
         }
 
     async def get_hexagon_dimensions(self, user_id: str) -> Dict[str, float]:
-        dataset = self._dataset(user_id, "progress")
-        progress = await self._recall("all learning progress scores", dataset, 100)
-        dims = {
-            "depth": 0.0,
-            "problem_solving": 0.0,
-            "speed": 0.0,
-            "consistency": 0.0,
-            "confidence": 0.0,
-            "creativity": 0.0,
-        }
-        if progress:
-            scores = [
-                p.get("metadata", {}).get("score", 0)
-                for p in progress
-                if isinstance(p, dict)
-                and p.get("metadata", {}).get("score") is not None
-            ]
-            if scores:
-                avg = sum(scores) / len(scores)
-                dims = {
-                    "depth": min(1.0, avg * 0.8 + 0.2),
-                    "problem_solving": min(1.0, avg * 0.7 + 0.3),
-                    "speed": min(1.0, avg * 0.6 + 0.4),
-                    "consistency": min(1.0, avg * 0.5 + 0.5),
-                    "confidence": min(1.0, avg * 0.5 + 0.3),
-                    "creativity": min(1.0, avg * 0.4 + 0.2),
-                }
-        return dims
+        try:
+            from app.services.mastery_engine import MasteryEngine
+            engine = MasteryEngine()
+            # Retrieve aggregated concepts or default concepts
+            concepts = ["overall"]
+            mastery = await engine.compute_mastery(user_id, "overall")
+            
+            # Map mastery dimensions (0..100) to 0.0..1.0 float scale
+            def _normalize(val: Optional[float], default: float) -> float:
+                if val is None:
+                    return default
+                return round(max(0.0, min(1.0, val / 100.0)), 2)
+
+            return {
+                "depth": _normalize(mastery.get("depth"), 0.0),
+                "problem_solving": _normalize(mastery.get("problem_solving"), 0.0),
+                "speed": _normalize(mastery.get("speed"), 0.0),
+                "consistency": _normalize(mastery.get("consistency"), 0.0),
+                "confidence": _normalize(mastery.get("confidence"), 0.0),
+                "creativity": _normalize(mastery.get("creativity"), 0.0),
+            }
+        except Exception as exc:
+            logger.warning("get_hexagon_dimensions delegation error: %s", exc)
+            return {
+                "depth": 0.0,
+                "problem_solving": 0.0,
+                "speed": 0.0,
+                "consistency": 0.0,
+                "confidence": 0.0,
+                "creativity": 0.0,
+            }
 
     # ─────────────────────────────────────────────────────────────────────────
     # improve

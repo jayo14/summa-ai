@@ -51,4 +51,23 @@ async def record_quiz_result(data: QuizResultCreate):
             exc_info=True,
         )
 
+    try:
+        from app.services.mastery_engine import MasteryEngine
+        mastery = MasteryEngine()
+        correct = (data.score or 0) >= 70.0
+        await mastery.record_attempt(
+            user_id=user_id,
+            activity_id=data.artifact_id,
+            concept_ids=[data.topic],
+            correct=correct,
+            score=data.score,
+        )
+    except Exception:
+        logger.warning(
+            "Failed to record attempt in mastery engine: user=%s topic=%s",
+            user_id,
+            data.topic,
+            exc_info=True,
+        )
+
     return await _store.create_quiz_result(user_id, data.model_dump())
