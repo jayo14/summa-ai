@@ -5,25 +5,27 @@ import {
   ArrowUpRight,
   BarChart2,
   Bell,
+  Building,
   Check,
   CheckCircle,
   ChevronDown,
   Clock,
-  Code2,
   CreditCard,
   Database,
+  Download,
   FileText,
   Folder,
-  HardDrive,
   HelpCircle,
-  Key,
+  Info,
   Layers,
   LayoutDashboard,
   Lock,
   LogOut,
   Menu,
+  MessageSquare,
   MoreHorizontal,
   Plus,
+  Radio,
   RefreshCw,
   Search,
   Server,
@@ -31,7 +33,6 @@ import {
   Shield,
   Sliders,
   Sparkles,
-  SquareCheck,
   User,
   Users,
   UserX,
@@ -41,7 +42,7 @@ import { Link, useRoute } from "wouter";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole, UserStatus } from "@/types/roles";
-import { fetchApi } from "@/lib/api";
+import { SummaLogo } from "@/components/SummaLogo";
 
 interface AdminUser {
   id: string;
@@ -71,41 +72,23 @@ interface AuditLog {
   timestamp: string;
 }
 
-interface TrackingLog {
-  id: string;
-  timestamp: string;
-  user_email: string;
-  endpoint: string;
-  model: string;
-  input_tokens: number;
-  output_tokens: number;
-  total_tokens: number;
-  latency_ms: number;
-  vector_retrieval_ms: number;
-  status_code: number;
-  feedback?: "up" | "down" | null;
-  prompt_sample: string;
-  response_sample: string;
-  context_chunks: number;
-  cost_usd: number;
-}
-
 type NavItem =
   | "overview"
-  | "playground"
-  | "assistants"
-  | "finetuning"
-  | "batches"
-  | "evaluation"
-  | "storage"
-  | "usage"
-  | "apikeys"
-  | "billing"
-  | "team"
-  | "projects"
+  | "users"
+  | "institutions"
+  | "analytics"
+  | "subscriptions"
+  | "revenue"
+  | "engagement"
+  | "content"
+  | "quizzes"
+  | "sessions"
+  | "messages"
+  | "feedback"
+  | "integrations"
   | "settings"
-  | "logs"
-  | "audit";
+  | "audit"
+  | "team";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -119,13 +102,8 @@ export default function AdminDashboard() {
   };
 
   const [activeItem, setActiveItem] = useState<NavItem>(currentTabFromUrl);
-  const [usageTab, setUsageTab] = useState<"cost" | "requests" | "tokens">("cost");
-  const [selectedLog, setSelectedLog] = useState<TrackingLog | null>(null);
-
-  // Users & Governance
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [trackingLogs, setTrackingLogs] = useState<TrackingLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
@@ -139,10 +117,9 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const [usersRes, auditRes, logsRes] = await Promise.all([
+      const [usersRes, auditRes] = await Promise.all([
         fetch("/api/v1/admin/users"),
         fetch("/api/v1/admin/audit-logs"),
-        fetch("/api/v1/admin/logs"),
       ]);
 
       if (usersRes.ok) {
@@ -152,15 +129,6 @@ export default function AdminDashboard() {
       if (auditRes.ok) {
         const aJson = await auditRes.json();
         setAuditLogs(aJson.audit_logs || []);
-      }
-      if (logsRes.ok) {
-        const lJson = await logsRes.json();
-        setTrackingLogs(
-          (lJson.logs || []).map((l: any) => ({
-            ...l,
-            cost_usd: (l.total_tokens / 1000000) * 0.25,
-          }))
-        );
       }
     } catch (err) {
       toast.error("Failed to refresh admin data.");
@@ -214,800 +182,593 @@ export default function AdminDashboard() {
     return matchesSearch && matchesRole;
   });
 
-  // Daily usage bar chart height percentages matching exact OpenAI visual
-  const barHeights = [
-    25, 45, 30, 65, 55, 80, 35, 90, 40, 30, 50, 60, 45, 55, 75, 40, 50, 65, 55, 70, 85, 80, 65, 95, 75, 85, 90, 80, 100, 70, 45
+  // Stacked bar values matching exact visual design
+  const mrrBars = [
+    { newMRR: 40, expansionMRR: 60 },
+    { newMRR: 45, expansionMRR: 55 },
+    { newMRR: 30, expansionMRR: 45 },
+    { newMRR: 55, expansionMRR: 65 },
+    { newMRR: 40, expansionMRR: 50 },
+    { newMRR: 60, expansionMRR: 75 },
+    { newMRR: 35, expansionMRR: 50 },
+    { newMRR: 65, expansionMRR: 80 },
+    { newMRR: 50, expansionMRR: 60 },
+    { newMRR: 55, expansionMRR: 70 },
+    { newMRR: 70, expansionMRR: 85 },
+    { newMRR: 45, expansionMRR: 60 },
+    { newMRR: 50, expansionMRR: 65 },
+    { newMRR: 60, expansionMRR: 75 },
+    { newMRR: 40, expansionMRR: 55 },
+    { newMRR: 50, expansionMRR: 65 },
+    { newMRR: 35, expansionMRR: 50 },
+    { newMRR: 45, expansionMRR: 60 },
+    { newMRR: 40, expansionMRR: 55 },
+    { newMRR: 55, expansionMRR: 70 },
+    { newMRR: 65, expansionMRR: 85 },
+    { newMRR: 50, expansionMRR: 65 },
+    { newMRR: 45, expansionMRR: 60 },
+    { newMRR: 55, expansionMRR: 75 },
+    { newMRR: 40, expansionMRR: 55 },
+    { newMRR: 60, expansionMRR: 75 },
+    { newMRR: 70, expansionMRR: 85 },
+    { newMRR: 50, expansionMRR: 65 },
+    { newMRR: 65, expansionMRR: 80 },
+    { newMRR: 55, expansionMRR: 70 },
+  ];
+
+  const sidebarNav: { key: NavItem; label: string; icon: React.ReactNode }[] = [
+    { key: "overview", label: "Overview", icon: <LayoutDashboard size={18} /> },
+    { key: "users", label: "Users", icon: <Users size={18} /> },
+    { key: "institutions", label: "Institutions", icon: <Building size={18} /> },
+    { key: "analytics", label: "Analytics", icon: <BarChart2 size={18} /> },
+    { key: "subscriptions", label: "Subscriptions", icon: <CreditCard size={18} /> },
+    { key: "revenue", label: "Revenue", icon: <CreditCard size={18} /> },
+    { key: "engagement", label: "Engagement", icon: <Activity size={18} /> },
+    { key: "content", label: "Content", icon: <Folder size={18} /> },
+    { key: "quizzes", label: "Quizzes & Results", icon: <CheckCircle size={18} /> },
+    { key: "sessions", label: "Live Sessions", icon: <Radio size={18} /> },
+    { key: "messages", label: "Messages", icon: <MessageSquare size={18} /> },
+    { key: "feedback", label: "Feedback", icon: <MessageSquare size={18} /> },
+    { key: "integrations", label: "Integrations", icon: <Layers size={18} /> },
+    { key: "settings", label: "Settings", icon: <Settings size={18} /> },
+    { key: "audit", label: "Audit Logs", icon: <FileText size={18} /> },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#0F172A] flex font-sans antialiased selection:bg-slate-200">
-      {/* LEFT SIDEBAR - Mirror-perfect OpenAI Style */}
-      <aside className="w-[240px] bg-[#F9FAFB] border-r border-[#E5E7EB] flex flex-col justify-between shrink-0 select-none">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex font-sans antialiased selection:bg-purple-100">
+      {/* LEFT SIDEBAR - Summa AI Admin Pixel Perfect */}
+      <aside className="w-[250px] bg-white border-r border-[#E2E8F0] flex flex-col justify-between shrink-0 select-none py-4 px-3">
         <div>
-          {/* Logo Bar */}
-          <div className="h-14 px-4 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 text-slate-900 hover:opacity-80 transition">
-              {/* OpenAI Spiral Logo Icon */}
-              <svg className="size-6 text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z" />
-                <path d="M12 6v12M6 12h12" />
-              </svg>
-              <span className="font-bold text-lg tracking-tight text-slate-900">OpenAI</span>
+          {/* Logo & Collapse Header */}
+          <div className="h-12 px-2 flex items-center justify-between mb-4">
+            <Link href="/" className="flex items-center gap-2 text-slate-900">
+              <SummaLogo />
             </Link>
-            <button className="p-1 rounded text-slate-500 hover:text-slate-900 transition">
+            <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
               <Menu size={18} />
             </button>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="px-2 py-1 space-y-0.5 text-[13px] font-medium text-slate-700">
-            <button
-              onClick={() => setActiveItem("overview")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "overview"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <LayoutDashboard size={17} className="text-slate-600" />
-              <span>Overview</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("playground")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "playground"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <Code2 size={17} className="text-slate-600" />
-              <span>Playground</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("assistants")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "assistants"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <User size={17} className="text-slate-600" />
-              <span>Assistants</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("finetuning")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "finetuning"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <Sliders size={17} className="text-slate-600" />
-              <span>Fine-tuning</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("batches")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "batches"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <Layers size={17} className="text-slate-600" />
-              <span>Batches</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("evaluation")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "evaluation"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <SquareCheck size={17} className="text-slate-600" />
-              <span>Evaluation</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("storage")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "storage"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <HardDrive size={17} className="text-slate-600" />
-              <span>Storage</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("usage")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "usage"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <BarChart2 size={17} className="text-slate-600" />
-              <span>Usage</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("apikeys")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "apikeys"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <Key size={17} className="text-slate-600" />
-              <span>API keys</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("billing")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "billing"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <CreditCard size={17} className="text-slate-600" />
-              <span>Billing</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("team")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "team"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <Users size={17} className="text-slate-600" />
-              <span>Team</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("projects")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "projects"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <Folder size={17} className="text-slate-600" />
-              <span>Projects</span>
-            </button>
-
-            <button
-              onClick={() => setActiveItem("settings")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
-                activeItem === "settings"
-                  ? "bg-[#ECECF1] text-slate-900 font-semibold"
-                  : "hover:bg-[#F0F0F0] text-slate-700 hover:text-slate-900"
-              }`}
-            >
-              <Settings size={17} className="text-slate-600" />
-              <span>Settings</span>
-            </button>
+          {/* Navigation Items */}
+          <nav className="space-y-0.5 text-[13px] font-medium text-slate-600">
+            {sidebarNav.map((item) => {
+              const active = activeItem === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setActiveItem(item.key)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition ${
+                    active
+                      ? "bg-[#6366F1]/10 text-[#4F46E5] font-semibold"
+                      : "hover:bg-slate-50 text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span className={active ? "text-[#4F46E5]" : "text-slate-400"}>
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </nav>
         </div>
 
-        {/* Sidebar Footer Cards */}
-        <div className="p-3 space-y-3">
-          {/* Plan Card */}
-          <div className="p-3 rounded-xl bg-white border border-[#E5E7EB] shadow-2xs space-y-1.5">
-            <div className="text-[11px] text-slate-500 font-medium">Plan</div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-slate-900">Pay-as-you-go</span>
-              <span className="font-bold text-xs text-emerald-600">$23.47</span>
-            </div>
-            <div className="text-[10px] text-slate-400">Credit balance</div>
-            <div className="pt-1 text-[11px]">
-              <a href="#billing" onClick={() => setActiveItem("billing")} className="text-blue-600 font-medium hover:underline flex items-center gap-1">
-                View billing <ArrowRight size={11} />
-              </a>
-            </div>
+        {/* Sidebar Footer Plan Card */}
+        <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2 mt-4">
+          <div className="text-[11px] text-slate-400 font-medium">Current Plan</div>
+          <div className="font-bold text-sm text-slate-900">Enterprise</div>
+          <div className="text-xs font-semibold text-[#10B981]">
+            ₦1,250,000 <span className="text-slate-400 font-normal">/ month</span>
           </div>
-
-          {/* Project Dropdown Box */}
-          <div className="space-y-1">
-            <div className="text-[11px] text-slate-500 font-medium px-1">Project</div>
-            <div className="p-2.5 rounded-xl bg-white border border-[#E5E7EB] shadow-2xs flex items-center justify-between text-xs text-slate-900 font-medium cursor-pointer">
-              <span>Default project</span>
-              <ChevronDown size={14} className="text-slate-400" />
-            </div>
-          </div>
-
-          {/* Sign Out Button */}
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition shadow-2xs cursor-pointer"
-          >
-            <LogOut size={14} />
-            <span>Sign Out</span>
+          <div className="text-[11px] text-slate-400">Renews on Jun 1, 2024</div>
+          <button className="pt-1 text-xs text-[#6366F1] font-semibold hover:underline flex items-center gap-1 cursor-pointer">
+            Manage plan <ArrowRight size={13} />
           </button>
         </div>
       </aside>
 
-      {/* RIGHT MAIN CANVAS AREA */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#FAFAFA] overflow-y-auto">
-        {/* Top Header */}
-        <header className="h-14 bg-white border-b border-[#E5E7EB] px-8 flex items-center justify-between shrink-0 sticky top-0 z-20">
-          <h1 className="text-xl font-bold text-slate-900 capitalize">
-            {activeItem === "overview" ? "Overview" : activeItem === "team" ? "Team" : activeItem}
-          </h1>
+      {/* RIGHT MAIN CANVAS */}
+      <main className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto">
+        {/* TOP NAVBAR */}
+        <header className="h-16 bg-white border-b border-[#E2E8F0] px-8 flex items-center justify-between shrink-0 sticky top-0 z-20">
+          <div>
+            <h1 className="text-lg font-bold text-slate-900">Overview</h1>
+            <p className="text-xs text-slate-400 flex items-center gap-1">
+              Welcome back, Admin <span className="text-amber-500">👋</span>
+            </p>
+          </div>
 
-          {/* Right Header Utilities */}
-          <div className="flex items-center gap-5 text-xs">
-            <button className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900 transition font-medium">
-              <FileText size={14} /> Docs
-            </button>
-            <button className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900 transition font-medium">
-              <HelpCircle size={14} /> Help
-            </button>
-            <button className="relative text-slate-600 hover:text-slate-900 transition">
+          {/* Top Controls */}
+          <div className="flex items-center gap-3 text-xs">
+            {/* Date Range Picker */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded-xl font-medium text-slate-700 shadow-2xs cursor-pointer">
+              <span>📅</span>
+              <span>May 1 – May 31, 2024</span>
+              <ChevronDown size={14} className="text-slate-400" />
+            </div>
+
+            {/* Compare Selector */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded-xl font-medium text-slate-700 shadow-2xs cursor-pointer">
+              <span className="text-slate-400">Compare to:</span>
+              <span>Apr 1 – Apr 30</span>
+              <ChevronDown size={14} className="text-slate-400" />
+            </div>
+
+            {/* Notification Bell with Badge */}
+            <button className="relative p-2.5 rounded-xl border border-[#E2E8F0] bg-white text-slate-600 hover:bg-slate-50 transition shadow-2xs">
               <Bell size={16} />
+              <span className="absolute top-1.5 right-1.5 size-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                3
+              </span>
             </button>
 
-            {/* Profile Pill */}
-            <div className="flex items-center gap-2 pl-2">
-              <div className="size-7 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center">
-                JS
+            {/* User Avatar */}
+            <div className="flex items-center gap-2.5 pl-2">
+              <div className="size-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center overflow-hidden border border-slate-200">
+                <img
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"
+                  alt="Admin Avatar"
+                  className="size-full object-cover"
+                />
               </div>
-              <div className="text-left text-xs leading-tight">
-                <div className="font-semibold text-slate-900">John Samuel</div>
-                <div className="text-[10px] text-slate-500 flex items-center gap-0.5">
-                  <span>Personal</span>
-                  <ChevronDown size={10} />
+              <div className="text-left leading-tight hidden md:block">
+                <div className="font-semibold text-xs text-slate-900">Admin</div>
+                <div className="text-[10px] text-slate-400 flex items-center gap-0.5">
+                  Super Admin <ChevronDown size={10} />
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* MAIN BODY CONTENT */}
-        <div className="p-8 space-y-6 max-w-[1240px] w-full mx-auto">
-          {/* Action Row above Top Metrics */}
+        {/* MAIN BODY DASHBOARD */}
+        <div className="p-8 space-y-6 max-w-[1400px] w-full mx-auto">
+          {/* Top Bar Action */}
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Top metrics</h2>
+            <div></div>
+            <button className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white transition flex items-center gap-2 shadow-sm cursor-pointer">
+              <Download size={14} />
+              <span>Export report</span>
+            </button>
+          </div>
 
-            <div className="flex items-center gap-2.5">
-              {/* Date Range Picker Dropdown */}
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs font-semibold text-slate-700 shadow-2xs cursor-pointer">
-                <span>📅</span>
-                <span>May 1 – May 31, 2024</span>
-                <ChevronDown size={14} className="text-slate-400" />
+          {activeItem === "overview" && (
+            <div className="space-y-6">
+              {/* 6 TOP METRIC CARDS ROW */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            {/* 1. Total Users */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                <span>Total Users</span>
+                <Info size={13} className="text-slate-400" />
               </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-xl font-bold text-slate-900">12,241</span>
+                <span className="text-[11px] font-semibold text-[#10B981]">+18.6%</span>
+              </div>
+              <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
+              <svg className="w-full h-7 stroke-[#8B5CF6] fill-none" viewBox="0 0 100 25">
+                <path d="M0,20 Q20,10 40,22 T80,12 T100,6" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </div>
 
-              {/* Black Action Button */}
-              <button
-                onClick={fetchAdminData}
-                disabled={loading}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#000000] hover:bg-slate-800 text-white transition flex items-center gap-1.5 shadow-2xs"
-              >
-                <Plus size={14} />
-                <span>Create new</span>
-                <ChevronDown size={14} />
-              </button>
+            {/* 2. Active Users */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                <span>Active Users (30d)</span>
+                <Info size={13} className="text-slate-400" />
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-xl font-bold text-slate-900">8,632</span>
+                <span className="text-[11px] font-semibold text-[#10B981]">+21.3%</span>
+              </div>
+              <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
+              <svg className="w-full h-7 stroke-[#10B981] fill-none" viewBox="0 0 100 25">
+                <path d="M0,22 Q25,15 50,18 T80,10 T100,4" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </div>
+
+            {/* 3. Institutions */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                <span>Institutions</span>
+                <Info size={13} className="text-slate-400" />
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-xl font-bold text-slate-900">34</span>
+                <span className="text-[11px] font-semibold text-[#10B981]">+13.3%</span>
+              </div>
+              <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
+              <svg className="w-full h-7 stroke-[#3B82F6] fill-none" viewBox="0 0 100 25">
+                <path d="M0,18 Q20,12 40,20 T80,10 T100,3" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </div>
+
+            {/* 4. Monthly Recurring Revenue */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                <span>Monthly Recurring Revenue</span>
+                <Info size={13} className="text-slate-400" />
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-xl font-bold text-slate-900">₦2,152,400</span>
+                <span className="text-[11px] font-semibold text-[#10B981]">+24.8%</span>
+              </div>
+              <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
+              <svg className="w-full h-7 stroke-[#8B5CF6] fill-none" viewBox="0 0 100 25">
+                <path d="M0,20 Q25,12 50,18 T80,10 T100,4" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </div>
+
+            {/* 5. Paid Subscriptions */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                <span>Paid Subscriptions</span>
+                <Info size={13} className="text-slate-400" />
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-xl font-bold text-slate-900">278</span>
+                <span className="text-[11px] font-semibold text-[#10B981]">+17.2%</span>
+              </div>
+              <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
+              <svg className="w-full h-7 stroke-[#F97316] fill-none" viewBox="0 0 100 25">
+                <path d="M0,22 Q20,16 40,20 T80,12 T100,8" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </div>
+
+            {/* 6. Avg. Daily Sessions */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                <span>Avg. Daily Sessions</span>
+                <Info size={13} className="text-slate-400" />
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-xl font-bold text-slate-900">3,126</span>
+                <span className="text-[11px] font-semibold text-[#10B981]">+15.1%</span>
+              </div>
+              <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
+              <svg className="w-full h-7 stroke-[#14B8A6] fill-none" viewBox="0 0 100 25">
+                <path d="M0,16 Q20,12 40,18 T80,10 T100,5" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
             </div>
           </div>
 
-          {/* OVERVIEW SECTION - Mirror Perfect OpenAI Layout */}
-          {activeItem === "overview" && (
-            <div className="space-y-6">
-              {/* TOP METRICS ROW (5 Cards) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-                {/* 1. Total usage */}
-                <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                    <span>Total usage</span>
-                    <HelpCircle size={13} className="text-slate-400" />
+          {/* MIDDLE SECTION: MRR OVERVIEW + USERS BREAKDOWN + LIVE SYSTEM STATUS */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* MRR Overview Stacked Bar Chart (6 Cols) */}
+            <div className="lg:col-span-6 bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
+                    <span>MRR Overview</span>
+                    <Info size={13} className="text-slate-400" />
                   </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-slate-900">$23.47</span>
-                    <span className="text-xs font-semibold text-[#10B981]">+34.6%</span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-2xl font-bold text-slate-900">₦2,152,400</span>
+                    <span className="text-xs font-semibold text-[#10B981]">+24.8%</span>
+                    <span className="text-[11px] text-slate-400">vs Apr 1 – Apr 30</span>
                   </div>
-                  <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
-                  <svg className="w-full h-7 stroke-[#10B981] fill-none" viewBox="0 0 100 25">
-                    <path d="M0,20 Q20,10 40,22 T80,12 T100,6" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
                 </div>
 
-                {/* 2. Total requests */}
-                <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                    <span>Total requests</span>
-                    <HelpCircle size={13} className="text-slate-400" />
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-slate-900">1.29M</span>
-                    <span className="text-xs font-semibold text-[#10B981]">+18.3%</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
-                  <svg className="w-full h-7 stroke-[#8B5CF6] fill-none" viewBox="0 0 100 25">
-                    <path d="M0,22 Q25,15 50,18 T80,10 T100,4" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                </div>
-
-                {/* 3. Tokens used */}
-                <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                    <span>Tokens used</span>
-                    <HelpCircle size={13} className="text-slate-400" />
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-slate-900">3.42B</span>
-                    <span className="text-xs font-semibold text-[#10B981]">+21.7%</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
-                  <svg className="w-full h-7 stroke-[#3B82F6] fill-none" viewBox="0 0 100 25">
-                    <path d="M0,18 Q20,12 40,20 T80,10 T100,3" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                </div>
-
-                {/* 4. Failed requests */}
-                <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                    <span>Failed requests</span>
-                    <HelpCircle size={13} className="text-slate-400" />
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-slate-900">0.27%</span>
-                    <span className="text-xs font-semibold text-[#10B981]">-12.5%</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
-                  <svg className="w-full h-7 stroke-[#F97316] fill-none" viewBox="0 0 100 25">
-                    <path d="M0,8 Q20,14 40,10 T80,20 T100,24" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                </div>
-
-                {/* 5. Avg. latency */}
-                <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                    <span>Avg. latency</span>
-                    <HelpCircle size={13} className="text-slate-400" />
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-slate-900">612ms</span>
-                    <span className="text-xs font-semibold text-[#10B981]">-8.4%</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400">vs Apr 1 – Apr 30</div>
-                  <svg className="w-full h-7 stroke-[#14B8A6] fill-none" viewBox="0 0 100 25">
-                    <path d="M0,14 Q20,16 40,10 T80,14 T100,8" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
+                <div className="flex items-center gap-1 bg-[#F8FAFC] px-3 py-1.5 rounded-xl border border-[#E2E8F0] text-xs font-medium text-slate-700 cursor-pointer">
+                  <span>Daily</span>
+                  <ChevronDown size={13} />
                 </div>
               </div>
 
-              {/* MIDDLE SECTION: USAGE BAR CHART + MODEL USAGE DONUT + NOTIFICATIONS & STATUS */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Usage Bar Chart (7 Cols) */}
-                <div className="lg:col-span-7 bg-white border border-[#E5E7EB] rounded-xl p-5 space-y-4 shadow-2xs flex flex-col justify-between">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-sm text-slate-900">Usage</span>
-                      <HelpCircle size={13} className="text-slate-400" />
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs">
-                      <div className="flex bg-[#F3F4F6] p-0.5 rounded-lg border border-slate-200">
-                        {(["cost", "requests", "tokens"] as const).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => setUsageTab(t)}
-                            className={`px-3 py-1 rounded-md capitalize font-medium transition ${
-                              usageTab === t ? "bg-white text-slate-900 shadow-2xs font-semibold" : "text-slate-500"
-                            }`}
-                          >
-                            {t === "cost" ? "Cost" : t === "requests" ? "Requests" : "Tokens"}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center gap-1 bg-[#F3F4F6] px-3 py-1 rounded-lg border border-slate-200 text-slate-700 font-medium">
-                        <span>Daily</span>
-                        <ChevronDown size={13} />
-                      </div>
-
-                      <div className="p-1 rounded bg-[#F3F4F6] border border-slate-200 text-slate-500 cursor-pointer">
-                        <Sliders size={13} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Daily Bar Graphic with Y-Axis */}
-                  <div className="flex gap-2 py-2">
-                    {/* Y-Axis Labels */}
-                    <div className="flex flex-col justify-between text-[11px] text-slate-400 font-mono py-1 pr-1 border-r border-slate-100">
-                      <span>$20</span>
-                      <span>$15</span>
-                      <span>$10</span>
-                      <span>$5</span>
-                      <span>$0</span>
-                    </div>
-
-                    {/* Bars Container */}
-                    <div className="flex-1 space-y-2">
-                      <div className="h-40 flex items-end justify-between gap-1.5 px-1">
-                        {barHeights.map((h, i) => (
-                          <div key={i} className="flex-1 bg-[#10B981] hover:bg-[#059669] rounded-t transition cursor-pointer" style={{ height: `${h}%` }}></div>
-                        ))}
-                      </div>
-                      <div className="flex justify-between text-[11px] text-slate-400 font-mono pt-1">
-                        <span>May 1</span>
-                        <span>May 6</span>
-                        <span>May 11</span>
-                        <span>May 16</span>
-                        <span>May 21</span>
-                        <span>May 26</span>
-                        <span>May 31</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="text-slate-500 flex items-center gap-1.5">
-                      <span className="size-2 rounded-full bg-[#10B981]"></span> USD
-                    </span>
-                    <button onClick={() => setActiveItem("usage")} className="text-blue-600 font-medium hover:underline flex items-center gap-1">
-                      View usage details <ArrowRight size={13} />
-                    </button>
-                  </div>
+              {/* Stacked Bars Chart Graphic */}
+              <div className="flex gap-2 py-4">
+                {/* Y-Axis */}
+                <div className="flex flex-col justify-between text-[10px] text-slate-400 font-mono py-1 pr-2">
+                  <span>₦2.5M</span>
+                  <span>₦2M</span>
+                  <span>₦1.5M</span>
+                  <span>₦1M</span>
+                  <span>₦0.5M</span>
+                  <span>₦0</span>
                 </div>
 
-                {/* Model Usage Donut Chart (5 Cols) */}
-                <div className="lg:col-span-5 bg-white border border-[#E5E7EB] rounded-xl p-5 space-y-4 shadow-2xs flex flex-col justify-between">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-sm text-slate-900">Model usage</span>
-                      <HelpCircle size={13} className="text-slate-400" />
-                    </div>
+                {/* Stacked Bars */}
+                <div className="flex-1 space-y-3">
+                  <div className="h-44 flex items-end justify-between gap-1 px-1">
+                    {mrrBars.map((b, i) => (
+                      <div key={i} className="flex-1 flex flex-col justify-end h-full gap-0.5">
+                        <div
+                          className="w-full bg-[#8B5CF6] rounded-t-xs"
+                          style={{ height: `${b.newMRR}%` }}
+                        ></div>
+                        <div
+                          className="w-full bg-[#10B981] rounded-b-xs"
+                          style={{ height: `${b.expansionMRR}%` }}
+                        ></div>
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Donut & Legend Container */}
-                  <div className="flex items-center justify-between gap-4 py-2">
-                    {/* SVG Donut Graphic */}
-                    <div className="relative size-36 shrink-0 flex items-center justify-center">
-                      <svg className="size-full -rotate-90" viewBox="0 0 36 36">
-                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#E5E7EB" strokeWidth="4.2" />
-                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3B82F6" strokeWidth="4.2" strokeDasharray="60 40" strokeDashoffset="0" />
-                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#10B981" strokeWidth="4.2" strokeDasharray="17 83" strokeDashoffset="-60" />
-                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#84CC16" strokeWidth="4.2" strokeDasharray="13 87" strokeDashoffset="-77" />
-                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#8B5CF6" strokeWidth="4.2" strokeDasharray="5 95" strokeDashoffset="-90" />
-                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#F97316" strokeWidth="4.2" strokeDasharray="2 98" strokeDashoffset="-95" />
-                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#9CA3AF" strokeWidth="4.2" strokeDasharray="1 99" strokeDashoffset="-97" />
-                      </svg>
-                      <div className="absolute text-center">
-                        <div className="text-base font-bold text-slate-900 font-mono">3.42B</div>
-                        <div className="text-[11px] text-slate-500">Tokens</div>
-                      </div>
-                    </div>
-
-                    {/* Legend Table */}
-                    <div className="flex-1 space-y-1.5 text-xs font-mono">
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-slate-800">
-                          <span className="size-2.5 rounded-full bg-[#3B82F6]"></span> gpt-4o
-                        </span>
-                        <span className="text-slate-500">60.1%</span>
-                        <span className="text-slate-900 font-semibold">2.06B</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-slate-800">
-                          <span className="size-2.5 rounded-full bg-[#10B981]"></span> gpt-4-turbo
-                        </span>
-                        <span className="text-slate-500">17.4%</span>
-                        <span className="text-slate-900 font-semibold">594M</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-slate-800">
-                          <span className="size-2.5 rounded-full bg-[#84CC16]"></span> gpt-3.5-turbo
-                        </span>
-                        <span className="text-slate-500">13.7%</span>
-                        <span className="text-slate-900 font-semibold">469M</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-slate-800">
-                          <span className="size-2.5 rounded-full bg-[#8B5CF6]"></span> text-embedding-3-small
-                        </span>
-                        <span className="text-slate-500">5.4%</span>
-                        <span className="text-slate-900 font-semibold">185M</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-slate-800">
-                          <span className="size-2.5 rounded-full bg-[#F97316]"></span> dall-e-3
-                        </span>
-                        <span className="text-slate-500">2.1%</span>
-                        <span className="text-slate-900 font-semibold">72M</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-slate-800">
-                          <span className="size-2.5 rounded-full bg-[#9CA3AF]"></span> Other
-                        </span>
-                        <span className="text-slate-500">1.3%</span>
-                        <span className="text-slate-900 font-semibold">44M</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-100 flex justify-end text-xs">
-                    <button onClick={() => setActiveItem("usage")} className="text-blue-600 font-medium hover:underline flex items-center gap-1">
-                      View model usage <ArrowRight size={13} />
-                    </button>
+                  <div className="flex justify-between text-[10px] text-slate-400 font-mono pt-1">
+                    <span>May 1</span>
+                    <span>May 6</span>
+                    <span>May 11</span>
+                    <span>May 16</span>
+                    <span>May 21</span>
+                    <span>May 26</span>
+                    <span>May 31</span>
                   </div>
                 </div>
               </div>
 
-              {/* BOTTOM SECTION: RECENT ACTIVITY + PROJECTS & NOTIFICATIONS */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Recent Activity Table (8 Cols) */}
-                <div className="lg:col-span-8 bg-white border border-[#E5E7EB] rounded-xl p-5 space-y-4 shadow-2xs">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-sm text-slate-900">Recent activity</span>
-                      <HelpCircle size={13} className="text-slate-400" />
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs font-mono">
-                      <thead className="text-slate-400 border-b border-slate-100 uppercase text-[10px] font-semibold tracking-wider">
-                        <tr>
-                          <th className="pb-3">TIME</th>
-                          <th className="pb-3">TYPE</th>
-                          <th className="pb-3">MODEL</th>
-                          <th className="pb-3">TOKENS</th>
-                          <th className="pb-3">COST</th>
-                          <th className="pb-3 text-right">STATUS</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        <tr className="hover:bg-slate-50 transition cursor-pointer">
-                          <td className="py-3.5 text-slate-500 font-sans">May 31, 10:24 AM</td>
-                          <td className="py-3.5 font-sans font-medium text-slate-900">Chat Completions</td>
-                          <td className="py-3.5 text-slate-700">gpt-4o</td>
-                          <td className="py-3.5 text-slate-900">2,153</td>
-                          <td className="py-3.5 text-slate-700">$0.043</td>
-                          <td className="py-3.5 text-right font-sans">
-                            <span className="inline-flex items-center gap-1 text-[#10B981] font-semibold text-xs">
-                              <span className="size-1.5 rounded-full bg-[#10B981]"></span> Success
-                            </span>
-                          </td>
-                        </tr>
-
-                        <tr className="hover:bg-slate-50 transition cursor-pointer">
-                          <td className="py-3.5 text-slate-500 font-sans">May 31, 10:21 AM</td>
-                          <td className="py-3.5 font-sans font-medium text-slate-900">Chat Completions</td>
-                          <td className="py-3.5 text-slate-700">gpt-4o</td>
-                          <td className="py-3.5 text-slate-900">1,584</td>
-                          <td className="py-3.5 text-slate-700">$0.032</td>
-                          <td className="py-3.5 text-right font-sans">
-                            <span className="inline-flex items-center gap-1 text-[#10B981] font-semibold text-xs">
-                              <span className="size-1.5 rounded-full bg-[#10B981]"></span> Success
-                            </span>
-                          </td>
-                        </tr>
-
-                        <tr className="hover:bg-slate-50 transition cursor-pointer">
-                          <td className="py-3.5 text-slate-500 font-sans">May 31, 10:18 AM</td>
-                          <td className="py-3.5 font-sans font-medium text-slate-900">Embeddings</td>
-                          <td className="py-3.5 text-slate-700">text-embedding-3-small</td>
-                          <td className="py-3.5 text-slate-900">5,120</td>
-                          <td className="py-3.5 text-slate-700">$0.002</td>
-                          <td className="py-3.5 text-right font-sans">
-                            <span className="inline-flex items-center gap-1 text-[#10B981] font-semibold text-xs">
-                              <span className="size-1.5 rounded-full bg-[#10B981]"></span> Success
-                            </span>
-                          </td>
-                        </tr>
-
-                        <tr className="hover:bg-slate-50 transition cursor-pointer">
-                          <td className="py-3.5 text-slate-500 font-sans">May 31, 10:17 AM</td>
-                          <td className="py-3.5 font-sans font-medium text-slate-900">Image Generation</td>
-                          <td className="py-3.5 text-slate-700">dall-e-3</td>
-                          <td className="py-3.5 text-slate-400">-</td>
-                          <td className="py-3.5 text-slate-700">$0.040</td>
-                          <td className="py-3.5 text-right font-sans">
-                            <span className="inline-flex items-center gap-1 text-[#10B981] font-semibold text-xs">
-                              <span className="size-1.5 rounded-full bg-[#10B981]"></span> Success
-                            </span>
-                          </td>
-                        </tr>
-
-                        <tr className="hover:bg-slate-50 transition cursor-pointer">
-                          <td className="py-3.5 text-slate-500 font-sans">May 31, 10:15 AM</td>
-                          <td className="py-3.5 font-sans font-medium text-slate-900">Chat Completions</td>
-                          <td className="py-3.5 text-slate-700">gpt-3.5-turbo</td>
-                          <td className="py-3.5 text-slate-900">1,024</td>
-                          <td className="py-3.5 text-slate-700">$0.001</td>
-                          <td className="py-3.5 text-right font-sans">
-                            <span className="inline-flex items-center gap-1 text-[#F97316] font-semibold text-xs">
-                              <span className="size-1.5 rounded-full bg-[#F97316]"></span> Rate limit
-                            </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-100 text-xs">
-                    <button onClick={() => setActiveItem("logs")} className="text-blue-600 font-medium hover:underline flex items-center gap-1">
-                      View all activity <ArrowRight size={13} />
-                    </button>
-                  </div>
+              {/* Legend & Footer link */}
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-4 text-slate-600 text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-full bg-[#8B5CF6]"></span> New MRR
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-full bg-[#10B981]"></span> Expansion MRR
+                  </span>
                 </div>
-
-                {/* Projects & Notifications Side Cards (4 Cols) */}
-                <div className="lg:col-span-4 space-y-6">
-                  {/* Projects Card */}
-                  <div className="bg-white border border-[#E5E7EB] rounded-xl p-5 space-y-4 shadow-2xs">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-sm text-slate-900">Projects</span>
-                        <HelpCircle size={13} className="text-slate-400" />
-                      </div>
-                      <button onClick={() => setActiveItem("projects")} className="text-xs text-blue-600 font-medium hover:underline flex items-center gap-1">
-                        View all projects <ArrowRight size={12} />
-                      </button>
-                    </div>
-
-                    <div className="space-y-3 text-xs font-mono">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-sans font-medium text-slate-900">
-                          <span className="size-6 rounded bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">D</span>
-                          <span>Default project</span>
-                        </div>
-                        <span className="text-slate-500">612K</span>
-                        <span className="text-slate-500">1.72B</span>
-                        <span className="text-slate-900 font-semibold">$12.21</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-sans font-medium text-slate-900">
-                          <span className="size-6 rounded bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center">A</span>
-                          <span>My AI App</span>
-                        </div>
-                        <span className="text-slate-500">321K</span>
-                        <span className="text-slate-500">953M</span>
-                        <span className="text-slate-900 font-semibold">$7.43</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-sans font-medium text-slate-900">
-                          <span className="size-6 rounded bg-pink-100 text-pink-700 font-bold text-xs flex items-center justify-center">R</span>
-                          <span>Research Assistant</span>
-                        </div>
-                        <span className="text-slate-500">189K</span>
-                        <span className="text-slate-500">512M</span>
-                        <span className="text-slate-900 font-semibold">$3.21</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-sans font-medium text-slate-900">
-                          <span className="size-6 rounded bg-sky-100 text-sky-700 font-bold text-xs flex items-center justify-center">D</span>
-                          <span>Data Analysis</span>
-                        </div>
-                        <span className="text-slate-500">98K</span>
-                        <span className="text-slate-500">231M</span>
-                        <span className="text-slate-900 font-semibold">$0.62</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-sans font-medium text-slate-900">
-                          <span className="size-6 rounded bg-amber-100 text-amber-700 font-bold text-xs flex items-center justify-center">O</span>
-                          <span>Others</span>
-                        </div>
-                        <span className="text-slate-500">79K</span>
-                        <span className="text-slate-500">16M</span>
-                        <span className="text-slate-900 font-semibold">$0.00</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Notifications Card */}
-                  <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 space-y-3 shadow-2xs">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <span className="font-bold text-xs text-slate-900">Notifications</span>
-                      <button className="text-[11px] text-blue-600 font-medium hover:underline">View all</button>
-                    </div>
-
-                    <div className="space-y-3 text-xs">
-                      <div className="flex gap-2.5">
-                        <span className="size-2 rounded-full bg-[#10B981] mt-1 shrink-0"></span>
-                        <div className="space-y-0.5">
-                          <div className="font-semibold text-slate-900">Payment successful</div>
-                          <div className="text-[10px] text-slate-400">May 31, 9:41 AM</div>
-                          <div className="text-[11px] text-slate-600">$20.00 was added to your balance.</div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2.5">
-                        <span className="size-2 rounded-full bg-[#3B82F6] mt-1 shrink-0"></span>
-                        <div className="space-y-0.5">
-                          <div className="font-semibold text-slate-900">System update</div>
-                          <div className="text-[10px] text-slate-400">May 30, 2:15 PM</div>
-                          <div className="text-[11px] text-slate-600">We've updated the function calling capabilities in gpt-4o.</div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2.5">
-                        <span className="size-2 rounded-full bg-[#8B5CF6] mt-1 shrink-0"></span>
-                        <div className="space-y-0.5">
-                          <div className="font-semibold text-slate-900">New model available</div>
-                          <div className="text-[10px] text-slate-400">May 29, 11:09 AM</div>
-                          <div className="text-[11px] text-slate-600">gpt-4o-mini is now available in the API.</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* System Status Card */}
-                  <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 space-y-3 shadow-2xs">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <span className="font-bold text-xs text-slate-900">System status</span>
-                      <a href="#status" className="text-[11px] text-blue-600 font-medium hover:underline flex items-center gap-1">
-                        View status page <ArrowRight size={11} />
-                      </a>
-                    </div>
-
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700">API</span>
-                        <span className="text-[#10B981] text-[11px] font-semibold flex items-center gap-1">
-                          <span className="size-1.5 rounded-full bg-[#10B981]"></span> Operational
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700">ChatGPT</span>
-                        <span className="text-[#10B981] text-[11px] font-semibold flex items-center gap-1">
-                          <span className="size-1.5 rounded-full bg-[#10B981]"></span> Operational
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700">Playground</span>
-                        <span className="text-[#10B981] text-[11px] font-semibold flex items-center gap-1">
-                          <span className="size-1.5 rounded-full bg-[#10B981]"></span> Operational
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700">Assistants</span>
-                        <span className="text-[#10B981] text-[11px] font-semibold flex items-center gap-1">
-                          <span className="size-1.5 rounded-full bg-[#10B981]"></span> Operational
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700">API status</span>
-                        <span className="text-[#10B981] text-[11px] font-semibold flex items-center gap-1">
-                          <span className="size-1.5 rounded-full bg-[#10B981]"></span> Operational
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5 text-xs text-[#10B981] font-bold">
-                      <CheckCircle size={14} /> All systems operational
-                    </div>
-                  </div>
-                </div>
+                <button
+                  onClick={() => setActiveItem("revenue")}
+                  className="text-[#6366F1] font-semibold hover:underline flex items-center gap-1"
+                >
+                  View revenue analytics <ArrowRight size={13} />
+                </button>
               </div>
             </div>
-          )}
 
-          {/* TEAM GOVERNANCE & RBAC SECTION */}
+            {/* Users Breakdown Donut Chart (3 Cols) */}
+            <div className="lg:col-span-3 bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-slate-700">
+                  <span>Users Breakdown</span>
+                  <Info size={13} className="text-slate-400" />
+                </div>
+              </div>
+
+              {/* Donut Graphic & Legend */}
+              <div className="flex flex-col items-center gap-4 py-2">
+                <div className="relative size-44 flex items-center justify-center">
+                  <svg className="size-full -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#E2E8F0" strokeWidth="3.8" />
+                    {/* Students 77.7% */}
+                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#8B5CF6" strokeWidth="3.8" strokeDasharray="77.7 22.3" strokeDashoffset="0" />
+                    {/* Lecturers 14.9% */}
+                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#10B981" strokeWidth="3.8" strokeDasharray="14.9 85.1" strokeDashoffset="-77.7" />
+                    {/* Admins 3.1% */}
+                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#F59E0B" strokeWidth="3.8" strokeDasharray="3.1 96.9" strokeDashoffset="-92.6" />
+                    {/* Others 4.3% */}
+                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3B82F6" strokeWidth="3.8" strokeDasharray="4.3 95.7" strokeDashoffset="-95.7" />
+                  </svg>
+                  <div className="absolute text-center">
+                    <div className="text-xl font-bold text-slate-900 font-mono">12,241</div>
+                    <div className="text-[11px] text-slate-400">Total Users</div>
+                  </div>
+                </div>
+
+                {/* Legend Table */}
+                <div className="w-full space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-slate-600">
+                      <span className="size-2.5 rounded-full bg-[#8B5CF6]"></span> Students
+                    </span>
+                    <span className="text-slate-900 font-mono font-semibold">9,512 (77.7%)</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-slate-600">
+                      <span className="size-2.5 rounded-full bg-[#10B981]"></span> Lecturers
+                    </span>
+                    <span className="text-slate-900 font-mono font-semibold">1,824 (14.9%)</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-slate-600">
+                      <span className="size-2.5 rounded-full bg-[#F59E0B]"></span> Admins
+                    </span>
+                    <span className="text-slate-900 font-mono font-semibold">378 (3.1%)</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-slate-600">
+                      <span className="size-2.5 rounded-full bg-[#3B82F6]"></span> Others
+                    </span>
+                    <span className="text-slate-900 font-mono font-semibold">527 (4.3%)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex justify-end text-xs">
+                <button
+                  onClick={() => setActiveItem("users")}
+                  className="text-[#6366F1] font-semibold hover:underline flex items-center gap-1"
+                >
+                  View users <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* Live System Status (3 Cols) */}
+            <div className="lg:col-span-3 bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-slate-700">
+                  <span>Live System</span>
+                  <Info size={13} className="text-slate-400" />
+                </div>
+              </div>
+
+              {/* Status List */}
+              <div className="space-y-4 py-1 text-xs">
+                {[
+                  { name: "AI Chat", status: "Operational" },
+                  { name: "Quiz Engine", status: "Operational" },
+                  { name: "Live Classes", status: "Operational" },
+                  { name: "File Processing", status: "Operational" },
+                  { name: "Embeddings", status: "Operational" },
+                  { name: "Notifications", status: "Operational" },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-slate-700 font-medium">
+                      <CheckCircle size={15} className="text-[#10B981]" />
+                      <span>{item.name}</span>
+                    </span>
+                    <span className="text-[#10B981] font-semibold text-[11px]">{item.status}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex justify-end text-xs">
+                <button className="text-[#6366F1] font-semibold hover:underline flex items-center gap-1">
+                  View status page <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* BOTTOM ROW: TOP INSTITUTIONS + RECENT ACTIVITY + QUICK ACTIONS */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Top Institutions Table (5 Cols) */}
+            <div className="lg:col-span-5 bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span className="font-bold text-xs text-slate-900">Top Institutions</span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="text-slate-400 border-b border-slate-100 text-[10px] font-semibold uppercase tracking-wider">
+                    <tr>
+                      <th className="pb-3">INSTITUTION</th>
+                      <th className="pb-3">USERS</th>
+                      <th className="pb-3">ACTIVE (30D)</th>
+                      <th className="pb-3">SUBSCRIPTION</th>
+                      <th className="pb-3 text-right">MRR</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {[
+                      { name: "University of Lagos", users: "2,341", active: "1,842", sub: "Enterprise", mrr: "₦420,000" },
+                      { name: "LASUSTECH", users: "1,832", active: "1,425", sub: "Pro", mrr: "₦250,000" },
+                      { name: "University of Ibadan", users: "1,201", active: "978", sub: "Pro", mrr: "₦180,000" },
+                      { name: "Babcock University", users: "987", active: "754", sub: "Pro", mrr: "₦150,000" },
+                      { name: "Covenant University", users: "842", active: "623", sub: "Basic", mrr: "₦72,000" },
+                    ].map((inst, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition">
+                        <td className="py-3 font-semibold text-slate-900">{inst.name}</td>
+                        <td className="py-3 text-slate-600 font-mono">{inst.users}</td>
+                        <td className="py-3 text-slate-600 font-mono">{inst.active}</td>
+                        <td className="py-3 text-slate-700">{inst.sub}</td>
+                        <td className="py-3 text-right font-mono font-semibold text-slate-900">{inst.mrr}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex justify-start text-xs">
+                <button
+                  onClick={() => setActiveItem("institutions")}
+                  className="text-[#6366F1] font-semibold hover:underline flex items-center gap-1"
+                >
+                  View all institutions <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* Recent Activity (4 Cols) */}
+            <div className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span className="font-bold text-xs text-slate-900">Recent Activity</span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="text-slate-400 border-b border-slate-100 text-[10px] font-semibold uppercase tracking-wider">
+                    <tr>
+                      <th className="pb-3">EVENT</th>
+                      <th className="pb-3">DETAILS</th>
+                      <th className="pb-3 text-right">TIME</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {[
+                      { event: "New user registered", details: "john.doe@student.unilag.edu.ng", time: "2m ago" },
+                      { event: "Subscription created", details: "LASUSTECH – Pro Plan", time: "15m ago" },
+                      { event: "Payment received", details: "₦250,000 from LASUSTECH", time: "18m ago" },
+                      { event: "Quiz completed", details: "Calculus Basics – 92%", time: "25m ago" },
+                      { event: "Live class started", details: "Operating Systems Lecture", time: "32m ago" },
+                    ].map((act, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition">
+                        <td className="py-3 text-slate-900 font-semibold">{act.event}</td>
+                        <td className="py-3 text-slate-600 truncate max-w-[160px]">{act.details}</td>
+                        <td className="py-3 text-right text-slate-400 font-mono text-[11px]">{act.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex justify-start text-xs">
+                <button
+                  onClick={() => setActiveItem("audit")}
+                  className="text-[#6366F1] font-semibold hover:underline flex items-center gap-1"
+                >
+                  View all activity <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Actions (3 Cols) */}
+            <div className="lg:col-span-3 bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span className="font-bold text-xs text-slate-900">Quick Actions</span>
+              </div>
+
+              <div className="space-y-2 py-1 text-xs font-semibold text-slate-700">
+                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-[#E2E8F0] text-left">
+                  <Building size={16} className="text-slate-500" />
+                  <span>Add Institution</span>
+                </button>
+
+                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-[#E2E8F0] text-left">
+                  <Bell size={16} className="text-slate-500" />
+                  <span>Create Announcement</span>
+                </button>
+
+                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-[#E2E8F0] text-left">
+                  <Download size={16} className="text-slate-500" />
+                  <span>Export Users</span>
+                </button>
+
+                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-[#E2E8F0] text-left">
+                  <FileText size={16} className="text-slate-500" />
+                  <span>View Reports</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TEAM GOVERNANCE & RBAC SECTION */}
           {activeItem === "team" && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-2xs">
