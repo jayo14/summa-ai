@@ -182,11 +182,11 @@ export default function LandingPage() {
       <main>
 
         {/* 2. HERO SECTION */}
-        <section id="hero" className="relative bg-[#003F3F] text-[#F5F3EC] pt-16 pb-24 md:pt-24 md:pb-32 px-6 text-center bg-grain-dark border-b border-[#005A57]">
+        <section id="hero" className="relative bg-[#003F3F] text-[#F5F3EC] pt-24 pb-24 md:pt-36 md:pb-32 px-6 text-center bg-grain-dark border-b border-[#005A57]">
           <div className="max-w-5xl mx-auto">
             
             {/* Beta Signal Tagline Badge */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#005A57]/60 border border-[#6D7E78]/30 text-[#DDE8DF] text-xs font-medium mb-8 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#005A57]/60 border border-[#6D7E78]/30 text-[#DDE8DF] text-xs font-medium mt-4 mb-8 backdrop-blur-md">
               <span className="size-2 rounded-full bg-[#B8FF4D] animate-pulse" />
               <span className="text-white font-semibold">Now in public beta</span>
               <ArrowRight className="size-3 text-[#B8FF4D]" />
