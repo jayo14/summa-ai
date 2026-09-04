@@ -139,15 +139,7 @@ class UserStore:
         except Exception:
             pass
 
-        return self._local_users.get(user_id, {
-            "id": user_id,
-            "email": "student@summa.ai",
-            "name": "Student User",
-            "avatar": None,
-            "provider": "credentials",
-            "onboarded": True,
-            "onboarding_data": {},
-        })
+        return self._local_users.get(user_id)
 
     async def update_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         try:
@@ -181,10 +173,13 @@ class UserStore:
                         query = f"UPDATE summa_ai.user_profiles SET {', '.join(sets)} WHERE id = ${len(values)} RETURNING *"
                         updated = await conn.fetchrow(query, *values)
                         return dict(updated)
+                    return dict(row)
         except Exception:
             pass
 
-        current = await self.get_user_by_id(user_id) or {"id": user_id}
+        current = await self.get_user_by_id(user_id)
+        if current is None:
+            raise ValueError(f"User with ID {user_id} not found")
         current.update({k: v for k, v in data.items() if v is not None})
         self._local_users[user_id] = current
         return current

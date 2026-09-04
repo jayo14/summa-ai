@@ -197,7 +197,10 @@ async def login(payload: AuthLoginRequest):
                         or resp.json().get("msg")
                         or "Authentication failed"
                     )
-                    raise HTTPException(status_code=401, detail=detail)
+                    if _dev_fallback_enabled() and (resp.status_code >= 500 or "database error" in detail.lower()):
+                        logger.warning("Supabase database error (%s: %s). Falling back to dev authentication.", resp.status_code, detail)
+                    else:
+                        raise HTTPException(status_code=401 if resp.status_code < 500 else 502, detail=detail)
         except HTTPException:
             # Re-raise application-level errors — never absorb them into the fallback
             raise

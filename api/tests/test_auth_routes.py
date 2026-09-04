@@ -164,3 +164,18 @@ async def test_login_fallback_works_when_enabled_non_prod():
         result = await login(AuthLoginRequest(email="a@b.com", password="pass", provider="credentials"))
         assert "access_token" in result
         assert result["user"]["email"] == "a@b.com"
+
+
+@pytest.mark.asyncio
+async def test_login_supabase_database_error_fallback():
+    mock_resp = MagicMock()
+    mock_resp.status_code = 400
+    mock_resp.json.return_value = {"error_description": "Database error querying schema"}
+    with patch("app.routes.auth.settings.ALLOW_DEV_AUTH_FALLBACK", True), \
+         patch("app.routes.auth.settings.ENVIRONMENT", "development"), \
+         patch("app.routes.auth.httpx.AsyncClient") as MockClient:
+        MockClient.return_value.__aenter__.return_value.post.return_value = mock_resp
+        result = await login(AuthLoginRequest(email="a@b.com", password="pass", provider="credentials"))
+        assert "access_token" in result
+        assert result["user"]["email"] == "a@b.com"
+

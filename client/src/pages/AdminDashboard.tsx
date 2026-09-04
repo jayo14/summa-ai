@@ -47,9 +47,19 @@ import {
   UsersView,
   UserDrawer,
   InstitutionsView,
+  AnalyticsView,
+  SubscriptionsView,
   RevenueView,
+  EngagementView,
+  ContentView,
+  QuizzesView,
+  LiveSessionsView,
+  MessagesView,
+  FeedbackView,
   IntegrationsView,
-  SettingsView,
+  AdminSettingsView,
+  AuditLogsView,
+  NotificationsDrawer,
   StatusBadge,
   MetricCard,
 } from "@/components/AdminViews";
@@ -113,11 +123,31 @@ export default function AdminDashboard() {
 
   const [activeItem, setActiveItem] = useState<NavItem>(currentTabFromUrl);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
+
+  const navMeta: Record<NavItem, { title: string; desc: string }> = {
+    overview: { title: "Overview", desc: "Welcome back, Admin 👋" },
+    users: { title: "Users", desc: "Manage students, lecturers and administrators." },
+    institutions: { title: "Institutions", desc: "Manage organizations using Summa AI." },
+    analytics: { title: "Analytics", desc: "Deep platform usage, token consumption, and learning telemetry." },
+    subscriptions: { title: "Subscriptions", desc: "Manage the SaaS subscription engine & recurring plans." },
+    revenue: { title: "Revenue", desc: "Track subscriptions, payments and recurring revenue." },
+    engagement: { title: "Engagement", desc: "Measure active retention, session length, and feature adoption." },
+    content: { title: "Content", desc: "Manage educational courses, lectures, documents, and notes." },
+    quizzes: { title: "Quizzes & Results", desc: "Assessment performance, completion rates, and question analytics." },
+    sessions: { title: "Live Sessions", desc: "Monitor live interactive classes and scheduled learning broadcasts." },
+    messages: { title: "Messages", desc: "Broadcast announcements, system notifications, and direct user messages." },
+    feedback: { title: "Feedback", desc: "Centralize user bug reports, feature requests, and satisfaction ratings." },
+    integrations: { title: "Integrations", desc: "External API services, payment gateways, and AI provider health." },
+    settings: { title: "Platform Settings", desc: "Configure global Summa AI admin behavior and environment flags." },
+    audit: { title: "Audit Logs", desc: "Immutable administrative activity trail and security telemetry." },
+    team: { title: "Team Governance", desc: "RBAC policies and administrative account permissions." },
+  };
 
   useEffect(() => {
     if (params?.tab && params.tab !== activeItem) {
@@ -247,11 +277,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex font-sans antialiased selection:bg-purple-100">
-      {/* LEFT SIDEBAR - Summa AI Admin Pixel Perfect */}
-      <aside className="w-[250px] bg-white border-r border-[#E2E8F0] flex flex-col justify-between shrink-0 select-none py-4 px-3">
-        <div>
+      {/* LEFT SIDEBAR - Summa AI Admin Fixed & Pixel Perfect */}
+      <aside className="w-[250px] h-screen sticky top-0 bg-white border-r border-[#E2E8F0] flex flex-col justify-between shrink-0 select-none py-4 px-3 z-30">
+        <div className="flex flex-col min-h-0">
           {/* Logo & Collapse Header */}
-          <div className="h-12 px-2 flex items-center justify-between mb-4">
+          <div className="h-12 px-2 flex items-center justify-between mb-4 shrink-0">
             <Link href="/" className="flex items-center gap-2 text-slate-900">
               <SummaLogo />
             </Link>
@@ -261,7 +291,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Navigation Items */}
-          <nav className="space-y-0.5 text-[13px] font-medium text-slate-600">
+          <nav className="space-y-0.5 text-[13px] font-medium text-slate-600 overflow-y-auto pr-1">
             {sidebarNav.map((item) => {
               const active = activeItem === item.key;
               return (
@@ -284,16 +314,27 @@ export default function AdminDashboard() {
           </nav>
         </div>
 
-        {/* Sidebar Footer Plan Card */}
-        <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2 mt-4">
-          <div className="text-[11px] text-slate-400 font-medium">Current Plan</div>
-          <div className="font-bold text-sm text-slate-900">Enterprise</div>
-          <div className="text-xs font-semibold text-[#10B981]">
-            ₦1,250,000 <span className="text-slate-400 font-normal">/ month</span>
+        {/* Sidebar Footer Plan Card & Functional Sign Out Button */}
+        <div className="shrink-0 space-y-3 pt-3">
+          <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2">
+            <div className="text-[11px] text-slate-400 font-medium">Current Plan</div>
+            <div className="font-bold text-sm text-slate-900">Enterprise</div>
+            <div className="text-xs font-semibold text-[#10B981]">
+              ₦1,250,000 <span className="text-slate-400 font-normal">/ month</span>
+            </div>
+            <div className="text-[11px] text-slate-400">Renews on Jun 1, 2024</div>
+            <button className="pt-1 text-xs text-[#6366F1] font-semibold hover:underline flex items-center gap-1 cursor-pointer">
+              Manage plan <ArrowRight size={13} />
+            </button>
           </div>
-          <div className="text-[11px] text-slate-400">Renews on Jun 1, 2024</div>
-          <button className="pt-1 text-xs text-[#6366F1] font-semibold hover:underline flex items-center gap-1 cursor-pointer">
-            Manage plan <ArrowRight size={13} />
+
+          {/* Sign Out Button */}
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 transition cursor-pointer border border-rose-200/60 shadow-2xs"
+          >
+            <LogOut size={16} />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -303,9 +344,9 @@ export default function AdminDashboard() {
         {/* TOP NAVBAR */}
         <header className="h-16 bg-white border-b border-[#E2E8F0] px-8 flex items-center justify-between shrink-0 sticky top-0 z-20">
           <div>
-            <h1 className="text-lg font-bold text-slate-900">Overview</h1>
+            <h1 className="text-lg font-bold text-slate-900">{navMeta[activeItem]?.title || "Overview"}</h1>
             <p className="text-xs text-slate-400 flex items-center gap-1">
-              Welcome back, Admin <span className="text-amber-500">👋</span>
+              {navMeta[activeItem]?.desc || "Welcome back, Admin 👋"}
             </p>
           </div>
 
@@ -326,7 +367,10 @@ export default function AdminDashboard() {
             </div>
 
             {/* Notification Bell with Badge */}
-            <button className="relative p-2.5 rounded-xl border border-[#E2E8F0] bg-white text-slate-600 hover:bg-slate-50 transition shadow-2xs">
+            <button
+              onClick={() => setNotificationsOpen(true)}
+              className="relative p-2.5 rounded-xl border border-[#E2E8F0] bg-white text-slate-600 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
+            >
               <Bell size={16} />
               <span className="absolute top-1.5 right-1.5 size-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
                 3
@@ -782,36 +826,26 @@ export default function AdminDashboard() {
       {/* VIEW SWITCHING ENGINE */}
           {activeItem === "users" && <UsersView onUserClick={(u) => setSelectedUser(u)} />}
           {activeItem === "institutions" && <InstitutionsView />}
+          {activeItem === "analytics" && <AnalyticsView />}
+          {activeItem === "subscriptions" && <SubscriptionsView />}
           {activeItem === "revenue" && <RevenueView />}
-          {activeItem === "subscriptions" && <RevenueView />}
-          {activeItem === "analytics" && <RevenueView />}
-          {activeItem === "engagement" && <RevenueView />}
+          {activeItem === "engagement" && <EngagementView />}
+          {activeItem === "content" && <ContentView />}
+          {activeItem === "quizzes" && <QuizzesView />}
+          {activeItem === "sessions" && <LiveSessionsView />}
+          {activeItem === "messages" && <MessagesView />}
+          {activeItem === "feedback" && <FeedbackView />}
           {activeItem === "integrations" && <IntegrationsView />}
-          {activeItem === "settings" && <SettingsView />}
+          {activeItem === "settings" && <AdminSettingsView />}
+          {activeItem === "audit" && <AuditLogsView />}
           
           {/* USER DETAILS DRAWER */}
           {selectedUser && (
             <UserDrawer user={selectedUser} onClose={() => setSelectedUser(null)} />
           )}
 
-          {/* OTHER SUB-PAGES DEFAULT PLACEHOLDER FOR UNIMPLEMENTED TABS */}
-          {!["overview", "users", "institutions", "revenue", "subscriptions", "analytics", "engagement", "integrations", "settings", "team"].includes(activeItem) && (
-            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-12 text-center space-y-3 shadow-2xs">
-              <div className="size-12 rounded-full bg-[#6366F1]/10 text-[#4F46E5] font-bold text-lg flex items-center justify-center mx-auto capitalize">
-                {activeItem.charAt(0)}
-              </div>
-              <h3 className="font-bold text-base text-slate-900 capitalize">{activeItem} Management</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Detailed administrative analytics and actions for {activeItem} are operating normally.
-              </p>
-              <button
-                onClick={() => setActiveItem("overview")}
-                className="mt-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition"
-              >
-                Back to Overview
-              </button>
-            </div>
-          )}
+          {/* NOTIFICATIONS DRAWER */}
+          <NotificationsDrawer isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
 
           {/* TEAM GOVERNANCE & RBAC SECTION */}
           {activeItem === "team" && (

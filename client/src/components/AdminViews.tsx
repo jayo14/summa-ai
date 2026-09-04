@@ -1,18 +1,24 @@
 import React, { useState } from "react";
 import {
   Activity,
+  AlertTriangle,
+  ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
   BarChart2,
   Bell,
+  BookOpen,
   Building,
   Check,
   CheckCircle,
+  CheckCircle2,
   ChevronDown,
+  ChevronRight,
   Clock,
   CreditCard,
   Database,
   Download,
+  Eye,
   FileText,
   Filter,
   Folder,
@@ -28,6 +34,7 @@ import {
   Menu,
   MessageSquare,
   MoreHorizontal,
+  PenSquare,
   Plus,
   Radio,
   RefreshCw,
@@ -38,33 +45,35 @@ import {
   Shield,
   Sliders,
   Sparkles,
+  Star,
+  Trash2,
   User,
   Users,
   UserX,
   X,
   Zap,
 } from "lucide-react";
-import { UserRole, UserStatus } from "@/types/roles";
+import { toast } from "sonner";
 
-// --- REUSABLE UI BADGES & COMPONENTS ---
+// --- REUSABLE UI BADGES & METRIC CARDS ---
 
 export function StatusBadge({ status }: { status: string }) {
   const s = status.toLowerCase();
-  let bg = "bg-slate-100 text-slate-700";
+  let bg = "bg-slate-100 text-slate-700 border border-slate-200";
   let dot = "bg-slate-500";
 
-  if (["active", "published", "completed", "operational", "successful", "paid", "delivered"].includes(s)) {
+  if (["active", "published", "completed", "operational", "successful", "paid", "delivered", "resolved"].includes(s)) {
     bg = "bg-emerald-50 text-emerald-700 border border-emerald-200/60";
     dot = "bg-emerald-500";
-  } else if (["pending", "processing", "scheduled", "trial", "draft"].includes(s)) {
+  } else if (["pending", "processing", "scheduled", "trial", "draft", "in review", "open"].includes(s)) {
     bg = "bg-amber-50 text-amber-700 border border-amber-200/60";
     dot = "bg-amber-500";
-  } else if (["suspended", "inactive", "failed", "degraded", "cancelled", "unread"].includes(s)) {
+  } else if (["suspended", "inactive", "failed", "degraded", "cancelled", "unread", "offline", "high"].includes(s)) {
     bg = "bg-rose-50 text-rose-700 border border-rose-200/60";
     dot = "bg-rose-500";
   } else if (["live", "pro", "enterprise"].includes(s)) {
     bg = "bg-indigo-50 text-indigo-700 border border-indigo-200/60";
-    dot = "bg-indigo-500";
+    dot = "bg-indigo-500 animate-pulse";
   }
 
   return (
@@ -94,7 +103,7 @@ export function MetricCard({
     <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 space-y-2 shadow-2xs">
       <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
         <span>{title}</span>
-        <Info size={13} className="text-slate-400" />
+        <Info size={13} className="text-slate-400 cursor-pointer" />
       </div>
       <div className="flex items-baseline justify-between">
         <span className="text-xl font-bold text-slate-900">{value}</span>
@@ -112,10 +121,12 @@ export function MetricCard({
   );
 }
 
-// --- 1. USERS SUB-PAGE ---
+// --- 1. USERS PAGE & DRAWER ---
+
 export function UsersView({ onUserClick }: { onUserClick: (user: any) => void }) {
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const sampleUsers = [
     { id: "u-1", name: "John Doe", email: "john.doe@unilag.edu.ng", role: "Student", institution: "University of Lagos", status: "Active", joined: "May 12, 2024", sessions: 42, sub: "Pro" },
@@ -125,6 +136,12 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
     { id: "u-5", name: "David Adeleke", email: "david@covenant.edu.ng", role: "Admin", institution: "Covenant University", status: "Active", joined: "Jan 15, 2024", sessions: 310, sub: "Enterprise" },
     { id: "u-6", name: "Chidi Nnamdi", email: "chidi.n@student.unilag.edu.ng", role: "Student", institution: "University of Lagos", status: "Suspended", joined: "Feb 20, 2024", sessions: 19, sub: "Basic" },
   ];
+
+  const filteredUsers = sampleUsers.filter((u) => {
+    const matchesSearch = !search || `${u.name} ${u.email} ${u.institution}`.toLowerCase().includes(search.toLowerCase());
+    const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <div className="space-y-6">
@@ -164,7 +181,10 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
               <option value="Admin">Admins</option>
             </select>
 
-            <button className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 shadow-2xs">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 shadow-2xs cursor-pointer"
+            >
               <Plus size={14} /> Add User
             </button>
           </div>
@@ -186,7 +206,7 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
-              {sampleUsers.map((u) => (
+              {filteredUsers.map((u) => (
                 <tr key={u.id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => onUserClick(u)}>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
@@ -216,11 +236,69 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
           </table>
         </div>
       </div>
+
+      {/* Add User Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-[#E2E8F0] animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+              <h3 className="font-bold text-sm text-slate-900">Add New User</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Full Name</label>
+                <input type="text" placeholder="e.g. Samuel Okon" className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none" />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Email Address</label>
+                <input type="email" placeholder="e.g. samuel@unilag.edu.ng" className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Role</label>
+                  <select className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none">
+                    <option>Student</option>
+                    <option>Lecturer</option>
+                    <option>Admin</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Institution</label>
+                  <select className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none">
+                    <option>University of Lagos</option>
+                    <option>LASUSTECH</option>
+                    <option>University of Ibadan</option>
+                    <option>Covenant University</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-[#E2E8F0] text-slate-700 font-semibold text-xs">
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  toast.success("User invitation sent successfully!");
+                  setShowAddModal(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition"
+              >
+                Create Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// --- USER DETAILS DRAWER ---
 export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }) {
   const [tab, setTab] = useState<"overview" | "activity" | "learning" | "billing">("overview");
 
@@ -323,10 +401,10 @@ export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }
 
         {/* Drawer Footer */}
         <div className="p-6 border-t border-[#E2E8F0] bg-[#F8FAFC] flex gap-3">
-          <button className="flex-1 py-2.5 rounded-xl border border-rose-200 text-rose-600 font-semibold text-xs hover:bg-rose-50 transition">
+          <button onClick={() => toast.warning("User suspended.")} className="flex-1 py-2.5 rounded-xl border border-rose-200 text-rose-600 font-semibold text-xs hover:bg-rose-50 transition cursor-pointer">
             Suspend Account
           </button>
-          <button className="flex-1 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition">
+          <button onClick={() => toast.success("User details saved.")} className="flex-1 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition cursor-pointer">
             Edit Details
           </button>
         </div>
@@ -335,14 +413,17 @@ export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }
   );
 }
 
-// --- 2. INSTITUTIONS SUB-PAGE ---
+// --- 2. INSTITUTIONS PAGE ---
+
 export function InstitutionsView() {
+  const [selectedInst, setSelectedInst] = useState<any>(null);
+
   const insts = [
-    { name: "University of Lagos", type: "Federal", users: "2,341", active: "1,842", plan: "Enterprise", mrr: "₦420,000", status: "Active" },
-    { name: "LASUSTECH", type: "State", users: "1,832", active: "1,425", plan: "Pro", mrr: "₦250,000", status: "Active" },
-    { name: "University of Ibadan", type: "Federal", users: "1,201", active: "978", plan: "Pro", mrr: "₦180,000", status: "Active" },
-    { name: "Babcock University", type: "Private", users: "987", active: "754", plan: "Pro", mrr: "₦150,000", status: "Active" },
-    { name: "Covenant University", type: "Private", users: "842", active: "623", plan: "Basic", mrr: "₦72,000", status: "Trial" },
+    { name: "University of Lagos", type: "Federal", users: "2,341", active: "1,842", plan: "Enterprise", mrr: "₦420,000", status: "Active", joined: "Jan 2024" },
+    { name: "LASUSTECH", type: "State", users: "1,832", active: "1,425", plan: "Pro", mrr: "₦250,000", status: "Active", joined: "Feb 2024" },
+    { name: "University of Ibadan", type: "Federal", users: "1,201", active: "978", plan: "Pro", mrr: "₦180,000", status: "Active", joined: "Mar 2024" },
+    { name: "Babcock University", type: "Private", users: "987", active: "754", plan: "Pro", mrr: "₦150,000", status: "Active", joined: "Apr 2024" },
+    { name: "Covenant University", type: "Private", users: "842", active: "623", plan: "Basic", mrr: "₦72,000", status: "Trial", joined: "May 2024" },
   ];
 
   return (
@@ -359,7 +440,7 @@ export function InstitutionsView() {
       <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
         <div className="flex justify-between items-center">
           <h3 className="font-bold text-sm text-slate-900">Registered Institutions</h3>
-          <button className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 shadow-2xs">
+          <button onClick={() => toast.info("Add Institution wizard opened.")} className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 shadow-2xs cursor-pointer">
             <Plus size={14} /> Add Institution
           </button>
         </div>
@@ -380,7 +461,7 @@ export function InstitutionsView() {
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
               {insts.map((i, idx) => (
-                <tr key={idx} className="hover:bg-slate-50 transition cursor-pointer">
+                <tr key={idx} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => setSelectedInst(i)}>
                   <td className="p-4 font-bold text-slate-900">{i.name}</td>
                   <td className="p-4 text-slate-600">{i.type}</td>
                   <td className="p-4 font-mono text-slate-700">{i.users}</td>
@@ -399,11 +480,136 @@ export function InstitutionsView() {
           </table>
         </div>
       </div>
+
+      {selectedInst && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex justify-end">
+          <div className="w-full max-w-lg bg-white h-full shadow-2xl p-6 overflow-y-auto space-y-6 animate-in slide-in-from-right duration-200">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+              <div>
+                <h3 className="font-bold text-base text-slate-900">{selectedInst.name}</h3>
+                <p className="text-xs text-slate-400 font-mono">ID: INST-{selectedInst.name.substring(0, 4).toUpperCase()}</p>
+              </div>
+              <button onClick={() => setSelectedInst(null)} className="p-2 rounded-xl text-slate-400 hover:text-slate-700">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+                <div className="text-slate-400 text-[10px]">Type</div>
+                <div className="font-bold text-slate-900 mt-0.5">{selectedInst.type}</div>
+              </div>
+              <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+                <div className="text-slate-400 text-[10px]">Plan</div>
+                <div className="font-bold text-slate-900 mt-0.5">{selectedInst.plan}</div>
+              </div>
+              <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+                <div className="text-slate-400 text-[10px]">Monthly Recurring Revenue</div>
+                <div className="font-bold text-[#10B981] font-mono mt-0.5">{selectedInst.mrr}</div>
+              </div>
+              <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+                <div className="text-slate-400 text-[10px]">Status</div>
+                <div className="mt-1"><StatusBadge status={selectedInst.status} /></div>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2 text-xs">
+              <h4 className="font-bold text-slate-900">Institutional Usage Telemetry</h4>
+              <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+                <div className="flex justify-between"><span>Registered Students:</span><span className="font-mono font-bold">{selectedInst.users}</span></div>
+                <div className="flex justify-between"><span>Active Students (30d):</span><span className="font-mono font-bold">{selectedInst.active}</span></div>
+                <div className="flex justify-between"><span>AI Tokens Consumed:</span><span className="font-mono font-bold">14.2M</span></div>
+                <div className="flex justify-between"><span>Quizzes Completed:</span><span className="font-mono font-bold">4,120</span></div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-[#E2E8F0] flex gap-3">
+              <button onClick={() => toast.success("Institution details updated.")} className="flex-1 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition">
+                Manage Contract
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// --- 3. REVENUE SUB-PAGE ---
+// --- 3. ANALYTICS PAGE ---
+
+export function AnalyticsView() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="DAU / WAU Ratio" value="42.1%" change="+3.2%" strokeColor="#10B981" />
+        <MetricCard title="AI Requests (30d)" value="142,800" change="+28.4%" strokeColor="#8B5CF6" />
+        <MetricCard title="AI Tokens Consumed" value="48.2M" change="+31.0%" strokeColor="#3B82F6" />
+        <MetricCard title="Quiz Attempts" value="34,190" change="+19.5%" strokeColor="#10B981" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+          <div className="flex justify-between items-center">
+            <h3 className="font-bold text-sm text-slate-900">User Growth & Retention Cohorts</h3>
+            <span className="text-[10px] font-mono text-slate-400">Monthly</span>
+          </div>
+          <div className="h-48 bg-slate-50 border border-[#E2E8F0] rounded-xl flex items-center justify-center text-xs text-slate-400 font-mono">
+            [User Growth Area Chart: New vs Returning]
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+          <div className="flex justify-between items-center">
+            <h3 className="font-bold text-sm text-slate-900">AI Tokens & Model Latency</h3>
+            <span className="text-[10px] font-mono text-slate-400">Realtime</span>
+          </div>
+          <div className="h-48 bg-slate-50 border border-[#E2E8F0] rounded-xl flex items-center justify-center text-xs text-slate-400 font-mono">
+            [AI Telemetry Bar Chart: Token Breakdown]
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- 4. SUBSCRIPTIONS PAGE ---
+
+export function SubscriptionsView() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="Active Subscriptions" value="278" change="+17.2%" strokeColor="#8B5CF6" />
+        <MetricCard title="Trial Conversions" value="28.4%" change="+4.1%" strokeColor="#10B981" />
+        <MetricCard title="Upgrades (30d)" value="18" change="+3" strokeColor="#3B82F6" />
+        <MetricCard title="Churn Rate" value="1.2%" change="-0.4%" strokeColor="#10B981" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { name: "Enterprise Plan", price: "₦1,250,000", period: "/ month", subs: "8 Institutions", mrr: "₦1,000,000" },
+          { name: "Pro Plan", price: "₦45,000", period: "/ student / yr", subs: "184 Students", mrr: "₦690,000" },
+          { name: "Basic Plan", price: "₦15,000", period: "/ student / yr", subs: "86 Students", mrr: "₦462,400" },
+        ].map((plan, idx) => (
+          <div key={idx} className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-3 shadow-2xs">
+            <div className="text-xs font-semibold text-slate-500">{plan.name}</div>
+            <div className="text-xl font-bold text-slate-900">{plan.price} <span className="text-xs text-slate-400 font-normal">{plan.period}</span></div>
+            <div className="pt-2 border-t border-[#E2E8F0] flex justify-between text-xs">
+              <span className="text-slate-400">Subscribers:</span>
+              <span className="font-bold text-slate-900">{plan.subs}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-400">Monthly Revenue:</span>
+              <span className="font-bold font-mono text-[#10B981]">{plan.mrr}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- 5. REVENUE PAGE ---
+
 export function RevenueView() {
   return (
     <div className="space-y-6">
@@ -419,7 +625,7 @@ export function RevenueView() {
       <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
         <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
           <h3 className="font-bold text-sm text-slate-900">Recent Revenue Transactions</h3>
-          <button className="px-3.5 py-1.5 rounded-xl border border-[#E2E8F0] text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5">
+          <button onClick={() => toast.success("Exporting transactions CSV...")} className="px-3.5 py-1.5 rounded-xl border border-[#E2E8F0] text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 cursor-pointer">
             <Download size={14} /> Export CSV
           </button>
         </div>
@@ -461,7 +667,271 @@ export function RevenueView() {
   );
 }
 
-// --- 4. INTEGRATIONS SUB-PAGE ---
+// --- 6. ENGAGEMENT PAGE ---
+
+export function EngagementView() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="User Retention (30d)" value="68.4%" change="+5.1%" strokeColor="#10B981" />
+        <MetricCard title="Avg Session Duration" value="24.5m" change="+2.4m" strokeColor="#8B5CF6" />
+        <MetricCard title="AI Conversations" value="42,100" change="+18.9%" strokeColor="#3B82F6" />
+        <MetricCard title="Quiz Completion Rate" value="84.2%" change="+3.0%" strokeColor="#10B981" />
+      </div>
+
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <h3 className="font-bold text-sm text-slate-900">Student Activation & Conversion Funnel</h3>
+        <div className="space-y-3 pt-2">
+          {[
+            { step: "Registered Users", count: "12,241", pct: "100%" },
+            { step: "Activated Account", count: "10,480", pct: "85.6%" },
+            { step: "First AI Session", count: "9,210", pct: "75.2%" },
+            { step: "Completed Quiz", count: "8,410", pct: "68.7%" },
+            { step: "Active Subscriber", count: "2,780", pct: "22.7%" },
+          ].map((f, idx) => (
+            <div key={idx} className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span className="font-semibold text-slate-700">{f.step}</span>
+                <span className="font-mono text-slate-500">{f.count} ({f.pct})</span>
+              </div>
+              <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[#6366F1]" style={{ width: f.pct }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- 7. CONTENT PAGE ---
+
+export function ContentView() {
+  const contentItems = [
+    { title: "CSC 201: Object-Oriented Programming Notes", type: "Course", inst: "University of Lagos", author: "Dr. Vance", views: "14,210", status: "Published" },
+    { title: "Data Structures & Algorithms Slide Deck", type: "Lecture", inst: "LASUSTECH", author: "Prof. Okoro", views: "9,840", status: "Published" },
+    { title: "Database Systems Past Questions 2023", type: "Document", inst: "University of Ibadan", author: "Dr. Alabi", views: "18,400", status: "Published" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="Total Content Objects" value="1,480" change="+12.4%" strokeColor="#8B5CF6" />
+        <MetricCard title="Published Content" value="1,240" change="+8.1%" strokeColor="#10B981" />
+        <MetricCard title="Total Views (30d)" value="342,000" change="+24.0%" strokeColor="#3B82F6" />
+        <MetricCard title="Downloads" value="48,200" change="+15.2%" strokeColor="#10B981" />
+      </div>
+
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <div className="flex justify-between items-center">
+          <h3 className="font-bold text-sm text-slate-900">Academic Content Repository</h3>
+          <button onClick={() => toast.info("Content upload modal opened.")} className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 cursor-pointer">
+            <Plus size={14} /> Upload Content
+          </button>
+        </div>
+
+        <table className="w-full text-left text-xs">
+          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+            <tr>
+              <th className="p-4">CONTENT TITLE</th>
+              <th className="p-4">TYPE</th>
+              <th className="p-4">INSTITUTION</th>
+              <th className="p-4">AUTHOR</th>
+              <th className="p-4">VIEWS</th>
+              <th className="p-4">STATUS</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#E2E8F0]">
+            {contentItems.map((c, idx) => (
+              <tr key={idx} className="hover:bg-slate-50 transition">
+                <td className="p-4 font-bold text-slate-900">{c.title}</td>
+                <td className="p-4 text-slate-600">{c.type}</td>
+                <td className="p-4 text-slate-600">{c.inst}</td>
+                <td className="p-4 text-slate-600">{c.author}</td>
+                <td className="p-4 font-mono text-slate-700">{c.views}</td>
+                <td className="p-4"><StatusBadge status={c.status} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// --- 8. QUIZZES & RESULTS PAGE ---
+
+export function QuizzesView() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="Total Quizzes" value="420" change="+14.2%" strokeColor="#8B5CF6" />
+        <MetricCard title="Total Attempts" value="34,190" change="+21.0%" strokeColor="#3B82F6" />
+        <MetricCard title="Average Score" value="78.4%" change="+2.1%" strokeColor="#10B981" />
+        <MetricCard title="Pass Rate" value="84.2%" change="+1.5%" strokeColor="#10B981" />
+      </div>
+
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <h3 className="font-bold text-sm text-slate-900">Recent Assessment Runs</h3>
+        <table className="w-full text-left text-xs">
+          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+            <tr>
+              <th className="p-4">QUIZ NAME</th>
+              <th className="p-4">COURSE</th>
+              <th className="p-4">ATTEMPTS</th>
+              <th className="p-4">AVG SCORE</th>
+              <th className="p-4">PASS RATE</th>
+              <th className="p-4">STATUS</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#E2E8F0]">
+            {[
+              { name: "Calculus & Derivatives Checkpoint", course: "MAT 101", att: "1,420", score: "82.4%", pass: "89.1%", status: "Active" },
+              { name: "Object-Oriented Design Principles", course: "CSC 201", att: "2,150", score: "76.0%", pass: "81.4%", status: "Active" },
+            ].map((q, idx) => (
+              <tr key={idx} className="hover:bg-slate-50 transition">
+                <td className="p-4 font-bold text-slate-900">{q.name}</td>
+                <td className="p-4 text-slate-600">{q.course}</td>
+                <td className="p-4 font-mono text-slate-700">{q.att}</td>
+                <td className="p-4 font-mono font-bold text-slate-900">{q.score}</td>
+                <td className="p-4 font-mono font-bold text-emerald-600">{q.pass}</td>
+                <td className="p-4"><StatusBadge status={q.status} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// --- 9. LIVE SESSIONS PAGE ---
+
+export function LiveSessionsView() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="Live Sessions Now" value="3" change="Active" strokeColor="#10B981" />
+        <MetricCard title="Sessions Today" value="14" change="+4" strokeColor="#3B82F6" />
+        <MetricCard title="Total Participants Today" value="1,840" change="+18.2%" strokeColor="#8B5CF6" />
+        <MetricCard title="Avg Attendance Rate" value="88.5%" change="+3.2%" strokeColor="#10B981" />
+      </div>
+
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <div className="flex justify-between items-center">
+          <h3 className="font-bold text-sm text-slate-900">Live Broadcast Monitor</h3>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
+            <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
+            3 Streams Streaming Live
+          </span>
+        </div>
+
+        <table className="w-full text-left text-xs">
+          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+            <tr>
+              <th className="p-4">SESSION TITLE</th>
+              <th className="p-4">HOST / LECTURER</th>
+              <th className="p-4">INSTITUTION</th>
+              <th className="p-4">PARTICIPANTS</th>
+              <th className="p-4">STATUS</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#E2E8F0]">
+            {[
+              { title: "CSC 201: Dynamic Dispatch Review", host: "Dr. Marcus Vance", inst: "University of Lagos", parts: "248 live", status: "Live" },
+              { title: "PHY 102: Electromagnetic Waves", host: "Prof. Kenneth Okoro", inst: "University of Ibadan", parts: "182 live", status: "Live" },
+              { title: "MAT 204: Linear Algebra Q&A", host: "Dr. Sarah Alabi", inst: "LASUSTECH", parts: "94 live", status: "Live" },
+            ].map((s, idx) => (
+              <tr key={idx} className="hover:bg-slate-50 transition">
+                <td className="p-4 font-bold text-slate-900">{s.title}</td>
+                <td className="p-4 text-slate-600">{s.host}</td>
+                <td className="p-4 text-slate-600">{s.inst}</td>
+                <td className="p-4 font-mono font-bold text-[#6366F1]">{s.parts}</td>
+                <td className="p-4"><StatusBadge status={s.status} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// --- 10. MESSAGES PAGE ---
+
+export function MessagesView() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="Messages Sent (30d)" value="14,280" change="+19.2%" strokeColor="#8B5CF6" />
+        <MetricCard title="Delivery Rate" value="99.4%" change="+0.2%" strokeColor="#10B981" />
+        <MetricCard title="Read Rate" value="82.9%" change="+3.1%" strokeColor="#3B82F6" />
+        <MetricCard title="Failed Messages" value="90" change="-12" strokeColor="#10B981" />
+      </div>
+
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <div className="flex justify-between items-center">
+          <h3 className="font-bold text-sm text-slate-900">Broadcast & Announcement Center</h3>
+          <button onClick={() => toast.info("Composer opened.")} className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 cursor-pointer">
+            <Send size={14} /> Compose Message
+          </button>
+        </div>
+
+        <div className="p-4 bg-slate-50 border border-[#E2E8F0] rounded-xl text-xs text-slate-500">
+          Select target audience (All Institutions, Specific Students, or Lecturers) to send push announcements.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- 11. FEEDBACK PAGE ---
+
+export function FeedbackView() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="Total Feedback" value="640" change="+8.4%" strokeColor="#8B5CF6" />
+        <MetricCard title="Average Rating" value="4.8 / 5.0" change="+0.1" strokeColor="#10B981" />
+        <MetricCard title="Open Bug Reports" value="12" change="-4" strokeColor="#10B981" />
+        <MetricCard title="Feature Requests" value="118" change="+14" strokeColor="#3B82F6" />
+      </div>
+
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <h3 className="font-bold text-sm text-slate-900">User Satisfaction & Reports</h3>
+        <table className="w-full text-left text-xs">
+          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+            <tr>
+              <th className="p-4">USER</th>
+              <th className="p-4">TYPE</th>
+              <th className="p-4">RATING</th>
+              <th className="p-4">MESSAGE</th>
+              <th className="p-4">STATUS</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#E2E8F0]">
+            {[
+              { user: "Amina Bello", type: "Feature Request", rating: "5 ★", msg: "Would love dark mode export for flashcard sets!", status: "Open" },
+              { user: "John Doe", type: "Bug Report", rating: "4 ★", msg: "Quiz timer paused on tab switch.", status: "In Review" },
+            ].map((f, idx) => (
+              <tr key={idx} className="hover:bg-slate-50 transition">
+                <td className="p-4 font-bold text-slate-900">{f.user}</td>
+                <td className="p-4 text-slate-600">{f.type}</td>
+                <td className="p-4 font-bold text-amber-500">{f.rating}</td>
+                <td className="p-4 text-slate-700">{f.msg}</td>
+                <td className="p-4"><StatusBadge status={f.status} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// --- 12. INTEGRATIONS PAGE ---
+
 export function IntegrationsView() {
   const integrations = [
     { name: "Paystack Payments", category: "Payments", desc: "Process local cards, bank transfers, and USSD payments.", status: "Operational", sync: "2 mins ago" },
@@ -488,7 +958,7 @@ export function IntegrationsView() {
 
             <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
               <span className="text-slate-400 font-mono text-[11px]">Sync: {item.sync}</span>
-              <button className="px-3 py-1.5 rounded-xl border border-[#E2E8F0] font-semibold text-slate-700 hover:bg-slate-50 transition">
+              <button onClick={() => toast.info(`Configuring ${item.name}`)} className="px-3 py-1.5 rounded-xl border border-[#E2E8F0] font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
                 Configure
               </button>
             </div>
@@ -499,8 +969,9 @@ export function IntegrationsView() {
   );
 }
 
-// --- 5. SETTINGS SUB-PAGE ---
-export function SettingsView() {
+// --- 13. SETTINGS PAGE ---
+
+export function AdminSettingsView() {
   return (
     <div className="bg-white border border-[#E2E8F0] rounded-2xl p-8 max-w-3xl space-y-6 shadow-2xs text-xs">
       <div className="border-b border-[#E2E8F0] pb-4 space-y-1">
@@ -532,12 +1003,109 @@ export function SettingsView() {
       </div>
 
       <div className="pt-4 border-t border-[#E2E8F0] flex justify-end gap-3">
-        <button className="px-5 py-2.5 rounded-xl border border-[#E2E8F0] font-semibold text-slate-700 hover:bg-slate-50 transition">
+        <button onClick={() => toast.info("Settings discarded.")} className="px-5 py-2.5 rounded-xl border border-[#E2E8F0] font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
           Cancel
         </button>
-        <button className="px-5 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold hover:bg-[#4F46E5] transition shadow-2xs">
+        <button onClick={() => toast.success("Platform settings saved successfully.")} className="px-5 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold hover:bg-[#4F46E5] transition shadow-2xs cursor-pointer">
           Save Settings
         </button>
+      </div>
+    </div>
+  );
+}
+
+// --- 14. AUDIT LOGS PAGE ---
+
+export function AuditLogsView() {
+  const logs = [
+    { time: "2026-09-04 16:25", actor: "alex@summa.ai", action: "ROLE_ELEVATED", target: "usr-prof-1", details: "Assigned Instructor role for CSC 201", status: "Successful" },
+    { time: "2026-09-04 14:30", actor: "alex@summa.ai", action: "SYSTEM_POLICY_UPDATED", target: "SYSTEM", details: "Enabled Hybrid Memory Vector Indexing & Gemini API Rate Limits", status: "Successful" },
+    { time: "2026-09-03 11:15", actor: "system@summa.ai", action: "DATABASE_BACKUP", target: "Postgres DB", details: "Completed nightly automated snapshot", status: "Successful" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="Total Events (30d)" value="14,820" change="+8.2%" strokeColor="#8B5CF6" />
+        <MetricCard title="Admin Actions" value="1,240" change="+12" strokeColor="#10B981" />
+        <MetricCard title="Security Events" value="85" change="-3" strokeColor="#10B981" />
+        <MetricCard title="Failed Actions" value="4" change="0" strokeColor="#3B82F6" />
+      </div>
+
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <h3 className="font-bold text-sm text-slate-900">System Activity & Audit Log Trail</h3>
+        <table className="w-full text-left text-xs">
+          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+            <tr>
+              <th className="p-4">TIMESTAMP</th>
+              <th className="p-4">ACTOR</th>
+              <th className="p-4">ACTION</th>
+              <th className="p-4">TARGET / RESOURCE</th>
+              <th className="p-4">DETAILS</th>
+              <th className="p-4">STATUS</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#E2E8F0] font-mono">
+            {logs.map((l, idx) => (
+              <tr key={idx} className="hover:bg-slate-50 transition">
+                <td className="p-4 text-slate-500 text-[11px]">{l.time}</td>
+                <td className="p-4 font-bold text-slate-900">{l.actor}</td>
+                <td className="p-4 font-bold text-[#6366F1]">{l.action}</td>
+                <td className="p-4 text-slate-700">{l.target}</td>
+                <td className="p-4 font-sans text-slate-600">{l.details}</td>
+                <td className="p-4 font-sans"><StatusBadge status={l.status} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// --- 15. GLOBAL NOTIFICATIONS DRAWER ---
+
+export function NotificationsDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null;
+
+  const notifications = [
+    { title: "Payment Received", desc: "LASUSTECH renewed Enterprise Plan (₦250,000)", time: "15m ago", type: "payment" },
+    { title: "New Institution Onboarded", desc: "Babcock University requested 500 student seats", time: "1h ago", type: "institution" },
+    { title: "AI Model Latency Spike", desc: "Gemini 2.5 API latency returned to nominal <350ms", time: "3h ago", type: "system" },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex justify-end">
+      <div className="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200">
+        <div>
+          <div className="p-5 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+            <div className="flex items-center gap-2 font-bold text-sm text-slate-900">
+              <Bell size={16} className="text-[#6366F1]" />
+              <span>Admin Notifications</span>
+            </div>
+            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700">
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="p-4 space-y-3">
+            {notifications.map((n, idx) => (
+              <div key={idx} className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl space-y-1 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-900">{n.title}</span>
+                  <span className="text-[10px] text-slate-400 font-mono">{n.time}</span>
+                </div>
+                <p className="text-slate-600 text-[11px] leading-relaxed">{n.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-[#E2E8F0] bg-[#F8FAFC]">
+          <button onClick={() => { toast.success("Marked all as read"); onClose(); }} className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+            Mark All as Read
+          </button>
+        </div>
       </div>
     </div>
   );

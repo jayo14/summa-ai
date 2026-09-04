@@ -33,7 +33,7 @@ INTENT_PATTERNS = {
     "gap-analysis": [re.compile(r"\b(gap|missing|need to learn)\b", re.I)],
 }
 
-WEAK_SCORE_THRESHOLD = 40.0
+WEAK_SCORE_THRESHOLD = 70.0
 PROACTIVE_GAP_CHECK_INTERVAL = 5
 MAX_CONTEXT_SECTION_CHARS = 3000
 
@@ -59,8 +59,12 @@ async def detect_knowledge_gaps(user_id: str) -> Optional[dict]:
         for entry in entries:
             score = entry.get("metadata", {}).get("score", 100)
             topic = entry.get("metadata", {}).get("topic") or entry.get("text", "")
-            if isinstance(score, (int, float)) and score < WEAK_SCORE_THRESHOLD:
-                gaps.append({"topic": topic, "score": score})
+            try:
+                score_num = float(score)
+            except (ValueError, TypeError):
+                score_num = 100.0
+            if score_num < WEAK_SCORE_THRESHOLD:
+                gaps.append({"topic": topic, "score": score_num})
         if gaps:
             return {
                 "type": "gap-analysis",

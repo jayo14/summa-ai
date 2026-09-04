@@ -11,14 +11,13 @@ from fastapi import APIRouter
 
 from app.core.security import resolve_user_id
 from app.models.interactions import QuizResultCreate
-from app.services.cognee_service import CogneeService
+from app.routes.chat import cognee
 from app.services.data_store import DataStore
 
 logger = logging.getLogger(__name__)
 
 interactions_router = APIRouter()
 _store = DataStore()
-_cognee = CogneeService()
 
 
 @interactions_router.post(
@@ -34,7 +33,7 @@ async def record_quiz_result(data: QuizResultCreate):
     user_id = resolve_user_id()
 
     try:
-        await _cognee.remember_learning_progress(
+        await cognee.remember_learning_progress(
             user_id,
             data.topic,
             data.score,
@@ -70,4 +69,5 @@ async def record_quiz_result(data: QuizResultCreate):
             exc_info=True,
         )
 
-    return await _store.create_quiz_result(user_id, data.model_dump())
+    res = await _store.create_quiz_result(user_id, data.model_dump())
+    return res

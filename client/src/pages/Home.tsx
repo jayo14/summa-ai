@@ -345,7 +345,7 @@ export default function Home() {
   const { user, logout } = useAuth();
 
   return (
-    <div className={`summa-app ${contextOpen ? "context-is-open" : "context-is-closed"} ${theme === "dark" ? "dark-mode" : ""}`}>
+    <div className={`summa-app ${contextOpen && sessionStarted && activeView === "workspace" ? "context-is-open" : "context-is-closed"} ${theme === "dark" ? "dark-mode" : ""}`}>
       <aside className={`app-sidebar ${sidebarOpen ? "is-open" : ""}`} aria-label="Primary navigation">
         <div className="sidebar-topline"><SummaLogo /><button className="mobile-close-button" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={19} /></button></div>
         <button type="button" className="new-session-button" onClick={startNewSession}><Plus size={16} /> New learning</button>
@@ -429,14 +429,82 @@ export default function Home() {
 
 type WorkspaceProps = { sessionStarted: boolean; onStart: () => void; composerValue: string; setComposerValue: (value: string) => void; sendMessage: (message?: string) => void; messages: ConversationMessage[]; isResponding: boolean; mastery: number; updateMastery: (amount: number) => void; registerEvent: (kind: string, detail: string) => void; setSourceTrayOpen: (value: boolean) => void };
 
+import {
+  PromptInput,
+  ThinkingBar,
+  ChainOfThought,
+  CodeBlock,
+  ToolCall,
+  ScrollButton,
+  SourceCard,
+} from "@/components/prompt-kit";
+
 function WorkspaceView(props: WorkspaceProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (props.messages.length || props.isResponding) bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [props.messages.length, props.isResponding]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setShowScrollButton(scrollHeight - scrollTop - clientHeight > 120);
+  };
+
+  useEffect(() => {
+    if (props.messages.length || props.isResponding) {
+      scrollToBottom();
+    }
+  }, [props.messages.length, props.isResponding]);
+
   if (!props.sessionStarted) return <EmptyWorkspace {...props} />;
-  return <div className="workspace-view active-workspace"><div className="conversation-scroll"><div className="conversation-column">
-    <section className="context-banner" aria-label="Current learning context"><div className="context-course"><span className="context-dot" /> CSC 201 <ChevronRight size={13} /> <strong>Object-Oriented Programming</strong></div><div className="context-meta"><button type="button" onClick={() => props.setSourceTrayOpen(true)}><BookOpen size={13} /> 3 sources</button><span /> <span className="objective-slip">Objective: explain runtime dispatch</span><button type="button" className="context-share-button" onClick={() => shareText("Summa AI learning summary", "Summa AI · CSC 201\nTopic: Runtime dispatch\nCurrent estimate: " + props.mastery + "%\nNext action: Explain how dynamic dispatch chooses an override.", "summa-learning-summary.txt")}><Share2 size={12} /> Share summary</button></div></section>
-    {props.messages.map((message) => <ConversationTurn message={message} key={message.id} />)}{props.isResponding && <div className="tutor-typing-indicator" role="status" aria-live="polite"><div className="typing-orb"><span className="mini-orb" /></div><div className="typing-bubble"><span className="sr-only">Summa is typing a response</span><i /><i /><i /></div><small>Summa is thinking</small></div>}<div ref={bottomRef} aria-hidden="true" />
-  </div></div><ComposerPanel {...props} active /></div>;
+  return (
+    <div className="workspace-view active-workspace relative">
+      <div className="conversation-scroll" ref={scrollContainerRef} onScroll={handleScroll}>
+        <div className="conversation-column">
+          <section className="context-banner" aria-label="Current learning context">
+            <div className="context-course">
+              <span className="context-dot" /> CSC 201 <ChevronRight size={13} /> <strong>Object-Oriented Programming</strong>
+            </div>
+            <div className="context-meta">
+              <button type="button" onClick={() => props.setSourceTrayOpen(true)}>
+                <BookOpen size={13} /> 3 sources
+              </button>
+              <span /> <span className="objective-slip">Objective: explain runtime dispatch</span>
+              <button
+                type="button"
+                className="context-share-button"
+                onClick={() =>
+                  shareText(
+                    "Summa AI learning summary",
+                    "Summa AI · CSC 201\nTopic: Runtime dispatch\nCurrent estimate: " +
+                      props.mastery +
+                      "%\nNext action: Explain how dynamic dispatch chooses an override.",
+                    "summa-learning-summary.txt"
+                  )
+                }
+              >
+                <Share2 size={12} /> Share summary
+              </button>
+            </div>
+          </section>
+          {props.messages.map((message) => (
+            <ConversationTurn message={message} key={message.id} />
+          ))}
+          {props.isResponding && (
+            <div className="my-3 space-y-2">
+              <ThinkingBar label="Summa is retrieving concept hierarchy & analyzing code..." />
+            </div>
+          )}
+          <div ref={bottomRef} aria-hidden="true" />
+        </div>
+      </div>
+      {showScrollButton && <ScrollButton onClick={scrollToBottom} />}
+      <ComposerPanel {...props} active />
+    </div>
+  );
 }
 
 function EmptyWorkspace(props: WorkspaceProps) {
@@ -448,10 +516,37 @@ function EmptyWorkspace(props: WorkspaceProps) {
 
 function ComposerPanel(props: WorkspaceProps & { active?: boolean }) {
   const [upload, setUpload] = useState<{ name: string; url: string } | null>(null);
-  const [isDictating, setIsDictating] = useState(false);
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-  function simulateDictation() { if (isDictating) return; setIsDictating(true); toast("Listening… simulated dictation is active."); window.setTimeout(() => { props.setComposerValue(`${props.composerValue}${props.composerValue ? " " : ""}Explain this concept with a concrete example.`); setIsDictating(false); toast("Transcript added to the composer."); }, 900); }
-  return <div className={`composer-shell ${props.active ? "active-composer-shell" : "empty-composer-shell"}`}><form className="composer" onSubmit={(event) => { event.preventDefault(); props.sendMessage(); }}><label className="composer-icon upload-trigger" aria-label="Upload a resource"><input type="file" accept="image/*,.pdf,.txt,.md" onChange={(event) => { const file = event.target.files?.[0]; if (file) { setUpload({ name: file.name, url: file.type.startsWith("image/") ? URL.createObjectURL(file) : "" }); toast(`${file.name} attached for this session.`); } }} /><Plus size={18} /></label><textarea value={props.composerValue} onChange={(event) => props.setComposerValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.sendMessage(); } }} placeholder="Ask anything…" rows={1} aria-label="Message Summa" />{upload && <div className="composer-upload-preview" title={upload.name}>{upload.url ? <button type="button" className="upload-thumbnail-button" onClick={() => setLightboxUrl(upload.url)} aria-label={`Enlarge ${upload.name}`}><img src={upload.url} alt="Uploaded resource thumbnail" /></button> : <span><FileText size={14} /></span>}<small>{upload.name}</small><button type="button" onClick={() => setUpload(null)} aria-label={`Remove ${upload.name}`}><X size={12} /></button></div>}<div className="composer-tools"><button type="button" className={`composer-icon ${isDictating ? "is-dictating" : ""}`} onClick={simulateDictation} aria-label={isDictating ? "Dictation in progress" : "Simulate voice dictation"}><Mic size={17} />{isDictating && <span className="audio-wave" aria-hidden="true"><i /><i /><i /><i /><i /></span>}</button><button type="button" className="composer-source" onClick={() => props.setSourceTrayOpen(true)}><BookOpen size={14} /><span>Data source</span><ChevronDown size={12} /></button></div><button type="submit" className="composer-send" disabled={!props.composerValue.trim() || props.isResponding} aria-label="Send message"><ArrowUp size={19} /></button></form>{props.active && <p className="composer-note">Enter sends · Shift+Enter adds a line · Summa uses selected course resources first.</p>}{lightboxUrl && <div className="upload-lightbox" role="dialog" aria-modal="true" aria-label="Enlarged uploaded resource" onClick={() => setLightboxUrl(null)}><button type="button" className="lightbox-close" onClick={() => setLightboxUrl(null)} aria-label="Close enlarged resource"><X size={18} /></button><img src={lightboxUrl} alt="Enlarged uploaded resource" onClick={(event) => event.stopPropagation()} /></div>}</div>;
+
+  const handleVoice = () => {
+    toast("Listening… simulated voice input active.");
+    window.setTimeout(() => {
+      props.setComposerValue(`${props.composerValue}${props.composerValue ? " " : ""}Explain this concept with a concrete example.`);
+      toast("Transcript added to composer.");
+    }, 900);
+  };
+
+  const handleAttach = () => {
+    props.setSourceTrayOpen(true);
+  };
+
+  return (
+    <div className={`composer-shell ${props.active ? "active-composer-shell" : "empty-composer-shell"}`}>
+      <PromptInput
+        value={props.composerValue}
+        onChange={(e) => props.setComposerValue(e.target.value)}
+        onSubmit={() => props.sendMessage()}
+        isResponding={props.isResponding}
+        placeholder="Ask Summa to explain, test, or map a concept..."
+        onAttach={handleAttach}
+        onVoice={handleVoice}
+        attachedFile={upload}
+        onRemoveAttach={() => setUpload(null)}
+      />
+      {props.active && (
+        <p className="composer-note">Enter sends · Shift+Enter adds a line · Summa uses selected course resources first.</p>
+      )}
+    </div>
+  );
 }
 
 function FormattedMarkdown({ content }: { content: string }) {
@@ -467,18 +562,7 @@ function FormattedMarkdown({ content }: { content: string }) {
           const firstLineEnd = part.indexOf("\n");
           const lang = part.slice(3, firstLineEnd > 3 ? firstLineEnd : 3).trim();
           const code = firstLineEnd !== -1 ? part.slice(firstLineEnd + 1, -3).trim() : part.slice(3, -3).trim();
-          return (
-            <div key={index} className="my-2.5 rounded-xl border border-slate-700/80 bg-slate-900 text-slate-100 overflow-hidden shadow-sm">
-              {lang && (
-                <div className="px-3 py-1 bg-slate-800/80 border-b border-slate-700/60 text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                  {lang}
-                </div>
-              )}
-              <pre className="p-3 text-xs font-mono overflow-x-auto whitespace-pre leading-normal">
-                <code>{code}</code>
-              </pre>
-            </div>
-          );
+          return <CodeBlock key={index} language={lang || "code"} code={code} />;
         }
 
         // Process line-by-line for headings, lists, bold
@@ -561,10 +645,22 @@ function ConversationTurn({ message }: { message: ConversationMessage }) {
   const { user } = useAuth();
   const initials = (user?.name || user?.email || "Student").split(" ").map((p) => p[0]).join("").toUpperCase().slice(0, 2);
 
+  // Extract reasoning steps if present in assistant response
+  let reasoningText: string | undefined;
+  let cleanContent = message.content;
+  if (!isStudent && message.content.includes("<think>")) {
+    const thinkStart = message.content.indexOf("<think>");
+    const thinkEnd = message.content.indexOf("</think>");
+    if (thinkEnd > thinkStart) {
+      reasoningText = message.content.slice(thinkStart + 7, thinkEnd).trim();
+      cleanContent = (message.content.slice(0, thinkStart) + message.content.slice(thinkEnd + 8)).trim();
+    }
+  }
+
   return (
     <div className={`message-block ${isStudent ? "student-message" : "summa-message dynamic-message"}`}>
       {isStudent ? (
-        <div className="student-message-avatar bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center rounded-xl size-7 shadow-sm">
+        <div className="student-message-avatar bg-gradient-to-tr from-[#005A57] to-[#003F3F] text-[#B8FF4D] font-bold text-xs flex items-center justify-center rounded-xl size-7 shadow-sm">
           {initials}
         </div>
       ) : (
@@ -576,7 +672,10 @@ function ConversationTurn({ message }: { message: ConversationMessage }) {
         </div>
       )}
       <div className="message-content">
-        {isStudent ? <p>{message.content}</p> : <FormattedMarkdown content={message.content} />}
+        {!isStudent && reasoningText && (
+          <ChainOfThought reasoningText={reasoningText} defaultExpanded={false} />
+        )}
+        {isStudent ? <p>{cleanContent}</p> : <FormattedMarkdown content={cleanContent} />}
         {message.activity && (
           <div className="mt-3">
             <ChatComponentRenderer activity={message.activity} />
@@ -589,12 +688,36 @@ function ConversationTurn({ message }: { message: ConversationMessage }) {
 
 function ContextRail({ mastery, events, onJumpToSources }: { mastery: number; events: string[]; onJumpToSources: () => void }) {
   const [nextAction, setNextAction] = useState<{ action: string; target_concept: string; reason: string; estimated_minutes: number } | null>(null);
+  const [learnerContext, setLearnerContext] = useState<{
+    sources_count: number;
+    capabilities: Array<{ label: string; value: number; tone: "strong" | "developing" }>;
+    memory: { preference: string; recurring_gap: string; next_review: string };
+    signals: string[];
+  } | null>(null);
 
   useEffect(() => {
     fetchApi<{ action: string; target_concept: string; reason: string; estimated_minutes: number }>("/student/next-action")
       .then((res) => { if (res && res.action) setNextAction(res); })
       .catch(() => {});
+
+    fetchApi<{
+      sources_count: number;
+      capabilities: Array<{ label: string; value: number; tone: "strong" | "developing" }>;
+      memory: { preference: string; recurring_gap: string; next_review: string };
+      signals: string[];
+    }>("/student/learner-context")
+      .then((res) => { if (res && res.capabilities) setLearnerContext(res); })
+      .catch(() => {});
   }, []);
+
+  const capabilities = learnerContext?.capabilities || [
+    { label: "Definitions", value: 91, tone: "strong" as const },
+    { label: "Identification", value: 82, tone: "strong" as const },
+    { label: "Runtime behaviour", value: mastery, tone: "developing" as const },
+    { label: "Implementation", value: 48, tone: "developing" as const },
+  ];
+
+  const signals = learnerContext?.signals || events;
 
   return (
     <aside className="context-rail" aria-label="Learning context">
@@ -617,28 +740,27 @@ function ContextRail({ mastery, events, onJumpToSources }: { mastery: number; ev
         <div className="section-heading"><div><span className="eyebrow">LEARNER MODEL</span><h3>Polymorphism</h3></div><span className="mastery-estimate">{mastery}%</span></div>
         <p className="estimate-copy">Estimated from recent retrieval and explanation evidence.</p>
         <div className="ledger-list">
-          <LedgerRow label="Definitions" value={91} tone="strong" />
-          <LedgerRow label="Identification" value={82} tone="strong" />
-          <LedgerRow label="Runtime behaviour" value={mastery} tone="developing" />
-          <LedgerRow label="Implementation" value={48} tone="developing" />
+          {capabilities.map((c) => (
+            <LedgerRow key={c.label} label={c.label} value={c.value} tone={c.tone} />
+          ))}
         </div>
       </section>
       <section className="memory-card">
         <div className="memory-head"><div><span className="eyebrow">WHAT I REMEMBER</span><h3>Useful continuity</h3></div><div className="memory-status"><span /> Active</div></div>
         <ul>
-          <li><span>Preference</span><strong>Examples before abstractions</strong></li>
-          <li><span>Recurring gap</span><strong>Overriding vs. overloading</strong></li>
-          <li><span>Next review</span><strong>Saturday · retrieval</strong></li>
+          <li><span>Preference</span><strong>{learnerContext?.memory?.preference || "Examples before abstractions"}</strong></li>
+          <li><span>Recurring gap</span><strong>{learnerContext?.memory?.recurring_gap || "Overriding vs. overloading"}</strong></li>
+          <li><span>Next review</span><strong>{learnerContext?.memory?.next_review || "Saturday · retrieval"}</strong></li>
         </ul>
       </section>
       <section className="source-lens">
-        <div className="source-lens-copy"><span className="eyebrow">SUMMASTUDY</span><h3>3 sources are in scope</h3><p>Selected materials anchor this session.</p></div>
+        <div className="source-lens-copy"><span className="eyebrow">SUMMASTUDY</span><h3>{learnerContext?.sources_count || 3} sources are in scope</h3><p>Selected materials anchor this session.</p></div>
         <img src="/manus-storage/summa-learning-atlas_404e3bf5.jpg" alt="An editorial arrangement of course materials and concept cards." />
         <button type="button" onClick={onJumpToSources}>Review sources <ChevronRight size={14} /></button>
       </section>
       <section className="event-ledger">
         <span className="eyebrow">SESSION SIGNALS</span>
-        {events.map((event) => <p key={event}><span />{event}</p>)}
+        {signals.map((event) => <p key={event}><span />{event}</p>)}
       </section>
     </aside>
   );
@@ -653,15 +775,57 @@ function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolder
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [folder, setFolder] = useState("All folders");
+
+  const [dbObjects, setDbObjects] = useState<Array<any>>([]);
+
+  useEffect(() => {
+    fetchApi<Array<any>>("/activities")
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setDbObjects(data.map((item) => ({
+            type: (item.type || "ACTIVITY").toUpperCase(),
+            title: item.title || "Untitled Activity",
+            description: item.purpose || item.change_note || "Learning activity",
+            meta: item.estimated_minutes ? `${item.estimated_minutes} min estimated` : "Active object",
+            action: "Open",
+            accent: item.type === "quiz" ? "coral" : item.type === "practice" ? "blue" : "ink",
+            topic: item.topic || "CSC 201",
+            date: item.created_at || new Date().toISOString(),
+          })));
+        } else {
+          setDbObjects(learningObjects);
+        }
+      })
+      .catch(() => setDbObjects(learningObjects));
+  }, []);
+
   const folders = ["All folders", "Unsorted", ...Array.from(new Set(Object.values(favoriteFolders).filter(Boolean)))];
   useEffect(() => { const timer = window.setTimeout(() => setIsFiltering(false), 360); return () => window.clearTimeout(timer); }, [topic, sort, favoritesOnly, query, folder]);
-  const topics = ["All topics", ...Array.from(new Set(learningObjects.map((item) => item.topic)))];
-  const visible = learningObjects.filter((item) => { const haystack = `${item.title} ${item.description} ${item.meta} ${item.topic}`.toLowerCase(); const itemFolder = favoriteFolders[item.title] || "Unsorted"; return (topic === "All topics" || item.topic === topic) && (!favoritesOnly || favorites.includes(item.title)) && (!query || haystack.includes(query.toLowerCase())) && (folder === "All folders" || itemFolder === folder); }).sort((a, b) => sort === "topic" ? a.topic.localeCompare(b.topic) : sort === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+  const topics = ["All topics", ...Array.from(new Set(dbObjects.map((item) => item.topic)))];
+  const visible = dbObjects.filter((item) => { const haystack = `${item.title} ${item.description} ${item.meta} ${item.topic}`.toLowerCase(); const itemFolder = favoriteFolders[item.title] || "Unsorted"; return (topic === "All topics" || item.topic === topic) && (!favoritesOnly || favorites.includes(item.title)) && (!query || haystack.includes(query.toLowerCase())) && (folder === "All folders" || itemFolder === folder); }).sort((a, b) => sort === "topic" ? a.topic.localeCompare(b.topic) : sort === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+
   return <div className="secondary-page library-page"><section className="secondary-intro library-intro"><div><span className="eyebrow">MY LEARNING</span><h1>Objects that keep learning with you.</h1><p>Your retrieval sets, practice, and quizzes are organized by course and adjust as your evidence changes.</p></div><img src="/assets/my-learning-desk-cards.jpg" alt="Study notes and index cards arranged on a desk." className="rounded-2xl border border-[#DDE8DF] dark:border-[#005A57] shadow-md object-cover" /></section><div className="discover-toolbar"><div className="filter-label"><Filter size={14} /> <span>Filter learning</span></div><label className="learning-search"><Search size={13} /><span className="sr-only">Search saved learning</span><input value={query} onChange={(event) => { setQuery(event.target.value); setIsFiltering(true); }} placeholder="Search saved learning…" /></label><label><span className="sr-only">Topic</span><select value={topic} onChange={(event) => setTopic(event.target.value)}>{topics.map((item) => <option key={item}>{item}</option>)}</select></label><label><ArrowDownUp size={13} /><span className="sr-only">Sort learning</span><select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}><option value="recent">Newest first</option><option value="oldest">Oldest first</option><option value="topic">By topic</option></select></label><button type="button" className={`favorites-filter ${favoritesOnly ? "active" : ""}`} onClick={() => { setFavoritesOnly((value) => !value); setIsFiltering(true); }}><BookmarkCheck size={13} /> Favorites {favorites.length}</button><label><span className="sr-only">Favorite folder</span><select value={folder} onChange={(event) => { setFolder(event.target.value); setIsFiltering(true); }}>{folders.map((item) => <option key={item}>{item}</option>)}</select></label><button type="button" className="folder-create-button" onClick={() => { const next = window.prompt("Name this favorite folder"); if (next?.trim()) { const title = favorites[0]; if (title) onAssignFolder(title, next.trim()); toast(`${next.trim()} folder created for your first favorite.`); } }}><Plus size={12} /> New folder</button><span className="result-count">{visible.length} objects</span></div>{isFiltering ? <FilterSkeletonGrid count={4} /> : <><div className="library-grid">{visible.map((item) => <LearningObject key={item.title} {...item} favorite={favorites.includes(item.title)} favoriteFolder={favoriteFolders[item.title] || "Unsorted"} favoriteFolders={folders.slice(1)} onToggleFavorite={onToggleFavorite} onAssignFolder={onAssignFolder} onClick={onResume} />)}</div>{visible.length === 0 && <div className="empty-filter-state">No learning objects match this topic yet.</div>}</>}</div>;
 }
 function LearningObject({ type, title, description, meta, action, onClick, accent, topic, date, favorite, favoriteFolder, favoriteFolders, onToggleFavorite, onAssignFolder }: { type: string; title: string; description: string; meta: string; action: string; onClick: () => void; accent: string; topic: string; date: string; favorite: boolean; favoriteFolder: string; favoriteFolders: string[]; onToggleFavorite: (title: string) => void; onAssignFolder: (title: string, folder: string) => void }) { const note = `${title}\n${description}\n${topic} · ${new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}\n${meta}`; return <article className={`learning-object object-${accent}`}><span className="object-tab">{type}</span><div><h2>{title}</h2><p>{description}</p></div><footer><span>{topic} · {new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span><div className="object-actions"><button type="button" className="card-share has-tooltip" data-tooltip="Share learning card" onClick={() => shareText(title, note, `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.txt`)} aria-label={`Share ${title}`}><Share2 size={12} /></button><button type="button" className="card-share has-tooltip" data-tooltip="Export as text file" onClick={() => exportText(title, note, `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.txt`)} aria-label={`Export ${title}`}><Download size={12} /></button><button type="button" className={`card-share favorite-button has-tooltip ${favorite ? "is-favorite" : ""}`} data-tooltip={favorite ? "Remove from favorites" : "Save to favorites"} onClick={() => onToggleFavorite(title)} aria-label={favorite ? `Remove ${title} from favorites` : `Save ${title} to favorites`}>{favorite ? <BookmarkCheck size={12} /> : <Bookmark size={12} />}</button>{favorite && <label className="card-folder-select has-tooltip" data-tooltip="Organize this favorite"><FolderOpen size={11} /><span className="sr-only">Favorite folder for {title}</span><select value={favoriteFolder} onChange={(event) => onAssignFolder(title, event.target.value)}>{favoriteFolders.map((item) => <option key={item}>{item}</option>)}</select></label>}<button type="button" onClick={onClick}>{action} <ChevronRight size={14} /></button></div></footer></article>; }
 
-function ProgressView({ mastery, onContinue }: { mastery: number; onContinue: () => void }) { const [completedTitles, setCompletedTitles] = useState<string[]>(() => JSON.parse(window.localStorage.getItem("summa-completed-milestones") || '["Polymorphism foundations"]')); const [celebrating, setCelebrating] = useState(false); function completeMilestone(title: string) { if (completedTitles.includes(title)) return; setCompletedTitles((items) => [...items, title]); window.localStorage.setItem("summa-completed-milestones", JSON.stringify([...completedTitles, title])); setCelebrating(true); window.setTimeout(() => setCelebrating(false), 1800); } return <div className="secondary-page progress-page"><section className="secondary-intro progress-intro"><div><span className="eyebrow">LEARNING PROGRESS</span><h1>See the evidence. Choose the next move.</h1><p>Mastery is an estimate from your answers, explanations, practice, and delayed review—not a completion badge.</p><button type="button" onClick={onContinue}>Continue learning <ChevronRight size={14} /></button></div><figure><div className="progress-orb"><span /></div><figcaption>Learning memory makes the next recommendation specific.</figcaption></figure></section><MilestoneTracker mastery={mastery} completedTitles={completedTitles} onComplete={completeMilestone} celebrating={celebrating} /><section className="progress-sheet"><div className="progress-sheet-heading"><div><span className="eyebrow">CSC 201 · OBJECT-ORIENTED PROGRAMMING</span><h2>Evidence by capability</h2></div><span>Updated today</span></div><div className="capability-table"><Capability label="Identify polymorphism" evidence="4 retrieval answers" estimate={86} state="stable" /><Capability label="Explain runtime dispatch" evidence="1 explanation · 1 hint" estimate={mastery} state="developing" /><Capability label="Implement overriding" evidence="No recent attempt" estimate={48} state="next" /><Capability label="Apply to an unfamiliar design" evidence="No evidence yet" estimate={34} state="next" /></div></section><div className="insight-strip"><Sparkles size={17} /><p><strong>Useful pattern:</strong> your answers improve when you predict first, then explain the runtime object in your own words.</p></div></div>; }
+function ProgressView({ mastery, onContinue }: { mastery: number; onContinue: () => void }) {
+  const [completedTitles, setCompletedTitles] = useState<string[]>(() => JSON.parse(window.localStorage.getItem("summa-completed-milestones") || '["Polymorphism foundations"]'));
+  const [celebrating, setCelebrating] = useState(false);
+  const [dbConcepts, setDbConcepts] = useState<Array<{ name: string; mastery: string }>>([]);
+
+  useEffect(() => {
+    fetchApi<Array<{ name: string; mastery: string }>>("/concepts")
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setDbConcepts(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  function completeMilestone(title: string) { if (completedTitles.includes(title)) return; setCompletedTitles((items) => [...items, title]); window.localStorage.setItem("summa-completed-milestones", JSON.stringify([...completedTitles, title])); setCelebrating(true); window.setTimeout(() => setCelebrating(false), 1800); }
+  return <div className="secondary-page progress-page"><section className="secondary-intro progress-intro"><div><span className="eyebrow">LEARNING PROGRESS</span><h1>See the evidence. Choose the next move.</h1><p>Mastery is an estimate from your answers, explanations, practice, and delayed review—not a completion badge.</p><button type="button" onClick={onContinue}>Continue learning <ChevronRight size={14} /></button></div><figure><div className="progress-orb"><span /></div><figcaption>Learning memory makes the next recommendation specific.</figcaption></figure></section><MilestoneTracker mastery={mastery} completedTitles={completedTitles} onComplete={completeMilestone} celebrating={celebrating} /><section className="progress-sheet"><div className="progress-sheet-heading"><div><span className="eyebrow">CSC 201 · OBJECT-ORIENTED PROGRAMMING</span><h2>Evidence by capability</h2></div><span>Updated today</span></div><div className="capability-table">{dbConcepts.length > 0 ? dbConcepts.slice(0, 4).map((c) => <Capability key={c.name} label={c.name} evidence="Active evidence tracking" estimate={c.mastery === "mastered" ? 88 : c.mastery === "practicing" ? 62 : 40} state={c.mastery === "mastered" ? "stable" : "developing"} />) : <><Capability label="Identify polymorphism" evidence="4 retrieval answers" estimate={86} state="stable" /><Capability label="Explain runtime dispatch" evidence="1 explanation · 1 hint" estimate={mastery} state="developing" /><Capability label="Implement overriding" evidence="No recent attempt" estimate={48} state="next" /><Capability label="Apply to an unfamiliar design" evidence="No evidence yet" estimate={34} state="next" /></>}</div></section><div className="insight-strip"><Sparkles size={17} /><p><strong>Useful pattern:</strong> your answers improve when you predict first, then explain the runtime object in your own words.</p></div></div>;
+}
 function Capability({ label, evidence, estimate, state }: { label: string; evidence: string; estimate: number; state: "stable" | "developing" | "next" }) { const activeCount = Math.max(1, Math.round(estimate / 10)); return <div className="capability-row"><div><span className={`capability-dot ${state}`} /><strong>{label}</strong><small>{evidence}</small></div><div className="evidence-marks capability-evidence">{Array.from({ length: 10 }, (_, index) => <i key={index} className={index < activeCount ? "is-active" : ""} />)}</div><strong>{estimate}%</strong><span className={`capability-state ${state}`}>{state === "stable" ? "Stable" : state === "developing" ? "Developing" : "Next"}</span></div>; }
 function MilestoneTracker({ mastery, completedTitles, onComplete, celebrating }: { mastery: number; completedTitles: string[]; onComplete: (title: string) => void; celebrating: boolean }) { const completed = completedTitles.length; const progress = Math.min(100, Math.round(((completed + (mastery / 100)) / milestoneData.length) * 100)); const nextMilestone = milestoneData.find((item) => !completedTitles.includes(item.title)); return <section className={`milestone-tracker ${celebrating ? "is-celebrating" : ""}`}><div className="milestone-heading"><div><span className="eyebrow">LEARNING MILESTONES</span><h2>Your path through CSC 201</h2><p>{completed} of {milestoneData.length} milestones complete · {progress}% journey progress</p></div><Trophy size={19} /></div>{celebrating && <div className="celebration-banner" role="status"><span className="celebration-sparkles">✦ ✧ ✦</span><strong>Milestone complete</strong><small>Your learning path just moved forward.</small></div>}<div className="milestone-track" style={{ "--milestone-progress": `${progress}%` } as React.CSSProperties}>{milestoneData.map((item) => { const isComplete = completedTitles.includes(item.title); const isCurrent = !isComplete && item.title === nextMilestone?.title; return <div className={`milestone-node ${isComplete ? "complete" : isCurrent ? "current" : "next"} has-tooltip`} data-tooltip={item.objective} tabIndex={0} role="button" aria-label={`${item.title}: ${item.objective}`} onClick={() => isCurrent && onComplete(item.title)} onKeyDown={(event) => { if ((event.key === "Enter" || event.key === " ") && isCurrent) { event.preventDefault(); onComplete(item.title); } }} key={item.title}><div className="milestone-dot">{isComplete ? <CheckCircle2 size={14} /> : isCurrent ? <LoaderCircle size={14} /> : <span />}</div><strong>{item.title}</strong><small>{item.detail}</small><em>{isComplete ? "Complete" : isCurrent ? "Click to complete" : item.date}</em></div>; })}</div></section>; }
 function FilterSkeletonGrid({ count }: { count: number }) { return <div className={`filter-skeleton-grid skeleton-count-${count}`} aria-live="polite" aria-label="Loading filtered content">{Array.from({ length: count }, (_, index) => <div className="filter-skeleton-card" key={index}><span className="skeleton-line short" /><span className="skeleton-line medium" /><span className="skeleton-line long" /><span className="skeleton-line tiny" /></div>)}</div>; }
@@ -670,9 +834,30 @@ function SourcesView({ onUseSource }: { onUseSource: () => void }) {
   const [topic, setTopic] = useState("All topics");
   const [sort, setSort] = useState<SortMode>("recent");
   const [isFiltering, setIsFiltering] = useState(true);
+  const [sources, setSources] = useState<Array<any>>([]);
+
+  useEffect(() => {
+    fetchApi<Array<any>>("/materials")
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setSources(data.map((m) => ({
+            title: m.title || "Learning Resource",
+            detail: m.description || m.type || "Course material",
+            type: m.type || "Material",
+            topic: m.topic || "CSC 201",
+            date: m.created_at || new Date().toISOString(),
+            selected: true,
+          })));
+        } else {
+          setSources(sourceCatalog);
+        }
+      })
+      .catch(() => setSources(sourceCatalog));
+  }, []);
+
   useEffect(() => { const timer = window.setTimeout(() => setIsFiltering(false), 360); return () => window.clearTimeout(timer); }, [topic, sort]);
-  const topics = ["All topics", ...Array.from(new Set(sourceCatalog.map((item) => item.topic)))];
-  const visible = sourceCatalog.filter((item) => topic === "All topics" || item.topic === topic).sort((a, b) => sort === "topic" ? a.topic.localeCompare(b.topic) : sort === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+  const topics = ["All topics", ...Array.from(new Set(sources.map((item) => item.topic)))];
+  const visible = sources.filter((item) => topic === "All topics" || item.topic === topic).sort((a, b) => sort === "topic" ? a.topic.localeCompare(b.topic) : sort === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
   return <div className="secondary-page sources-page"><section className="secondary-intro plain-intro"><div><span className="eyebrow">SUMMASTUDY CONNECTION</span><h1>Your materials are learning context.</h1><p>Summa prioritizes selected academic resources, then clearly distinguishes a general explanation when your materials do not settle a question.</p></div><div className="connect-status"><span className="status-orb" /> Connected through SummaStudy</div></section><div className="discover-toolbar source-discover-toolbar"><div className="filter-label"><Filter size={14} /> <span>Filter sources</span></div><label><span className="sr-only">Topic</span><select value={topic} onChange={(event) => setTopic(event.target.value)}>{topics.map((item) => <option key={item}>{item}</option>)}</select></label><label><ArrowDownUp size={13} /><span className="sr-only">Sort sources</span><select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}><option value="recent">Newest first</option><option value="oldest">Oldest first</option><option value="topic">By topic</option></select></label><span className="result-count">{visible.length} sources</span></div>{isFiltering ? <FilterSkeletonGrid count={3} /> : <section className="source-catalog">{visible.map((source) => <article key={source.title}><div className="source-file-icon"><FileText size={20} /></div><div><span className="eyebrow">{source.type} · {source.topic}</span><h2>{source.title}</h2><p>{source.detail}</p></div><span className="source-in-use">{new Date(source.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span><button type="button" onClick={onUseSource}>Use to learn <ChevronRight size={14} /></button></article>)}</section>}<button type="button" className="add-source-button" onClick={() => { toast("SummaStudy picker opened — choose the materials to add."); onUseSource(); }}><Plus size={16} /> Add from SummaStudy</button></div>;
 }
 function SourceTray({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) { return <div className="source-tray-overlay" role="dialog" aria-modal="true" aria-labelledby="source-tray-title"><button className="source-tray-backdrop" onClick={onClose} aria-label="Close source selector" /><section className="source-tray"><header><div><span className="eyebrow">SESSION CONTEXT</span><h2 id="source-tray-title">Choose what grounds this learning.</h2><p>Summa will prioritize these approved resources before general knowledge.</p></div><button type="button" onClick={onClose} aria-label="Close source selector"><X size={19} /></button></header><div className="source-picker-list">{sourceItems.map((source) => <label key={source.title} className="source-picker-item"><input type="checkbox" defaultChecked={source.selected} /><span className="custom-check"><Check size={13} /></span><FileText size={17} /><span><strong>{source.title}</strong><small>{source.detail}</small></span><em>{source.type}</em></label>)}</div><footer><button type="button" className="secondary-action" onClick={() => toast("Upload control will be available after secure file storage is configured.")}><Paperclip size={14} /> Upload a resource</button><button type="button" className="interactive-primary" onClick={onConfirm}>Use selected sources <Send size={14} /></button></footer></section></div>; }

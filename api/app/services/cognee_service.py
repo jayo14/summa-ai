@@ -232,6 +232,7 @@ class CogneeService:
                 logger.warning("Cognee remember failed: %s", exc)
 
         self._memory.setdefault(dataset, []).append(item)
+        self._recall_cache._store.clear()
         try:
             pool = await get_pool()
             if pool:
@@ -336,9 +337,10 @@ class CogneeService:
     # ─────────────────────────────────────────────────────────────────────────
 
     async def _recall(self, query: str, dataset: str, limit: int = 10) -> List[Dict]:
-        cached = self._recall_cache.get(query, dataset, limit)
-        if cached is not None:
-            return cached
+        if not query.lower().startswith("all "):
+            cached = self._recall_cache.get(query, dataset, limit)
+            if cached is not None:
+                return cached
 
         result: List[Dict] = []
         if self._cognee:

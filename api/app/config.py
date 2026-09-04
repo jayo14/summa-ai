@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 
     # Feature flags
-    ALLOW_DEV_AUTH_FALLBACK: bool = False
+    ALLOW_DEV_AUTH_FALLBACK: bool = True
     SCHEDULER_ENABLED: bool = True
     WEBSOCKET_ENABLED: bool = True
     NEW_CHAT_UI: bool = False

@@ -847,6 +847,7 @@ class DataStore:
                         )
                         d = dict(row)
                         d["id"] = str(d["id"])
+                        d["sessions"] = sessions_data
                         return d
         except Exception:
             pass
@@ -862,6 +863,13 @@ class DataStore:
             "sessions": sessions_data,
         }
         self._local_study_plans.append(plan_item)
+        await self.create_timeline_event(
+            user_id,
+            "study_plan",
+            f"Study Plan Created: {data.get('title', 'Study Plan')}",
+            f"Created study plan with {len(sessions_data)} session(s)",
+            {"plan_id": pid},
+        )
         return plan_item
 
     async def _get_study_plan(self, pid: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -908,12 +916,21 @@ class DataStore:
             return await self._get_study_plan(pid, user_id)
 
     async def delete_study_plan(self, pid: str, user_id: str) -> bool:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            result = await conn.execute(
-                "DELETE FROM summa_ai.study_plans WHERE id = $1 AND user_id = $2", pid, user_id
-            )
-        return "DELETE 1" in result
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    result = await conn.execute(
+                        "DELETE FROM summa_ai.study_plans WHERE id = $1 AND user_id = $2", pid, user_id
+                    )
+                if "DELETE 1" in result:
+                    return True
+        except Exception:
+            pass
+
+        before = len(self._local_study_plans)
+        self._local_study_plans = [p for p in self._local_study_plans if not (p.get("id") == pid and p.get("user_id") == user_id)]
+        return len(self._local_study_plans) < before
 
     async def update_session(
         self, sid: str, user_id: str, data: Dict[str, Any]
