@@ -22,8 +22,20 @@ router = APIRouter()
 SUPABASE_AUTH_URL = f"{settings.SUPABASE_URL}/auth/v1" if settings.SUPABASE_URL else ""
 
 
+def _dev_fallback_enabled() -> bool:
+    """Return True only when ALLOW_DEV_AUTH_FALLBACK is set and not in production."""
+    import os
+    if settings.is_production:
+        return False
+    if settings.ALLOW_DEV_AUTH_FALLBACK:
+        return True
+    return os.getenv("ALLOW_DEV_AUTH_FALLBACK", "false").lower() in ("1", "true", "yes")
+
+
 def _create_mock_jwt(user_id: str) -> str:
-    """Generate token for local dev when Supabase is unconfigured/unreachable."""
+    """Generate token for local dev when Supabase is unconfigured/unreachable.
+    Only called when _dev_fallback_enabled() returns True.
+    """
     import jwt as pyjwt
     from datetime import datetime, timedelta, timezone
 
@@ -90,11 +102,18 @@ async def signup(payload: AuthLoginRequest):
                     )
                     if resp.status_code == 422:
                         detail = "An account with this email may already exist"
-                    logger.warning("Supabase signup failed: %s", detail)
+                    raise HTTPException(status_code=400, detail=detail)
+        except HTTPException:
+            raise
         except Exception as exc:
-            logger.warning("Supabase connection skipped/failed during signup: %s", exc)
+            logger.warning("Supabase connection failed during signup: %s", exc)
+            if not _dev_fallback_enabled():
+                raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
-    # Local / Dev Fallback
+    # Local / Dev Fallback — only when explicitly enabled
+    if not _dev_fallback_enabled():
+        raise HTTPException(status_code=502, detail="Authentication service unavailable")
+
     token = _create_mock_jwt(user_id)
     return {
         "access_token": token,
@@ -132,13 +151,16 @@ async def login(payload: AuthLoginRequest):
 
     if SUPABASE_AUTH_URL and not settings.SUPABASE_URL.startswith("https://xxx"):
         try:
+            # Validate credentials before making the upstream call
+            if payload.provider == "credentials":
+                if not payload.password:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Password is required for credential sign-in",
+                    )
+
             async with httpx.AsyncClient(timeout=2.0) as client:
                 if payload.provider == "credentials":
-                    if not payload.password:
-                        raise HTTPException(
-                            status_code=400,
-                            detail="Password is required for credential sign-in",
-                        )
                     resp = await client.post(
                         f"{SUPABASE_AUTH_URL}/token?grant_type=password",
                         headers={"apikey": settings.SUPABASE_ANON_KEY},
@@ -175,11 +197,19 @@ async def login(payload: AuthLoginRequest):
                         or resp.json().get("msg")
                         or "Authentication failed"
                     )
-                    logger.warning("Supabase login failed: %s", detail)
+                    raise HTTPException(status_code=401, detail=detail)
+        except HTTPException:
+            # Re-raise application-level errors — never absorb them into the fallback
+            raise
         except Exception as exc:
-            logger.warning("Supabase login error, proceeding with dev fallback: %s", exc)
+            logger.warning("Supabase login connection error: %s", exc)
+            if not _dev_fallback_enabled():
+                raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
-    # Local / Dev Fallback
+    # Local / Dev Fallback — only when explicitly enabled via ALLOW_DEV_AUTH_FALLBACK=true
+    if not _dev_fallback_enabled():
+        raise HTTPException(status_code=502, detail="Authentication service unavailable")
+
     token = _create_mock_jwt(user_id)
     return {
         "access_token": token,

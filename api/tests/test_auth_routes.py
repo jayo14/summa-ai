@@ -52,7 +52,7 @@ async def test_signup_supabase_error():
         MockClient.return_value.__aenter__.return_value.post.return_value = mock_resp
         with pytest.raises(HTTPException) as exc:
             await signup(AuthLoginRequest(email="a@b.com", password="pass123"))
-        assert exc.value.status_code == 422
+        assert exc.value.status_code == 400
 
 
 @pytest.mark.asyncio
@@ -133,3 +133,34 @@ async def test_signup_missing_supabase_url():
             )
             with pytest.raises(Exception):
                 await signup(AuthLoginRequest(email="a@b.com", password="pass123"))
+
+
+@pytest.mark.asyncio
+async def test_login_missing_password_returns_400_all_configs():
+    with patch("app.routes.auth.settings.ALLOW_DEV_AUTH_FALLBACK", True), \
+         patch("app.routes.auth.settings.ENVIRONMENT", "development"):
+        with pytest.raises(HTTPException) as exc:
+            await login(AuthLoginRequest(email="a@b.com", password="", provider="credentials"))
+        assert exc.value.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_login_supabase_fail_returns_502_when_fallback_disabled():
+    with patch("app.routes.auth.settings.ALLOW_DEV_AUTH_FALLBACK", False), \
+         patch("app.routes.auth.settings.ENVIRONMENT", "development"), \
+         patch("app.routes.auth.httpx.AsyncClient") as MockClient:
+        MockClient.return_value.__aenter__.return_value.post.side_effect = Exception("Supabase down")
+        with pytest.raises(HTTPException) as exc:
+            await login(AuthLoginRequest(email="a@b.com", password="pass", provider="credentials"))
+        assert exc.value.status_code == 502
+
+
+@pytest.mark.asyncio
+async def test_login_fallback_works_when_enabled_non_prod():
+    with patch("app.routes.auth.settings.ALLOW_DEV_AUTH_FALLBACK", True), \
+         patch("app.routes.auth.settings.ENVIRONMENT", "development"), \
+         patch("app.routes.auth.httpx.AsyncClient") as MockClient:
+        MockClient.return_value.__aenter__.return_value.post.side_effect = Exception("Supabase down")
+        result = await login(AuthLoginRequest(email="a@b.com", password="pass", provider="credentials"))
+        assert "access_token" in result
+        assert result["user"]["email"] == "a@b.com"
