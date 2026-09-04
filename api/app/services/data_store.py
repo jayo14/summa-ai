@@ -201,8 +201,9 @@ class DataStore:
                     await conn.execute(
                         """INSERT INTO summa_ai.artifacts
                            (id, user_id, conversation_id, title, type, source, source_label,
-                            parent_artifact_id, component, change_note)
-                           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)""",
+                            parent_artifact_id, component, change_note, purpose, concept_ids,
+                            difficulty, estimated_minutes, learning_signals)
+                           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)""",
                         aid,
                         user_id,
                         data.get("conversation_id"),
@@ -213,6 +214,11 @@ class DataStore:
                         data.get("parent_artifact_id"),
                         json.dumps(data.get("component")) if data.get("component") else None,
                         data.get("change_note"),
+                        data.get("purpose"),
+                        json.dumps(data.get("concept_ids", [])),
+                        data.get("difficulty"),
+                        data.get("estimated_minutes"),
+                        json.dumps(data.get("learning_signals", {})),
                     )
                     await conn.execute(
                         """INSERT INTO summa_ai.artifact_versions (artifact_id, version, title, component, change_note)
@@ -251,6 +257,12 @@ class DataStore:
             "action": data.get("action", "Open"),
             "pinned": False,
             "archived": False,
+            "purpose": data.get("purpose"),
+            "concept_ids": data.get("concept_ids", []),
+            "difficulty": data.get("difficulty"),
+            "estimated_minutes": data.get("estimated_minutes"),
+            "learning_signals": data.get("learning_signals", {}),
+            "component": data.get("component"),
         }
         self._local_activities.insert(0, item)
         return item
