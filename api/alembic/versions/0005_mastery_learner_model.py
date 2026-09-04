@@ -16,12 +16,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute("""
+    op.execute(sa.text("""
         ALTER TABLE summa_ai.concepts
             ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES summa_ai.concepts(id) ON DELETE SET NULL,
             ADD COLUMN IF NOT EXISTS subject VARCHAR(255),
             ADD COLUMN IF NOT EXISTS course VARCHAR(255);
+    """))
 
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.mastery_records (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id VARCHAR(255) NOT NULL,
@@ -36,8 +38,12 @@ def upgrade() -> None:
             last_evidence_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             UNIQUE(user_id, concept_id)
         );
+    """))
+    op.execute(sa.text("""
         CREATE INDEX IF NOT EXISTS idx_mastery_records_user_concept ON summa_ai.mastery_records(user_id, concept_id);
+    """))
 
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.activity_attempts (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             activity_id VARCHAR(255),
@@ -50,8 +56,12 @@ def upgrade() -> None:
             confidence_rating INT,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
+    """))
+    op.execute(sa.text("""
         CREATE INDEX IF NOT EXISTS idx_activity_attempts_user_created ON summa_ai.activity_attempts(user_id, created_at DESC);
+    """))
 
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.misconceptions (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id VARCHAR(255) NOT NULL,
@@ -62,17 +72,19 @@ def upgrade() -> None:
             last_observed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             UNIQUE(user_id, concept_id, description)
         );
+    """))
+    op.execute(sa.text("""
         CREATE INDEX IF NOT EXISTS idx_misconceptions_user_concept ON summa_ai.misconceptions(user_id, concept_id);
-    """)
+    """))
 
 
 def downgrade() -> None:
-    op.execute("""
-        DROP TABLE IF EXISTS summa_ai.misconceptions;
-        DROP TABLE IF EXISTS summa_ai.activity_attempts;
-        DROP TABLE IF EXISTS summa_ai.mastery_records;
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.misconceptions;"))
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.activity_attempts;"))
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.mastery_records;"))
+    op.execute(sa.text("""
         ALTER TABLE summa_ai.concepts
             DROP COLUMN IF EXISTS course,
             DROP COLUMN IF EXISTS subject,
             DROP COLUMN IF EXISTS parent_id;
-    """)
+    """))

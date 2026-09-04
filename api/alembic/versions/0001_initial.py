@@ -23,11 +23,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # The schema references auth.users (provided by Supabase in production).
-    # On a plain Postgres (CI/dev without Supabase) create a minimal stub so
-    # the foreign keys resolve. No-op when auth.users already exists.
-    op.execute("CREATE SCHEMA IF NOT EXISTS auth")
-    op.execute("CREATE TABLE IF NOT EXISTS auth.users (id UUID PRIMARY KEY)")
+    op.execute("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'auth') THEN
+            CREATE SCHEMA auth;
+            CREATE TABLE auth.users (id UUID PRIMARY KEY);
+        END IF;
+    END $$;
+    """)
 
     op.execute("CREATE SCHEMA IF NOT EXISTS summa_ai")
 

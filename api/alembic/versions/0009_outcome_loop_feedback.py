@@ -11,7 +11,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute("""
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.exam_feedback (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             exam_id VARCHAR(255) NOT NULL,
@@ -23,7 +23,9 @@ def upgrade() -> None:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             UNIQUE(user_id, exam_id)
         );
+    """))
 
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.prediction_evaluations (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             exam_id VARCHAR(255) NOT NULL,
@@ -32,11 +34,9 @@ def upgrade() -> None:
             actually_appeared BOOLEAN NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-    """)
+    """))
 
 
 def downgrade() -> None:
-    op.execute("""
-        DROP TABLE IF EXISTS summa_ai.prediction_evaluations;
-        DROP TABLE IF EXISTS summa_ai.exam_feedback;
-    """)
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.prediction_evaluations;"))
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.exam_feedback;"))

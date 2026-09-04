@@ -11,7 +11,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute("""
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.resource_chunks (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             resource_id VARCHAR(255) NOT NULL,
@@ -20,8 +20,12 @@ def upgrade() -> None:
             location VARCHAR(255),
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
+    """))
+    op.execute(sa.text("""
         CREATE INDEX IF NOT EXISTS idx_resource_chunks_user_resource ON summa_ai.resource_chunks(user_id, resource_id);
+    """))
 
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.resource_permissions (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id VARCHAR(255) NOT NULL,
@@ -30,8 +34,12 @@ def upgrade() -> None:
             granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             UNIQUE(user_id, resource_id, scope)
         );
+    """))
+    op.execute(sa.text("""
         CREATE INDEX IF NOT EXISTS idx_resource_permissions_user_resource ON summa_ai.resource_permissions(user_id, resource_id);
+    """))
 
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.message_sources (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             message_id VARCHAR(255) NOT NULL,
@@ -41,12 +49,10 @@ def upgrade() -> None:
             chunk_id VARCHAR(255),
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-    """)
+    """))
 
 
 def downgrade() -> None:
-    op.execute("""
-        DROP TABLE IF EXISTS summa_ai.message_sources;
-        DROP TABLE IF EXISTS summa_ai.resource_permissions;
-        DROP TABLE IF EXISTS summa_ai.resource_chunks;
-    """)
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.message_sources;"))
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.resource_permissions;"))
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.resource_chunks;"))

@@ -10,13 +10,13 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP
 
 revision = "0003"
-down_revision = "0002"
+down_revision = "0002_quiz_results"
 branch_labels = None
 depends_on = None
 
 
 def upgrade() -> None:
-    op.execute("""
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.memory_entries (
             id UUID PRIMARY KEY,
             user_id VARCHAR(255) NOT NULL,
@@ -25,19 +25,20 @@ def upgrade() -> None:
             metadata JSONB DEFAULT '{}'::jsonb,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
+    """))
+    op.execute(sa.text("""
         CREATE INDEX IF NOT EXISTS idx_memory_entries_user_dataset ON summa_ai.memory_entries(user_id, dataset);
-
+    """))
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.rate_limit_hits (
             client_ip VARCHAR(255) NOT NULL,
             window_start BIGINT NOT NULL,
             hit_count INT DEFAULT 1,
             PRIMARY KEY (client_ip, window_start)
         );
-    """)
+    """))
 
 
 def downgrade() -> None:
-    op.execute("""
-        DROP TABLE IF EXISTS summa_ai.rate_limit_hits;
-        DROP TABLE IF EXISTS summa_ai.memory_entries;
-    """)
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.rate_limit_hits;"))
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.memory_entries;"))

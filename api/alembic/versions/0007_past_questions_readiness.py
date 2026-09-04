@@ -11,7 +11,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute("""
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.past_question_sets (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id VARCHAR(255) NOT NULL,
@@ -20,7 +20,9 @@ def upgrade() -> None:
             year INT,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
+    """))
 
+    op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS summa_ai.past_questions (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             set_id VARCHAR(255) NOT NULL,
@@ -32,12 +34,12 @@ def upgrade() -> None:
             question_text TEXT NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
+    """))
+    op.execute(sa.text("""
         CREATE INDEX IF NOT EXISTS idx_past_questions_exam ON summa_ai.past_questions(exam_id, user_id);
-    """)
+    """))
 
 
 def downgrade() -> None:
-    op.execute("""
-        DROP TABLE IF EXISTS summa_ai.past_questions;
-        DROP TABLE IF EXISTS summa_ai.past_question_sets;
-    """)
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.past_questions;"))
+    op.execute(sa.text("DROP TABLE IF EXISTS summa_ai.past_question_sets;"))
