@@ -231,10 +231,25 @@ async def chat_stream(request: ChatRequest):
     user_id = resolve_user_id()
     last_query = request.messages[-1].content if request.messages else ""
     messages = [{"role": m.role, "content": m.content} for m in request.messages]
+    
+    from app.services.orchestrator import LearningOrchestrator
+    orchestrator = LearningOrchestrator()
+    decision = await orchestrator.decide_next_action(user_id, last_query, messages)
+    
     intent = detect_intent(last_query)
     orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages, request=request)
 
     async def generate():
+        # Emit orchestrator next_action event
+        next_action_event = {
+            "type": "next_action",
+            "action": decision.action,
+            "reasoning": decision.reasoning,
+            "target_concept_ids": decision.target_concept_ids,
+            "suggested_difficulty": decision.suggested_difficulty,
+        }
+        yield f"data: {json.dumps(next_action_event)}\n\n"
+
         if intent:
             payload = await generate_component_payload(intent, last_query, orch_prompt)
             if payload is not None:
