@@ -12,6 +12,7 @@ from app.config import settings
 from app.core.security import (
     ConnectionManager,
     current_user_id,
+    load_jwks_at_startup,
     reset_current_user_id,
     reset_current_jwt_token,
     set_current_jwt_token,
@@ -72,6 +73,7 @@ async def lifespan(app: FastAPI):
             + ". Set these environment variables before deploying."
         )
     await CogneeService.initialize()
+    await load_jwks_at_startup()
     logger.info("🚀 Summa AI API Started")
     yield
     logger.info("👋 Summa AI API Shutting Down")
