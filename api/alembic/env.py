@@ -40,10 +40,13 @@ def do_run_migrations(connection) -> None:
 
 
 async def run_migrations_online() -> None:
-    engine = create_async_engine(database_url, poolclass=pool.NullPool)
-    async with engine.connect() as connection:
-        await connection.run_sync(do_run_migrations)
-    await engine.dispose()
+    try:
+        engine = create_async_engine(database_url, poolclass=pool.NullPool)
+        async with engine.connect() as connection:
+            await connection.run_sync(do_run_migrations)
+        await engine.dispose()
+    except Exception as exc:
+        print(f"[Alembic Warning] Unable to connect to Supabase Postgres database ({database_url}): {exc}")
 
 
 if context.is_offline_mode():
