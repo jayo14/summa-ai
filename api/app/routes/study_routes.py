@@ -261,6 +261,35 @@ async def get_exam_readiness(eid: str):
     return await ExamReadinessEngine.compute_readiness(user_id, eid)
 
 
+@exams_router.post(
+    "/exams/{eid}/feedback",
+    status_code=201,
+    summary="Submit post-exam feedback",
+    description="Submit post-exam outcome feedback with privacy & recommendation consent",
+)
+async def submit_exam_feedback(eid: str, payload: dict):
+    user_id = resolve_user_id()
+    from app.services.outcome_loop import OutcomeLoopEngine, ExamFeedbackCreate
+    engine = OutcomeLoopEngine()
+    feedback = ExamFeedbackCreate(**payload)
+    return await engine.submit_exam_feedback(user_id, eid, feedback)
+
+
+@exams_router.get(
+    "/exams/{eid}/feedback",
+    summary="Get post-exam feedback",
+    description="Get recorded post-exam outcome feedback for an exam",
+)
+async def get_exam_feedback(eid: str):
+    user_id = resolve_user_id()
+    from app.services.outcome_loop import OutcomeLoopEngine
+    engine = OutcomeLoopEngine()
+    res = await engine.get_exam_feedback(user_id, eid)
+    if res is None:
+        raise HTTPException(404, "Not found")
+    return res
+
+
 @exams_router.delete(
     "/exams/{eid}", summary="Delete exam", description="Remove an exam"
 )
