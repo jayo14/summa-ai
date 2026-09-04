@@ -92,9 +92,6 @@ async def update_session(sid: str, data: StudySessionUpdate):
     return session
 
 
-# ========== FLASHCARDS ==========
-
-
 @flashcards_router.get(
     "/flashcards",
     summary="List flashcards",
@@ -103,6 +100,69 @@ async def update_session(sid: str, data: StudySessionUpdate):
 async def list_flashcards():
     user_id = resolve_user_id()
     return await _store.list_flashcards(user_id)
+
+
+@flashcards_router.get(
+    "/flashcards/due",
+    summary="Get due flashcards",
+    description="Get all flashcards due for review",
+)
+async def get_due_flashcards():
+    user_id = resolve_user_id()
+    all_cards = await _store.list_flashcards(user_id)
+    # Filter cards where next_review_at is <= now or unset
+    from datetime import datetime, timezone
+    now_iso = datetime.now(timezone.utc).isoformat()
+    return [c for c in all_cards if not c.get("next_review_at") or c.get("next_review_at") <= now_iso]
+
+
+@flashcards_router.post(
+    "/flashcards/{fid}/review",
+    summary="Record flashcard review",
+    description="Record a performance rating for a flashcard and compute SM-2 schedule",
+)
+async def record_flashcard_review(fid: str, payload: dict):
+    user_id = resolve_user_id()
+    rating = payload.get("rating", "good")
+    if rating not in ("again", "hard", "good", "easy"):
+        raise HTTPException(400, "Invalid rating value")
+
+    card = await _store.update_flashcard(fid, user_id, {})
+    if card is None:
+        raise HTTPException(404, "Not found")
+
+    from app.services.spaced_repetition import next_review
+    from datetime import datetime, timedelta, timezone
+
+    ease = float(card.get("ease_factor", 2.5))
+    interval = int(card.get("interval_days", 0))
+    reps = int(card.get("repetitions", 0))
+
+    new_ease, new_interval, new_reps = next_review(rating, ease, interval, reps)
+    next_review_at = datetime.now(timezone.utc) + timedelta(days=new_interval)
+
+    updated = await _store.update_flashcard(
+        fid,
+        user_id,
+        {
+            "ease_factor": new_ease,
+            "interval_days": new_interval,
+            "repetitions": new_reps,
+            "next_review_at": next_review_at.isoformat(),
+        },
+    )
+
+    from app.services.mastery_engine import MasteryEngine
+    engine = MasteryEngine()
+    correct = rating in ("good", "easy")
+    await engine.record_attempt(
+        user_id=user_id,
+        activity_id=fid,
+        concept_ids=[card.get("concept_id") or card.get("front") or "flashcard"],
+        correct=correct,
+    )
+
+    return updated
 
 
 @flashcards_router.post(
