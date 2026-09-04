@@ -30,7 +30,14 @@ export default function SignIn() {
         window.location.href = "/";
       }, 100);
     } catch (err: any) {
-      toast.error(err.message || "Failed to sign in");
+      const errMsg = err.message || "";
+      if (errMsg.toLowerCase().includes("not verified") || errMsg.toLowerCase().includes("not confirmed")) {
+        toast.info("Please verify your email before logging in.");
+        localStorage.setItem("summa_pending_email", email);
+        setLocation(`/verify-email?email=${encodeURIComponent(email)}`);
+      } else {
+        toast.error(errMsg || "Failed to sign in");
+      }
       setIsSubmitting(false);
     }
   };

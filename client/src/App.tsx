@@ -9,6 +9,7 @@ import NotFound from "@/pages/NotFound";
 import ResetPassword from "@/pages/ResetPassword";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
+import VerifyEmail from "@/pages/VerifyEmail";
 import LogsPage from "@/pages/LogsPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import { AdminRoute } from "@/components/AdminRoute";
@@ -30,6 +31,10 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     return <Redirect to="/sign-in" />;
   }
 
+  if (user && user.email_verified === false) {
+    return <Redirect to={`/verify-email?email=${encodeURIComponent(user.email)}`} />;
+  }
+
   if (user?.role === UserRole.ADMIN) {
     return <Redirect to="/admin" />;
   }
@@ -44,7 +49,7 @@ function PublicAuthRoute({ component: Component }: { component: React.ComponentT
     return <SummaPreloader />;
   }
 
-  if (isAuthenticated) {
+  if (isAuthenticated && user?.email_verified !== false) {
     if (user?.role === UserRole.ADMIN) {
       return <Redirect to="/admin" />;
     }
@@ -62,6 +67,9 @@ function IndexRoute() {
   }
 
   if (isAuthenticated) {
+    if (user?.email_verified === false) {
+      return <Redirect to={`/verify-email?email=${encodeURIComponent(user.email)}`} />;
+    }
     if (user?.role === UserRole.ADMIN) {
       return <Redirect to="/admin" />;
     }
@@ -79,6 +87,9 @@ function Router() {
       </Route>
       <Route path="/sign-up">
         {() => <PublicAuthRoute component={SignUp} />}
+      </Route>
+      <Route path="/verify-email">
+        {() => <VerifyEmail />}
       </Route>
       <Route path="/forgot-password">
         {() => <PublicAuthRoute component={ForgotPassword} />}

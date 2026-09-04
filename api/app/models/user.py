@@ -12,6 +12,7 @@ class User(BaseModel):
     avatar: Optional[str] = None
     bio: Optional[str] = None
     provider: Optional[str] = None
+    email_verified: bool = True
     onboarded: bool = False
     onboarding_data: Dict[str, Any] = Field(default_factory=dict)
     created_at: Optional[datetime] = None
@@ -80,4 +81,15 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     password: str
+
+
+class VerifyOtpRequest(BaseModel):
+    email: str
+    token: str
+    type: str = "signup"
+
+
+class ResendOtpRequest(BaseModel):
+    email: str
+    type: str = "signup"
 

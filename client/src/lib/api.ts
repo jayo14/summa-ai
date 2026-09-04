@@ -29,7 +29,16 @@ export async function fetchApi<T = any>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    const errorMsg = data.detail || data.message || `API error (${response.status})`;
+    let errorMsg = "API request failed";
+    if (typeof data.detail === "string") {
+      errorMsg = data.detail;
+    } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+      errorMsg = data.detail.map((err: any) => err.msg || JSON.stringify(err)).join(", ");
+    } else if (data.message) {
+      errorMsg = data.message;
+    } else {
+      errorMsg = `API error (${response.status})`;
+    }
     throw new Error(errorMsg);
   }
 

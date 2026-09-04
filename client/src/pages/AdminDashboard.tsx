@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { toast } from "sonner";
+import { fetchApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole, UserStatus } from "@/types/roles";
 import { SummaLogo } from "@/components/SummaLogo";
@@ -158,18 +159,16 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const [usersRes, auditRes] = await Promise.all([
-        fetch("/api/v1/admin/users"),
-        fetch("/api/v1/admin/audit-logs"),
+      const [uJson, aJson] = await Promise.all([
+        fetchApi<any>("/admin/users"),
+        fetchApi<any>("/admin/audit-logs"),
       ]);
 
-      if (usersRes.ok) {
-        const uJson = await usersRes.json();
-        setUsers(uJson.users || []);
+      if (uJson?.users) {
+        setUsers(uJson.users);
       }
-      if (auditRes.ok) {
-        const aJson = await auditRes.json();
-        setAuditLogs(aJson.audit_logs || []);
+      if (aJson?.audit_logs) {
+        setAuditLogs(aJson.audit_logs);
       }
     } catch (err) {
       toast.error("Failed to refresh admin data.");
@@ -185,12 +184,10 @@ export default function AdminDashboard() {
   const handleRoleChange = async (userId: string, newRoleStr: string) => {
     const targetRole = newRoleStr === "admin" ? UserRole.ADMIN : UserRole.USER;
     try {
-      const res = await fetch(`/api/v1/admin/users/${userId}/role`, {
+      await fetchApi(`/admin/users/${userId}/role`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: targetRole }),
       });
-      if (!res.ok) throw new Error("Role update failed");
 
       toast.success(`User role updated to ${targetRole.toUpperCase()}`);
       fetchAdminData();
@@ -202,9 +199,8 @@ export default function AdminDashboard() {
   const handleStatusChange = async (userId: string, currentStatus: string) => {
     const newStatus = currentStatus === UserStatus.ACTIVE ? UserStatus.SUSPENDED : UserStatus.ACTIVE;
     try {
-      const res = await fetch(`/api/v1/admin/users/${userId}/status`, {
+      await fetchApi(`/admin/users/${userId}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error("Status update failed");

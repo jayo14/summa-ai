@@ -162,6 +162,9 @@ class UserStore:
                     if "onboarded" in data:
                         sets.append(f"onboarded = ${len(values) + 1}")
                         values.append(bool(data["onboarded"]))
+                    if "email_verified" in data:
+                        sets.append(f"email_verified = ${len(values) + 1}")
+                        values.append(bool(data["email_verified"]))
                     if "onboarding_data" in data:
                         sets.append(f"onboarding_data = ${len(values) + 1}")
                         values.append(json.dumps(data["onboarding_data"]))
@@ -212,6 +215,7 @@ class UserStore:
             "avatar": user.get("avatar"),
             "bio": user.get("bio"),
             "provider": user.get("provider"),
+            "email_verified": bool(user.get("email_verified", True)),
             "onboarded": bool(user.get("onboarded")),
             "onboarding_data": onboarding_data,
             "created_at": (

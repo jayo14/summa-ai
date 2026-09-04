@@ -35,11 +35,9 @@ export default function SignUp() {
     setIsSubmitting(true);
     try {
       await signup(email, password, name);
-      toast.success("Account created successfully!");
-      setLocation("/");
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 100);
+      localStorage.setItem("summa_pending_email", email);
+      toast.success("Account created! Please check your email for verification code.");
+      setLocation(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err: any) {
       toast.error(err.message || "Failed to create account");
       setIsSubmitting(false);

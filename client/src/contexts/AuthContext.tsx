@@ -11,6 +11,7 @@ export interface User {
   avatar?: string;
   bio?: string;
   provider?: string;
+  email_verified?: boolean;
   onboarded?: boolean;
 }
 
@@ -22,6 +23,7 @@ function normalizeUser(userData: any): User {
 
   return {
     ...userData,
+    email_verified: userData?.email_verified !== undefined ? Boolean(userData.email_verified) : true,
     role,
     status,
   };
@@ -34,6 +36,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password?: string) => Promise<void>;
   signup: (email: string, password?: string, name?: string) => Promise<void>;
+  verifyOtp: (email: string, token: string, type?: string) => Promise<void>;
+  resendOtp: (email: string, type?: string) => Promise<string>;
   forgotPassword: (email: string) => Promise<string>;
   resetPassword: (password: string) => Promise<string>;
   updateUser: (data: Partial<User>) => Promise<User>;
@@ -118,6 +122,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const verifyOtp = async (email: string, code: string, type: string = "signup") => {
+    setIsLoading(true);
+    try {
+      const res = await fetchApi<{ access_token: string; user: any }>("/auth/verify-otp", {
+        method: "POST",
+        body: JSON.stringify({ email, token: code, type }),
+      });
+
+      localStorage.setItem("summa_access_token", res.access_token);
+      setToken(res.access_token);
+      setUser(normalizeUser(res.user));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendOtp = async (email: string, type: string = "signup"): Promise<string> => {
+    const res = await fetchApi<{ message: string }>("/auth/resend-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, type }),
+    });
+    return res.message;
+  };
+
   const forgotPassword = async (email: string): Promise<string> => {
     const res = await fetchApi<{ message: string }>("/auth/forgot-password", {
       method: "POST",
@@ -159,6 +187,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user,
         login,
         signup,
+        verifyOtp,
+        resendOtp,
         forgotPassword,
         resetPassword,
         updateUser,
