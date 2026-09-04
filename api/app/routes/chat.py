@@ -179,7 +179,7 @@ async def build_orchestrator_prompt(
     if settings.HYBRID_MEMORY_ENABLED:
         try:
             atomic_facts = await summastudy_memory.retrieve_relevant_memories(
-                user_id, limit=8
+                user_id, query=query, limit=8
             )
             if atomic_facts:
                 parts.append(

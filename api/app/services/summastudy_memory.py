@@ -158,37 +158,48 @@ class SummaStudyMemoryClient:
             await self._release_conn(conn)
 
     async def retrieve_relevant_memories(
-        self, user_id: str, limit: int = 10
+        self, user_id: str, query: Optional[str] = None, limit: int = 10
     ) -> List[Dict[str, Any]]:
-        """Retrieve the most recent atomic facts for a user."""
-        conn = await self._get_conn()
+        """Retrieve atomic facts for a user, ranked by relevance if query is provided."""
         try:
-            rows = await conn.fetch(
-                """
-                SELECT content, memory_type, created_at
-                FROM user_memories
-                WHERE user_id = $1
-                ORDER BY created_at DESC
-                LIMIT $2
-                """,
-                user_id,
-                limit,
-            )
-            return [
-                {
-                    "content": row["content"],
-                    "type": row["memory_type"],
-                    "created_at": (
-                        row["created_at"].isoformat() if row["created_at"] else None
-                    ),
-                }
-                for row in rows
-            ]
+            conn = await self._get_conn()
+            try:
+                rows = await conn.fetch(
+                    """
+                    SELECT content, memory_type, created_at
+                    FROM user_memories
+                    WHERE user_id = $1
+                    ORDER BY created_at DESC
+                    LIMIT 50
+                    """,
+                    user_id,
+                )
+                items = [
+                    {
+                        "content": row["content"],
+                        "type": row["memory_type"],
+                        "created_at": (
+                            row["created_at"].isoformat() if row["created_at"] else None
+                        ),
+                    }
+                    for row in rows
+                ]
+            finally:
+                await self._release_conn(conn)
         except Exception as e:
             logger.error("Failed to retrieve memories: %s", e)
-            return []
-        finally:
-            await self._release_conn(conn)
+            items = []
+
+        if query and items:
+            q_terms = set(re.findall(r"\w+", query.lower()))
+            def _score(item: Dict[str, Any]) -> float:
+                c_terms = set(re.findall(r"\w+", item["content"].lower()))
+                overlap = len(q_terms.intersection(c_terms))
+                return float(overlap)
+
+            items.sort(key=_score, reverse=True)
+
+        return items[:limit]
 
     async def get_memories_by_type(
         self, user_id: str, memory_type: str, limit: int = 20
