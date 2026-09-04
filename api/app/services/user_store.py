@@ -40,6 +40,19 @@ class UserStore:
                 },
             ]
             cls._instance._local_users: Dict[str, Dict[str, Any]] = {
+                "eb39900f-6706-5803-8c1f-c66e00be722b": {
+                    "id": "eb39900f-6706-5803-8c1f-c66e00be722b",
+                    "email": "admin@summa.ai",
+                    "name": "System Administrator",
+                    "role": "admin",
+                    "status": "active",
+                    "avatar": None,
+                    "provider": "credentials",
+                    "onboarded": True,
+                    "onboarding_data": {"degree": "M.S. Systems & Security", "field_of_study": "AI Infrastructure"},
+                    "last_active": "2026-09-04T02:42:00Z",
+                    "created_at": "2026-08-01T00:00:00Z",
+                },
                 "119f677f-cd51-526d-acf3-3bd68d95b57b": {
                     "id": "119f677f-cd51-526d-acf3-3bd68d95b57b",
                     "email": "alex@summa.ai",
@@ -216,7 +229,7 @@ class UserStore:
                 if hasattr(user.get("updated_at"), "isoformat")
                 else user.get("updated_at")
             ),
-            "role": user.get("role", "student"),
+            "role": "admin" if user.get("role") == "admin" else "user",
             "status": user.get("status", "active"),
             "last_active": user.get("last_active"),
         }
@@ -239,7 +252,9 @@ class UserStore:
         if not target:
             return None
 
-        updated = await self.update_user(target_user_id, {"role": new_role})
+        # Standardize role enum: admin vs user
+        normalized_role = "admin" if new_role.lower().strip() == "admin" else "user"
+        updated = await self.update_user(target_user_id, {"role": normalized_role})
         import uuid
         from datetime import datetime, timezone
         actor = await self.get_user_by_id(actor_id) or {"email": "system@summa.ai"}
@@ -250,7 +265,7 @@ class UserStore:
             "action": "ROLE_CHANGED",
             "target_user_id": target_user_id,
             "target_email": target.get("email"),
-            "details": f"Role updated to {new_role}",
+            "details": f"Role updated to {normalized_role.upper()}",
             "timestamp": datetime.now(timezone.utc).isoformat(),
         })
         return self.serialize_user(updated)
@@ -279,19 +294,157 @@ class UserStore:
     def get_audit_logs(self, limit: int = 100) -> List[Dict[str, Any]]:
         return self._audit_logs[:limit]
 
+    async def get_tracking_logs(self, limit: int = 50) -> List[Dict[str, Any]]:
+        return [
+            {
+                "id": "log-901",
+                "timestamp": "2026-09-04T02:15:30Z",
+                "user_email": "sarah.chen@student.edu",
+                "endpoint": "/api/v1/chat/stream",
+                "model": "gemini-1.5-flash",
+                "input_tokens": 1280,
+                "output_tokens": 340,
+                "total_tokens": 1620,
+                "latency_ms": 780,
+                "vector_retrieval_ms": 32,
+                "status_code": 200,
+                "feedback": "up",
+                "prompt_sample": "Can you explain dynamic dispatch with a Java memory diagram?",
+                "response_sample": "Dynamic dispatch resolves the overridden method at runtime based on the actual object type on the heap...",
+                "context_chunks": 4,
+            },
+            {
+                "id": "log-902",
+                "timestamp": "2026-09-04T02:10:12Z",
+                "user_email": "david.k@student.edu",
+                "endpoint": "/api/v1/quiz/generate",
+                "model": "gemini-1.5-pro",
+                "input_tokens": 2450,
+                "output_tokens": 890,
+                "total_tokens": 3340,
+                "latency_ms": 1450,
+                "vector_retrieval_ms": 54,
+                "status_code": 200,
+                "feedback": "up",
+                "prompt_sample": "Generate 3 multiple choice questions on database normalization 3NF",
+                "response_sample": "Question 1: What functional dependency condition is required for 3NF?...",
+                "context_chunks": 6,
+            },
+            {
+                "id": "log-903",
+                "timestamp": "2026-09-04T01:52:04Z",
+                "user_email": "prof.marcus@university.edu",
+                "endpoint": "/api/v1/rag/search",
+                "model": "text-embedding-004",
+                "input_tokens": 420,
+                "output_tokens": 0,
+                "total_tokens": 420,
+                "latency_ms": 110,
+                "vector_retrieval_ms": 28,
+                "status_code": 200,
+                "feedback": None,
+                "prompt_sample": "CSC 201 syllabus polymorphism assignments",
+                "response_sample": "Retrieved 5 vector documents from Cognee memory store.",
+                "context_chunks": 5,
+            },
+            {
+                "id": "log-904",
+                "timestamp": "2026-09-04T01:30:19Z",
+                "user_email": "maya.lin@student.edu",
+                "endpoint": "/api/v1/chat/stream",
+                "model": "gemini-1.5-flash",
+                "input_tokens": 1890,
+                "output_tokens": 410,
+                "total_tokens": 2300,
+                "latency_ms": 920,
+                "vector_retrieval_ms": 41,
+                "status_code": 429,
+                "feedback": "down",
+                "prompt_sample": "Trace stack frames for recursion in binary tree traversal",
+                "response_sample": "Error: Rate limit exceeded for tier. Retrying request...",
+                "context_chunks": 2,
+            },
+            {
+                "id": "log-905",
+                "timestamp": "2026-09-04T00:45:00Z",
+                "user_email": "alex@summa.ai",
+                "endpoint": "/api/v1/summarize",
+                "model": "gemini-1.5-pro",
+                "input_tokens": 5400,
+                "output_tokens": 1200,
+                "total_tokens": 6600,
+                "latency_ms": 2100,
+                "vector_retrieval_ms": 62,
+                "status_code": 200,
+                "feedback": "up",
+                "prompt_sample": "Summarize entire Lecture 6 transcript on Inheritance vs Composition",
+                "response_sample": "Executive Summary: Inheritance models 'is-a' relationships while composition models 'has-a'...",
+                "context_chunks": 12,
+            },
+        ][:limit]
+
+    async def get_feedback_analysis(self) -> Dict[str, Any]:
+        return {
+            "satisfaction_score": 96.4,
+            "total_ratings": 312,
+            "positive_ratings": 301,
+            "negative_ratings": 11,
+            "recent_feedback": [
+                {
+                    "id": "fb-1",
+                    "user_email": "sarah.chen@student.edu",
+                    "rating": "up",
+                    "topic": "Dynamic Dispatch",
+                    "comment": "The step-by-step memory pointer explanation made runtime overriding click immediately!",
+                    "timestamp": "2026-09-04T02:15:30Z",
+                    "status": "resolved",
+                },
+                {
+                    "id": "fb-2",
+                    "user_email": "maya.lin@student.edu",
+                    "rating": "down",
+                    "topic": "Recursion Stack",
+                    "comment": "Hit rate limit during practice session.",
+                    "timestamp": "2026-09-04T01:30:19Z",
+                    "status": "flagged",
+                },
+                {
+                    "id": "fb-3",
+                    "user_email": "david.k@student.edu",
+                    "rating": "up",
+                    "topic": "Database 3NF",
+                    "comment": "Quiz questions were directly aligned with our CSC 203 syllabus.",
+                    "timestamp": "2026-09-04T02:10:12Z",
+                    "status": "resolved",
+                },
+            ],
+        }
+
+    async def get_system_health(self) -> Dict[str, Any]:
+        return {
+            "status": "healthy",
+            "uptime_pct": 99.98,
+            "active_connections": 14,
+            "cache_memory_mb": 184,
+            "services": [
+                {"name": "Google Gemini LLM Engine", "type": "LLM Provider", "status": "operational", "latency_ms": 210},
+                {"name": "Cognee Memory Vector Index", "type": "Vector DB", "status": "operational", "latency_ms": 32},
+                {"name": "Postgres User Store Pool", "type": "Database", "status": "operational", "latency_ms": 8},
+                {"name": "Redis Rate Limiter & Cache", "type": "Cache", "status": "operational", "latency_ms": 2},
+            ],
+        }
+
     async def get_admin_stats(self) -> Dict[str, Any]:
         users = await self.list_all_users()
         active_users = sum(1 for u in users if u.get("status") == "active")
-        students = sum(1 for u in users if u.get("role") == "student")
-        instructors = sum(1 for u in users if u.get("role") == "instructor")
         admins = sum(1 for u in users if u.get("role") == "admin")
+        standard_users = len(users) - admins
 
         return {
             "overview": {
                 "total_users": len(users),
                 "active_users": active_users,
-                "students": students,
-                "instructors": instructors,
+                "regular_users": standard_users,
                 "admins": admins,
                 "dau": 42,
                 "total_messages": 1284,

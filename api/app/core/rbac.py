@@ -13,9 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class UserRole(str, Enum):
+    USER = "user"
     ADMIN = "admin"
-    INSTRUCTOR = "instructor"
-    STUDENT = "student"
 
 
 class UserStatus(str, Enum):
@@ -26,19 +25,21 @@ class UserStatus(str, Enum):
 def get_user_role(user: dict) -> str:
     """Extracts or infers role for a user dict."""
     if not user:
-        return UserRole.STUDENT.value
+        return UserRole.USER.value
 
     # Check explicit role field first
-    explicit_role = user.get("role")
-    if explicit_role and explicit_role in [r.value for r in UserRole]:
-        return explicit_role
+    explicit_role = str(user.get("role", "")).lower().strip()
+    if explicit_role == UserRole.ADMIN.value:
+        return UserRole.ADMIN.value
+    if explicit_role in (UserRole.USER.value, "student", "instructor"):
+        return UserRole.USER.value
 
     # Default admin emails or fallback
     email = (user.get("email") or "").lower()
     if "admin" in email or email in ("alex@summa.ai", "admin@summa.ai", "codegallantx@gmail.com"):
         return UserRole.ADMIN.value
 
-    return UserRole.STUDENT.value
+    return UserRole.USER.value
 
 
 async def get_current_user_with_role(request: Request) -> dict:
@@ -75,7 +76,7 @@ def require_roles(allowed_roles: List[UserRole]):
     """FastAPI dependency factory enforcing specified RBAC roles."""
 
     async def role_checker(current_user: dict = Depends(get_current_user_with_role)):
-        user_role = current_user.get("role", UserRole.STUDENT.value)
+        user_role = current_user.get("role", UserRole.USER.value)
         allowed_str = [r.value if isinstance(r, UserRole) else str(r) for r in allowed_roles]
 
         if user_role not in allowed_str:
@@ -96,4 +97,4 @@ def require_roles(allowed_roles: List[UserRole]):
 
 
 require_admin = require_roles([UserRole.ADMIN])
-require_instructor = require_roles([UserRole.ADMIN, UserRole.INSTRUCTOR])
+require_user = require_roles([UserRole.ADMIN, UserRole.USER])

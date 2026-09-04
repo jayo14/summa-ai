@@ -1,14 +1,30 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { fetchApi } from "@/lib/api";
+import { UserRole, UserStatus } from "@/types/roles";
 
 export interface User {
   id: string;
   email: string;
   name?: string;
+  role: UserRole;
+  status: UserStatus;
   avatar?: string;
   bio?: string;
   provider?: string;
   onboarded?: boolean;
+}
+
+function normalizeUser(userData: any): User {
+  const roleStr = String(userData?.role || "").toLowerCase().trim();
+  const role = roleStr === "admin" ? UserRole.ADMIN : UserRole.USER;
+  const statusStr = String(userData?.status || "").toLowerCase().trim();
+  const status = statusStr === "suspended" ? UserStatus.SUSPENDED : UserStatus.ACTIVE;
+
+  return {
+    ...userData,
+    role,
+    status,
+  };
 }
 
 interface AuthContextType {
@@ -46,9 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        const userData = await fetchApi<User>("/user");
+        const rawUserData = await fetchApi<any>("/user");
         if (isMounted) {
-          setUser(userData);
+          setUser(normalizeUser(rawUserData));
         }
       } catch (err) {
         console.warn("Auth token verification failed, clearing session:", err);
@@ -73,14 +89,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password?: string) => {
     setIsLoading(true);
     try {
-      const res = await fetchApi<{ access_token: string; user: User }>("/auth/login", {
+      const res = await fetchApi<{ access_token: string; user: any }>("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password, provider: "credentials" }),
       });
 
       localStorage.setItem("summa_access_token", res.access_token);
       setToken(res.access_token);
-      setUser(res.user);
+      setUser(normalizeUser(res.user));
     } finally {
       setIsLoading(false);
     }
@@ -89,14 +105,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password?: string, name?: string) => {
     setIsLoading(true);
     try {
-      const res = await fetchApi<{ access_token: string; user: User }>("/auth/signup", {
+      const res = await fetchApi<{ access_token: string; user: any }>("/auth/signup", {
         method: "POST",
         body: JSON.stringify({ email, password, name, provider: "credentials" }),
       });
 
       localStorage.setItem("summa_access_token", res.access_token);
       setToken(res.access_token);
-      setUser(res.user);
+      setUser(normalizeUser(res.user));
     } finally {
       setIsLoading(false);
     }
@@ -119,12 +135,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUser = async (data: Partial<User>): Promise<User> => {
-    const updatedUser = await fetchApi<User>("/user", {
+    const rawUpdated = await fetchApi<any>("/user", {
       method: "PATCH",
       body: JSON.stringify(data),
     });
-    setUser(updatedUser);
-    return updatedUser;
+    const normalized = normalizeUser(rawUpdated);
+    setUser(normalized);
+    return normalized;
   };
 
   const logout = () => {

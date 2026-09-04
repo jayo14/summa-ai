@@ -14,6 +14,9 @@ from app.models.user import (
     ResetPasswordRequest,
 )
 
+from app.core.rbac import get_user_role
+from app.services.user_store import UserStore
+
 logger = logging.getLogger(__name__)
 router = APIRouter()
 SUPABASE_AUTH_URL = f"{settings.SUPABASE_URL}/auth/v1" if settings.SUPABASE_URL else ""
@@ -44,8 +47,9 @@ async def signup(payload: AuthLoginRequest):
     if not payload.email or not payload.password:
         raise HTTPException(status_code=400, detail="Email and password are required")
 
-    user_id = str(uuid.uuid4())
+    user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, payload.email.lower().strip()))
     name = payload.name or payload.email.split("@")[0].capitalize()
+    role = get_user_role({"email": payload.email})
 
     if SUPABASE_AUTH_URL and not settings.SUPABASE_URL.startswith("https://xxx"):
         try:
@@ -56,7 +60,7 @@ async def signup(payload: AuthLoginRequest):
                     json={
                         "email": payload.email,
                         "password": payload.password,
-                        "data": {"name": name, "avatar": payload.avatar},
+                        "data": {"name": name, "avatar": payload.avatar, "role": role},
                     },
                 )
                 if resp.status_code == 200:
@@ -71,6 +75,8 @@ async def signup(payload: AuthLoginRequest):
                             "email": user_data.get("email", payload.email),
                             "name": user_data.get("user_metadata", {}).get("name") or name,
                             "avatar": user_data.get("user_metadata", {}).get("avatar") or payload.avatar,
+                            "role": role,
+                            "status": "active",
                             "provider": "credentials",
                             "onboarded": False,
                             "onboarding_data": {},
@@ -98,6 +104,8 @@ async def signup(payload: AuthLoginRequest):
             "email": payload.email,
             "name": name,
             "avatar": payload.avatar,
+            "role": role,
+            "status": "active",
             "provider": "credentials",
             "onboarded": False,
             "onboarding_data": {},
@@ -115,7 +123,12 @@ async def login(payload: AuthLoginRequest):
     if not payload.email:
         raise HTTPException(status_code=400, detail="Email is required")
 
-    name = payload.name or payload.email.split("@")[0].capitalize()
+    email_clean = payload.email.lower().strip()
+    user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email_clean))
+    user_store = UserStore()
+    existing_user = await user_store.get_user_by_id(user_id)
+    role = existing_user.get("role") if existing_user else get_user_role({"email": email_clean})
+    name = existing_user.get("name") if existing_user else (payload.name or email_clean.split("@")[0].capitalize())
 
     if SUPABASE_AUTH_URL and not settings.SUPABASE_URL.startswith("https://xxx"):
         try:
@@ -149,6 +162,8 @@ async def login(payload: AuthLoginRequest):
                             "email": user_data["email"],
                             "name": user_data.get("user_metadata", {}).get("name") or name,
                             "avatar": user_data.get("user_metadata", {}).get("avatar") or payload.avatar,
+                            "role": role,
+                            "status": existing_user.get("status", "active") if existing_user else "active",
                             "provider": payload.provider,
                             "onboarded": False,
                             "onboarding_data": {},
@@ -165,7 +180,6 @@ async def login(payload: AuthLoginRequest):
             logger.warning("Supabase login error, proceeding with dev fallback: %s", exc)
 
     # Local / Dev Fallback
-    user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, payload.email))
     token = _create_mock_jwt(user_id)
     return {
         "access_token": token,
@@ -175,6 +189,8 @@ async def login(payload: AuthLoginRequest):
             "email": payload.email,
             "name": name,
             "avatar": payload.avatar,
+            "role": role,
+            "status": existing_user.get("status", "active") if existing_user else "active",
             "provider": payload.provider,
             "onboarded": False,
             "onboarding_data": {},

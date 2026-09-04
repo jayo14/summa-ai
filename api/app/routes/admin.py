@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.core.rbac import require_admin, require_instructor
+from app.core.rbac import UserRole, require_admin
 from app.services.user_store import UserStore
 
 logger = logging.getLogger(__name__)
@@ -45,21 +45,23 @@ async def update_user_role(
     payload: UpdateRoleRequest,
     current_user: dict = Depends(require_admin),
 ):
-    """Updates target user's RBAC role (admin, instructor, student) and records audit trail."""
+    """Updates target user's RBAC role (admin vs user) and records audit trail."""
     new_role = payload.role.lower().strip()
-    if new_role not in ("admin", "instructor", "student"):
+    if new_role not in (UserRole.ADMIN.value, UserRole.USER.value, "student", "instructor"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid role. Must be 'admin', 'instructor', or 'student'.",
+            detail="Invalid role. Must be 'admin' or 'user'.",
         )
+
+    standardized_role = UserRole.ADMIN.value if new_role == "admin" else UserRole.USER.value
 
     user_store = UserStore()
     actor_id = current_user.get("id", "system")
-    updated = await user_store.update_user_role(actor_id, user_id, new_role)
+    updated = await user_store.update_user_role(actor_id, user_id, standardized_role)
     if not updated:
         raise HTTPException(status_code=404, detail="Target user not found")
 
-    logger.info("User %s role updated to %s by admin %s", user_id, new_role, actor_id)
+    logger.info("User %s role updated to %s by admin %s", user_id, standardized_role, actor_id)
     return {"success": True, "user": updated}
 
 
@@ -93,3 +95,27 @@ async def list_audit_logs(current_user: dict = Depends(require_admin)):
     user_store = UserStore()
     logs = user_store.get_audit_logs()
     return {"success": True, "audit_logs": logs, "count": len(logs)}
+
+
+@router.get("/logs", summary="Get detailed AI request tracking logs & traces")
+async def get_tracking_logs(current_user: dict = Depends(require_admin)):
+    """Returns real-time AI execution logs with latency, token breakdown, and prompt/response traces."""
+    user_store = UserStore()
+    logs = await user_store.get_tracking_logs()
+    return {"success": True, "logs": logs, "count": len(logs)}
+
+
+@router.get("/feedback", summary="Get user feedback & quality analysis")
+async def get_feedback_analysis(current_user: dict = Depends(require_admin)):
+    """Returns satisfaction ratings, positive/negative feedback, and flagged responses."""
+    user_store = UserStore()
+    feedback = await user_store.get_feedback_analysis()
+    return {"success": True, "data": feedback}
+
+
+@router.get("/system-health", summary="Get AI infrastructure & service health status")
+async def get_system_health(current_user: dict = Depends(require_admin)):
+    """Returns operational status for LLM engine, Vector DB, DB pool, and Cache."""
+    user_store = UserStore()
+    health = await user_store.get_system_health()
+    return {"success": True, "data": health}

@@ -12,6 +12,7 @@ import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/c
 import { SummaLogo } from "@/components/SummaLogo";
 import { SettingsView } from "@/components/SettingsView";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/types/roles";
 import { fetchApi } from "@/lib/api";
 import {
   DropdownMenu,
@@ -341,7 +342,6 @@ export default function Home() {
         <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>8</small>}</button>; })}</nav>
         <section className="history-section" aria-labelledby="folders-label"><div className="section-title-row"><span id="folders-label" className="nav-caption">FOLDERS</span><button type="button" aria-label="Create folder" onClick={() => toast("Create a course folder from the connected learning library.")}><Plus size={15} /></button></div><div className="folder-list"><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 201 · OOP</span></button><div className="history-list">{dbConversations.length > 0 ? dbConversations.map((chat) => <button type="button" className="history-item" key={chat.id} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>Live</small></button>) : chatHistory.slice(0, 2).map((chat) => <button type="button" className={`history-item ${chat.active ? "active" : ""}`} key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 203 · Databases</span></button><div className="history-list">{chatHistory.slice(2).map((chat) => <button type="button" className="history-item" key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div></div></section>
         <div className="sidebar-bottom">
-          <button type="button" className="nav-item" onClick={() => window.location.href = "/admin"}><Shield size={16} /><span>Admin Dashboard</span></button>
           <button type="button" className="nav-item" onClick={() => window.location.href = "/__manus__/logs"}><Terminal size={16} /><span>System Diagnostics</span></button>
           <button type="button" className={`nav-item ${activeView === "settings" ? "active" : ""}`} onClick={() => selectView("settings")}><Settings2 size={16} /><span>Settings</span></button>
           <DropdownMenu>
@@ -363,9 +363,21 @@ export default function Home() {
               sideOffset={8}
               className="w-56 p-1.5 shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl z-[999]"
             >
-              <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-slate-500">
-                Account Overview
+              <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-slate-500 flex items-center justify-between">
+                <span>Account Overview</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 uppercase font-mono">
+                  {user?.role || UserRole.USER}
+                </span>
               </DropdownMenuLabel>
+              {user?.role === UserRole.ADMIN && (
+                <DropdownMenuItem
+                  onClick={() => window.location.href = "/admin"}
+                  className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40"
+                >
+                  <Shield size={14} />
+                  <span>Admin Infrastructure</span>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={() => selectView("settings")}
                 className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-600 dark:hover:text-purple-400"
