@@ -55,8 +55,8 @@ async def test_create_artifact():
 async def test_get_artifact_found():
     store = DataStore()
     pool, conn = _mock_pool(store)
-    conn.fetchrow.return_value = {"id": "a1"}
-    assert await store.get_artifact("a1") == {"id": "a1"}
+    conn.fetchrow.return_value = {"id": "a1", "user_id": "user-1"}
+    assert await store.get_artifact("a1", "user-1") == {"id": "a1", "user_id": "user-1"}
 
 
 @pytest.mark.asyncio
@@ -64,7 +64,7 @@ async def test_get_artifact_missing():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.fetchrow.return_value = None
-    assert await store.get_artifact("missing") is None
+    assert await store.get_artifact("missing", "user-1") is None
 
 
 @pytest.mark.asyncio
@@ -72,10 +72,10 @@ async def test_update_artifact():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.fetchrow.side_effect = [
-        {"id": "a1", "title": "Updated", "current_version": 2, "component": None},
-        {"id": "a1", "title": "Updated", "current_version": 2, "component": None},
+        {"id": "a1", "user_id": "user-1", "title": "Updated", "current_version": 2, "component": None},
+        {"id": "a1", "user_id": "user-1", "title": "Updated", "current_version": 2, "component": None},
     ]
-    result = await store.update_artifact("a1", {"title": "Updated"})
+    result = await store.update_artifact("a1", "user-1", {"title": "Updated"})
     assert result["title"] == "Updated"
 
 
@@ -84,7 +84,7 @@ async def test_delete_artifact_success():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.execute.return_value = "DELETE 1"
-    assert await store.delete_artifact("a1") is True
+    assert await store.delete_artifact("a1", "user-1") is True
 
 
 @pytest.mark.asyncio
@@ -92,15 +92,15 @@ async def test_delete_artifact_missing():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.execute.return_value = "DELETE 0"
-    assert await store.delete_artifact("missing") is False
+    assert await store.delete_artifact("missing", "user-1") is False
 
 
 @pytest.mark.asyncio
 async def test_toggle_pin_artifact():
     store = DataStore()
     pool, conn = _mock_pool(store)
-    conn.fetchrow.return_value = {"id": "a1", "pinned": True}
-    result = await store.toggle_pin_artifact("a1")
+    conn.fetchrow.return_value = {"id": "a1", "user_id": "user-1", "pinned": True}
+    result = await store.toggle_pin_artifact("a1", "user-1", {"pinned": True})
     assert result["pinned"] is True
 
 
@@ -126,8 +126,8 @@ async def test_create_conversation():
 async def test_get_conversation():
     store = DataStore()
     pool, conn = _mock_pool(store)
-    conn.fetchrow.return_value = {"id": "c1"}
-    assert await store.get_conversation("c1") == {"id": "c1"}
+    conn.fetchrow.return_value = {"id": "c1", "user_id": "user-1"}
+    assert await store.get_conversation("c1", "user-1") == {"id": "c1", "user_id": "user-1"}
 
 
 @pytest.mark.asyncio
@@ -135,7 +135,7 @@ async def test_delete_conversation():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.execute.return_value = "DELETE 1"
-    assert await store.delete_conversation("c1") is True
+    assert await store.delete_conversation("c1", "user-1") is True
 
 
 @pytest.mark.asyncio
@@ -143,7 +143,7 @@ async def test_list_messages():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.fetch.return_value = [{"id": "m1", "role": "user"}]
-    result = await store.list_messages("c1")
+    result = await store.list_messages("c1", "user-1")
     assert result[0]["id"] == "m1"
 
 
@@ -151,8 +151,9 @@ async def test_list_messages():
 async def test_add_message():
     store = DataStore()
     pool, conn = _mock_pool(store)
+    conn.fetchval.return_value = "user-1"
     conn.fetchrow.return_value = {"id": "m1"}
-    result = await store.add_message("c1", "user", "Hello")
+    result = await store.add_message("c1", "user-1", "user", "Hello")
     assert result["id"] == "m1"
 
 
@@ -230,8 +231,9 @@ async def test_delete_concept():
 async def test_list_artifact_versions():
     store = DataStore()
     pool, conn = _mock_pool(store)
+    conn.fetchrow.return_value = {"id": "a1", "user_id": "user-1"}
     conn.fetch.return_value = [{"id": "v1", "version": 1}]
-    result = await store.list_artifact_versions("a1")
+    result = await store.list_artifact_versions("a1", "user-1")
     assert len(result) == 1
 
 
@@ -240,10 +242,12 @@ async def test_restore_artifact_version_found():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.fetchrow.side_effect = [
+        {"id": "a1", "user_id": "user-1"},
         {"id": "v1", "version": 1, "title": "Old", "component": "{}"},
-        {"id": "a1", "title": "Old", "current_version": 1},
+        {"id": "a1", "user_id": "user-1", "title": "Old", "current_version": 1},
+        {"id": "a1", "user_id": "user-1", "title": "Old", "current_version": 1},
     ]
-    result = await store.restore_artifact_version("a1", 1)
+    result = await store.restore_artifact_version("a1", "user-1", 1)
     assert result["title"] == "Old"
 
 
@@ -252,4 +256,4 @@ async def test_restore_artifact_version_missing():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.fetchrow.return_value = None
-    assert await store.restore_artifact_version("a1", 99) is None
+    assert await store.restore_artifact_version("a1", "user-1", 99) is None

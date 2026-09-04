@@ -257,25 +257,25 @@ class DataStore:
 
     create_activity = create_artifact
 
-    async def get_artifact(self, aid: str) -> Optional[Dict[str, Any]]:
+    async def get_artifact(self, aid: str, user_id: str) -> Optional[Dict[str, Any]]:
         try:
             pool = await self._get_pool()
             if pool is not None:
                 async with pool.acquire() as conn:
                     row = await conn.fetchrow(
-                        "SELECT * FROM summa_ai.artifacts WHERE id = $1", aid
+                        "SELECT * FROM summa_ai.artifacts WHERE id = $1 AND user_id = $2", aid, user_id
                     )
                 if row:
                     return dict(row)
         except Exception:
             pass
 
-        return next((a for a in self._local_activities if a.get("id") == aid), None)
+        return next((a for a in self._local_activities if a.get("id") == aid and a.get("user_id") == user_id), None)
 
     get_activity = get_artifact
 
     async def update_artifact(
-        self, aid: str, data: Dict[str, Any]
+        self, aid: str, user_id: str, data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         try:
             pool = await self._get_pool()
@@ -293,13 +293,14 @@ class DataStore:
                 if sets:
                     sets.append("updated_at = NOW()")
                     vals.append(aid)
+                    vals.append(user_id)
                     async with pool.acquire() as conn:
                         await conn.execute(
-                            f"UPDATE summa_ai.artifacts SET {', '.join(sets)} WHERE id = ${len(vals)}",
+                            f"UPDATE summa_ai.artifacts SET {', '.join(sets)} WHERE id = ${len(vals) - 1} AND user_id = ${len(vals)}",
                             *vals,
                         )
                         row = await conn.fetchrow(
-                            "SELECT * FROM summa_ai.artifacts WHERE id = $1", aid
+                            "SELECT * FROM summa_ai.artifacts WHERE id = $1 AND user_id = $2", aid, user_id
                         )
                     if row:
                         return dict(row)
@@ -307,31 +308,81 @@ class DataStore:
             pass
 
         for a in self._local_activities:
-            if a.get("id") == aid:
+            if a.get("id") == aid and a.get("user_id") == user_id:
                 a.update({k: v for k, v in data.items() if v is not None})
                 return a
         return None
 
     update_activity = update_artifact
 
-    async def delete_artifact(self, aid: str) -> bool:
+    async def delete_artifact(self, aid: str, user_id: str) -> bool:
         try:
             pool = await self._get_pool()
             if pool is not None:
                 async with pool.acquire() as conn:
                     result = await conn.execute(
-                        "DELETE FROM summa_ai.artifacts WHERE id = $1", aid
+                        "DELETE FROM summa_ai.artifacts WHERE id = $1 AND user_id = $2", aid, user_id
                     )
                 return "DELETE 1" in result
         except Exception:
             pass
 
-        self._local_activities = [a for a in self._local_activities if a.get("id") != aid]
-        return True
+        orig_len = len(self._local_activities)
+        self._local_activities = [a for a in self._local_activities if not (a.get("id") == aid and a.get("user_id") == user_id)]
+        return len(self._local_activities) < orig_len
 
     delete_activity = delete_artifact
     toggle_pin_artifact = update_artifact
     toggle_pin_activity = toggle_pin_artifact
+
+    async def list_artifact_versions(self, aid: str, user_id: str) -> List[Dict[str, Any]]:
+        artifact = await self.get_artifact(aid, user_id)
+        if not artifact:
+            return []
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        "SELECT * FROM summa_ai.artifact_versions WHERE artifact_id = $1 ORDER BY version DESC",
+                        aid,
+                    )
+                if rows is not None:
+                    return [dict(r) for r in rows]
+        except Exception:
+            pass
+        return []
+
+    list_activity_versions = list_artifact_versions
+
+    async def restore_artifact_version(
+        self, aid: str, user_id: str, version: int
+    ) -> Optional[Dict[str, Any]]:
+        artifact = await self.get_artifact(aid, user_id)
+        if not artifact:
+            return None
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    vrow = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.artifact_versions WHERE artifact_id = $1 AND version = $2",
+                        aid,
+                        version,
+                    )
+                    if not vrow:
+                        return None
+                    vdata = dict(vrow)
+                    component = vdata.get("component")
+                    component_obj = json.loads(component) if isinstance(component, str) else component
+                    return await self.update_artifact(
+                        aid, user_id, {"title": vdata.get("title"), "component": component_obj}
+                    )
+        except Exception:
+            pass
+        return None
+
+    restore_activity_version = restore_artifact_version
 
     # ── Conversations ──────────────────────────────────────────────
 
@@ -389,67 +440,82 @@ class DataStore:
         self._local_conversations.insert(0, item)
         return item
 
-    async def get_conversation(self, cid: str) -> Optional[Dict[str, Any]]:
+    async def get_conversation(self, cid: str, user_id: str) -> Optional[Dict[str, Any]]:
         try:
             pool = await self._get_pool()
             if pool is not None:
                 async with pool.acquire() as conn:
                     row = await conn.fetchrow(
                         "SELECT *, (SELECT count(*) FROM summa_ai.messages WHERE conversation_id = c.id) as message_count "
-                        "FROM summa_ai.conversations c WHERE id = $1",
+                        "FROM summa_ai.conversations c WHERE id = $1 AND user_id = $2",
                         cid,
+                        user_id,
                     )
                 if row:
                     return dict(row)
         except Exception:
             pass
 
-        return next((c for c in self._local_conversations if c.get("id") == cid), None)
+        return next((c for c in self._local_conversations if c.get("id") == cid and c.get("user_id") == user_id), None)
 
-    async def delete_conversation(self, cid: str) -> bool:
+    async def delete_conversation(self, cid: str, user_id: str) -> bool:
         try:
             pool = await self._get_pool()
             if pool is not None:
                 async with pool.acquire() as conn:
                     result = await conn.execute(
-                        "DELETE FROM summa_ai.conversations WHERE id = $1", cid
+                        "DELETE FROM summa_ai.conversations WHERE id = $1 AND user_id = $2", cid, user_id
                     )
                 return "DELETE 1" in result
         except Exception:
             pass
 
-        self._local_conversations = [c for c in self._local_conversations if c.get("id") != cid]
-        return True
+        orig_len = len(self._local_conversations)
+        self._local_conversations = [c for c in self._local_conversations if not (c.get("id") == cid and c.get("user_id") == user_id)]
+        return len(self._local_conversations) < orig_len
 
-    async def list_messages(self, cid: str) -> List[Dict[str, Any]]:
+    async def list_messages(self, cid: str, user_id: str) -> List[Dict[str, Any]]:
         try:
             pool = await self._get_pool()
             if pool is not None:
                 async with pool.acquire() as conn:
                     rows = await conn.fetch(
-                        "SELECT * FROM summa_ai.messages WHERE conversation_id = $1 ORDER BY created_at ASC",
+                        """SELECT m.* FROM summa_ai.messages m
+                           JOIN summa_ai.conversations c ON m.conversation_id = c.id
+                           WHERE m.conversation_id = $1 AND c.user_id = $2
+                           ORDER BY m.created_at ASC""",
                         cid,
+                        user_id,
                     )
                 if rows is not None:
                     return [dict(r) for r in rows]
         except Exception:
             pass
 
+        conv = next((c for c in self._local_conversations if c.get("id") == cid and c.get("user_id") == user_id), None)
+        if not conv:
+            return []
         return self._local_messages.get(cid, [])
 
     async def add_message(
         self,
         cid: str,
+        user_id: str,
         role: str,
         content: str,
         reasoning: Optional[str] = None,
         components: Optional[Any] = None,
-    ) -> Dict[str, Any]:
+    ) -> Optional[Dict[str, Any]]:
         mid = str(uuid.uuid4())
         try:
             pool = await self._get_pool()
             if pool is not None:
                 async with pool.acquire() as conn:
+                    owner = await conn.fetchval(
+                        "SELECT user_id FROM summa_ai.conversations WHERE id = $1", cid
+                    )
+                    if owner != user_id:
+                        return None
                     await conn.execute(
                         "INSERT INTO summa_ai.messages (id, conversation_id, role, content, reasoning, components) VALUES ($1,$2,$3,$4,$5,$6)",
                         mid,
@@ -457,12 +523,10 @@ class DataStore:
                         role,
                         content,
                         reasoning,
-                        json.dumps(components) if components is not None else None,
+                        json.dumps(components) if components else None,
                     )
                     await conn.execute(
-                        "UPDATE summa_ai.conversations SET snippet = $1, updated_at = NOW() WHERE id = $2",
-                        content[:100],
-                        cid,
+                        "UPDATE summa_ai.conversations SET updated_at = NOW() WHERE id = $1", cid
                     )
                     row = await conn.fetchrow(
                         "SELECT * FROM summa_ai.messages WHERE id = $1", mid
@@ -472,6 +536,9 @@ class DataStore:
         except Exception:
             pass
 
+        conv = next((c for c in self._local_conversations if c.get("id") == cid and c.get("user_id") == user_id), None)
+        if not conv:
+            return None
         item = {
             "id": mid,
             "conversation_id": cid,
@@ -764,12 +831,17 @@ class DataStore:
         )
         return result
 
-    async def _get_study_plan(self, pid: str) -> Optional[Dict[str, Any]]:
+    async def _get_study_plan(self, pid: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()
         async with pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.study_plans WHERE id = $1", pid
-            )
+            if user_id is not None:
+                row = await conn.fetchrow(
+                    "SELECT * FROM summa_ai.study_plans WHERE id = $1 AND user_id = $2", pid, user_id
+                )
+            else:
+                row = await conn.fetchrow(
+                    "SELECT * FROM summa_ai.study_plans WHERE id = $1", pid
+                )
             if not row:
                 return None
             p = dict(row)
@@ -781,7 +853,7 @@ class DataStore:
         return p
 
     async def update_study_plan(
-        self, pid: str, data: Dict[str, Any]
+        self, pid: str, user_id: str, data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()
         sets = []
@@ -791,28 +863,38 @@ class DataStore:
                 sets.append(f"{key} = ${len(vals) + 1}")
                 vals.append(data[key])
         if not sets:
-            return await self._get_study_plan(pid)
+            return await self._get_study_plan(pid, user_id)
         sets.append("updated_at = NOW()")
         vals.append(pid)
+        vals.append(user_id)
         async with pool.acquire() as conn:
             await conn.execute(
-                f"UPDATE summa_ai.study_plans SET {', '.join(sets)} WHERE id = ${len(vals)}",
+                f"UPDATE summa_ai.study_plans SET {', '.join(sets)} WHERE id = ${len(vals) - 1} AND user_id = ${len(vals)}",
                 *vals,
             )
-            return await self._get_study_plan(pid)
+            return await self._get_study_plan(pid, user_id)
 
-    async def delete_study_plan(self, pid: str) -> bool:
+    async def delete_study_plan(self, pid: str, user_id: str) -> bool:
         pool = await self._get_pool()
         async with pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM summa_ai.study_plans WHERE id = $1", pid
+                "DELETE FROM summa_ai.study_plans WHERE id = $1 AND user_id = $2", pid, user_id
             )
         return "DELETE 1" in result
 
     async def update_session(
-        self, sid: str, data: Dict[str, Any]
+        self, sid: str, user_id: str, data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            owner = await conn.fetchval(
+                """SELECT sp.user_id FROM summa_ai.study_sessions ss
+                   JOIN summa_ai.study_plans sp ON ss.plan_id = sp.id
+                   WHERE ss.id = $1""", sid
+            )
+            if owner != user_id:
+                return None
+
         sets = []
         vals = []
         for key in ("status", "duration"):
@@ -876,7 +958,7 @@ class DataStore:
         return result
 
     async def update_flashcard(
-        self, fid: str, data: Dict[str, Any]
+        self, fid: str, user_id: str, data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()
         sets = []
@@ -894,21 +976,22 @@ class DataStore:
             return None
         sets.append("updated_at = NOW()")
         vals.append(fid)
+        vals.append(user_id)
         async with pool.acquire() as conn:
             await conn.execute(
-                f"UPDATE summa_ai.flashcards SET {', '.join(sets)} WHERE id = ${len(vals)}",
+                f"UPDATE summa_ai.flashcards SET {', '.join(sets)} WHERE id = ${len(vals) - 1} AND user_id = ${len(vals)}",
                 *vals,
             )
             row = await conn.fetchrow(
-                "SELECT * FROM summa_ai.flashcards WHERE id = $1", fid
+                "SELECT * FROM summa_ai.flashcards WHERE id = $1 AND user_id = $2", fid, user_id
             )
         return dict(row) if row else None
 
-    async def delete_flashcard(self, fid: str) -> bool:
+    async def delete_flashcard(self, fid: str, user_id: str) -> bool:
         pool = await self._get_pool()
         async with pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM summa_ai.flashcards WHERE id = $1", fid
+                "DELETE FROM summa_ai.flashcards WHERE id = $1 AND user_id = $2", fid, user_id
             )
         return "DELETE 1" in result
 
@@ -948,7 +1031,7 @@ class DataStore:
         return result
 
     async def update_exam(
-        self, eid: str, data: Dict[str, Any]
+        self, eid: str, user_id: str, data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         pool = await self._get_pool()
         sets = []
@@ -960,23 +1043,24 @@ class DataStore:
         if not sets:
             async with pool.acquire() as conn:
                 row = await conn.fetchrow(
-                    "SELECT * FROM summa_ai.exams WHERE id = $1", eid
+                    "SELECT * FROM summa_ai.exams WHERE id = $1 AND user_id = $2", eid, user_id
                 )
             return dict(row) if row else None
         sets.append("updated_at = NOW()")
         vals.append(eid)
+        vals.append(user_id)
         async with pool.acquire() as conn:
             await conn.execute(
-                f"UPDATE summa_ai.exams SET {', '.join(sets)} WHERE id = ${len(vals)}",
+                f"UPDATE summa_ai.exams SET {', '.join(sets)} WHERE id = ${len(vals) - 1} AND user_id = ${len(vals)}",
                 *vals,
             )
-            row = await conn.fetchrow("SELECT * FROM summa_ai.exams WHERE id = $1", eid)
+            row = await conn.fetchrow("SELECT * FROM summa_ai.exams WHERE id = $1 AND user_id = $2", eid, user_id)
         return dict(row) if row else None
 
-    async def delete_exam(self, eid: str) -> bool:
+    async def delete_exam(self, eid: str, user_id: str) -> bool:
         pool = await self._get_pool()
         async with pool.acquire() as conn:
-            result = await conn.execute("DELETE FROM summa_ai.exams WHERE id = $1", eid)
+            result = await conn.execute("DELETE FROM summa_ai.exams WHERE id = $1 AND user_id = $2", eid, user_id)
         return "DELETE 1" in result
 
     # ========== QUIZ RESULTS ==========

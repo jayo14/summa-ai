@@ -49,8 +49,8 @@ async def create_study_plan(data: StudyPlanCreate):
     description="Get a specific study plan",
 )
 async def get_study_plan(pid: str):
-    resolve_user_id()
-    plan = await _store._get_study_plan(pid)
+    user_id = resolve_user_id()
+    plan = await _store._get_study_plan(pid, user_id)
     if plan is None:
         raise HTTPException(404, "Not found")
     return plan
@@ -62,8 +62,8 @@ async def get_study_plan(pid: str):
     description="Update a study plan's metadata",
 )
 async def update_study_plan(pid: str, data: StudyPlanUpdate):
-    resolve_user_id()
-    plan = await _store.update_study_plan(pid, data.model_dump(exclude_unset=True))
+    user_id = resolve_user_id()
+    plan = await _store.update_study_plan(pid, user_id, data.model_dump(exclude_unset=True))
     if plan is None:
         raise HTTPException(404, "Not found")
     return plan
@@ -73,8 +73,8 @@ async def update_study_plan(pid: str, data: StudyPlanUpdate):
     "/study-plans/{pid}", summary="Delete study plan", description="Delete a study plan"
 )
 async def delete_study_plan(pid: str):
-    resolve_user_id()
-    if not await _store.delete_study_plan(pid):
+    user_id = resolve_user_id()
+    if not await _store.delete_study_plan(pid, user_id):
         raise HTTPException(404, "Not found")
     return {"status": "success"}
 
@@ -85,8 +85,8 @@ async def delete_study_plan(pid: str):
     description="Update a study session's status",
 )
 async def update_session(sid: str, data: StudySessionUpdate):
-    resolve_user_id()
-    session = await _store.update_session(sid, data.model_dump(exclude_unset=True))
+    user_id = resolve_user_id()
+    session = await _store.update_session(sid, user_id, data.model_dump(exclude_unset=True))
     if session is None:
         raise HTTPException(404, "Not found")
     return session
@@ -122,8 +122,8 @@ async def create_flashcard(data: FlashcardCreate):
     description="Update a flashcard's mastery status",
 )
 async def update_flashcard(fid: str, data: FlashcardsUpdate):
-    resolve_user_id()
-    card = await _store.update_flashcard(fid, data.model_dump(exclude_unset=True))
+    user_id = resolve_user_id()
+    card = await _store.update_flashcard(fid, user_id, data.model_dump(exclude_unset=True))
     if card is None:
         raise HTTPException(404, "Not found")
     return card
@@ -133,8 +133,8 @@ async def update_flashcard(fid: str, data: FlashcardsUpdate):
     "/flashcards/{fid}", summary="Delete flashcard", description="Delete a flashcard"
 )
 async def delete_flashcard(fid: str):
-    resolve_user_id()
-    if not await _store.delete_flashcard(fid):
+    user_id = resolve_user_id()
+    if not await _store.delete_flashcard(fid, user_id):
         raise HTTPException(404, "Not found")
     return {"status": "success"}
 
@@ -164,8 +164,8 @@ async def create_exam(data: ExamCreate):
     description="Update an exam's details or readiness",
 )
 async def update_exam(eid: str, data: ExamUpdate):
-    resolve_user_id()
-    exam = await _store.update_exam(eid, data.model_dump(exclude_unset=True))
+    user_id = resolve_user_id()
+    exam = await _store.update_exam(eid, user_id, data.model_dump(exclude_unset=True))
     if exam is None:
         raise HTTPException(404, "Not found")
     return exam
@@ -175,7 +175,7 @@ async def update_exam(eid: str, data: ExamUpdate):
     "/exams/{eid}", summary="Delete exam", description="Remove an exam"
 )
 async def delete_exam(eid: str):
-    resolve_user_id()
-    if not await _store.delete_exam(eid):
+    user_id = resolve_user_id()
+    if not await _store.delete_exam(eid, user_id):
         raise HTTPException(404, "Not found")
     return {"status": "success"}

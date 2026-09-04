@@ -56,8 +56,8 @@ async def create_activity(data: ActivityCreate, user_id: str = Query(default="de
 )
 @activities_router.get("/artifacts/{aid}", include_in_schema=False)
 async def get_activity(aid: str):
-    resolve_user_id()
-    a = await _store.get_activity(aid)
+    user_id = resolve_user_id()
+    a = await _store.get_activity(aid, user_id)
     if a is None:
         raise HTTPException(404, "Not found")
     return a
@@ -70,8 +70,8 @@ async def get_activity(aid: str):
 )
 @activities_router.patch("/artifacts/{aid}", include_in_schema=False)
 async def update_activity(aid: str, data: ActivityUpdate):
-    resolve_user_id()
-    a = await _store.update_activity(aid, data.model_dump(exclude_unset=True, by_alias=True))
+    user_id = resolve_user_id()
+    a = await _store.update_activity(aid, user_id, data.model_dump(exclude_unset=True, by_alias=True))
     if a is None:
         raise HTTPException(404, "Not found")
     return a
@@ -84,8 +84,8 @@ async def update_activity(aid: str, data: ActivityUpdate):
 )
 @activities_router.delete("/artifacts/{aid}", include_in_schema=False)
 async def delete_activity(aid: str):
-    resolve_user_id()
-    if not await _store.delete_activity(aid):
+    user_id = resolve_user_id()
+    if not await _store.delete_activity(aid, user_id):
         raise HTTPException(404, "Not found")
     return {"status": "success"}
 
@@ -97,8 +97,8 @@ async def delete_activity(aid: str):
 )
 @activities_router.post("/artifacts/{aid}/pin", include_in_schema=False)
 async def pin_activity(aid: str):
-    resolve_user_id()
-    a = await _store.toggle_pin_activity(aid)
+    user_id = resolve_user_id()
+    a = await _store.toggle_pin_activity(aid, user_id)
     if a is None:
         raise HTTPException(404, "Not found")
     return a
@@ -111,8 +111,8 @@ async def pin_activity(aid: str):
 )
 @activities_router.get("/artifacts/{aid}/versions", include_in_schema=False)
 async def list_activity_versions(aid: str):
-    resolve_user_id()
-    return await _store.list_activity_versions(aid)
+    user_id = resolve_user_id()
+    return await _store.list_activity_versions(aid, user_id)
 
 
 @activities_router.post(
@@ -122,8 +122,8 @@ async def list_activity_versions(aid: str):
 )
 @activities_router.post("/artifacts/{aid}/versions", include_in_schema=False)
 async def restore_version(aid: str, data: ActivityVersionRestore):
-    resolve_user_id()
-    restored = await _store.restore_activity_version(aid, data.version)
+    user_id = resolve_user_id()
+    restored = await _store.restore_activity_version(aid, user_id, data.version)
     if restored is None:
         raise HTTPException(404, "Version not found")
     return restored
@@ -164,8 +164,8 @@ async def create_conversation(
     description="Get a specific conversation by ID",
 )
 async def get_conversation(cid: str):
-    resolve_user_id()
-    c = await _store.get_conversation(cid)
+    user_id = resolve_user_id()
+    c = await _store.get_conversation(cid, user_id)
     if c is None:
         raise HTTPException(404, "Not found")
     return c
@@ -177,10 +177,10 @@ async def get_conversation(cid: str):
     description="Get all messages for a specific conversation",
 )
 async def get_messages(cid: str):
-    resolve_user_id()
-    if not await _store.get_conversation(cid):
+    user_id = resolve_user_id()
+    if not await _store.get_conversation(cid, user_id):
         raise HTTPException(404, "Not found")
-    return await _store.list_messages(cid)
+    return await _store.list_messages(cid, user_id)
 
 
 @conv_router.post(
@@ -190,16 +190,20 @@ async def get_messages(cid: str):
     description="Add a message to a conversation",
 )
 async def add_message(cid: str, data: MessageCreate):
-    resolve_user_id()
-    if not await _store.get_conversation(cid):
+    user_id = resolve_user_id()
+    if not await _store.get_conversation(cid, user_id):
         raise HTTPException(404, "Not found")
-    return await _store.add_message(
+    msg = await _store.add_message(
         cid,
+        user_id,
         data.role,
         data.content,
         reasoning=data.reasoning,
         components=data.components,
     )
+    if msg is None:
+        raise HTTPException(404, "Not found")
+    return msg
 
 
 @conv_router.delete(
@@ -208,8 +212,8 @@ async def add_message(cid: str, data: MessageCreate):
     description="Permanently delete a conversation and its messages",
 )
 async def delete_conversation(cid: str):
-    resolve_user_id()
-    if not await _store.delete_conversation(cid):
+    user_id = resolve_user_id()
+    if not await _store.delete_conversation(cid, user_id):
         raise HTTPException(404, "Not found")
     return {"status": "success"}
 
