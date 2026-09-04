@@ -51,6 +51,5 @@ async def test_adaptive_difficulty_adjustment_and_overrides():
         await mastery_engine.record_attempt(user_id, f"act-{i}", ["con-math"], True)
 
     orchestrator = LearningOrchestrator()
-    with patch("app.services.mastery_engine.MasteryEngine", return_value=mastery_engine):
-        decision = await orchestrator.decide_next_action(user_id, "make it harder")
-        assert decision.suggested_difficulty == "hard"
+    decision = await orchestrator.decide_next_action(user_id, "make it harder")
+    assert decision.suggested_difficulty == "hard"

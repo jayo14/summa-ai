@@ -587,7 +587,62 @@ function ConversationTurn({ message }: { message: ConversationMessage }) {
   );
 }
 
-function ContextRail({ mastery, events, onJumpToSources }: { mastery: number; events: string[]; onJumpToSources: () => void }) { return <aside className="context-rail" aria-label="Learning context"><div className="rail-heading"><div><span className="eyebrow">YOUR LEARNING CONTEXT</span><h2>In the margins</h2></div><button type="button" aria-label="Context options"><MoreHorizontal size={19} /></button></div><section className="focus-card"><div className="focus-card-top"><span className="eyebrow">NEXT BEST ACTION</span><span className="time-chip"><Clock3 size={12} /> 12 min</span></div><h3>Explain how dynamic dispatch chooses an override.</h3><p>Your last response identified the right method but skipped the runtime-object reasoning.</p><button type="button" onClick={() => document.getElementById("practice-title")?.scrollIntoView({ behavior: "smooth", block: "center" })}>Practice this now <ChevronRight size={14} /></button></section><section className="mastery-ledger"><div className="section-heading"><div><span className="eyebrow">LEARNER MODEL</span><h3>Polymorphism</h3></div><span className="mastery-estimate">{mastery}%</span></div><p className="estimate-copy">Estimated from recent retrieval and explanation evidence.</p><div className="ledger-list"><LedgerRow label="Definitions" value={91} tone="strong" /><LedgerRow label="Identification" value={82} tone="strong" /><LedgerRow label="Runtime behaviour" value={mastery} tone="developing" /><LedgerRow label="Implementation" value={48} tone="developing" /></div></section><section className="memory-card"><div className="memory-head"><div><span className="eyebrow">WHAT I REMEMBER</span><h3>Useful continuity</h3></div><div className="memory-status"><span /> Active</div></div><ul><li><span>Preference</span><strong>Examples before abstractions</strong></li><li><span>Recurring gap</span><strong>Overriding vs. overloading</strong></li><li><span>Next review</span><strong>Saturday · retrieval</strong></li></ul></section><section className="source-lens"><div className="source-lens-copy"><span className="eyebrow">SUMMASTUDY</span><h3>3 sources are in scope</h3><p>Selected materials anchor this session.</p></div><img src="/manus-storage/summa-learning-atlas_404e3bf5.jpg" alt="An editorial arrangement of course materials and concept cards." /><button type="button" onClick={onJumpToSources}>Review sources <ChevronRight size={14} /></button></section><section className="event-ledger"><span className="eyebrow">SESSION SIGNALS</span>{events.map((event) => <p key={event}><span />{event}</p>)}</section></aside>; }
+function ContextRail({ mastery, events, onJumpToSources }: { mastery: number; events: string[]; onJumpToSources: () => void }) {
+  const [nextAction, setNextAction] = useState<{ action: string; target_concept: string; reason: string; estimated_minutes: number } | null>(null);
+
+  useEffect(() => {
+    fetchApi<{ action: string; target_concept: string; reason: string; estimated_minutes: number }>("/student/next-action")
+      .then((res) => { if (res && res.action) setNextAction(res); })
+      .catch(() => {});
+  }, []);
+
+  return (
+    <aside className="context-rail" aria-label="Learning context">
+      <div className="rail-heading">
+        <div><span className="eyebrow">YOUR LEARNING CONTEXT</span><h2>In the margins</h2></div>
+        <button type="button" aria-label="Context options"><MoreHorizontal size={19} /></button>
+      </div>
+      <section className="focus-card">
+        <div className="focus-card-top">
+          <span className="eyebrow">NEXT BEST ACTION ({nextAction?.action || "EXPLAIN"})</span>
+          <span className="time-chip"><Clock3 size={12} /> {nextAction?.estimated_minutes || 12} min</span>
+        </div>
+        <h3>{nextAction?.target_concept ? `Mastery Focus: ${nextAction.target_concept}` : "Explain how dynamic dispatch chooses an override."}</h3>
+        <p>{nextAction?.reason || "Your last response identified the right method but skipped the runtime-object reasoning."}</p>
+        <button type="button" onClick={() => document.getElementById("practice-title")?.scrollIntoView({ behavior: "smooth", block: "center" })}>
+          Practice this now <ChevronRight size={14} />
+        </button>
+      </section>
+      <section className="mastery-ledger">
+        <div className="section-heading"><div><span className="eyebrow">LEARNER MODEL</span><h3>Polymorphism</h3></div><span className="mastery-estimate">{mastery}%</span></div>
+        <p className="estimate-copy">Estimated from recent retrieval and explanation evidence.</p>
+        <div className="ledger-list">
+          <LedgerRow label="Definitions" value={91} tone="strong" />
+          <LedgerRow label="Identification" value={82} tone="strong" />
+          <LedgerRow label="Runtime behaviour" value={mastery} tone="developing" />
+          <LedgerRow label="Implementation" value={48} tone="developing" />
+        </div>
+      </section>
+      <section className="memory-card">
+        <div className="memory-head"><div><span className="eyebrow">WHAT I REMEMBER</span><h3>Useful continuity</h3></div><div className="memory-status"><span /> Active</div></div>
+        <ul>
+          <li><span>Preference</span><strong>Examples before abstractions</strong></li>
+          <li><span>Recurring gap</span><strong>Overriding vs. overloading</strong></li>
+          <li><span>Next review</span><strong>Saturday · retrieval</strong></li>
+        </ul>
+      </section>
+      <section className="source-lens">
+        <div className="source-lens-copy"><span className="eyebrow">SUMMASTUDY</span><h3>3 sources are in scope</h3><p>Selected materials anchor this session.</p></div>
+        <img src="/manus-storage/summa-learning-atlas_404e3bf5.jpg" alt="An editorial arrangement of course materials and concept cards." />
+        <button type="button" onClick={onJumpToSources}>Review sources <ChevronRight size={14} /></button>
+      </section>
+      <section className="event-ledger">
+        <span className="eyebrow">SESSION SIGNALS</span>
+        {events.map((event) => <p key={event}><span />{event}</p>)}
+      </section>
+    </aside>
+  );
+}
 
 function LedgerRow({ label, value, tone }: { label: string; value: number; tone: "strong" | "developing" }) { const activeCount = Math.max(1, Math.round(value / 10)); return <div className="ledger-row"><div><span className={`ledger-status ${tone}`} /><span>{label}</span></div><strong>{value}%</strong><div className="evidence-marks" aria-label={`${value}% evidence estimate`}>{Array.from({ length: 10 }, (_, index) => <i key={index} className={index < activeCount ? "is-active" : ""} />)}</div></div>; }
 

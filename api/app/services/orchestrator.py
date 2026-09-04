@@ -66,6 +66,11 @@ class LearningOrchestrator:
         fallback_reasoning = f"Keyword matching selected default action {fallback_action} based on query terms."
 
         difficulty = "medium"
+        query_lower = query.lower()
+        if "harder" in query_lower:
+            difficulty = "hard"
+        elif "easier" in query_lower:
+            difficulty = "easy"
 
         try:
             from app.services.mastery_engine import MasteryEngine
@@ -85,28 +90,22 @@ class LearningOrchestrator:
             mastery = await mastery_engine.compute_mastery(user_id, "overall")
             misconceptions = await misconception_engine.get_active_misconceptions(user_id)
 
-            # Determine adaptive difficulty from recent rolling attempts
-            recent_attempts = [a for a in mastery_engine._local_attempts if a["user_id"] == user_id][-5:]
-            consecutive_correct = sum(1 for a in reversed(recent_attempts) if a.get("correct"))
-            consecutive_incorrect = sum(1 for a in reversed(recent_attempts) if not a.get("correct"))
+            # Determine adaptive difficulty from recent rolling attempts if not explicitly overridden
+            if difficulty == "medium":
+                recent_attempts = [a for a in mastery_engine._local_attempts if a["user_id"] == user_id][-5:]
+                consecutive_correct = sum(1 for a in reversed(recent_attempts) if a.get("correct"))
+                consecutive_incorrect = sum(1 for a in reversed(recent_attempts) if not a.get("correct"))
 
-            if consecutive_correct >= 3:
-                difficulty = "hard"
-            elif consecutive_incorrect >= 2:
-                difficulty = "easy"
+                if consecutive_correct >= 3:
+                    difficulty = "hard"
+                elif consecutive_incorrect >= 2:
+                    difficulty = "easy"
 
             recipe_name = RecipeSelector.select_recipe(
                 mastery_snapshot=mastery,
                 exam_proximity_days=1 if exams else None,
                 misconception_active=len(misconceptions) > 0,
             )
-
-            # Student override handling in query
-            query_lower = query.lower()
-            if "harder" in query_lower:
-                difficulty = "hard"
-            elif "easier" in query_lower:
-                difficulty = "easy"
 
             if misconceptions and ("compare" in query_lower or recipe_name == "WEAK_TOPIC"):
                 target_concepts = [m["concept_id"] for m in misconceptions[:2]]
