@@ -114,16 +114,39 @@ async def rate_limit_middleware(request: Request, call_next):
 
     client_ip = request.client.host if request.client else "unknown"
     now = time.time()
-    window = 60
+    window_start = int(now // 60) * 60
 
-    requests = _rate_limit_store.get(client_ip, [])
-    requests = [ts for ts in requests if now - ts < window]
+    hit_count = 0
+    try:
+        from app.services.db_pool import get_pool
+        pool = await get_pool()
+        if pool:
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    """INSERT INTO summa_ai.rate_limit_hits (client_ip, window_start, hit_count)
+                       VALUES ($1, $2, 1)
+                       ON CONFLICT (client_ip, window_start)
+                       DO UPDATE SET hit_count = summa_ai.rate_limit_hits.hit_count + 1
+                       RETURNING hit_count""",
+                    client_ip,
+                    window_start,
+                )
+                if row:
+                    hit_count = row["hit_count"]
+    except Exception as exc:
+        logger.debug("Database rate limiter fallback: %s", exc)
 
-    if len(requests) >= 100:
+    if hit_count > 100:
         return JSONResponse({"detail": "Rate limit exceeded"}, status_code=429)
 
-    requests.append(now)
-    _rate_limit_store[client_ip] = requests
+    if hit_count == 0:
+        requests = _rate_limit_store.get(client_ip, [])
+        requests = [ts for ts in requests if now - ts < 60]
+        if len(requests) >= 100:
+            return JSONResponse({"detail": "Rate limit exceeded"}, status_code=429)
+        requests.append(now)
+        _rate_limit_store[client_ip] = requests
+
     return await call_next(request)
 
 

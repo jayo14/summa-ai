@@ -230,6 +230,23 @@ class CogneeService:
                 logger.warning("Cognee remember failed: %s", exc)
 
         self._memory.setdefault(dataset, []).append(item)
+        try:
+            from app.services.db_pool import get_pool
+            pool = await get_pool()
+            if pool:
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        """INSERT INTO summa_ai.memory_entries (id, user_id, dataset, text, metadata, created_at)
+                           VALUES ($1, $2, $3, $4, $5, NOW())""",
+                        uuid.UUID(item["id"]),
+                        user_id,
+                        dataset,
+                        text,
+                        json.dumps(metadata or {}),
+                    )
+        except Exception as exc:
+            logger.debug("Database write for memory_entries skipped: %s", exc)
+
         return {"status": "success", "dataset": dataset, "id": item["id"]}
 
     async def remember_conversation(
@@ -348,18 +365,36 @@ class CogneeService:
                 logger.warning("Cognee recall failed: %s", exc)
 
         if not result:
-            # In-memory fallback
-            items = self._memory.get(dataset, [])
+            # Postgres / In-memory fallback
+            items = []
+            try:
+                from app.services.db_pool import get_pool
+                pool = await get_pool()
+                if pool:
+                    async with pool.acquire() as conn:
+                        rows = await conn.fetch(
+                            "SELECT text, metadata, created_at FROM summa_ai.memory_entries WHERE dataset = $1 ORDER BY created_at DESC LIMIT $2",
+                            dataset,
+                            limit * 2,
+                        )
+                        if rows:
+                            for r in rows:
+                                meta = r["metadata"]
+                                if isinstance(meta, str):
+                                    meta = json.loads(meta)
+                                items.append({
+                                    "text": r["text"],
+                                    "metadata": meta or {},
+                                    "created_at": r["created_at"].isoformat() if hasattr(r["created_at"], "isoformat") else str(r["created_at"]),
+                                })
+            except Exception as exc:
+                logger.debug("Database query for memory_entries skipped: %s", exc)
+
+            if not items:
+                items = self._memory.get(dataset, [])
+
             q = query.lower()
             if q.startswith("all "):
-                # Catch-all queries ("all learning progress", "all exams", ...)
-                # describe "return everything in this dataset", not a literal
-                # substring to search for — stored text never contains the
-                # word "all", so a literal substring check here always
-                # returned empty and every caller of this pattern (recall_
-                # learning_progress, recall_exams, recall_artifacts,
-                # get_hexagon_dimensions with topic/filter unset) silently
-                # got nothing back.
                 matched = items
             else:
                 matched = [
