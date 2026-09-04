@@ -23,6 +23,13 @@ class UpdateStatusRequest(BaseModel):
     status: str
 
 
+class CreateUserRequest(BaseModel):
+    name: str
+    email: str
+    role: str = "user"
+    institution: Optional[str] = None
+
+
 @router.get("/stats", summary="Get platform usage statistics & telemetry")
 async def get_admin_stats(current_user: dict = Depends(require_admin)):
     """Returns aggregate application metrics, DAU, token usage, latency, and popular learning topics."""
@@ -37,6 +44,44 @@ async def list_admin_users(current_user: dict = Depends(require_admin)):
     user_store = UserStore()
     users = await user_store.list_all_users()
     return {"success": True, "users": users, "count": len(users)}
+
+
+@router.post("/users", summary="Create or invite new user")
+async def create_admin_user(
+    payload: CreateUserRequest,
+    current_user: dict = Depends(require_admin),
+):
+    """Creates a new user profile with assigned RBAC role and institution."""
+    import uuid
+    user_store = UserStore()
+    user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, payload.email.lower().strip()))
+    actor_id = current_user.get("id", "system")
+    
+    new_user = {
+        "id": user_id,
+        "email": payload.email.lower().strip(),
+        "name": payload.name,
+        "role": UserRole.ADMIN.value if payload.role.lower() == "admin" else UserRole.USER.value,
+        "status": "active",
+        "email_verified": True,
+        "onboarded": False,
+        "onboarding_data": {"institution": payload.institution or "General"}
+    }
+    created = await user_store.save_user(user_id, new_user)
+    return {"success": True, "user": created}
+
+
+@router.get("/users/{user_id}", summary="Get detailed user profile and learning metrics")
+async def get_admin_user_detail(
+    user_id: str,
+    current_user: dict = Depends(require_admin),
+):
+    """Returns full details, learning progress, and session summary for a user."""
+    user_store = UserStore()
+    user = await user_store.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"success": True, "user": user}
 
 
 @router.patch("/users/{user_id}/role", summary="Update user RBAC role")
