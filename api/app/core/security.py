@@ -82,6 +82,10 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
                 algorithms=["HS256"],
                 options={"verify_aud": False},
             )
+            aud = payload.get("aud")
+            if aud and aud not in ("authenticated", "anon"):
+                logger.warning("Rejected JWT with invalid aud: %s", aud)
+                return None
             return payload.get("sub")
         except pyjwt.ExpiredSignatureError:
             logger.warning("JWT has expired (HS256)")
