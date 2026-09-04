@@ -79,7 +79,7 @@ export default function LandingPage() {
         <header
           className={`pointer-events-auto bg-[#003F3F] text-[#F5F3EC] bg-grain-dark transition-all duration-300 ease-in-out ${
             isScrolled
-              ? "mt-4 w-[85%] md:w-[75%] rounded-full border border-[#005A57] shadow-xl"
+              ? "mt-4 w-[85%] md:w-[70%] rounded-full border border-[#005A57] shadow-xl"
               : "mt-0 w-full rounded-none border-b border-[#005A57]/60 shadow-none"
           }`}
         >
