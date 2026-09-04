@@ -221,14 +221,31 @@ async def create_exam(data: ExamCreate):
 @exams_router.patch(
     "/exams/{eid}",
     summary="Update exam",
-    description="Update an exam's details or readiness",
+    description="Update an exam's details (readiness is computed server-side)",
 )
 async def update_exam(eid: str, data: ExamUpdate):
     user_id = resolve_user_id()
-    exam = await _store.update_exam(eid, user_id, data.model_dump(exclude_unset=True))
+    payload = data.model_dump(exclude_unset=True)
+    payload.pop("readiness", None)  # Prevent client from directly setting readiness score
+    exam = await _store.update_exam(eid, user_id, payload)
     if exam is None:
         raise HTTPException(404, "Not found")
     return exam
+
+
+@exams_router.get(
+    "/exams/{eid}/readiness",
+    summary="Get computed exam readiness",
+    description="Returns computed readiness breakdown and topic analysis for an exam",
+)
+async def get_exam_readiness(eid: str):
+    user_id = resolve_user_id()
+    exam = await _store.update_exam(eid, user_id, {})
+    if exam is None:
+        raise HTTPException(404, "Not found")
+
+    from app.services.pattern_analysis import ExamReadinessEngine
+    return await ExamReadinessEngine.compute_readiness(user_id, eid)
 
 
 @exams_router.delete(
