@@ -43,6 +43,16 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole, UserStatus } from "@/types/roles";
 import { SummaLogo } from "@/components/SummaLogo";
+import {
+  UsersView,
+  UserDrawer,
+  InstitutionsView,
+  RevenueView,
+  IntegrationsView,
+  SettingsView,
+  StatusBadge,
+  MetricCard,
+} from "@/components/AdminViews";
 
 interface AdminUser {
   id: string;
@@ -102,6 +112,7 @@ export default function AdminDashboard() {
   };
 
   const [activeItem, setActiveItem] = useState<NavItem>(currentTabFromUrl);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -768,7 +779,41 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* TEAM GOVERNANCE & RBAC SECTION */}
+      {/* VIEW SWITCHING ENGINE */}
+          {activeItem === "users" && <UsersView onUserClick={(u) => setSelectedUser(u)} />}
+          {activeItem === "institutions" && <InstitutionsView />}
+          {activeItem === "revenue" && <RevenueView />}
+          {activeItem === "subscriptions" && <RevenueView />}
+          {activeItem === "analytics" && <RevenueView />}
+          {activeItem === "engagement" && <RevenueView />}
+          {activeItem === "integrations" && <IntegrationsView />}
+          {activeItem === "settings" && <SettingsView />}
+          
+          {/* USER DETAILS DRAWER */}
+          {selectedUser && (
+            <UserDrawer user={selectedUser} onClose={() => setSelectedUser(null)} />
+          )}
+
+          {/* OTHER SUB-PAGES DEFAULT PLACEHOLDER FOR UNIMPLEMENTED TABS */}
+          {!["overview", "users", "institutions", "revenue", "subscriptions", "analytics", "engagement", "integrations", "settings", "team"].includes(activeItem) && (
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-12 text-center space-y-3 shadow-2xs">
+              <div className="size-12 rounded-full bg-[#6366F1]/10 text-[#4F46E5] font-bold text-lg flex items-center justify-center mx-auto capitalize">
+                {activeItem.charAt(0)}
+              </div>
+              <h3 className="font-bold text-base text-slate-900 capitalize">{activeItem} Management</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Detailed administrative analytics and actions for {activeItem} are operating normally.
+              </p>
+              <button
+                onClick={() => setActiveItem("overview")}
+                className="mt-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition"
+              >
+                Back to Overview
+              </button>
+            </div>
+          )}
+
+          {/* TEAM GOVERNANCE & RBAC SECTION */}
           {activeItem === "team" && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-2xs">
