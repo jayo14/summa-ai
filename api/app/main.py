@@ -63,11 +63,7 @@ async def lifespan(app: FastAPI):
             missing.append("SUPABASE_URL")
         if not settings.SUPABASE_ANON_KEY:
             missing.append("SUPABASE_ANON_KEY")
-        if (
-            not settings.DATABASE_URL
-            or settings.DATABASE_URL
-            == "postgresql://postgres:password@localhost:5432/postgres"
-        ):
+        if not settings.DATABASE_URL:
             missing.append("DATABASE_URL")
     if missing:
         raise RuntimeError(

@@ -48,23 +48,17 @@ class Settings(BaseSettings):
     VECTOR_DB_KEY: str = os.getenv("VECTOR_DB_KEY", "")
     VECTOR_DB_PROVIDER: str = os.getenv("VECTOR_DB_PROVIDER", "")
 
-    # Database
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL",
-        "postgresql://postgres:2qLyQMkGqFokNinC@db.qzynckcdexotmoxtgzuz.supabase.co:5432/postgres",
-    )
+    # Database — must be supplied via environment variable; no hardcoded default
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
 
-    # Supabase Auth
+    # Supabase Auth — must be supplied via environment variable; no hardcoded default
     SUPABASE_URL: str = os.getenv(
         "SUPABASE_URL",
-        os.getenv("NEXT_PUBLIC_SUPABASE_URL", "https://qzynckcdexotmoxtgzuz.supabase.co"),
+        os.getenv("NEXT_PUBLIC_SUPABASE_URL", ""),
     )
     SUPABASE_ANON_KEY: str = os.getenv(
         "SUPABASE_ANON_KEY",
-        os.getenv(
-            "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6eW5ja2NkZXhvdG1veHRgzuzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MTUyODMsImV4cCI6MjA2NzE5MTI4M30.H1leHnvBUUR8s4qqJIGFqFVJMw54TOfs3xWDpyaQc9I",
-        ),
+        os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY", ""),
     )
     SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
 
