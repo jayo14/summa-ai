@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchApi } from "../lib/api";
 import {
   Activity,
   AlertTriangle,
@@ -417,30 +418,65 @@ export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }
 
 export function InstitutionsView() {
   const [selectedInst, setSelectedInst] = useState<any>(null);
+  const [insts, setInsts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [name, setName] = useState("");
+  const [type, setType] = useState("Federal");
+  const [plan, setPlan] = useState("Enterprise");
 
-  const insts = [
-    { name: "University of Lagos", type: "Federal", users: "2,341", active: "1,842", plan: "Enterprise", mrr: "₦420,000", status: "Active", joined: "Jan 2024" },
-    { name: "LASUSTECH", type: "State", users: "1,832", active: "1,425", plan: "Pro", mrr: "₦250,000", status: "Active", joined: "Feb 2024" },
-    { name: "University of Ibadan", type: "Federal", users: "1,201", active: "978", plan: "Pro", mrr: "₦180,000", status: "Active", joined: "Mar 2024" },
-    { name: "Babcock University", type: "Private", users: "987", active: "754", plan: "Pro", mrr: "₦150,000", status: "Active", joined: "Apr 2024" },
-    { name: "Covenant University", type: "Private", users: "842", active: "623", plan: "Basic", mrr: "₦72,000", status: "Trial", joined: "May 2024" },
-  ];
+  const fetchInstitutions = async () => {
+    setLoading(true);
+    try {
+      const res = await fetchApi<any>("/admin/institutions");
+      if (res?.institutions) {
+        setInsts(res.institutions);
+      }
+    } catch (err) {
+      toast.error("Failed to load institutions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInstitutions();
+  }, []);
+
+  const handleCreate = async () => {
+    if (!name) {
+      toast.error("Institution name is required");
+      return;
+    }
+    try {
+      await fetchApi("/admin/institutions", {
+        method: "POST",
+        body: JSON.stringify({ name, type, plan }),
+      });
+      toast.success("Institution registered successfully!");
+      setShowAddModal(false);
+      setName("");
+      fetchInstitutions();
+    } catch (err) {
+      toast.error("Failed to add institution.");
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-        <MetricCard title="Total Institutions" value="34" change="+13.3%" strokeColor="#3B82F6" />
-        <MetricCard title="Active Institutions" value="31" change="+10.0%" strokeColor="#10B981" />
-        <MetricCard title="Enterprise Institutions" value="8" change="+25.0%" strokeColor="#8B5CF6" />
+        <MetricCard title="Total Institutions" value={insts.length.toString()} change="+13.3%" strokeColor="#3B82F6" />
+        <MetricCard title="Active Institutions" value={insts.filter(i => i.status === "active").length.toString()} change="+10.0%" strokeColor="#10B981" />
+        <MetricCard title="Enterprise Institutions" value={insts.filter(i => i.plan === "Enterprise").length.toString()} change="+25.0%" strokeColor="#8B5CF6" />
         <MetricCard title="Institution Users" value="7,203" change="+18.4%" strokeColor="#3B82F6" />
-        <MetricCard title="Institution MRR" value="₦1,072,000" change="+22.1%" strokeColor="#10B981" />
+        <MetricCard title="Institution MRR" value={`₦${insts.reduce((acc, curr) => acc + (curr.mrr || 0), 0).toLocaleString()}`} change="+22.1%" strokeColor="#10B981" />
         <MetricCard title="Pending Trials" value="3" change="-1" isPositive={false} strokeColor="#F59E0B" />
       </div>
 
       <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
         <div className="flex justify-between items-center">
           <h3 className="font-bold text-sm text-slate-900">Registered Institutions</h3>
-          <button onClick={() => toast.info("Add Institution wizard opened.")} className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 shadow-2xs cursor-pointer">
+          <button onClick={() => setShowAddModal(true)} className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 shadow-2xs cursor-pointer">
             <Plus size={14} /> Add Institution
           </button>
         </div>
@@ -467,7 +503,7 @@ export function InstitutionsView() {
                   <td className="p-4 font-mono text-slate-700">{i.users}</td>
                   <td className="p-4 font-mono text-slate-700">{i.active}</td>
                   <td className="p-4 font-semibold text-slate-900">{i.plan}</td>
-                  <td className="p-4 font-mono font-bold text-slate-900">{i.mrr}</td>
+                  <td className="p-4 font-mono font-bold text-slate-900">₦{(i.mrr || 0).toLocaleString()}</td>
                   <td className="p-4"><StatusBadge status={i.status} /></td>
                   <td className="p-4 text-right">
                     <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
@@ -480,6 +516,47 @@ export function InstitutionsView() {
           </table>
         </div>
       </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-[#E2E8F0]">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+              <h3 className="font-bold text-sm text-slate-900">Add Partner Institution</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Institution Name</label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Obafemi Awolowo University" className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Category / Type</label>
+                  <select value={type} onChange={(e) => setType(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900">
+                    <option value="Federal">Federal</option>
+                    <option value="State">State</option>
+                    <option value="Private">Private</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Plan</label>
+                  <select value={plan} onChange={(e) => setPlan(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900">
+                    <option value="Enterprise">Enterprise</option>
+                    <option value="Pro">Pro</option>
+                    <option value="Basic">Basic</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-[#E2E8F0] text-slate-700 font-semibold text-xs">Cancel</button>
+              <button onClick={handleCreate} className="px-4 py-2 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition">Register Institution</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedInst && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex justify-end">

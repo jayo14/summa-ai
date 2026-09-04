@@ -123,6 +123,7 @@ export default function AdminDashboard() {
   };
 
   const [activeItem, setActiveItem] = useState<NavItem>(currentTabFromUrl);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -273,14 +274,24 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex font-sans antialiased selection:bg-purple-100">
       {/* LEFT SIDEBAR - Summa AI Admin Fixed & Pixel Perfect */}
-      <aside className="w-[250px] h-screen sticky top-0 bg-white border-r border-[#E2E8F0] flex flex-col justify-between shrink-0 select-none py-4 px-3 z-30">
+      <aside
+        className={`${
+          isCollapsed ? "w-[72px]" : "w-[250px]"
+        } transition-all duration-300 ease-in-out h-screen sticky top-0 bg-white border-r border-[#E2E8F0] flex flex-col justify-between shrink-0 select-none py-4 px-3 z-30`}
+      >
         <div className="flex flex-col min-h-0">
           {/* Logo & Collapse Header */}
-          <div className="h-12 px-2 flex items-center justify-between mb-4 shrink-0">
-            <Link href="/" className="flex items-center gap-2 text-slate-900">
-              <SummaLogo />
-            </Link>
-            <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
+          <div className={`h-12 px-2 flex items-center ${isCollapsed ? "justify-center" : "justify-between"} mb-4 shrink-0`}>
+            {!isCollapsed && (
+              <Link href="/" className="flex items-center gap-2 text-slate-900 overflow-hidden whitespace-nowrap">
+                <SummaLogo />
+              </Link>
+            )}
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+            >
               <Menu size={18} />
             </button>
           </div>
@@ -293,7 +304,10 @@ export default function AdminDashboard() {
                 <button
                   key={item.key}
                   onClick={() => setActiveItem(item.key)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition ${
+                  title={isCollapsed ? item.label : undefined}
+                  className={`w-full flex items-center ${
+                    isCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"
+                  } rounded-xl text-left transition ${
                     active
                       ? "bg-[#6366F1]/10 text-[#4F46E5] font-semibold"
                       : "hover:bg-slate-50 text-slate-600 hover:text-slate-900"
@@ -302,7 +316,7 @@ export default function AdminDashboard() {
                   <span className={active ? "text-[#4F46E5]" : "text-slate-400"}>
                     {item.icon}
                   </span>
-                  <span>{item.label}</span>
+                  {!isCollapsed && <span className="truncate">{item.label}</span>}
                 </button>
               );
             })}
@@ -311,25 +325,30 @@ export default function AdminDashboard() {
 
         {/* Sidebar Footer Plan Card & Functional Sign Out Button */}
         <div className="shrink-0 space-y-3 pt-3">
-          <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2">
-            <div className="text-[11px] text-slate-400 font-medium">Current Plan</div>
-            <div className="font-bold text-sm text-slate-900">Enterprise</div>
-            <div className="text-xs font-semibold text-[#10B981]">
-              ₦1,250,000 <span className="text-slate-400 font-normal">/ month</span>
+          {!isCollapsed && (
+            <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2">
+              <div className="text-[11px] text-slate-400 font-medium">Current Plan</div>
+              <div className="font-bold text-sm text-slate-900">Enterprise</div>
+              <div className="text-xs font-semibold text-[#10B981]">
+                ₦1,250,000 <span className="text-slate-400 font-normal">/ month</span>
+              </div>
+              <div className="text-[11px] text-slate-400">Renews on Jun 1, 2024</div>
+              <button className="pt-1 text-xs text-[#6366F1] font-semibold hover:underline flex items-center gap-1 cursor-pointer">
+                Manage plan <ArrowRight size={13} />
+              </button>
             </div>
-            <div className="text-[11px] text-slate-400">Renews on Jun 1, 2024</div>
-            <button className="pt-1 text-xs text-[#6366F1] font-semibold hover:underline flex items-center gap-1 cursor-pointer">
-              Manage plan <ArrowRight size={13} />
-            </button>
-          </div>
+          )}
 
           {/* Sign Out Button */}
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 transition cursor-pointer border border-rose-200/60 shadow-2xs"
+            title={isCollapsed ? "Sign Out" : undefined}
+            className={`w-full flex items-center justify-center ${
+              isCollapsed ? "p-2.5" : "gap-2 px-3 py-2.5"
+            } rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 transition cursor-pointer border border-rose-200/60 shadow-2xs`}
           >
             <LogOut size={16} />
-            <span>Sign Out</span>
+            {!isCollapsed && <span>Sign Out</span>}
           </button>
         </div>
       </aside>
