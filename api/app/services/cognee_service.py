@@ -17,11 +17,13 @@ is available, so local dev works without any external services.
 
 import asyncio
 import logging
+import json
 import os
 import time
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from app.services.db_pool import get_pool
 
 from app.config import settings
 
@@ -231,7 +233,6 @@ class CogneeService:
 
         self._memory.setdefault(dataset, []).append(item)
         try:
-            from app.services.db_pool import get_pool
             pool = await get_pool()
             if pool:
                 async with pool.acquire() as conn:
@@ -368,7 +369,6 @@ class CogneeService:
             # Postgres / In-memory fallback
             items = []
             try:
-                from app.services.db_pool import get_pool
                 pool = await get_pool()
                 if pool:
                     async with pool.acquire() as conn:
