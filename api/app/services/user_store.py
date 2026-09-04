@@ -160,7 +160,7 @@ class UserStore:
                 if row:
                     sets = []
                     values = []
-                    for key in ("name", "avatar", "bio"):
+                    for key in ("name", "avatar", "bio", "role"):
                         if key in data:
                             sets.append(f"{key} = ${len(values) + 1}")
                             values.append(data[key])
