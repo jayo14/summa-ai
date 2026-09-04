@@ -83,7 +83,7 @@ export default function LandingPage() {
     <div className="min-h-screen w-full bg-[#FBFAF6] text-[#102B2B] font-sans selection:bg-[#B8FF4D] selection:text-[#003F3F] relative antialiased overflow-x-hidden">
       
       {/* 1. FLOATING STICKY NAVIGATION HEADER */}
-      <div className="sticky top-0 z-50 w-full pointer-events-none flex justify-center py-2 bg-[#003F3F]/80 backdrop-blur-md">
+      <div className="sticky top-0 z-50 w-full pointer-events-none flex justify-center py-2 backdrop-blur-md bg-gradient-to-b from-[#FBFAF6]/80 to-transparent">
         <header
           style={{
             width: `${headerWidth}%`,
