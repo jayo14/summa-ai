@@ -117,6 +117,19 @@ class GapAnalysisComponent(BaseComponent):
     gaps: List[GapAnalysisGap] = Field(min_length=1)
 
 
+class ComparisonDistinction(BaseModel):
+    aspect: str
+    conceptA: str
+    conceptB: str
+
+
+class ComparisonComponent(BaseComponent):
+    type: Literal["comparison"] = "comparison"
+    conceptA: str
+    conceptB: str
+    distinctions: List[ComparisonDistinction] = Field(min_length=1)
+
+
 ComponentData = Union[
     HexagonComponent,
     QuizComponent,
@@ -125,6 +138,7 @@ ComponentData = Union[
     GraphComponent,
     TimelineComponent,
     GapAnalysisComponent,
+    ComparisonComponent,
 ]
 
 COMPONENT_TYPE_MAP = {
@@ -135,8 +149,9 @@ COMPONENT_TYPE_MAP = {
     "graph": GraphComponent,
     "timeline": TimelineComponent,
     "gap-analysis": GapAnalysisComponent,
+    "comparison": ComparisonComponent,
 }
 
 ComponentType = Literal[
-    "hexagon", "quiz", "flashcards", "study-plan", "graph", "timeline", "gap-analysis"
+    "hexagon", "quiz", "flashcards", "study-plan", "graph", "timeline", "gap-analysis", "comparison"
 ]
