@@ -56,6 +56,19 @@ async def get_study_plan(pid: str):
     return plan
 
 
+@study_router.post(
+    "/study-plans/{pid}/approve",
+    summary="Approve study plan",
+    description="Mark a study plan as approved and active",
+)
+async def approve_study_plan(pid: str):
+    user_id = resolve_user_id()
+    plan = await _store.update_study_plan(pid, user_id, {"approved": True})
+    if plan is None:
+        raise HTTPException(404, "Not found")
+    return plan
+
+
 @study_router.patch(
     "/study-plans/{pid}",
     summary="Update study plan",
