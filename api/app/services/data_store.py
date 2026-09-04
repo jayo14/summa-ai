@@ -840,11 +840,10 @@ class DataStore:
                     if row:
                         await self.create_timeline_event(
                             user_id,
-                            {
-                                "type": "study_plan",
-                                "title": f"Study Plan Created: {data.get('title', 'Study Plan')}",
-                                "description": f"Created study plan with {len(sessions_data)} session(s)",
-                            },
+                            "study_plan",
+                            f"Study Plan Created: {data.get('title', 'Study Plan')}",
+                            f"Created study plan with {len(sessions_data)} session(s)",
+                            {"plan_id": pid},
                         )
                         d = dict(row)
                         d["id"] = str(d["id"])

@@ -121,10 +121,10 @@ async def test_create_list_update_delete_flashcard(store):
     cards = await store.list_flashcards(USER_ID)
     assert any(c["id"] == cid for c in cards)
 
-    updated = await store.update_flashcard(cid, {"mastered": True})
+    updated = await store.update_flashcard(cid, USER_ID, {"mastered": True})
     assert updated["mastered"] is True
 
-    assert await store.delete_flashcard(cid) is True
+    assert await store.delete_flashcard(cid, USER_ID) is True
 
 
 @pytest.mark.asyncio
@@ -138,7 +138,7 @@ async def test_create_list_delete_exam(store):
     exams = await store.list_exams(USER_ID)
     assert any(e["id"] == eid for e in exams)
 
-    assert await store.delete_exam(eid) is True
+    assert await store.delete_exam(eid, USER_ID) is True
 
 
 @pytest.mark.asyncio
