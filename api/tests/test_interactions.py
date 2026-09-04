@@ -33,6 +33,7 @@ _current_user = {"id": "unset"}
 
 def _post_quiz_result(user_id: str, topic: str, score: float, answers: dict | None = None):
     _current_user["id"] = user_id
+    set_current_user_id(user_id)
     with patch("app.main.verify_supabase_jwt", return_value=user_id):
         with patch("app.routes.interactions._store") as mock_store:
             mock_store.create_quiz_result = AsyncMock(
