@@ -240,6 +240,7 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 from app.routes.progress_routes import progress_router
+from app.routes.resource_routes import resource_router
 
 for r, tag in [
     (auth.router, "auth"),
@@ -258,6 +259,7 @@ for r, tag in [
     (exams_router, "exams"),
     (interactions_router, "interactions"),
     (progress_router, "progress"),
+    (resource_router, "resources"),
     (logs.router, "system"),
     (admin.router, "admin"),
 ]:
