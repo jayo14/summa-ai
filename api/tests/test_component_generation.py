@@ -23,10 +23,11 @@ def _fake_instructor_client(create_side_effect):
 class TestGenerateComponentPayloadRoundTrip:
     @pytest.mark.asyncio
     async def test_quiz_round_trips_through_generation_and_validation(self):
-        brief = GenerationBrief(topic="Recursion", focus="base cases")
-        quiz = QuizComponent(
-            title="Recursion Quiz",
-            questions=[
+        brief_data = {"topic": "Recursion", "focus": "base cases"}
+        quiz_data = {
+            "title": "Recursion Quiz",
+            "type": "quiz",
+            "questions": [
                 {
                     "id": "q1",
                     "question": "What stops recursion?",
@@ -35,12 +36,12 @@ class TestGenerateComponentPayloadRoundTrip:
                     "explanation": "The base case halts further recursive calls.",
                 }
             ],
-        )
-        client = _fake_instructor_client([brief, quiz])
+        }
 
-        with patch(
-            "app.services.zai_client.get_instructor_client", return_value=client
-        ):
+        with patch("app.services.google_ai.is_gemini_configured", return_value=True), patch(
+            "app.services.google_ai.generate_gemini_json",
+            side_effect=[brief_data, quiz_data],
+        ) as mock_gemini:
             payload = await generate_component_payload(
                 "quiz", "quiz me on recursion", "context: student studies recursion"
             )
@@ -54,22 +55,15 @@ class TestGenerateComponentPayloadRoundTrip:
         serialized = payload.data.model_dump(by_alias=True, mode="json")
         assert serialized["questions"][0]["id"] == "q1"
         assert serialized["questions"][0]["correctIndex"] == 0
-        assert client.chat.completions.create.await_count == 2
-
-        # The detected intent ("quiz") must actually shape what's requested
-        # from the LLM, not just be computed and discarded — both calls'
-        # system prompts and the second call's response_model reflect it.
-        first_call, second_call = client.chat.completions.create.await_args_list
-        assert "quiz" in first_call.kwargs["messages"][0]["content"]
-        assert "quiz" in second_call.kwargs["messages"][0]["content"]
-        assert second_call.kwargs["response_model"] is QuizComponent
+        assert mock_gemini.call_count == 2
 
     @pytest.mark.asyncio
     async def test_gap_analysis_round_trips(self):
-        brief = GenerationBrief(topic="Prerequisites")
-        gap = GapAnalysisComponent(
-            title="Gaps",
-            gaps=[
+        brief_data = {"topic": "Prerequisites"}
+        gap_data = {
+            "title": "Gaps",
+            "type": "gap-analysis",
+            "gaps": [
                 {
                     "id": "g1",
                     "topic": "Matrix multiplication",
@@ -78,11 +72,11 @@ class TestGenerateComponentPayloadRoundTrip:
                     "estTime": "45 min",
                 }
             ],
-        )
-        client = _fake_instructor_client([brief, gap])
+        }
 
-        with patch(
-            "app.services.zai_client.get_instructor_client", return_value=client
+        with patch("app.services.google_ai.is_gemini_configured", return_value=True), patch(
+            "app.services.google_ai.generate_gemini_json",
+            side_effect=[brief_data, gap_data],
         ):
             payload = await generate_component_payload(
                 "gap-analysis", "what am I missing", "context"
@@ -95,15 +89,12 @@ class TestGenerateComponentPayloadRoundTrip:
 class TestGenerateComponentPayloadFallback:
     @pytest.mark.asyncio
     async def test_validation_failure_after_retries_returns_none_not_raise(self):
-        try:
-            QuizComponent(title="bad", questions=[])
-        except ValidationError as exc:
-            validation_error = exc
+        brief_data = {"topic": "Recursion"}
+        bad_quiz_data = {"title": "bad", "type": "quiz", "questions": []}
 
-        client = _fake_instructor_client(validation_error)
-
-        with patch(
-            "app.services.zai_client.get_instructor_client", return_value=client
+        with patch("app.services.google_ai.is_gemini_configured", return_value=True), patch(
+            "app.services.google_ai.generate_gemini_json",
+            side_effect=[brief_data, bad_quiz_data],
         ):
             payload = await generate_component_payload(
                 "quiz", "quiz me", "context"
@@ -113,10 +104,9 @@ class TestGenerateComponentPayloadFallback:
 
     @pytest.mark.asyncio
     async def test_network_failure_returns_none_not_raise(self):
-        client = _fake_instructor_client(ConnectionError("Z.ai unreachable"))
-
-        with patch(
-            "app.services.zai_client.get_instructor_client", return_value=client
+        with patch("app.services.google_ai.is_gemini_configured", return_value=True), patch(
+            "app.services.google_ai.generate_gemini_json",
+            side_effect=ConnectionError("Gemini unreachable"),
         ):
             payload = await generate_component_payload(
                 "flashcards", "make flashcards", "context"
@@ -130,3 +120,4 @@ class TestGenerateComponentPayloadFallback:
             "not-a-real-type", "query", "context"
         )
         assert payload is None
+

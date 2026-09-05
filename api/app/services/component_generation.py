@@ -27,7 +27,7 @@ from pydantic import BaseModel, ValidationError
 from app.config import settings
 from app.models.artifact import ArtifactPayload
 from app.models.components import COMPONENT_TYPE_MAP, ComponentData, ComponentType
-from app.services import zai_client
+from app.services import google_ai, zai_client
 
 logger = logging.getLogger(__name__)
 
@@ -42,53 +42,73 @@ class GenerationBrief(BaseModel):
 async def _decide_brief(
     component_type: str, query: str, context: str
 ) -> GenerationBrief:
-    client = zai_client.get_instructor_client()
-    return await client.chat.completions.create(
-        model=settings.ZAI_MODEL,
-        response_model=GenerationBrief,
-        max_retries=MAX_VALIDATION_RETRIES,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "Extract a clean generation brief for a "
-                    f"{component_type} learning component from the student's "
-                    "message and the tutoring context. `topic` is the specific "
-                    "subject; `focus` is an optional narrower angle (a subtopic "
-                    "or a weak area to emphasize)."
-                ),
-            },
-            {
-                "role": "user",
-                "content": f"Context:\n{context}\n\nStudent said: {query}",
-            },
-        ],
+    system_prompt = (
+        "Extract a clean generation brief for a "
+        f"{component_type} learning component from the student's "
+        "message and the tutoring context. `topic` is the specific "
+        "subject; `focus` is an optional narrower angle (a subtopic "
+        "or a weak area to emphasize). Respond with valid JSON matching GenerationBrief schema."
     )
+    user_content = f"Context:\n{context}\n\nStudent said: {query}"
+
+    if google_ai.is_gemini_configured():
+        raw_json = await google_ai.generate_gemini_json(
+            messages=[{"role": "user", "content": user_content}],
+            system_prompt=system_prompt,
+        )
+        if raw_json:
+            return GenerationBrief.model_validate(raw_json)
+
+    if zai_client._has_instructor:
+        client = zai_client.get_instructor_client()
+        return await client.chat.completions.create(
+            model=settings.ZAI_MODEL,
+            response_model=GenerationBrief,
+            max_retries=MAX_VALIDATION_RETRIES,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+        )
+
+    # Fallback default brief if no LLM service is available
+    return GenerationBrief(topic=query or component_type)
 
 
 async def _generate_content(
     component_type: str, brief: GenerationBrief, context: str
 ) -> ComponentData:
     schema = COMPONENT_TYPE_MAP[component_type]
-    client = zai_client.get_instructor_client()
-    return await client.chat.completions.create(
-        model=settings.ZAI_MODEL,
-        response_model=schema,
-        max_retries=MAX_VALIDATION_RETRIES,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    f"Generate a {component_type} learning component about "
-                    f"'{brief.topic}'"
-                    + (f", focused on {brief.focus}" if brief.focus else "")
-                    + ". Ground it in the tutoring context below where relevant. "
-                    "Every `id` field must be a short unique string."
-                ),
-            },
-            {"role": "user", "content": f"Context:\n{context}"},
-        ],
+    system_prompt = (
+        f"Generate a {component_type} learning component about "
+        f"'{brief.topic}'"
+        + (f", focused on {brief.focus}" if brief.focus else "")
+        + ". Ground it in the tutoring context below where relevant. "
+        "Every `id` field must be a short unique string. Respond with valid JSON matching component schema."
     )
+    user_content = f"Context:\n{context}"
+
+    if google_ai.is_gemini_configured():
+        raw_json = await google_ai.generate_gemini_json(
+            messages=[{"role": "user", "content": user_content}],
+            system_prompt=system_prompt,
+        )
+        if raw_json:
+            return schema.model_validate(raw_json)
+
+    if zai_client._has_instructor:
+        client = zai_client.get_instructor_client()
+        return await client.chat.completions.create(
+            model=settings.ZAI_MODEL,
+            response_model=schema,
+            max_retries=MAX_VALIDATION_RETRIES,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+        )
+
+    raise RuntimeError("No LLM service available for component generation")
 
 
 async def generate_component_payload(

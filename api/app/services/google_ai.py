@@ -186,3 +186,43 @@ async def stream_gemini_completion(
         logger.warning("Gemini API connection error (%s). Using fallback stream.", exc)
         async for chunk in _generate_fallback_stream(messages, system_prompt):
             yield chunk
+
+
+async def generate_gemini_json(
+    messages: List[Dict[str, str]],
+    system_prompt: str = "",
+    json_schema: Optional[Dict[str, Any]] = None,
+) -> Optional[Dict[str, Any]]:
+    """Generates structured JSON object using Google AI Gemini API."""
+    if not settings.GEMINI_API_KEY:
+        logger.warning("Gemini API key not configured for structured JSON generation.")
+        return None
+
+    url = f"{GEMINI_API_BASE}/models/{settings.GEMINI_MODEL}:generateContent?key={settings.GEMINI_API_KEY}"
+    payload = _format_messages_for_gemini(messages, system_prompt)
+
+    gen_config = payload.get("generationConfig", {})
+    gen_config["responseMimeType"] = "application/json"
+    if json_schema:
+        gen_config["responseSchema"] = json_schema
+    payload["generationConfig"] = gen_config
+
+    try:
+        async with httpx.AsyncClient(timeout=GEMINI_STREAM_TIMEOUT) as client:
+            res = await client.post(url, json=payload)
+            if res.status_code != 200:
+                logger.warning("Gemini API structured JSON generation error %d: %s", res.status_code, res.text)
+                return None
+            
+            data = res.json()
+            candidates = data.get("candidates", [])
+            if not candidates:
+                return None
+            parts = candidates[0].get("content", {}).get("parts", [])
+            if not parts:
+                return None
+            text = parts[0].get("text", "")
+            return json.loads(text)
+    except Exception as exc:
+        logger.warning("Gemini structured JSON generation failed: %s", exc)
+        return None
