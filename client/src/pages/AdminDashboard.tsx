@@ -128,6 +128,7 @@ export default function AdminDashboard() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [adminStats, setAdminStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
@@ -160,9 +161,10 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const [uJson, aJson] = await Promise.all([
+      const [uJson, aJson, sJson] = await Promise.all([
         fetchApi<any>("/admin/users"),
         fetchApi<any>("/admin/audit-logs"),
+        fetchApi<any>("/admin/stats"),
       ]);
 
       if (uJson?.users) {
@@ -170,6 +172,9 @@ export default function AdminDashboard() {
       }
       if (aJson?.audit_logs) {
         setAuditLogs(aJson.audit_logs);
+      }
+      if (sJson?.data) {
+        setAdminStats(sJson.data);
       }
     } catch (err) {
       toast.error("Failed to refresh admin data.");
@@ -847,7 +852,7 @@ export default function AdminDashboard() {
             />
           )}
           {activeItem === "institutions" && <InstitutionsView />}
-          {activeItem === "analytics" && <AnalyticsView />}
+          {activeItem === "analytics" && <AnalyticsView stats={adminStats} />}
           {activeItem === "subscriptions" && <SubscriptionsView />}
           {activeItem === "revenue" && <RevenueView />}
           {activeItem === "engagement" && <EngagementView />}
