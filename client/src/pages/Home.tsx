@@ -132,6 +132,15 @@ export default function Home() {
   const [favorites, setFavorites] = useState<string[]>(() => JSON.parse(window.localStorage.getItem("summa-favorites") || "[]"));
   const [favoriteFolders, setFavoriteFolders] = useState<Record<string, string>>(() => JSON.parse(window.localStorage.getItem("summa-favorite-folders") || "{}"));
 
+  const [customFolders, setCustomFolders] = useState<string[]>(() => {
+    const saved = window.localStorage.getItem("summa-custom-folders");
+    return saved ? JSON.parse(saved) : ["CSC 201 · OOP", "CSC 203 · Databases"];
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem("summa-custom-folders", JSON.stringify(customFolders));
+  }, [customFolders]);
+
   const [dbConversations, setDbConversations] = useState<Array<{ id: string; title: string; created_at: string }>>([]);
   const [dbMaterials, setDbMaterials] = useState<Array<{ id: string; title: string; type: string; description?: string }>>([]);
   const [dbActivities, setDbActivities] = useState<Array<any>>([]);
@@ -350,9 +359,58 @@ export default function Home() {
         <div className="sidebar-topline"><SummaLogo /><button className="mobile-close-button" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={19} /></button></div>
         <button type="button" className="new-session-button" onClick={startNewSession}><Plus size={16} /> New learning</button>
         <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>8</small>}</button>; })}</nav>
-        <section className="history-section" aria-labelledby="folders-label"><div className="section-title-row"><span id="folders-label" className="nav-caption">FOLDERS</span><button type="button" aria-label="Create folder" onClick={() => toast("Create a course folder from the connected learning library.")}><Plus size={15} /></button></div><div className="folder-list"><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 201 · OOP</span></button><div className="history-list">{dbConversations.length > 0 ? dbConversations.map((chat) => <button type="button" className="history-item" key={chat.id} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>Live</small></button>) : chatHistory.slice(0, 2).map((chat) => <button type="button" className={`history-item ${chat.active ? "active" : ""}`} key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div><div className="folder-group"><button type="button" className="folder-heading"><FolderOpen size={14} /><span>CSC 203 · Databases</span></button><div className="history-list">{chatHistory.slice(2).map((chat) => <button type="button" className="history-item" key={chat.title} onClick={() => { selectView("workspace"); setSessionStarted(true); setSidebarOpen(false); }}><span>{chat.title}</span><small>{chat.time}</small></button>)}</div></div></div></section>
+        <section className="history-section" aria-labelledby="folders-label">
+          <div className="section-title-row">
+            <span id="folders-label" className="nav-caption">FOLDERS</span>
+            <button
+              type="button"
+              aria-label="Create folder"
+              onClick={() => {
+                const folderName = window.prompt("Enter new folder name (e.g. CSC 301 · Algorithms):");
+                if (folderName?.trim()) {
+                  setCustomFolders((prev) => Array.from(new Set([...prev, folderName.trim()])));
+                  toast.success(`Folder "${folderName.trim()}" created.`);
+                }
+              }}
+            >
+              <Plus size={15} />
+            </button>
+          </div>
+          <div className="folder-list">
+            {customFolders.map((folderName, idx) => (
+              <div className="folder-group" key={folderName}>
+                <button type="button" className="folder-heading">
+                  <FolderOpen size={14} />
+                  <span>{folderName}</span>
+                </button>
+                <div className="history-list">
+                  {dbConversations
+                    .filter((c: any) => (c.folder || (idx === 0 ? folderName : "")) === folderName || dbConversations.length === 0 || idx === 0)
+                    .slice(0, idx === 0 ? 3 : 2)
+                    .map((chat) => (
+                      <button
+                        type="button"
+                        className="history-item"
+                        key={chat.id}
+                        onClick={() => {
+                          selectView("workspace");
+                          setSessionStarted(true);
+                          setSidebarOpen(false);
+                        }}
+                      >
+                        <span>{chat.title}</span>
+                        <small>Live</small>
+                      </button>
+                    ))}
+                  {dbConversations.length === 0 && (
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 px-7 py-1 block">No sessions yet</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
         <div className="sidebar-bottom">
-          <button type="button" className="nav-item" onClick={() => window.location.href = "/__manus__/logs"}><Terminal size={16} /><span>System Diagnostics</span></button>
           <button type="button" className={`nav-item ${activeView === "settings" ? "active" : ""}`} onClick={() => selectView("settings")}><Settings2 size={16} /><span>Settings</span></button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -414,7 +472,7 @@ export default function Home() {
       <section className="main-area">
         <header className="app-header"><div className="header-left"><button type="button" className="header-icon-button mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation"><Menu size={19} /></button><div className="header-crumbs"><span>Summa AI</span><ChevronRight size={13} /><strong>{activeView === "workspace" ? "Summa AI Chat" : activeView === "learning" ? "My learning" : activeView === "progress" ? "Learning progress" : activeView === "sources" ? "Academic sources" : "Learning settings"}</strong><ChevronDown size={12} /></div></div><div className="header-actions">{activeView === "workspace" && sessionStarted && <button type="button" className="context-toggle" onClick={() => setContextOpen((value) => !value)}><PanelRight size={16} /><span>{contextOpen ? "Hide context" : "Context"}</span></button>}<button type="button" className="theme-toggle" onClick={() => setTheme((value) => value === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>{theme === "light" ? <Moon size={15} /> : <Sun size={15} />}<span>{theme === "light" ? "Dark" : "Light"}</span></button><button type="button" className="header-icon-button" onClick={() => toast("No new learning reminders.")} aria-label="Open notifications"><Bell size={17} /></button><button type="button" className="header-icon-button" onClick={() => toast("Need a hand? Summa can help you choose the next learning action.")} aria-label="Open help"><CircleHelp size={17} /></button></div></header>
         <main className="product-stage">
-          {activeView === "workspace" && <WorkspaceView sessionStarted={sessionStarted} onStart={() => setSessionStarted(true)} composerValue={composerValue} setComposerValue={setComposerValue} sendMessage={sendMessage} messages={messages} isResponding={isResponding} mastery={mastery} updateMastery={updateMastery} registerEvent={registerEvent} setSourceTrayOpen={setSourceTrayOpen} />}
+          {activeView === "workspace" && <WorkspaceView sessionStarted={sessionStarted} onStart={() => setSessionStarted(true)} composerValue={composerValue} setComposerValue={setComposerValue} sendMessage={sendMessage} messages={messages} isResponding={isResponding} mastery={mastery} updateMastery={updateMastery} registerEvent={registerEvent} setSourceTrayOpen={setSourceTrayOpen} dbConversations={dbConversations} />}
           {activeView === "learning" && <LearningLibrary onResume={() => { selectView("workspace"); setSessionStarted(true); }} favorites={favorites} onToggleFavorite={toggleFavorite} favoriteFolders={favoriteFolders} onAssignFolder={assignFavoriteFolder} />}
           {activeView === "progress" && <ProgressView mastery={mastery} onContinue={() => { selectView("workspace"); setSessionStarted(true); }} />}
           {activeView === "sources" && <SourcesView onUseSource={() => { selectView("workspace"); setSessionStarted(true); setSourceTrayOpen(true); }} />}
@@ -427,7 +485,7 @@ export default function Home() {
   );
 }
 
-type WorkspaceProps = { sessionStarted: boolean; onStart: () => void; composerValue: string; setComposerValue: (value: string) => void; sendMessage: (message?: string) => void; messages: ConversationMessage[]; isResponding: boolean; mastery: number; updateMastery: (amount: number) => void; registerEvent: (kind: string, detail: string) => void; setSourceTrayOpen: (value: boolean) => void };
+type WorkspaceProps = { sessionStarted: boolean; onStart: () => void; composerValue: string; setComposerValue: (value: string) => void; sendMessage: (message?: string) => void; messages: ConversationMessage[]; isResponding: boolean; mastery: number; updateMastery: (amount: number) => void; registerEvent: (kind: string, detail: string) => void; setSourceTrayOpen: (value: boolean) => void; dbConversations?: Array<{ id: string; title: string; created_at: string }> };
 
 import {
   PromptInput,
@@ -459,7 +517,7 @@ function WorkspaceView(props: WorkspaceProps) {
     }
   }, [props.messages.length, props.isResponding]);
 
-  if (!props.sessionStarted) return <EmptyWorkspace {...props} />;
+  if (!props.sessionStarted) return <EmptyWorkspace {...props} dbConversations={props.dbConversations} />;
   return (
     <div className="workspace-view active-workspace relative">
       <div className="conversation-scroll" ref={scrollContainerRef} onScroll={handleScroll}>
@@ -507,11 +565,51 @@ function WorkspaceView(props: WorkspaceProps) {
   );
 }
 
-function EmptyWorkspace(props: WorkspaceProps) {
+function EmptyWorkspace(props: WorkspaceProps & { dbConversations?: Array<{ id: string; title: string; created_at: string }> }) {
   const { user } = useAuth();
   const userName = user?.name ? user.name.split(" ")[0] : "Student";
   const emptyActions = [{ label: "Quiz me", icon: ListChecks }, { label: "Build a study plan", icon: BookOpen }, { label: "Explain a concept", icon: Lightbulb }, { label: "Find weak areas", icon: Sparkles }];
-  return <div className="empty-workspace"><div className="empty-hero"><div className="hero-orb"><span /></div><h1>Good day, {userName}</h1><p>What would you like to learn today?</p></div><ComposerPanel {...props} /><div className="empty-actions" aria-label="Learning shortcuts">{emptyActions.map(({ label, icon: Icon }) => <button type="button" key={label} onClick={() => { props.setComposerValue(label); props.onStart(); }}><Icon size={15} /> {label}</button>)}</div><section className="recent-learning"><div className="recent-heading"><span>Your recent chats</span><button type="button" onClick={() => toast("All learning conversations are in the sidebar.")}>View all <ChevronRight size={14} /></button></div><div className="recent-grid">{chatHistory.slice(0, 3).map((chat) => <button type="button" className="recent-card" key={chat.title} onClick={() => props.onStart()}><strong>{chat.title}</strong><p>{chat.title === "Polymorphism, continued" ? "Runtime dispatch and overriding, with a short retrieval loop." : chat.title === "Trace recursive calls" ? "Build a stack trace one frame at a time." : "A focused map for the next exam review."}</p><small>{chat.time === "Now" ? "Today" : chat.time}</small></button>)}</div></section></div>;
+  const recentItems = props.dbConversations && props.dbConversations.length > 0 ? props.dbConversations.slice(0, 3) : [];
+  return (
+    <div className="empty-workspace">
+      <div className="empty-hero">
+        <div className="hero-orb"><span /></div>
+        <h1>Good day, {userName}</h1>
+        <p>What would you like to learn today?</p>
+      </div>
+      <ComposerPanel {...props} />
+      <div className="empty-actions" aria-label="Learning shortcuts">
+        {emptyActions.map(({ label, icon: Icon }) => (
+          <button type="button" key={label} onClick={() => { props.setComposerValue(label); props.onStart(); }}>
+            <Icon size={15} /> {label}
+          </button>
+        ))}
+      </div>
+      <section className="recent-learning">
+        <div className="recent-heading">
+          <span>Your recent chats</span>
+          <button type="button" onClick={() => toast("All learning conversations are in the sidebar.")}>
+            View all <ChevronRight size={14} />
+          </button>
+        </div>
+        <div className="recent-grid">
+          {recentItems.length > 0 ? (
+            recentItems.map((chat) => (
+              <button type="button" className="recent-card" key={chat.id} onClick={() => props.onStart()}>
+                <strong>{chat.title}</strong>
+                <p>Interactive study session</p>
+                <small>{new Date(chat.created_at || Date.now()).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</small>
+              </button>
+            ))
+          ) : (
+            <div className="col-span-3 py-6 text-center text-xs text-slate-400 dark:text-slate-500 bg-white/40 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+              No recent learning chats yet. Start a new session above!
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
 }
 
 function ComposerPanel(props: WorkspaceProps & { active?: boolean }) {

@@ -10,7 +10,6 @@ import ResetPassword from "@/pages/ResetPassword";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
 import VerifyEmail from "@/pages/VerifyEmail";
-import LogsPage from "@/pages/LogsPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import { AdminRoute } from "@/components/AdminRoute";
 import { UserRole } from "@/types/roles";
@@ -115,8 +114,6 @@ function Router() {
       <Route path="/settings">
         {() => <ProtectedRoute component={Home} />}
       </Route>
-      <Route path="/logs" component={LogsPage} />
-      <Route path="/__manus__/logs" component={LogsPage} />
       
       <Route path="/admin">
         {() => <AdminRoute component={AdminDashboard} />}
