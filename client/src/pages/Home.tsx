@@ -1179,31 +1179,31 @@ function LearningLibrary({
     switch (type) {
       case "code":
         return (
-          <div className="size-11 rounded-2xl bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300 flex items-center justify-center font-mono font-bold text-sm shrink-0">
+          <div className="size-11 rounded-2xl bg-[#005A57]/10 dark:bg-[#005A57]/30 text-[#005A57] dark:text-[#B8FF4D] flex items-center justify-center font-mono font-bold text-sm shrink-0">
             &lt;/&gt;
           </div>
         );
       case "math":
         return (
-          <div className="size-11 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-serif font-bold italic text-base shrink-0">
+          <div className="size-11 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-serif font-bold italic text-base shrink-0">
             f(x)
           </div>
         );
       case "physics":
         return (
-          <div className="size-11 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
+          <div className="size-11 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
             <Atom className="size-5" />
           </div>
         );
       case "writing":
         return (
-          <div className="size-11 rounded-2xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-300 flex items-center justify-center shrink-0">
+          <div className="size-11 rounded-2xl bg-[#DDE8DF] dark:bg-slate-800 text-[#003F3F] dark:text-[#B8FF4D] flex items-center justify-center shrink-0">
             <PenTool className="size-5" />
           </div>
         );
       default:
         return (
-          <div className="size-11 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
+          <div className="size-11 rounded-2xl bg-[#F5F3EC] dark:bg-slate-800 text-[#6D7E78] dark:text-slate-300 flex items-center justify-center shrink-0">
             <Book className="size-5" />
           </div>
         );
@@ -1211,10 +1211,10 @@ function LearningLibrary({
   };
 
   const getFolderProgressColor = (mastery: number) => {
-    if (mastery >= 60) return "bg-purple-600 dark:bg-purple-400";
-    if (mastery >= 40) return "bg-emerald-500 dark:bg-emerald-400";
+    if (mastery >= 60) return "bg-[#005A57] dark:bg-[#B8FF4D]";
+    if (mastery >= 40) return "bg-emerald-600 dark:bg-emerald-400";
     if (mastery >= 20) return "bg-amber-500 dark:bg-amber-400";
-    if (mastery > 0) return "bg-blue-500 dark:bg-blue-400";
+    if (mastery > 0) return "bg-[#6D7E78] dark:bg-slate-400";
     return "bg-slate-300 dark:bg-slate-700";
   };
 
@@ -1240,7 +1240,7 @@ function LearningLibrary({
             <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs relative overflow-hidden flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300">
+                  <span className="p-1.5 rounded-lg bg-[#005A57]/10 dark:bg-[#005A57]/30 text-[#005A57] dark:text-[#B8FF4D]">
                     <BookOpen className="size-4" />
                   </span>
                   Understanding
@@ -1251,13 +1251,13 @@ function LearningLibrary({
                 <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Overall mastery</div>
               </div>
               <div className="mt-3">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 text-xs font-semibold border border-purple-200/60 dark:border-purple-800/40">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#005A57]/10 dark:bg-[#005A57]/30 text-[#005A57] dark:text-[#B8FF4D] text-xs font-semibold border border-[#005A57]/20 dark:border-[#B8FF4D]/30">
                   ↑ 8% this week
                 </span>
               </div>
               <div className="absolute right-0 bottom-0 pointer-events-none opacity-20 dark:opacity-10">
                 <svg width="120" height="40" viewBox="0 0 120 40" fill="none">
-                  <path d="M0 30 Q 30 10, 60 25 T 120 5 L 120 40 L 0 40 Z" fill="#8B5CF6" />
+                  <path d="M0 30 Q 30 10, 60 25 T 120 5 L 120 40 L 0 40 Z" fill="#005A57" />
                 </svg>
               </div>
             </div>
@@ -1308,7 +1308,7 @@ function LearningLibrary({
             <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-300">
+                  <span className="p-1.5 rounded-lg bg-[#DDE8DF] dark:bg-slate-800 text-[#003F3F] dark:text-[#B8FF4D]">
                     <Brain className="size-4" />
                   </span>
                   Knowledge gained
@@ -1319,7 +1319,7 @@ function LearningLibrary({
                 <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">New concepts</div>
               </div>
               <div className="mt-3">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200/60 dark:border-blue-800/40">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#DDE8DF]/70 dark:bg-slate-800 text-[#003F3F] dark:text-[#B8FF4D] text-xs font-semibold border border-[#DDE8DF] dark:border-slate-700">
                   ↑ 21% this week
                 </span>
               </div>
