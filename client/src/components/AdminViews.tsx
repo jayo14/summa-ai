@@ -480,11 +480,11 @@ export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }
                   </div>
                   <div className="p-3 rounded-xl bg-slate-50 border border-[#E2E8F0]">
                     <div className="text-[10px] text-slate-400">Institution</div>
-                    <div className="font-bold text-slate-900 mt-0.5 truncate">{user.institution}</div>
+                    <div className="font-bold text-slate-900 mt-0.5 truncate">{user.institution || user.onboarding_data?.institution || user.onboarding_data?.field_of_study || "nil"}</div>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-50 border border-[#E2E8F0]">
                     <div className="text-[10px] text-slate-400">Subscription</div>
-                    <div className="font-bold text-slate-900 mt-0.5">{user.sub}</div>
+                    <div className="font-bold text-slate-900 mt-0.5">{user.sub || user.onboarding_data?.subscription || "nil"}</div>
                   </div>
                 </div>
 
