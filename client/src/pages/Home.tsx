@@ -376,7 +376,7 @@ export default function Home() {
       <aside className={`app-sidebar ${sidebarOpen ? "is-open" : ""}`} aria-label="Primary navigation">
         <div className="sidebar-topline"><SummaLogo /><button className="mobile-close-button" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={19} /></button></div>
         <button type="button" className="new-session-button" onClick={startNewSession}><Plus size={16} /> New learning</button>
-        <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>8</small>}</button>; })}</nav>
+        <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>{dbActivities.length}</small>}</button>; })}</nav>
         <section className="history-section" aria-labelledby="folders-label">
           <div className="section-title-row">
             <span id="folders-label" className="nav-caption">FOLDERS</span>
@@ -995,9 +995,14 @@ function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolder
       {/* Intro Section */}
       <section className="secondary-intro library-intro flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-6 border-b border-[#DDE8DF] dark:border-slate-800">
         <div>
-          <span className="eyebrow uppercase font-mono tracking-widest text-[#6D7E78] dark:text-emerald-400 font-semibold text-xs">
-            MY LEARNING
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="eyebrow uppercase font-mono tracking-widest text-[#6D7E78] dark:text-emerald-400 font-semibold text-xs">
+              MY LEARNING
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-[#E7EFE7] dark:bg-[#003F3F] text-[#003F3F] dark:text-[#B8FF4D] text-[10px] font-bold font-mono border border-[#005A57]/30">
+              {visible.length} {visible.length === 1 ? "object" : "objects"}
+            </span>
+          </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#102B2B] dark:text-white mt-1">
             Objects that keep learning with you
           </h1>
