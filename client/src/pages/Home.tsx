@@ -456,7 +456,6 @@ export default function Home() {
                           onClick={() => selectConversation(chat.id)}
                         >
                           <span>{chat.title}</span>
-                          <small>Live</small>
                         </button>
                       ))}
                   </div>
@@ -497,7 +496,6 @@ export default function Home() {
                     onClick={() => selectConversation(chat.id)}
                   >
                     <span className="truncate">{chat.title}</span>
-                    <small className="font-mono text-[10px] opacity-70 shrink-0">Live</small>
                   </button>
 
                   <DropdownMenu>

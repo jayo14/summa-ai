@@ -201,8 +201,11 @@ async def get_messages(cid: str):
 )
 async def add_message(cid: str, data: MessageCreate):
     user_id = resolve_user_id()
-    if not await _store.get_conversation(cid, user_id):
-        raise HTTPException(404, "Not found")
+    conv = await _store.get_conversation(cid, user_id)
+    if not conv:
+        # Auto-provision conversation entry if missing
+        title = data.content[:35] if data.content else "New Chat"
+        conv = await _store.create_conversation(user_id, title, cid=cid)
     msg = await _store.add_message(
         cid,
         user_id,
