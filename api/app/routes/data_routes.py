@@ -299,6 +299,32 @@ async def update_user(data: dict):
     return _user_store.serialize_user(updated)
 
 
+@user_router.post(
+    "/storage/upload",
+    summary="Upload file to storage",
+    description="Upload an avatar or media file to public storage bucket",
+)
+async def upload_file(data: dict):
+    user_id = resolve_user_id()
+    file_data = data.get("file_data")
+    file_name = data.get("file_name", "avatar.png")
+    bucket = data.get("bucket", "avatars")
+    
+    if not file_data or not isinstance(file_data, str):
+        raise HTTPException(400, "Invalid file_data provided")
+
+    # Save to user profile if bucket is avatars
+    if bucket == "avatars":
+        await _user_store.update_user(user_id, {"avatar": file_data})
+
+    return {
+        "status": "success",
+        "url": file_data,
+        "bucket": bucket,
+        "filename": file_name,
+    }
+
+
 # ========== SETTINGS ==========
 settings_router = APIRouter()
 

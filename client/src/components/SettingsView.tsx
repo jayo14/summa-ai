@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Camera,
@@ -52,6 +53,7 @@ export function SettingsView({
   const [avatar, setAvatar] = useState(user?.avatar || "");
   const [explanationPref, setExplanationPref] = useState("examples");
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const initials = (name || user?.email || "Student")
     .split(" ")
@@ -69,11 +71,27 @@ export function SettingsView({
       return;
     }
 
+    setIsUploading(true);
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const result = reader.result as string;
       setAvatar(result);
-      toast.success("Avatar preview updated. Click 'Save profile' to confirm.");
+      try {
+        await fetchApi("/storage/upload", {
+          method: "POST",
+          body: JSON.stringify({
+            file_data: result,
+            file_name: file.name,
+            bucket: "avatars",
+          }),
+        });
+        await updateUser({ avatar: result });
+        toast.success("Avatar uploaded and saved to profile!");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to upload avatar to storage bucket");
+      } finally {
+        setIsUploading(false);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -192,10 +210,18 @@ export function SettingsView({
               />
               <button
                 type="button"
+                disabled={isUploading}
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3.5 py-1.5 bg-[#DDE8DF] hover:bg-[#c8d9cc] dark:bg-slate-800 dark:hover:bg-slate-700 text-[#003F3F] dark:text-slate-200 text-xs sm:text-sm font-semibold rounded-lg transition-colors cursor-pointer border border-[#005A57]/20"
+                className="px-3.5 py-1.5 bg-[#DDE8DF] hover:bg-[#c8d9cc] dark:bg-slate-800 dark:hover:bg-slate-700 text-[#003F3F] dark:text-slate-200 text-xs sm:text-sm font-semibold rounded-lg transition-colors cursor-pointer border border-[#005A57]/20 flex items-center gap-2 disabled:opacity-50"
               >
-                Upload avatar
+                {isUploading ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <span>Upload avatar</span>
+                )}
               </button>
               {avatar && (
                 <button
