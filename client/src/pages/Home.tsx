@@ -408,7 +408,7 @@ export default function Home() {
         setSessionStarted(true);
         fetchApi<{ messages: Array<{ id: string; role: string; content: string }> }>(`/conversations/${urlCid}`)
           .then((data) => {
-            if (data && Array.isArray(data.messages) && data.messages.length > 0) {
+            if (data && Array.isArray(data.messages)) {
               setMessages(
                 data.messages.map((m, idx) => ({
                   id: Number(m.id) || Date.now() + idx,
@@ -421,7 +421,7 @@ export default function Home() {
           .catch((err) => console.debug("Error loading route conversation messages:", err));
       }
     }
-  }, [location, activeConversationId]);
+  }, [location]);
 
   const activeView: ViewName = useMemo(() => {
     if (location === "/learning" || location === "/activities") return "learning";

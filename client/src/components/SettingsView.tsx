@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
@@ -54,6 +54,14 @@ export function SettingsView({
   const [explanationPref, setExplanationPref] = useState("examples");
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setBio(user.bio || "");
+      setAvatar(user.avatar || "");
+    }
+  }, [user]);
 
   const initials = (name || user?.email || "Student")
     .split(" ")
