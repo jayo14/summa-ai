@@ -4,9 +4,9 @@ import { useLocation } from "wouter";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
-  Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, Paperclip, PanelRight,
+  Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, MoreVertical, Paperclip, PanelRight,
   Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck, LogOut, Terminal, Shield,
-  Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity,
+  Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/components/LearningInteractives";
@@ -187,6 +187,28 @@ export default function Home() {
     } catch (err) {
       console.debug("Error loading conversation messages:", err);
     }
+  };
+
+  const deleteConversationHandler = async (cid: string) => {
+    try {
+      await fetchApi(`/conversations/${cid}`, { method: "DELETE" });
+      setDbConversations((prev) => prev.filter((c) => c.id !== cid));
+      if (activeConversationId === cid) {
+        setActiveConversationId(null);
+        setMessages([]);
+        setSessionStarted(false);
+      }
+      toast.success("Conversation deleted");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete conversation");
+    }
+  };
+
+  const assignChatToFolder = (cid: string, folderName: string) => {
+    setDbConversations((prev) =>
+      prev.map((c) => (c.id === cid ? { ...c, folder: folderName } : c))
+    );
+    toast.success(`Chat added to folder "${folderName}"`);
   };
 
   useEffect(() => {
@@ -461,15 +483,68 @@ export default function Home() {
           <div className="history-list">
             {dbConversations.length > 0 ? (
               dbConversations.map((chat) => (
-                <button
-                  type="button"
-                  className={`history-item ${activeConversationId === chat.id ? "active" : ""}`}
+                <div
                   key={chat.id}
-                  onClick={() => selectConversation(chat.id)}
+                  className={`group relative flex items-center justify-between gap-1 w-full rounded-lg text-left text-xs transition-colors ${
+                    activeConversationId === chat.id
+                      ? "bg-[#DDE8DF] dark:bg-slate-800 text-[#003F3F] dark:text-[#B8FF4D] font-bold"
+                      : "text-[#6D7E78] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-[#102B2B] dark:hover:text-slate-200"
+                  }`}
                 >
-                  <span>{chat.title}</span>
-                  <small>Live</small>
-                </button>
+                  <button
+                    type="button"
+                    className="flex-1 flex items-center justify-between gap-2 px-2.5 py-1.5 min-w-0 text-left cursor-pointer"
+                    onClick={() => selectConversation(chat.id)}
+                  >
+                    <span className="truncate">{chat.title}</span>
+                    <small className="font-mono text-[10px] opacity-70 shrink-0">Live</small>
+                  </button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 mr-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-opacity cursor-pointer shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label="Chat options"
+                      >
+                        <MoreVertical size={14} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      side="right"
+                      align="start"
+                      sideOffset={4}
+                      className="w-48 p-1 shadow-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl z-[999]"
+                    >
+                      {customFolders.length > 0 && (
+                        <>
+                          <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            Add to folder
+                          </DropdownMenuLabel>
+                          {customFolders.map((folder) => (
+                            <DropdownMenuItem
+                              key={folder}
+                              onClick={() => assignChatToFolder(chat.id, folder)}
+                              className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/30"
+                            >
+                              <FolderPlus size={14} className="text-[#005A57] dark:text-[#B8FF4D]" />
+                              <span className="truncate">{folder}</span>
+                            </DropdownMenuItem>
+                          ))}
+                          <DropdownMenuSeparator className="my-1 border-slate-100 dark:border-slate-800" />
+                        </>
+                      )}
+                      <DropdownMenuItem
+                        onClick={() => deleteConversationHandler(chat.id)}
+                        className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium"
+                      >
+                        <Trash2 size={14} />
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ))
             ) : (
               <span className="text-[11px] text-slate-400 dark:text-slate-500 px-3 py-1.5 block">No learning sessions yet</span>
