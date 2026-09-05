@@ -503,7 +503,7 @@ export default function Home() {
       </aside>
       {sidebarOpen && <button className="sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
       <section className="main-area">
-        <header className="app-header"><div className="header-left"><button type="button" className="header-icon-button mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation"><Menu size={19} /></button><div className="header-crumbs"><span>Summa AI</span><ChevronRight size={13} /><strong>{activeView === "workspace" ? "Summa AI Chat" : activeView === "learning" ? "My learning" : activeView === "progress" ? "Learning progress" : activeView === "sources" ? "Academic sources" : "Learning settings"}</strong><ChevronDown size={12} /></div></div><div className="header-actions">{activeView === "workspace" && sessionStarted && <button type="button" className="context-toggle" onClick={() => setContextOpen((value) => !value)}><PanelRight size={16} /><span>{contextOpen ? "Hide context" : "Context"}</span></button>}<button type="button" className="theme-toggle" onClick={() => setTheme((value) => value === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>{theme === "light" ? <Moon size={15} /> : <Sun size={15} />}<span>{theme === "light" ? "Dark" : "Light"}</span></button><button type="button" className="header-icon-button" onClick={() => toast("No new learning reminders.")} aria-label="Open notifications"><Bell size={17} /></button><button type="button" className="header-icon-button" onClick={() => toast("Need a hand? Summa can help you choose the next learning action.")} aria-label="Open help"><CircleHelp size={17} /></button></div></header>
+        <header className="app-header"><div className="header-left"><button type="button" className="header-icon-button mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation"><Menu size={19} /></button><div className="header-crumbs"><span>Summa AI</span><ChevronRight size={13} /><strong>{activeView === "workspace" ? "Summa AI Chat" : activeView === "learning" ? "My learning" : activeView === "progress" ? "Learning progress" : activeView === "sources" ? "Academic sources" : "Learning settings"}</strong><ChevronDown size={12} /></div></div><div className="header-actions"><button type="button" className="theme-toggle" onClick={() => setTheme((value) => value === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>{theme === "light" ? <Moon size={15} /> : <Sun size={15} />}<span>{theme === "light" ? "Dark" : "Light"}</span></button><button type="button" className="header-icon-button" onClick={() => toast("No new learning reminders.")} aria-label="Open notifications"><Bell size={17} /></button><button type="button" className="header-icon-button" onClick={() => toast("Need a hand? Summa can help you choose the next learning action.")} aria-label="Open help"><CircleHelp size={17} /></button></div></header>
         <main className="product-stage">
           {activeView === "workspace" && <WorkspaceView sessionStarted={sessionStarted} onStart={() => setSessionStarted(true)} composerValue={composerValue} setComposerValue={setComposerValue} sendMessage={sendMessage} messages={messages} isResponding={isResponding} mastery={mastery} updateMastery={updateMastery} registerEvent={registerEvent} setSourceTrayOpen={setSourceTrayOpen} dbConversations={dbConversations} />}
           {activeView === "learning" && (
@@ -524,7 +524,6 @@ export default function Home() {
           {activeView === "settings" && <SettingsView memoryEnabled={memoryEnabled} setMemoryEnabled={setMemoryEnabled} />}
         </main>
       </section>
-      {activeView === "workspace" && contextOpen && sessionStarted && <ContextRail mastery={mastery} events={events} onJumpToSources={() => setSourceTrayOpen(true)} />}
       {sourceTrayOpen && <SourceTray onClose={() => setSourceTrayOpen(false)} onConfirm={() => { setSourceTrayOpen(false); toast(`${contextSummary} are grounding this learning session.`); }} />}
 
       {/* Sidebar Folder Creation Dialog Component */}
@@ -1095,7 +1094,7 @@ function LearningLibrary({
   };
 
   return (
-    <div className="secondary-page library-page w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 text-slate-900 dark:text-slate-100">
+    <div className="secondary-page library-page w-full p-4 sm:p-6 lg:p-8 space-y-6 text-slate-900 dark:text-slate-100">
       {/* Intro Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#102B2B] dark:text-white">
