@@ -1,7 +1,7 @@
 /* Aetheris Glassmorphism reminder: this page is an airy, orb-led chat canvas inside an inset glass shell; learning tools should feel like native conversation objects, never a separate dashboard. */
 
 import { useLocation } from "wouter";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
   Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, MoreVertical, Paperclip, PanelRight,
@@ -211,7 +211,7 @@ export default function Home() {
     toast.success(`Chat added to folder "${folderName}"`);
   };
 
-  useEffect(() => {
+  const loadConversations = useCallback(() => {
     fetchApi<{ conversations: Array<{ id: string; title: string; created_at: string }> }>("/conversations")
       .then((data) => {
         if (data && Array.isArray(data.conversations)) {
@@ -221,6 +221,10 @@ export default function Home() {
         }
       })
       .catch((err) => console.debug("Fetch conversations error:", err));
+  }, []);
+
+  useEffect(() => {
+    loadConversations();
 
     fetchApi<{ materials: Array<{ id: string; title: string; type: string; description?: string }> }>("/materials")
       .then((data) => {
@@ -237,7 +241,7 @@ export default function Home() {
         if (Array.isArray(data)) setDbActivities(data);
       })
       .catch((err) => console.debug(err));
-  }, []);
+  }, [loadConversations]);
 
   useEffect(() => { window.localStorage.setItem("summa-mastery-runtime-dispatch", String(mastery)); }, [mastery]);
   useEffect(() => { window.localStorage.setItem("summa-memory-enabled", String(memoryEnabled)); }, [memoryEnabled]);
@@ -405,6 +409,7 @@ export default function Home() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
+    loadConversations();
     if (location.startsWith("/c/")) {
       const urlCid = location.replace("/c/", "").trim();
       if (urlCid && urlCid !== activeConversationId) {
@@ -425,7 +430,7 @@ export default function Home() {
           .catch((err) => console.debug("Error loading route conversation messages:", err));
       }
     }
-  }, [location]);
+  }, [location, loadConversations]);
 
   const activeView: ViewName = useMemo(() => {
     if (location === "/learning" || location === "/activities") return "learning";
