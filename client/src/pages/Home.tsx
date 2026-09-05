@@ -1105,102 +1105,104 @@ function LearningLibrary({
         </p>
       </div>
 
-      {/* Top 4 Stats Metric Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Understanding Card */}
-        <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300">
-                <BookOpen className="size-4" />
-              </span>
-              Understanding
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-3xl font-bold text-[#102B2B] dark:text-white">72%</div>
-            <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Overall mastery</div>
-          </div>
-          <div className="mt-3">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 text-xs font-semibold border border-purple-200/60 dark:border-purple-800/40">
-              ↑ 8% this week
-            </span>
-          </div>
-          <div className="absolute right-0 bottom-0 pointer-events-none opacity-20 dark:opacity-10">
-            <svg width="120" height="40" viewBox="0 0 120 40" fill="none">
-              <path d="M0 30 Q 30 10, 60 25 T 120 5 L 120 40 L 0 40 Z" fill="#8B5CF6" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Study Streak Card */}
-        <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-300">
-                <Flame className="size-4" />
-              </span>
-              Study streak
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-3xl font-bold text-[#102B2B] dark:text-white">14</div>
-            <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Days in a row</div>
-          </div>
-          <div className="mt-3">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200/60 dark:border-amber-800/40">
-              Keep it up! 🔥
-            </span>
-          </div>
-        </div>
-
-        {/* AI Interactions Card */}
-        <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300">
-                <MessageSquare className="size-4" />
-              </span>
-              AI interactions
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-3xl font-bold text-[#102B2B] dark:text-white">284</div>
-            <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Conversations</div>
-          </div>
-          <div className="mt-3">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200/60 dark:border-emerald-800/40">
-              ↑ 18% this week
-            </span>
-          </div>
-        </div>
-
-        {/* Knowledge Gained Card */}
-        <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-300">
-                <Brain className="size-4" />
-              </span>
-              Knowledge gained
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-3xl font-bold text-[#102B2B] dark:text-white">126</div>
-            <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">New concepts</div>
-          </div>
-          <div className="mt-3">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200/60 dark:border-blue-800/40">
-              ↑ 21% this week
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Two Column Section */}
+      {/* Main Two-Column Layout matching reference image: Left 2/3 (Stats + Folders), Right 1/3 (Sidebar Stack) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left Column: Your Folders */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* Left Column (2/3 width): Top 4 Stats Metric Grid + Your Folders */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Top 4 Stats Metric Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Understanding Card */}
+            <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs relative overflow-hidden flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300">
+                    <BookOpen className="size-4" />
+                  </span>
+                  Understanding
+                </span>
+              </div>
+              <div className="mt-4">
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-white">72%</div>
+                <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Overall mastery</div>
+              </div>
+              <div className="mt-3">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 text-xs font-semibold border border-purple-200/60 dark:border-purple-800/40">
+                  ↑ 8% this week
+                </span>
+              </div>
+              <div className="absolute right-0 bottom-0 pointer-events-none opacity-20 dark:opacity-10">
+                <svg width="120" height="40" viewBox="0 0 120 40" fill="none">
+                  <path d="M0 30 Q 30 10, 60 25 T 120 5 L 120 40 L 0 40 Z" fill="#8B5CF6" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Study Streak Card */}
+            <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-300">
+                    <Flame className="size-4" />
+                  </span>
+                  Study streak
+                </span>
+              </div>
+              <div className="mt-4">
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-white">14</div>
+                <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Days in a row</div>
+              </div>
+              <div className="mt-3">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200/60 dark:border-amber-800/40">
+                  Keep it up! 🔥
+                </span>
+              </div>
+            </div>
+
+            {/* AI Interactions Card */}
+            <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300">
+                    <MessageSquare className="size-4" />
+                  </span>
+                  AI interactions
+                </span>
+              </div>
+              <div className="mt-4">
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-white">284</div>
+                <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Conversations</div>
+              </div>
+              <div className="mt-3">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200/60 dark:border-emerald-800/40">
+                  ↑ 18% this week
+                </span>
+              </div>
+            </div>
+
+            {/* Knowledge Gained Card */}
+            <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-300">
+                    <Brain className="size-4" />
+                  </span>
+                  Knowledge gained
+                </span>
+              </div>
+              <div className="mt-4">
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-white">126</div>
+                <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">New concepts</div>
+              </div>
+              <div className="mt-3">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200/60 dark:border-blue-800/40">
+                  ↑ 21% this week
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Your Folders Container */}
+          <div className="space-y-4">
           {/* Toolbar Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
             <h2 className="text-lg sm:text-xl font-bold text-[#102B2B] dark:text-white">Your folders</h2>
@@ -1330,6 +1332,7 @@ function LearningLibrary({
             <Plus className="size-4" />
             <span>New folder</span>
           </button>
+        </div>
         </div>
 
         {/* Right Column: Sidebar Widgets */}
