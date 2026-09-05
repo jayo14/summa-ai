@@ -274,8 +274,8 @@ export default function Home() {
     setIsResponding(true);
 
     let activeCid = activeConversationId;
-    try {
-      if (!activeCid || activeCid === "default-session" || activeCid.startsWith("f2b37d07")) {
+    if (!activeCid || activeCid === "default-session" || activeCid.startsWith("f2b37d07")) {
+      try {
         const newConv = await fetchApi<{ id: string }>("/conversations", {
           method: "POST",
           body: JSON.stringify({ title: clean.slice(0, 35) }),
@@ -285,15 +285,16 @@ export default function Home() {
           setActiveConversationId(newConv.id);
           setDbConversations((prev) => [{ id: newConv.id, title: clean.slice(0, 35), created_at: new Date().toISOString() }, ...prev]);
         }
+      } catch (err) {
+        console.debug("Conversation creation error:", err);
       }
-      if (activeCid) {
-        fetchApi(`/conversations/${activeCid}/messages`, {
-          method: "POST",
-          body: JSON.stringify({ role: "user", content: clean }),
-        }).catch(() => {});
-      }
-    } catch (err) {
-      console.debug("Conversation sync skipped:", err);
+    }
+
+    if (activeCid && activeCid !== "default-session") {
+      fetchApi(`/conversations/${activeCid}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ role: "user", content: clean }),
+      }).catch(() => {});
     }
 
     const historyForBackend = updatedMessages.map((m) => ({
