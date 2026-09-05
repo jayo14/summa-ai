@@ -99,7 +99,7 @@
 /* Theme-adaptive custom small scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #005A57 #DDE8DF;
+  scrollbar-color: #005A57 transparent;
 }
 
 ::-webkit-scrollbar {
@@ -108,8 +108,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #DDE8DF;
-  border-radius: 999px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -122,11 +121,11 @@
 }
 
 :is(.dark-mode, .dark, html.dark) {
-  scrollbar-color: #005A57 #181E1E;
+  scrollbar-color: #005A57 transparent;
 }
 
 :is(.dark-mode, .dark, html.dark) ::-webkit-scrollbar-track {
-  background: #181E1E;
+  background: transparent;
 }
 
 :is(.dark-mode, .dark, html.dark) ::-webkit-scrollbar-thumb {
@@ -136,4 +135,5 @@
 :is(.dark-mode, .dark, html.dark) ::-webkit-scrollbar-thumb:hover {
   background: #B8FF4D;
 }
+
 
