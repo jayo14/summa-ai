@@ -141,6 +141,58 @@ class UserStore:
 
         return self._local_users.get(user_id)
 
+    async def save_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        user_obj = {
+            "id": user_id,
+            "email": data.get("email", f"user_{user_id[:8]}@summa.ai"),
+            "name": data.get("name"),
+            "avatar": data.get("avatar"),
+            "bio": data.get("bio"),
+            "role": data.get("role", "user"),
+            "status": data.get("status", "active"),
+            "provider": data.get("provider", "credentials"),
+            "email_verified": bool(data.get("email_verified", True)),
+            "onboarded": bool(data.get("onboarded", False)),
+            "onboarding_data": data.get("onboarding_data", {}),
+        }
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    row = await conn.fetchrow(
+                        """
+                        INSERT INTO summa_ai.user_profiles (id, email, name, avatar, bio, role, status, provider, email_verified, onboarded, onboarding_data)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                        ON CONFLICT (id) DO UPDATE SET
+                            email = EXCLUDED.email,
+                            name = COALESCE(EXCLUDED.name, summa_ai.user_profiles.name),
+                            role = EXCLUDED.role,
+                            status = EXCLUDED.status,
+                            email_verified = EXCLUDED.email_verified
+                        RETURNING *
+                        """,
+                        user_id,
+                        user_obj["email"],
+                        user_obj["name"],
+                        user_obj["avatar"],
+                        user_obj["bio"],
+                        user_obj["role"],
+                        user_obj["status"],
+                        user_obj["provider"],
+                        user_obj["email_verified"],
+                        user_obj["onboarded"],
+                        json.dumps(user_obj["onboarding_data"]),
+                    )
+                    if row:
+                        saved = dict(row)
+                        self._local_users[user_id] = saved
+                        return saved
+        except Exception:
+            pass
+
+        self._local_users[user_id] = user_obj
+        return user_obj
+
     async def update_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         try:
             pool = await self._get_pool()
