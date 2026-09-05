@@ -30,98 +30,12 @@ class DataStore:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._pool: Optional[asyncpg.Pool] = None
-            cls._instance._local_activities: List[Dict[str, Any]] = [
-                {
-                    "id": "act-1",
-                    "type": "retrieval",
-                    "title": "Active Recall: Polymorphism Foundations",
-                    "description": "Test your memory on dynamic dispatch vs static binding without looking at reference code.",
-                    "meta": "10 questions · 86% average mastery",
-                    "accent": "indigo",
-                    "topic": "CSC 201 · Object-Oriented Programming",
-                    "date": "2026-09-03T09:30:00Z",
-                    "action": "Resume practice",
-                    "pinned": False,
-                    "archived": False,
-                },
-                {
-                    "id": "act-2",
-                    "type": "quiz",
-                    "title": "Java Overriding vs Overloading Practice Quiz",
-                    "description": "5 targeted questions testing compile-time method resolution and hidden overrides.",
-                    "meta": "5 questions · 92% average mastery",
-                    "accent": "emerald",
-                    "topic": "CSC 201 · Object-Oriented Programming",
-                    "date": "2026-09-02T14:15:00Z",
-                    "action": "Start quiz",
-                    "pinned": False,
-                    "archived": False,
-                },
-                {
-                    "id": "act-3",
-                    "type": "flashcards",
-                    "title": "Core OOP Design Terms Flashcards",
-                    "description": "Flashcard deck covering encapsulating invariant state, abstract interfaces, and subtyping.",
-                    "meta": "15 flashcards · 100% reviewed",
-                    "accent": "amber",
-                    "topic": "CSC 201 · Object-Oriented Programming",
-                    "date": "2026-09-01T11:00:00Z",
-                    "action": "Review deck",
-                    "pinned": False,
-                    "archived": False,
-                },
-            ]
-            cls._instance._local_materials: List[Dict[str, Any]] = [
-                {
-                    "id": "mat-1",
-                    "type": "PDF",
-                    "title": "CSC 201 Course Syllabus & Polymorphism Notes",
-                    "detail": "15 min read · University Portal",
-                    "source": "SummaStudy / University Portal",
-                    "size": "2.4 MB",
-                    "duration": "15 min read",
-                    "status": "active",
-                    "topic": "CSC 201 · Object-Oriented Programming",
-                    "date": "2026-09-03T10:00:00Z",
-                },
-                {
-                    "id": "mat-2",
-                    "type": "Text",
-                    "title": "Java Collections & Interface Design Patterns",
-                    "detail": "10 min read · SummaStudy Library",
-                    "source": "SummaStudy Library",
-                    "size": "1.1 MB",
-                    "duration": "10 min read",
-                    "status": "active",
-                    "topic": "CSC 201 · Object-Oriented Programming",
-                    "date": "2026-09-02T16:00:00Z",
-                },
-                {
-                    "id": "mat-3",
-                    "type": "Code",
-                    "title": "Abstract Methods & Overriding Examples",
-                    "detail": "8 min code trace · Lab Workbook",
-                    "source": "Lab Workbook",
-                    "size": "450 KB",
-                    "duration": "8 min code trace",
-                    "status": "active",
-                    "topic": "CSC 201 · Object-Oriented Programming",
-                    "date": "2026-09-01T14:00:00Z",
-                },
-            ]
-            cls._instance._local_concepts: List[Dict[str, Any]] = [
-                {"id": "con-1", "name": "Runtime Dispatch (Dynamic Binding)", "category": "Polymorphism", "mastery": "mastered", "related_count": 5},
-                {"id": "con-2", "name": "Method Overriding", "category": "Inheritance", "mastery": "mastered", "related_count": 8},
-                {"id": "con-3", "name": "Interface Contracts", "category": "Architecture", "mastery": "learning", "related_count": 4},
-                {"id": "con-4", "name": "Abstract Class Instantiation Rules", "category": "Core Java", "mastery": "needs_review", "related_count": 3},
-            ]
-            cls._instance._local_conversations: List[Dict[str, Any]] = [
-                {"id": "conv-1", "user_id": "demo", "title": "CSC 201 · Dynamic Dispatch & Polymorphism", "snippet": "Polymorphism allows objects of different concrete classes...", "created_at": "2026-09-03T10:00:00Z", "updated_at": "2026-09-03T10:00:00Z", "archived": False}
-            ]
-            cls._instance._local_messages: Dict[str, List[Dict[str, Any]]] = {}
-            cls._instance._local_timeline: List[Dict[str, Any]] = [
-                {"id": "evt-1", "type": "milestone", "title": "Polymorphism foundations completed", "description": "Successfully answered 4 retrieval prompts and scored 92% on dynamic dispatch quiz.", "created_at": "2026-09-03T09:00:00Z"}
-            ]
+            cls._instance._local_activities = []
+            cls._instance._local_materials = []
+            cls._instance._local_concepts = []
+            cls._instance._local_conversations = []
+            cls._instance._local_messages = {}
+            cls._instance._local_timeline = []
             cls._instance._local_study_plans: List[Dict[str, Any]] = []
             cls._instance._local_flashcards: List[Dict[str, Any]] = []
             cls._instance._local_exams: List[Dict[str, Any]] = []
