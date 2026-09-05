@@ -846,7 +846,7 @@ function FormattedMarkdown({ content }: { content: string }) {
   const parts = content.split(/(```[\s\S]*?```)/g);
 
   return (
-    <div className="markdown-body text-xs sm:text-sm leading-relaxed space-y-2 text-slate-800 dark:text-slate-200">
+    <div className="markdown-body text-xs sm:text-sm leading-relaxed space-y-2 text-[#102B2B] dark:text-[#DDE8DF]">
       {parts.map((part, index) => {
         if (part.startsWith("```")) {
           const firstLineEnd = part.indexOf("\n");
@@ -866,21 +866,21 @@ function FormattedMarkdown({ content }: { content: string }) {
               // Headings
               if (trimmed.startsWith("### ")) {
                 return (
-                  <h3 key={lineIdx} className="text-sm font-bold text-slate-900 dark:text-white mt-3 mb-1">
+                  <h3 key={lineIdx} className="text-sm font-bold text-[#102B2B] dark:text-[#FBFAF6] mt-3 mb-1">
                     {parseInlineMarkdown(trimmed.slice(4))}
                   </h3>
                 );
               }
               if (trimmed.startsWith("## ")) {
                 return (
-                  <h2 key={lineIdx} className="text-base font-bold text-slate-900 dark:text-white mt-3.5 mb-1">
+                  <h2 key={lineIdx} className="text-base font-bold text-[#102B2B] dark:text-[#FBFAF6] mt-3.5 mb-1">
                     {parseInlineMarkdown(trimmed.slice(3))}
                   </h2>
                 );
               }
               if (trimmed.startsWith("# ")) {
                 return (
-                  <h1 key={lineIdx} className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-1.5">
+                  <h1 key={lineIdx} className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6] mt-4 mb-1.5">
                     {parseInlineMarkdown(trimmed.slice(2))}
                   </h1>
                 );
@@ -891,7 +891,7 @@ function FormattedMarkdown({ content }: { content: string }) {
                 const num = trimmed.slice(0, 3);
                 return (
                   <div key={lineIdx} className="flex items-start gap-2 pl-2">
-                    <span className="font-bold text-purple-600 dark:text-purple-400 text-xs shrink-0">{num}</span>
+                    <span className="font-bold text-[#005A57] dark:text-[#B8FF4D] text-xs shrink-0">{num}</span>
                     <span>{parseInlineMarkdown(trimmed.slice(3))}</span>
                   </div>
                 );
@@ -899,7 +899,7 @@ function FormattedMarkdown({ content }: { content: string }) {
               if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
                 return (
                   <div key={lineIdx} className="flex items-start gap-2 pl-2">
-                    <span className="text-purple-500 font-bold shrink-0">•</span>
+                    <span className="text-[#005A57] dark:text-[#B8FF4D] font-bold shrink-0">•</span>
                     <span>{parseInlineMarkdown(trimmed.slice(2))}</span>
                   </div>
                 );
@@ -918,13 +918,13 @@ function parseInlineMarkdown(text: string) {
   const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
   return parts.map((part, idx) => {
     if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
-      return <strong key={idx} className="font-bold text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
+      return <strong key={idx} className="font-bold text-[#102B2B] dark:text-[#FBFAF6]">{part.slice(2, -2)}</strong>;
     }
     if (part.startsWith("*") && part.endsWith("*") && part.length >= 2) {
       return <em key={idx} className="italic">{part.slice(1, -1)}</em>;
     }
     if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
-      return <code key={idx} className="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 text-purple-600 dark:text-purple-300 font-mono text-[11px] rounded">{part.slice(1, -1)}</code>;
+      return <code key={idx} className="px-1 py-0.5 bg-[#DDE8DF]/60 dark:bg-[#232D2D] text-[#005A57] dark:text-[#B8FF4D] font-mono text-[11px] rounded">{part.slice(1, -1)}</code>;
     }
     return part;
   });

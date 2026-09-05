@@ -46,15 +46,15 @@ export function PromptInput({
   };
 
   return (
-    <div className="relative w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-3 shadow-lg backdrop-blur-xl transition-all focus-within:border-[#005A57] dark:focus-within:border-[#B8FF4D]">
+    <div className="relative w-full rounded-2xl border border-[#DDE8DF] dark:border-[#2A3838] bg-[#FBFAF6] dark:bg-[#1C2323] p-3 shadow-lg backdrop-blur-xl transition-all focus-within:border-[#005A57] dark:focus-within:border-[#B8FF4D]">
       {attachedFile && (
-        <div className="mb-2 flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs text-emerald-800 dark:text-emerald-300 w-fit">
+        <div className="mb-2 flex items-center gap-2 rounded-lg bg-[#005A57]/10 dark:bg-[#232D2D] border border-[#005A57]/20 dark:border-[#2A3838] px-3 py-1.5 text-xs text-[#003F3F] dark:text-[#B8FF4D] w-fit">
           <Paperclip className="h-3.5 w-3.5" />
           <span className="font-medium truncate max-w-[200px]">{attachedFile.name}</span>
           <button
             type="button"
             onClick={onRemoveAttach}
-            className="ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="ml-1 text-[#6D7E78] hover:text-[#102B2B] dark:hover:text-[#FBFAF6]"
           >
             ×
           </button>
@@ -68,16 +68,16 @@ export function PromptInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         rows={1}
-        className="w-full resize-none bg-transparent px-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 border-none min-h-[38px] max-h-[180px]"
+        className="w-full resize-none bg-transparent px-1 text-sm text-[#102B2B] dark:text-[#FBFAF6] placeholder:text-[#6D7E78] dark:placeholder:text-[#8FA29B] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 border-none min-h-[38px] max-h-[180px]"
       />
 
-      <div className="mt-2 flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60">
+      <div className="mt-2 flex items-center justify-between pt-1 border-t border-[#DDE8DF] dark:border-[#2A3838]">
         <div className="flex items-center gap-1">
           {onAttach && (
             <button
               type="button"
               onClick={onAttach}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+              className="rounded-lg p-2 text-[#6D7E78] dark:text-[#8FA29B] hover:bg-[#F5F3EC] dark:hover:bg-[#232D2D] hover:text-[#003F3F] dark:hover:text-[#B8FF4D] transition-colors"
               title="Attach academic resource or document"
             >
               <Paperclip className="h-4 w-4" />
@@ -87,7 +87,7 @@ export function PromptInput({
             <button
               type="button"
               onClick={onVoice}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+              className="rounded-lg p-2 text-[#6D7E78] dark:text-[#8FA29B] hover:bg-[#F5F3EC] dark:hover:bg-[#232D2D] hover:text-[#003F3F] dark:hover:text-[#B8FF4D] transition-colors"
               title="Voice input"
             >
               <Mic className="h-4 w-4" />
@@ -101,8 +101,8 @@ export function PromptInput({
           disabled={!value.trim() || isResponding}
           className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
             value.trim() && !isResponding
-              ? "bg-[#005A57] text-[#B8FF4D] hover:bg-[#003F3F] shadow-sm cursor-pointer"
-              : "bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
+              ? "bg-[#005A57] dark:bg-[#B8FF4D] text-[#B8FF4D] dark:text-[#003F3F] hover:bg-[#003F3F] dark:hover:bg-[#c7ff62] shadow-sm cursor-pointer"
+              : "bg-[#DDE8DF] dark:bg-[#232D2D] text-[#6D7E78] dark:text-[#8FA29B] cursor-not-allowed"
           }`}
         >
           <ArrowUp className="h-4 w-4 stroke-[2.5]" />
@@ -117,9 +117,9 @@ export function PromptInput({
  */
 export function ThinkingBar({ label = "Summa is reasoning over academic sources..." }: { label?: string }) {
   return (
-    <div className="flex items-center gap-2.5 rounded-xl border border-teal-500/20 bg-[#005A57]/5 dark:bg-[#005A57]/20 px-3.5 py-2 text-xs text-[#005A57] dark:text-[#B8FF4D]">
+    <div className="flex items-center gap-2.5 rounded-xl border border-[#005A57]/20 dark:border-[#2A3838] bg-[#E7EFE7] dark:bg-[#1C2323] px-3.5 py-2 text-xs text-[#005A57] dark:text-[#B8FF4D]">
       <div className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#B8FF4D] opacity-75"></span>
         <span className="relative inline-flex rounded-full h-2 w-2 bg-[#005A57] dark:bg-[#B8FF4D]"></span>
       </div>
       <span className="font-mono text-[11px] font-medium tracking-wide uppercase">{label}</span>
@@ -142,11 +142,11 @@ export function ChainOfThought({ steps = [], reasoningText, defaultExpanded = fa
   if (!steps.length && !reasoningText) return null;
 
   return (
-    <div className="my-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 overflow-hidden text-xs">
+    <div className="my-2 rounded-xl border border-[#DDE8DF] dark:border-[#2A3838] bg-[#FBFAF6] dark:bg-[#1C2323] overflow-hidden text-xs">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 text-[#6D7E78] dark:text-[#8FA29B] hover:bg-[#F5F3EC] dark:hover:bg-[#232D2D] transition-colors"
       >
         <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider font-semibold">
           <Sparkles className="h-3.5 w-3.5 text-[#005A57] dark:text-[#B8FF4D]" />
@@ -156,7 +156,7 @@ export function ChainOfThought({ steps = [], reasoningText, defaultExpanded = fa
       </button>
 
       {expanded && (
-        <div className="p-3 pt-1 border-t border-slate-200/60 dark:border-slate-800/60 font-mono text-[11.5px] leading-relaxed text-slate-700 dark:text-slate-300 space-y-2">
+        <div className="p-3 pt-1 border-t border-[#DDE8DF] dark:border-[#2A3838] font-mono text-[11.5px] leading-relaxed text-[#102B2B] dark:text-[#DDE8DF] space-y-2">
           {reasoningText && <p className="whitespace-pre-wrap opacity-90">{reasoningText}</p>}
           {steps.map((step, idx) => (
             <div key={idx} className="flex items-start gap-2">
@@ -188,18 +188,18 @@ export function CodeBlock({ language = "text", code }: CodeBlockProps) {
   };
 
   return (
-    <div className="my-3 rounded-xl border border-slate-800 bg-[#0A1818] overflow-hidden text-slate-100 font-mono text-xs shadow-md">
-      <div className="flex items-center justify-between px-4 py-2 bg-[#102B2B] border-b border-slate-800 text-[11px] text-slate-400">
+    <div className="my-3 rounded-xl border border-[#005A57] dark:border-[#2A3838] bg-[#003F3F] dark:bg-[#181E1E] overflow-hidden text-[#FBFAF6] font-mono text-xs shadow-md">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#002B2B] dark:bg-[#1C2323] border-b border-[#005A57]/40 dark:border-[#2A3838] text-[11px] text-[#DDE8DF]">
         <span className="uppercase font-semibold tracking-wider text-[#B8FF4D]">{language}</span>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 hover:text-white transition-colors"
+          className="flex items-center gap-1 hover:text-[#B8FF4D] transition-colors"
         >
           {copied ? (
             <>
-              <Check className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="text-emerald-400">Copied</span>
+              <Check className="h-3.5 w-3.5 text-[#B8FF4D]" />
+              <span className="text-[#B8FF4D]">Copied</span>
             </>
           ) : (
             <>
@@ -209,7 +209,7 @@ export function CodeBlock({ language = "text", code }: CodeBlockProps) {
           )}
         </button>
       </div>
-      <pre className="p-4 overflow-x-auto text-[12px] leading-relaxed text-slate-200 font-mono">
+      <pre className="p-4 overflow-x-auto text-[12px] leading-relaxed text-[#FBFAF6] dark:text-[#DDE8DF] font-mono">
         <code>{code}</code>
       </pre>
     </div>
@@ -227,13 +227,13 @@ export interface ToolCallProps {
 
 export function ToolCall({ name, status = "completed", details }: ToolCallProps) {
   return (
-    <div className="my-1.5 inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300">
+    <div className="my-1.5 inline-flex items-center gap-2 rounded-lg border border-[#DDE8DF] dark:border-[#2A3838] bg-[#FBFAF6] dark:bg-[#1C2323] px-3 py-1.5 text-xs text-[#102B2B] dark:text-[#FBFAF6]">
       <Terminal className="h-3.5 w-3.5 text-[#005A57] dark:text-[#B8FF4D]" />
       <span className="font-mono text-[11px] font-semibold">{name}</span>
       {status === "running" && <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />}
-      {status === "completed" && <span className="h-2 w-2 rounded-full bg-emerald-400" />}
+      {status === "completed" && <span className="h-2 w-2 rounded-full bg-[#B8FF4D]" />}
       {status === "failed" && <span className="h-2 w-2 rounded-full bg-rose-500" />}
-      {details && <span className="text-[10px] text-slate-400 truncate max-w-[150px]">({details})</span>}
+      {details && <span className="text-[10px] text-[#6D7E78] dark:text-[#8FA29B] truncate max-w-[150px]">({details})</span>}
     </div>
   );
 }
@@ -266,15 +266,15 @@ export interface SourceCardProps {
 
 export function SourceCard({ title, type = "Reference", detail, onOpen }: SourceCardProps) {
   return (
-    <div className="my-2 flex items-center justify-between rounded-xl border border-teal-500/20 bg-emerald-500/5 dark:bg-emerald-950/20 p-2.5 text-xs">
+    <div className="my-2 flex items-center justify-between rounded-xl border border-[#005A57]/20 dark:border-[#2A3838] bg-[#E7EFE7] dark:bg-[#1C2323] p-2.5 text-xs">
       <div className="min-w-0 pr-2">
-        <div className="flex items-center gap-1.5 font-medium text-slate-900 dark:text-slate-100">
+        <div className="flex items-center gap-1.5 font-medium text-[#102B2B] dark:text-[#FBFAF6]">
           <span className="rounded bg-[#005A57] text-[#B8FF4D] text-[9px] font-mono px-1.5 py-0.5 uppercase font-bold">
             {type}
           </span>
           <span className="truncate">{title}</span>
         </div>
-        {detail && <p className="text-[11px] text-slate-500 truncate mt-0.5">{detail}</p>}
+        {detail && <p className="text-[11px] text-[#6D7E78] dark:text-[#8FA29B] truncate mt-0.5">{detail}</p>}
       </div>
       {onOpen && (
         <button
