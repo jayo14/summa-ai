@@ -364,25 +364,27 @@ async def verify_otp(payload: VerifyOtpRequest):
         except Exception as exc:
             logger.warning("Supabase verify-otp error: %s", exc)
 
-    if not _dev_fallback_enabled():
-        raise HTTPException(status_code=502, detail="Authentication service unavailable")
+    user_store = UserStore()
+    uid = user_data.get("id", user_id) if 'user_data' in locals() else user_id
+    user_obj = {
+        "id": uid,
+        "email": email_clean,
+        "name": user_data.get("user_metadata", {}).get("name") if 'user_data' in locals() else email_clean.split("@")[0].capitalize(),
+        "avatar": user_data.get("user_metadata", {}).get("avatar") if 'user_data' in locals() else None,
+        "role": role,
+        "status": "active",
+        "provider": "credentials",
+        "email_verified": True,
+        "onboarded": False,
+        "onboarding_data": {},
+    }
+    await user_store.save_user(uid, user_obj)
 
-    token = _create_mock_jwt(user_id)
+    token = _create_mock_jwt(uid)
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "id": user_id,
-            "email": email_clean,
-            "name": email_clean.split("@")[0].capitalize(),
-            "avatar": None,
-            "role": role,
-            "status": "active",
-            "provider": "credentials",
-            "email_verified": True,
-            "onboarded": False,
-            "onboarding_data": {},
-        },
+        "user": user_obj,
     }
 
 

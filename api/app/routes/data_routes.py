@@ -263,7 +263,18 @@ async def get_user():
     user_id = resolve_user_id()
     current = await _user_store.get_user_by_id(user_id)
     if current is None:
-        raise HTTPException(404, "Not found")
+        # Create user profile entry on-the-fly for verified JWT users
+        email = f"user_{user_id[:8]}@summa.ai"
+        current = await _user_store.save_user(user_id, {
+            "id": user_id,
+            "email": email,
+            "name": f"User {user_id[:6]}",
+            "role": "student",
+            "status": "active",
+            "email_verified": True,
+            "onboarded": False,
+            "onboarding_data": {},
+        })
     return _user_store.serialize_user(current)
 
 
