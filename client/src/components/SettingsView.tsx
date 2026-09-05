@@ -119,11 +119,11 @@ export function SettingsView({
   };
 
   return (
-    <div className="secondary-page settings-page w-full p-4 sm:p-6 lg:p-8 space-y-8">
+    <div className="secondary-page settings-page w-full p-4 sm:p-6 lg:p-8 space-y-8 text-slate-900 dark:text-slate-100">
       {/* Intro Header */}
       <section className="secondary-intro plain-intro flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#DDE8DF] dark:border-slate-800 pb-6">
         <div>
-          <span className="eyebrow uppercase font-mono tracking-widest text-[#6D7E78] dark:text-emerald-400 font-bold text-xs">
+          <span className="eyebrow uppercase font-mono tracking-widest text-[#6D7E78] dark:text-[#B8FF4D] font-bold text-xs">
             ACCOUNT & PREFERENCES
           </span>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-normal text-[#102B2B] dark:text-white mt-1 tracking-tight">
