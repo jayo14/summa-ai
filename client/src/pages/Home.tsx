@@ -134,7 +134,14 @@ export default function Home() {
 
   const [customFolders, setCustomFolders] = useState<string[]>(() => {
     const saved = window.localStorage.getItem("summa-custom-folders");
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((f) => f !== "CSC 201 · OOP" && f !== "CSC 203 · Databases");
+      }
+    } catch {}
+    return [];
   });
 
   useEffect(() => {
