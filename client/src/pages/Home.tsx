@@ -453,129 +453,131 @@ export default function Home() {
         <div className="sidebar-topline"><SummaLogo /><button className="mobile-close-button" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={19} /></button></div>
         <button type="button" className="new-session-button" onClick={startNewSession}><Plus size={16} /> New learning</button>
         <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>{dbActivities.length}</small>}</button>; })}</nav>
-        <section className="history-section" aria-labelledby="folders-label">
-          <div className="section-title-row">
-            <span id="folders-label" className="nav-caption">FOLDERS</span>
-            <button
-              type="button"
-              aria-label="Create folder"
-              onClick={() => setIsSidebarFolderDialogOpen(true)}
-            >
-              <Plus size={15} />
-            </button>
-          </div>
-          <div className="folder-list">
-            {customFolders.length > 0 ? (
-              customFolders.map((folderName, idx) => (
-                <div className="folder-group" key={folderName}>
-                  <button type="button" className="folder-heading">
-                    <FolderOpen size={14} />
-                    <span>{folderName}</span>
-                  </button>
-                  <div className="history-list">
-                    {dbConversations
-                      .filter((c: any) => c.folder === folderName)
-                      .map((chat) => (
+        <div className="flex-1 overflow-y-auto min-h-0 pr-1 space-y-4">
+          <section className="history-section" aria-labelledby="folders-label">
+            <div className="section-title-row">
+              <span id="folders-label" className="nav-caption">FOLDERS</span>
+              <button
+                type="button"
+                aria-label="Create folder"
+                onClick={() => setIsSidebarFolderDialogOpen(true)}
+              >
+                <Plus size={15} />
+              </button>
+            </div>
+            <div className="folder-list">
+              {customFolders.length > 0 ? (
+                customFolders.map((folderName) => (
+                  <div className="folder-group" key={folderName}>
+                    <button type="button" className="folder-heading">
+                      <FolderOpen size={14} />
+                      <span>{folderName}</span>
+                    </button>
+                    <div className="history-list">
+                      {dbConversations
+                        .filter((c: any) => c.folder === folderName)
+                        .map((chat) => (
+                          <button
+                            type="button"
+                            className={`history-item ${activeConversationId === chat.id ? "active" : ""}`}
+                            key={chat.id}
+                            onClick={() => selectConversation(chat.id)}
+                          >
+                            <span>{chat.title}</span>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <span className="text-[11px] text-[#6D7E78] dark:text-[#8FA29B] px-3 py-1 block">No folders created</span>
+              )}
+            </div>
+          </section>
+
+          {/* Dedicated CHATS Section */}
+          <section className="history-section mt-4" aria-labelledby="chats-label">
+            <div className="section-title-row mb-1">
+              <span id="chats-label" className="nav-caption">CHATS</span>
+              <button
+                type="button"
+                aria-label="New chat"
+                onClick={startNewSession}
+              >
+                <Plus size={15} />
+              </button>
+            </div>
+            <div className="history-list">
+              {dbConversations.length > 0 ? (
+                dbConversations.map((chat) => (
+                  <div
+                    key={chat.id}
+                    className={`group relative flex items-center justify-between gap-1 w-full rounded-lg text-left text-xs transition-colors ${
+                      activeConversationId === chat.id
+                        ? "bg-[#DDE8DF] dark:bg-[#2A3838] text-[#003F3F] dark:text-[#B8FF4D] font-bold"
+                        : "text-[#6D7E78] dark:text-[#8FA29B] hover:bg-[#DDE8DF]/50 dark:hover:bg-[#232D2D] hover:text-[#102B2B] dark:hover:text-[#FBFAF6]"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      className="flex-1 flex items-center justify-between gap-2 px-2.5 py-1.5 min-w-0 text-left cursor-pointer"
+                      onClick={() => selectConversation(chat.id)}
+                    >
+                      <span className="truncate">{chat.title}</span>
+                    </button>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
                         <button
                           type="button"
-                          className={`history-item ${activeConversationId === chat.id ? "active" : ""}`}
-                          key={chat.id}
-                          onClick={() => selectConversation(chat.id)}
+                          className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 mr-1 rounded-md hover:bg-[#DDE8DF] dark:hover:bg-[#2A3838] text-[#6D7E78] hover:text-[#102B2B] dark:text-[#8FA29B] dark:hover:text-[#FBFAF6] transition-opacity cursor-pointer shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label="Chat options"
                         >
-                          <span>{chat.title}</span>
+                          <MoreVertical size={14} />
                         </button>
-                      ))}
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        side="right"
+                        align="start"
+                        sideOffset={4}
+                        className="w-48 p-1 shadow-lg border border-[#DDE8DF] dark:border-[#2A3838] bg-[#FBFAF6] dark:bg-[#1C2323] text-[#102B2B] dark:text-[#FBFAF6] rounded-xl z-[999]"
+                      >
+                        {customFolders.length > 0 && (
+                          <>
+                            <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold text-[#6D7E78] dark:text-[#8FA29B] uppercase tracking-wider">
+                              Add to folder
+                            </DropdownMenuLabel>
+                            {customFolders.map((folder) => (
+                              <DropdownMenuItem
+                                key={folder}
+                                onClick={() => assignChatToFolder(chat.id, folder)}
+                                className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-[#102B2B] dark:text-[#FBFAF6] hover:bg-[#DDE8DF] dark:hover:bg-[#232D2D]"
+                              >
+                                <FolderPlus size={14} className="text-[#005A57] dark:text-[#B8FF4D]" />
+                                <span className="truncate">{folder}</span>
+                              </DropdownMenuItem>
+                            ))}
+                            <DropdownMenuSeparator className="my-1 border-[#DDE8DF] dark:border-[#2A3838]" />
+                          </>
+                        )}
+                        <DropdownMenuItem
+                          onClick={() => deleteConversationHandler(chat.id)}
+                          className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium"
+                        >
+                          <Trash2 size={14} />
+                          <span>Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </div>
-              ))
-            ) : (
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 px-3 py-1 block">No folders created</span>
-            )}
-          </div>
-        </section>
-
-        {/* Dedicated CHATS Section */}
-        <section className="history-section mt-4" aria-labelledby="chats-label">
-          <div className="section-title-row mb-1">
-            <span id="chats-label" className="nav-caption">CHATS</span>
-            <button
-              type="button"
-              aria-label="New chat"
-              onClick={startNewSession}
-            >
-              <Plus size={15} />
-            </button>
-          </div>
-          <div className="history-list">
-            {dbConversations.length > 0 ? (
-              dbConversations.map((chat) => (
-                <div
-                  key={chat.id}
-                  className={`group relative flex items-center justify-between gap-1 w-full rounded-lg text-left text-xs transition-colors ${
-                    activeConversationId === chat.id
-                      ? "bg-[#DDE8DF] dark:bg-slate-800 text-[#003F3F] dark:text-[#B8FF4D] font-bold"
-                      : "text-[#6D7E78] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-[#102B2B] dark:hover:text-slate-200"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    className="flex-1 flex items-center justify-between gap-2 px-2.5 py-1.5 min-w-0 text-left cursor-pointer"
-                    onClick={() => selectConversation(chat.id)}
-                  >
-                    <span className="truncate">{chat.title}</span>
-                  </button>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 mr-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-opacity cursor-pointer shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label="Chat options"
-                      >
-                        <MoreVertical size={14} />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      side="right"
-                      align="start"
-                      sideOffset={4}
-                      className="w-48 p-1 shadow-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl z-[999]"
-                    >
-                      {customFolders.length > 0 && (
-                        <>
-                          <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            Add to folder
-                          </DropdownMenuLabel>
-                          {customFolders.map((folder) => (
-                            <DropdownMenuItem
-                              key={folder}
-                              onClick={() => assignChatToFolder(chat.id, folder)}
-                              className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/30"
-                            >
-                              <FolderPlus size={14} className="text-[#005A57] dark:text-[#B8FF4D]" />
-                              <span className="truncate">{folder}</span>
-                            </DropdownMenuItem>
-                          ))}
-                          <DropdownMenuSeparator className="my-1 border-slate-100 dark:border-slate-800" />
-                        </>
-                      )}
-                      <DropdownMenuItem
-                        onClick={() => deleteConversationHandler(chat.id)}
-                        className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium"
-                      >
-                        <Trash2 size={14} />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))
-            ) : (
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 px-3 py-1.5 block">No learning sessions yet</span>
-            )}
-          </div>
-        </section>
+                ))
+              ) : (
+                <span className="text-[11px] text-[#6D7E78] dark:text-[#8FA29B] px-3 py-1.5 block">No learning sessions yet</span>
+              )}
+            </div>
+          </section>
+        </div>
         <div className="sidebar-bottom">
           <button type="button" className={`nav-item ${activeView === "settings" ? "active" : ""}`} onClick={() => selectView("settings")}><Settings2 size={16} /><span>Settings</span></button>
           <DropdownMenu>
