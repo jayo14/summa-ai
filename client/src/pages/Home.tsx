@@ -822,16 +822,9 @@ function ConversationTurn({ message }: { message: ConversationMessage }) {
 
   return (
     <div className={`message-block ${isStudent ? "student-message" : "summa-message dynamic-message"}`}>
-      {isStudent ? (
+      {isStudent && (
         <div className="student-message-avatar bg-gradient-to-tr from-[#005A57] to-[#003F3F] text-[#B8FF4D] font-bold text-xs flex items-center justify-center rounded-xl size-7 shadow-sm">
           {initials}
-        </div>
-      ) : (
-        <div className="message-sender">
-          <div className="summa-message-mark">
-            <span className="mini-orb" />
-          </div>
-          <strong>Summa AI</strong>
         </div>
       )}
       <div className="message-content">
