@@ -29,7 +29,7 @@ export async function fetchApi<T = any>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       // Don't auto-logout if the request was to the auth/login or auth/signup endpoints
       const isAuthRequest = endpoint.includes("/auth/login") || endpoint.includes("/auth/signup");
       if (!isAuthRequest) {

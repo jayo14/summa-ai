@@ -335,6 +335,10 @@ export default function Home() {
     })
       .then(async (response) => {
         if (!response.ok || !response.body) {
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem("summa_access_token");
+            window.dispatchEvent(new CustomEvent("summa:unauthorized"));
+          }
           throw new Error(`HTTP error ${response.status}`);
         }
         const reader = response.body.getReader();
