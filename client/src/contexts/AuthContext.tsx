@@ -85,8 +85,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     verifyAuth();
+
+    const handleUnauthorized = () => {
+      if (isMounted) {
+        setToken(null);
+        setUser(null);
+        if (window.location.pathname !== "/sign-in") {
+          window.location.href = "/sign-in";
+        }
+      }
+    };
+
+    window.addEventListener("summa:unauthorized", handleUnauthorized);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("summa:unauthorized", handleUnauthorized);
     };
   }, []);
 
