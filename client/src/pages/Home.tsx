@@ -290,7 +290,7 @@ export default function Home() {
       }
     }
 
-    if (activeCid && activeCid !== "default-session") {
+    if (activeCid && activeCid !== "default-session" && !activeCid.startsWith("f2b37d07")) {
       fetchApi(`/conversations/${activeCid}/messages`, {
         method: "POST",
         body: JSON.stringify({ role: "user", content: clean }),
@@ -384,7 +384,7 @@ export default function Home() {
       .finally(() => {
         setIsResponding(false);
         registerEvent("practice", "New learning intent captured");
-        if (fullAiResponse && activeCid !== "default-session") {
+        if (fullAiResponse && activeCid && activeCid !== "default-session" && !activeCid.startsWith("f2b37d07")) {
           fetchApi(`/conversations/${activeCid}/messages`, {
             method: "POST",
             body: JSON.stringify({ role: "assistant", content: fullAiResponse }),
