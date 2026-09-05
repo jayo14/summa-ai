@@ -164,6 +164,31 @@ export default function Home() {
   const [dbMaterials, setDbMaterials] = useState<Array<{ id: string; title: string; type: string; description?: string }>>([]);
   const [dbActivities, setDbActivities] = useState<Array<any>>([]);
 
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+
+  const selectConversation = async (cid: string) => {
+    setActiveConversationId(cid);
+    setSessionStarted(true);
+    selectView("workspace");
+    setSidebarOpen(false);
+    try {
+      const data = await fetchApi<{ messages: Array<{ id: string; role: string; content: string }> }>(`/conversations/${cid}`);
+      if (data && Array.isArray(data.messages)) {
+        setMessages(
+          data.messages.map((m, idx) => ({
+            id: Number(m.id) || Date.now() + idx,
+            role: m.role === "user" || m.role === "student" ? "student" : "summa",
+            content: m.content,
+          }))
+        );
+      } else {
+        setMessages([]);
+      }
+    } catch (err) {
+      console.debug("Error loading conversation messages:", err);
+    }
+  };
+
   useEffect(() => {
     fetchApi<{ conversations: Array<{ id: string; title: string; created_at: string }> }>("/conversations")
       .then((data) => {
@@ -226,7 +251,7 @@ export default function Home() {
     setComposerValue("");
     setIsResponding(true);
 
-    let activeCid = dbConversations.length > 0 ? dbConversations[0].id : null;
+    let activeCid = activeConversationId;
     try {
       if (!activeCid || activeCid === "default-session" || activeCid.startsWith("f2b37d07")) {
         const newConv = await fetchApi<{ id: string }>("/conversations", {
@@ -235,6 +260,7 @@ export default function Home() {
         });
         if (newConv && newConv.id) {
           activeCid = newConv.id;
+          setActiveConversationId(newConv.id);
           setDbConversations((prev) => [{ id: newConv.id, title: clean.slice(0, 35), created_at: new Date().toISOString() }, ...prev]);
         }
       }
@@ -354,7 +380,7 @@ export default function Home() {
   }, [location]);
 
   function startNewSession() {
-    setLocation("/"); setSessionStarted(false); setMessages([]); setComposerValue(""); setSidebarOpen(false);
+    setActiveConversationId(null); setLocation("/"); setSessionStarted(false); setMessages([]); setComposerValue(""); setSidebarOpen(false);
     toast("New learning space ready", { description: "Tell Summa what you want to understand." });
   }
 
@@ -403,13 +429,9 @@ export default function Home() {
                       .map((chat) => (
                         <button
                           type="button"
-                          className="history-item"
+                          className={`history-item ${activeConversationId === chat.id ? "active" : ""}`}
                           key={chat.id}
-                          onClick={() => {
-                            selectView("workspace");
-                            setSessionStarted(true);
-                            setSidebarOpen(false);
-                          }}
+                          onClick={() => selectConversation(chat.id)}
                         >
                           <span>{chat.title}</span>
                           <small>Live</small>
@@ -424,13 +446,9 @@ export default function Home() {
                   dbConversations.map((chat) => (
                     <button
                       type="button"
-                      className="history-item"
+                      className={`history-item ${activeConversationId === chat.id ? "active" : ""}`}
                       key={chat.id}
-                      onClick={() => {
-                        selectView("workspace");
-                        setSessionStarted(true);
-                        setSidebarOpen(false);
-                      }}
+                      onClick={() => selectConversation(chat.id)}
                     >
                       <span>{chat.title}</span>
                       <small>Live</small>
