@@ -165,6 +165,10 @@ export default function Home() {
   const [dbActivities, setDbActivities] = useState<Array<any>>([]);
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const activeConversationIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    activeConversationIdRef.current = activeConversationId;
+  }, [activeConversationId]);
 
   const selectConversation = async (cid: string) => {
     setActiveConversationId(cid);
@@ -412,12 +416,13 @@ export default function Home() {
     loadConversations();
     if (location.startsWith("/c/")) {
       const urlCid = location.replace("/c/", "").trim();
-      if (urlCid && urlCid !== activeConversationId) {
+      if (urlCid && urlCid !== activeConversationIdRef.current) {
+        activeConversationIdRef.current = urlCid;
         setActiveConversationId(urlCid);
         setSessionStarted(true);
         fetchApi<{ messages: Array<{ id: string; role: string; content: string }> }>(`/conversations/${urlCid}`)
           .then((data) => {
-            if (data && Array.isArray(data.messages)) {
+            if (data && Array.isArray(data.messages) && data.messages.length > 0) {
               setMessages(
                 data.messages.map((m, idx) => ({
                   id: Number(m.id) || Date.now() + idx,
