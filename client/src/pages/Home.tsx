@@ -198,9 +198,9 @@ export default function Home() {
     setComposerValue("");
     setIsResponding(true);
 
-    let activeCid = "default-session";
+    let activeCid = dbConversations.length > 0 ? dbConversations[0].id : null;
     try {
-      if (dbConversations.length === 0) {
+      if (!activeCid || activeCid === "default-session" || activeCid.startsWith("f2b37d07")) {
         const newConv = await fetchApi<{ id: string }>("/conversations", {
           method: "POST",
           body: JSON.stringify({ title: clean.slice(0, 35) }),
@@ -209,13 +209,13 @@ export default function Home() {
           activeCid = newConv.id;
           setDbConversations((prev) => [{ id: newConv.id, title: clean.slice(0, 35), created_at: new Date().toISOString() }, ...prev]);
         }
-      } else {
-        activeCid = dbConversations[0].id;
       }
-      fetchApi(`/conversations/${activeCid}/messages`, {
-        method: "POST",
-        body: JSON.stringify({ role: "user", content: clean }),
-      }).catch(() => {});
+      if (activeCid) {
+        fetchApi(`/conversations/${activeCid}/messages`, {
+          method: "POST",
+          body: JSON.stringify({ role: "user", content: clean }),
+        }).catch(() => {});
+      }
     } catch (err) {
       console.debug("Conversation sync skipped:", err);
     }
