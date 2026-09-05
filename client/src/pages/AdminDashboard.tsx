@@ -837,8 +837,15 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* VIEW SWITCHING ENGINE */}
-          {activeItem === "users" && <UsersView onUserClick={(u) => setSelectedUser(u)} />}
+          {activeItem === "users" && (
+            <UsersView
+              users={users}
+              onUserClick={(u) => setSelectedUser(u)}
+              onRoleChange={handleRoleChange}
+              onStatusChange={handleStatusChange}
+              onRefresh={fetchAdminData}
+            />
+          )}
           {activeItem === "institutions" && <InstitutionsView />}
           {activeItem === "analytics" && <AnalyticsView />}
           {activeItem === "subscriptions" && <SubscriptionsView />}

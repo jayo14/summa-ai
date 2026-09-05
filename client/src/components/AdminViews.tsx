@@ -124,36 +124,105 @@ export function MetricCard({
 
 // --- 1. USERS PAGE & DRAWER ---
 
-export function UsersView({ onUserClick }: { onUserClick: (user: any) => void }) {
+interface AdminUserItem {
+  id: string;
+  email: string;
+  name?: string;
+  role: string;
+  status: string;
+  avatar?: string;
+  provider?: string;
+  onboarded: boolean;
+  onboarding_data?: {
+    degree?: string;
+    field_of_study?: string;
+    institution?: string;
+    subscription?: string;
+  };
+  last_active?: string;
+  created_at?: string;
+}
+
+export function UsersView({
+  users = [],
+  onUserClick,
+  onRoleChange,
+  onStatusChange,
+  onRefresh,
+}: {
+  users?: AdminUserItem[];
+  onUserClick: (user: any) => void;
+  onRoleChange?: (userId: string, newRole: string) => void;
+  onStatusChange?: (userId: string, currentStatus: string) => void;
+  onRefresh?: () => void;
+}) {
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addRole, setAddRole] = useState("user");
+  const [addInstitution, setAddInstitution] = useState("");
 
-  const sampleUsers = [
-    { id: "u-1", name: "John Doe", email: "john.doe@unilag.edu.ng", role: "Student", institution: "University of Lagos", status: "Active", joined: "May 12, 2024", sessions: 42, sub: "Pro" },
-    { id: "u-2", name: "Dr. Sarah Alabi", email: "s.alabi@lasustech.edu.ng", role: "Lecturer", institution: "LASUSTECH", status: "Active", joined: "Apr 04, 2024", sessions: 128, sub: "Enterprise" },
-    { id: "u-3", name: "Prof. Kenneth Okoro", email: "k.okoro@ui.edu.ng", role: "Lecturer", institution: "University of Ibadan", status: "Active", joined: "Mar 18, 2024", sessions: 96, sub: "Pro" },
-    { id: "u-4", name: "Amina Bello", email: "a.bello@student.babcock.edu.ng", role: "Student", institution: "Babcock University", status: "Pending", joined: "May 28, 2024", sessions: 3, sub: "Basic" },
-    { id: "u-5", name: "David Adeleke", email: "david@covenant.edu.ng", role: "Admin", institution: "Covenant University", status: "Active", joined: "Jan 15, 2024", sessions: 310, sub: "Enterprise" },
-    { id: "u-6", name: "Chidi Nnamdi", email: "chidi.n@student.unilag.edu.ng", role: "Student", institution: "University of Lagos", status: "Suspended", joined: "Feb 20, 2024", sessions: 19, sub: "Basic" },
-  ];
+  const totalUsersCount = users.length;
+  const activeUsersCount = users.filter((u) => u.status?.toLowerCase() === "active").length;
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const newUsersCount = users.filter((u) => u.created_at && new Date(u.created_at) >= thirtyDaysAgo).length;
+  const studentsCount = users.filter((u) => u.role?.toLowerCase() === "user" || u.role?.toLowerCase() === "student").length;
+  const lecturersCount = users.filter((u) => u.role?.toLowerCase() === "instructor" || u.role?.toLowerCase() === "lecturer").length;
+  const adminsCount = users.filter((u) => u.role?.toLowerCase() === "admin").length;
 
-  const filteredUsers = sampleUsers.filter((u) => {
-    const matchesSearch = !search || `${u.name} ${u.email} ${u.institution}`.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
+  const filteredUsers = users.filter((u) => {
+    const displayName = u.name || u.email.split("@")[0];
+    const institutionName = u.onboarding_data?.institution || u.onboarding_data?.field_of_study || "";
+    const haystack = `${displayName} ${u.email} ${institutionName}`.toLowerCase();
+    const matchesSearch = !search || haystack.includes(search.toLowerCase());
+    
+    let userRoleCategory = "user";
+    if (u.role?.toLowerCase() === "admin") userRoleCategory = "admin";
+    else if (u.role?.toLowerCase() === "instructor" || u.role?.toLowerCase() === "lecturer") userRoleCategory = "instructor";
+
+    const matchesRole = roleFilter === "ALL" || userRoleCategory === roleFilter.toLowerCase();
     return matchesSearch && matchesRole;
   });
+
+  const handleCreateUser = async () => {
+    if (!addEmail.trim() || !addName.trim()) {
+      toast.error("Name and Email are required");
+      return;
+    }
+    try {
+      await fetchApi("/admin/users", {
+        method: "POST",
+        body: JSON.stringify({
+          name: addName.trim(),
+          email: addEmail.trim(),
+          role: addRole,
+          institution: addInstitution.trim() || undefined,
+        }),
+      });
+      toast.success("User added successfully!");
+      setShowAddModal(false);
+      setAddName("");
+      setAddEmail("");
+      setAddInstitution("");
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create user");
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-        <MetricCard title="Total Users" value="12,241" change="+18.6%" strokeColor="#8B5CF6" />
-        <MetricCard title="Active Users" value="8,632" change="+21.3%" strokeColor="#10B981" />
-        <MetricCard title="New Users (30d)" value="1,420" change="+14.2%" strokeColor="#3B82F6" />
-        <MetricCard title="Students" value="9,512" change="+19.1%" strokeColor="#8B5CF6" />
-        <MetricCard title="Lecturers" value="1,824" change="+11.5%" strokeColor="#10B981" />
-        <MetricCard title="Administrators" value="378" change="+4.0%" strokeColor="#F59E0B" />
+        <MetricCard title="Total Users" value={totalUsersCount.toLocaleString()} change="+100% DB" strokeColor="#8B5CF6" />
+        <MetricCard title="Active Users" value={activeUsersCount.toLocaleString()} change={`${totalUsersCount ? roundPercent((activeUsersCount / totalUsersCount) * 100) : 0}% active`} strokeColor="#10B981" />
+        <MetricCard title="New Users (30d)" value={newUsersCount.toLocaleString()} change="Realtime" strokeColor="#3B82F6" />
+        <MetricCard title="Students" value={studentsCount.toLocaleString()} change="Role: User" strokeColor="#8B5CF6" />
+        <MetricCard title="Lecturers" value={lecturersCount.toLocaleString()} change="Role: Instructor" strokeColor="#10B981" />
+        <MetricCard title="Administrators" value={adminsCount.toLocaleString()} change="Role: Admin" strokeColor="#F59E0B" />
       </div>
 
       {/* Controls & Table */}
@@ -165,7 +234,7 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by user name, email, or institution..."
+              placeholder="Search by name, email, or institution..."
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-[#E2E8F0] rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#6366F1]"
             />
           </div>
@@ -177,9 +246,9 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
               className="bg-slate-50 border border-[#E2E8F0] text-slate-700 text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none"
             >
               <option value="ALL">All Roles</option>
-              <option value="Student">Students</option>
-              <option value="Lecturer">Lecturers</option>
-              <option value="Admin">Admins</option>
+              <option value="user">Students / Users</option>
+              <option value="instructor">Lecturers / Instructors</option>
+              <option value="admin">Admins</option>
             </select>
 
             <button
@@ -200,39 +269,77 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
                 <th className="p-4">ROLE</th>
                 <th className="p-4">INSTITUTION</th>
                 <th className="p-4">STATUS</th>
-                <th className="p-4">SESSIONS</th>
                 <th className="p-4">SUBSCRIPTION</th>
                 <th className="p-4">JOINED</th>
                 <th className="p-4 text-right">ACTION</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
-              {filteredUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => onUserClick(u)}>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-full bg-[#6366F1]/10 text-[#4F46E5] font-bold text-xs flex items-center justify-center">
-                        {u.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-900">{u.name}</div>
-                        <div className="text-[11px] text-slate-400 font-mono">{u.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 font-medium text-slate-700">{u.role}</td>
-                  <td className="p-4 text-slate-600">{u.institution}</td>
-                  <td className="p-4"><StatusBadge status={u.status} /></td>
-                  <td className="p-4 font-mono text-slate-700">{u.sessions}</td>
-                  <td className="p-4 font-medium text-slate-900">{u.sub}</td>
-                  <td className="p-4 text-slate-400 font-mono text-[11px]">{u.joined}</td>
-                  <td className="p-4 text-right">
-                    <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
-                      <MoreHorizontal size={16} />
-                    </button>
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((u) => {
+                  const displayName = u.name || u.email.split("@")[0];
+                  const institutionDisplay = u.onboarding_data?.institution || u.onboarding_data?.field_of_study || "nil";
+                  const subscriptionDisplay = u.onboarding_data?.subscription || "nil";
+                  const formattedJoined = u.created_at
+                    ? new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                    : "May 12, 2024";
+
+                  return (
+                    <tr key={u.id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => onUserClick(u)}>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="size-8 rounded-full bg-[#6366F1]/10 text-[#4F46E5] font-bold text-xs flex items-center justify-center">
+                            {displayName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-slate-900">{displayName}</div>
+                            <div className="text-[11px] text-slate-400 font-mono">{u.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 font-medium text-slate-700 capitalize">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                          {u.role === "admin" ? "ADMIN" : u.role === "instructor" ? "LECTURER" : "STUDENT"}
+                        </span>
+                      </td>
+                      <td className="p-4 text-slate-600 font-medium">{institutionDisplay}</td>
+                      <td className="p-4"><StatusBadge status={u.status || "Active"} /></td>
+                      <td className="p-4 font-medium text-slate-900 uppercase text-[11px]">{subscriptionDisplay}</td>
+                      <td className="p-4 text-slate-400 font-mono text-[11px]">{formattedJoined}</td>
+                      <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-2">
+                          {onRoleChange && (
+                            <button
+                              onClick={() => onRoleChange(u.id, u.role === "admin" ? "user" : "admin")}
+                              title="Toggle Role"
+                              className="px-2 py-1 rounded-lg text-[11px] font-semibold text-[#6366F1] hover:bg-[#6366F1]/10 transition"
+                            >
+                              {u.role === "admin" ? "Make User" : "Make Admin"}
+                            </button>
+                          )}
+                          {onStatusChange && (
+                            <button
+                              onClick={() => onStatusChange(u.id, u.status)}
+                              title="Toggle Account Status"
+                              className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition ${
+                                u.status === "suspended" ? "text-emerald-600 hover:bg-emerald-50" : "text-rose-600 hover:bg-rose-50"
+                              }`}
+                            >
+                              {u.status === "suspended" ? "Activate" : "Suspend"}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-slate-400 font-medium text-xs">
+                    No users matching search or filter criteria.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -252,29 +359,46 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Full Name</label>
-                <input type="text" placeholder="e.g. Samuel Okon" className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none" />
+                <input
+                  type="text"
+                  value={addName}
+                  onChange={(e) => setAddName(e.target.value)}
+                  placeholder="e.g. Samuel Okon"
+                  className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none"
+                />
               </div>
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Email Address</label>
-                <input type="email" placeholder="e.g. samuel@unilag.edu.ng" className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none" />
+                <input
+                  type="email"
+                  value={addEmail}
+                  onChange={(e) => setAddEmail(e.target.value)}
+                  placeholder="e.g. samuel@unilag.edu.ng"
+                  className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Role</label>
-                  <select className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none">
-                    <option>Student</option>
-                    <option>Lecturer</option>
-                    <option>Admin</option>
+                  <select
+                    value={addRole}
+                    onChange={(e) => setAddRole(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none"
+                  >
+                    <option value="user">Student (User)</option>
+                    <option value="instructor">Lecturer (Instructor)</option>
+                    <option value="admin">Admin</option>
                   </select>
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Institution</label>
-                  <select className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none">
-                    <option>University of Lagos</option>
-                    <option>LASUSTECH</option>
-                    <option>University of Ibadan</option>
-                    <option>Covenant University</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={addInstitution}
+                    onChange={(e) => setAddInstitution(e.target.value)}
+                    placeholder="e.g. University of Lagos or nil"
+                    className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none"
+                  />
                 </div>
               </div>
             </div>
@@ -284,10 +408,7 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  toast.success("User invitation sent successfully!");
-                  setShowAddModal(false);
-                }}
+                onClick={handleCreateUser}
                 className="px-4 py-2 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition"
               >
                 Create Account
@@ -298,6 +419,10 @@ export function UsersView({ onUserClick }: { onUserClick: (user: any) => void })
       )}
     </div>
   );
+}
+
+function roundPercent(val: number) {
+  return Math.round(val * 10) / 10;
 }
 
 export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }) {
