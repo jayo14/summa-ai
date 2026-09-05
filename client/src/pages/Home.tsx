@@ -1469,7 +1469,7 @@ function LearningLibrary({
               <button
                 type="button"
                 onClick={onSelectProgress || onResume}
-                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                className="text-xs font-bold text-[#005A57] dark:text-[#B8FF4D] hover:underline"
               >
                 View all
               </button>
@@ -1502,8 +1502,8 @@ function LearningLibrary({
                 />
                 <defs>
                   <linearGradient id="arc-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#4F46E5" />
-                    <stop offset="100%" stopColor="#818CF8" />
+                    <stop offset="0%" stopColor="#005A57" />
+                    <stop offset="100%" stopColor="#B8FF4D" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -1543,14 +1543,14 @@ function LearningLibrary({
                   <span>63%</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-purple-600 dark:bg-purple-400 h-full rounded-full w-[63%]" />
+                  <div className="bg-[#005A57] dark:bg-[#B8FF4D] h-full rounded-full w-[63%]" />
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={onResume}
-                className="w-full py-2 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-purple-200/60 dark:border-purple-800/40"
+                className="w-full py-2 bg-[#DDE8DF]/60 hover:bg-[#DDE8DF] dark:bg-slate-700/60 dark:hover:bg-slate-700 text-[#003F3F] dark:text-[#B8FF4D] text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-[#DDE8DF] dark:border-slate-600"
               >
                 <span>Go to last topic</span>
                 <ChevronRight className="size-3.5" />
@@ -1584,7 +1584,7 @@ function LearningLibrary({
                 <div className="flex items-baseline justify-between mt-1">
                   <span className="text-lg font-bold text-[#102B2B] dark:text-white">96</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
-                    <path d="M0 14 Q 10 2, 20 10 T 40 4" fill="none" stroke="#8B5CF6" strokeWidth="2" />
+                    <path d="M0 14 Q 10 2, 20 10 T 40 4" fill="none" stroke="#005A57" strokeWidth="2" />
                   </svg>
                 </div>
               </div>
@@ -1594,7 +1594,7 @@ function LearningLibrary({
                 <div className="flex items-baseline justify-between mt-1">
                   <span className="text-lg font-bold text-[#102B2B] dark:text-white">78%</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
-                    <path d="M0 10 Q 10 14, 20 4 T 40 8" fill="none" stroke="#3B82F6" strokeWidth="2" />
+                    <path d="M0 10 Q 10 14, 20 4 T 40 8" fill="none" stroke="#00A896" strokeWidth="2" />
                   </svg>
                 </div>
               </div>
@@ -1612,7 +1612,7 @@ function LearningLibrary({
           </div>
 
           {/* Widget 4: Motivational Card */}
-          <div className="bg-gradient-to-br from-purple-100/90 via-indigo-50/80 to-purple-50 dark:from-purple-950/50 dark:via-indigo-950/40 dark:to-slate-900 border border-purple-200/80 dark:border-purple-800/50 rounded-2xl p-5 relative overflow-hidden space-y-2 shadow-2xs">
+          <div className="bg-[#E7EFE7] dark:bg-slate-800/90 border border-[#DDE8DF] dark:border-slate-700 rounded-2xl p-5 relative overflow-hidden space-y-2 shadow-2xs">
             <h4 className="text-base font-bold text-[#102B2B] dark:text-white">Small steps, big mastery.</h4>
             <p className="text-xs text-[#6D7E78] dark:text-slate-300 max-w-[200px] leading-relaxed">
               Your consistency is building knowledge that lasts.
@@ -1621,16 +1621,16 @@ function LearningLibrary({
             <button
               type="button"
               onClick={onSelectProgress || onResume}
-              className="inline-flex items-center gap-1 text-xs font-bold text-purple-700 dark:text-purple-300 hover:underline pt-2 cursor-pointer"
+              className="inline-flex items-center gap-1 text-xs font-bold text-[#005A57] dark:text-[#B8FF4D] hover:underline pt-2 cursor-pointer"
             >
               <span>See your progress</span>
               <ChevronRight className="size-3.5" />
             </button>
 
-            <div className="absolute right-0 bottom-0 pointer-events-none opacity-40 dark:opacity-20">
+            <div className="absolute right-0 bottom-0 pointer-events-none opacity-30 dark:opacity-10">
               <svg width="110" height="80" viewBox="0 0 110 80" fill="none">
-                <path d="M40 80 L75 25 L110 80 Z" fill="#8B5CF6" />
-                <path d="M0 80 L45 35 L90 80 Z" fill="#A78BFA" />
+                <path d="M40 80 L75 25 L110 80 Z" fill="#005A57" />
+                <path d="M0 80 L45 35 L90 80 Z" fill="#6D7E78" />
               </svg>
             </div>
           </div>
