@@ -595,7 +595,7 @@ export default function Home() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <strong className="block truncate text-[#102B2B] dark:text-[#FBFAF6] font-semibold">{user?.name || "Student User"}</strong>
-                  <span className="block truncate text-xs text-[#6D7E78] dark:text-[#8FA29B]">{user?.email || "student@summa.ai"}</span>
+                  <span className="block truncate text-xs text-[#6D7E78] dark:text-[#8FA29B]">{user?.email || ""}</span>
                 </div>
                 <ChevronDown size={14} className="text-[#6D7E78] dark:text-[#8FA29B] flex-shrink-0" />
               </button>
