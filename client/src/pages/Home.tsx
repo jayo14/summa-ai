@@ -542,32 +542,7 @@ function WorkspaceView(props: WorkspaceProps) {
     <div className="workspace-view active-workspace relative">
       <div className="conversation-scroll" ref={scrollContainerRef} onScroll={handleScroll}>
         <div className="conversation-column">
-          <section className="context-banner" aria-label="Current learning context">
-            <div className="context-course">
-              <span className="context-dot" /> CSC 201 <ChevronRight size={13} /> <strong>Object-Oriented Programming</strong>
-            </div>
-            <div className="context-meta">
-              <button type="button" onClick={() => props.setSourceTrayOpen(true)}>
-                <BookOpen size={13} /> 3 sources
-              </button>
-              <span /> <span className="objective-slip">Objective: explain runtime dispatch</span>
-              <button
-                type="button"
-                className="context-share-button"
-                onClick={() =>
-                  shareText(
-                    "Summa AI learning summary",
-                    "Summa AI · CSC 201\nTopic: Runtime dispatch\nCurrent estimate: " +
-                      props.mastery +
-                      "%\nNext action: Explain how dynamic dispatch chooses an override.",
-                    "summa-learning-summary.txt"
-                  )
-                }
-              >
-                <Share2 size={12} /> Share summary
-              </button>
-            </div>
-          </section>
+
           {props.messages.map((message) => (
             <ConversationTurn message={message} key={message.id} />
           ))}
