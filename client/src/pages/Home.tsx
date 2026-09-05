@@ -276,7 +276,7 @@ export default function Home() {
     let activeCid = activeConversationId;
     if (!activeCid || activeCid === "default-session" || activeCid.startsWith("f2b37d07")) {
       try {
-        const newConv = await fetchApi<{ id: string }>("/conversations", {
+        const newConv = await fetchApi<{ id: string; title?: string }>("/conversations", {
           method: "POST",
           body: JSON.stringify({ title: clean.slice(0, 35) }),
         });
@@ -284,7 +284,11 @@ export default function Home() {
           activeCid = newConv.id;
           setActiveConversationId(newConv.id);
           setLocation(`/c/${newConv.id}`);
-          setDbConversations((prev) => [{ id: newConv.id, title: clean.slice(0, 35), created_at: new Date().toISOString() }, ...prev]);
+          const newTitle = newConv.title || clean.slice(0, 35);
+          setDbConversations((prev) => {
+            if (prev.some((c) => c.id === newConv.id)) return prev;
+            return [{ id: newConv.id, title: newTitle, created_at: new Date().toISOString() }, ...prev];
+          });
         }
       } catch (err) {
         console.debug("Conversation creation error:", err);
