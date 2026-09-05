@@ -262,17 +262,17 @@ export function UsersView({
         </div>
 
         {/* Users Table Scroll Area */}
-        <ScrollArea className="w-full max-h-[520px] rounded-xl border border-[#E2E8F0] overflow-auto">
-          <table className="w-full text-left text-xs min-w-[700px]">
-            <thead className="sticky top-0 z-10 bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold tracking-wider">
-              <tr>
-                <th className="p-4 bg-[#F8FAFC]">USER</th>
-                <th className="p-4 bg-[#F8FAFC]">ROLE</th>
-                <th className="p-4 bg-[#F8FAFC]">INSTITUTION</th>
-                <th className="p-4 bg-[#F8FAFC]">STATUS</th>
-                <th className="p-4 bg-[#F8FAFC]">SUBSCRIPTION</th>
-                <th className="p-4 bg-[#F8FAFC]">JOINED</th>
-                <th className="p-4 text-right bg-[#F8FAFC]">ACTION</th>
+        <ScrollArea className="w-full h-[520px] rounded-xl border border-[#E2E8F0]">
+          <table className="w-full text-left text-xs min-w-[700px] border-collapse">
+            <thead className="sticky top-0 z-20 bg-[#F8FAFC] shadow-xs">
+              <tr className="border-b border-[#E2E8F0]">
+                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">USER</th>
+                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">ROLE</th>
+                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">INSTITUTION</th>
+                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">STATUS</th>
+                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">SUBSCRIPTION</th>
+                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">JOINED</th>
+                <th className="p-4 text-right bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">ACTION</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0] bg-white">
