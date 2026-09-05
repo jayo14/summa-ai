@@ -68,7 +68,8 @@ export function PromptInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         rows={1}
-        className="w-full resize-none bg-transparent px-1 text-sm text-[#102B2B] dark:text-[#FBFAF6] placeholder:text-[#6D7E78] dark:placeholder:text-[#8FA29B] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 border-none min-h-[38px] max-h-[180px]"
+        style={{ outline: "none" }}
+        className="w-full resize-none bg-transparent px-1 text-sm text-[#102B2B] dark:text-[#FBFAF6] placeholder:text-[#6D7E78] dark:placeholder:text-[#8FA29B] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 outline-none border-none min-h-[38px] max-h-[180px]"
       />
 
       <div className="mt-2 flex items-center justify-between pt-1 border-t border-[#DDE8DF] dark:border-[#2A3838]">
