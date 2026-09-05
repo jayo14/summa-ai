@@ -517,6 +517,10 @@ export default function Home() {
               favoriteFolders={favoriteFolders}
               onAssignFolder={assignFavoriteFolder}
               onSelectProgress={() => selectView("progress")}
+              customFolders={customFolders}
+              onCreateFolder={(name) => {
+                setCustomFolders((prev) => Array.from(new Set([...prev, name])));
+              }}
             />
           )}
           {activeView === "progress" && <ProgressView mastery={mastery} onContinue={() => { selectView("workspace"); setSessionStarted(true); }} />}
@@ -943,6 +947,8 @@ function LearningLibrary({
   favoriteFolders,
   onAssignFolder,
   onSelectProgress,
+  customFolders,
+  onCreateFolder,
 }: {
   onResume: () => void;
   favorites: string[];
@@ -950,6 +956,8 @@ function LearningLibrary({
   favoriteFolders: Record<string, string>;
   onAssignFolder: (title: string, folder: string) => void;
   onSelectProgress?: () => void;
+  customFolders: string[];
+  onCreateFolder: (name: string) => void;
 }) {
   const [filterState, setFilterState] = useState<"all" | "active" | "onhold" | "completed">("all");
   const [sortMode, setSortMode] = useState<"recent" | "mastery" | "title">("recent");
@@ -1031,7 +1039,18 @@ function LearningLibrary({
     },
   ];
 
-  const foldersList = dbFolders.length > 0 ? dbFolders : defaultFolders;
+  const customFoldersMapped = customFolders.map((name, idx) => ({
+    id: `custom-folder-${idx}`,
+    title: name,
+    chatsCount: 0,
+    createdDate: "Just now",
+    mastery: 0,
+    lastActivity: "No activity yet",
+    status: "active" as const,
+    iconType: idx % 5 === 0 ? "code" : idx % 5 === 1 ? "math" : idx % 5 === 2 ? "physics" : idx % 5 === 3 ? "writing" : "book",
+  }));
+
+  const foldersList = [...customFoldersMapped, ...(dbFolders.length > 0 ? dbFolders : defaultFolders)];
 
   const filteredFolders = foldersList
     .filter((f) => filterState === "all" || f.status === filterState)
@@ -1044,7 +1063,7 @@ function LearningLibrary({
   const handleCreateFolder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFolderName.trim()) return;
-    onAssignFolder(newFolderName.trim(), "Active");
+    onCreateFolder(newFolderName.trim());
     toast.success(`Folder "${newFolderName.trim()}" created.`);
     setNewFolderName("");
     setIsFolderDialogOpen(false);
