@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchApi } from "../lib/api";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Activity,
   AlertTriangle,
@@ -260,21 +261,21 @@ export function UsersView({
           </div>
         </div>
 
-        {/* Users Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold tracking-wider">
+        {/* Users Table Scroll Area */}
+        <ScrollArea className="w-full max-h-[520px] rounded-xl border border-[#E2E8F0] overflow-auto">
+          <table className="w-full text-left text-xs min-w-[700px]">
+            <thead className="sticky top-0 z-10 bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold tracking-wider">
               <tr>
-                <th className="p-4">USER</th>
-                <th className="p-4">ROLE</th>
-                <th className="p-4">INSTITUTION</th>
-                <th className="p-4">STATUS</th>
-                <th className="p-4">SUBSCRIPTION</th>
-                <th className="p-4">JOINED</th>
-                <th className="p-4 text-right">ACTION</th>
+                <th className="p-4 bg-[#F8FAFC]">USER</th>
+                <th className="p-4 bg-[#F8FAFC]">ROLE</th>
+                <th className="p-4 bg-[#F8FAFC]">INSTITUTION</th>
+                <th className="p-4 bg-[#F8FAFC]">STATUS</th>
+                <th className="p-4 bg-[#F8FAFC]">SUBSCRIPTION</th>
+                <th className="p-4 bg-[#F8FAFC]">JOINED</th>
+                <th className="p-4 text-right bg-[#F8FAFC]">ACTION</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
+            <tbody className="divide-y divide-[#E2E8F0] bg-white">
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((u) => {
                   const displayName = u.name || u.email.split("@")[0];
@@ -342,7 +343,9 @@ export function UsersView({
               )}
             </tbody>
           </table>
-        </div>
+          <ScrollBar orientation="horizontal" />
+          <ScrollBar orientation="vertical" />
+        </ScrollArea>
       </div>
 
       {/* Add User Modal */}
