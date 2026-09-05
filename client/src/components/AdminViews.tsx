@@ -261,91 +261,118 @@ export function UsersView({
           </div>
         </div>
 
-        {/* Users Table Scroll Area */}
-        <ScrollArea className="w-full h-[520px] rounded-xl border border-[#E2E8F0]">
-          <table className="w-full text-left text-xs min-w-[700px] border-collapse">
-            <thead className="sticky top-0 z-20 bg-[#F8FAFC] shadow-xs">
-              <tr className="border-b border-[#E2E8F0]">
-                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">USER</th>
-                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">ROLE</th>
-                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">INSTITUTION</th>
-                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">STATUS</th>
-                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">SUBSCRIPTION</th>
-                <th className="p-4 bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">JOINED</th>
-                <th className="p-4 text-right bg-[#F8FAFC] text-slate-500 font-bold uppercase text-[10px] tracking-wider">ACTION</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0] bg-white">
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((u) => {
-                  const displayName = u.name || u.email.split("@")[0];
-                  const institutionDisplay = u.onboarding_data?.institution || u.onboarding_data?.field_of_study || "nil";
-                  const subscriptionDisplay = u.onboarding_data?.subscription || "nil";
-                  const formattedJoined = u.created_at
-                    ? new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                    : "May 12, 2024";
-
-                  return (
-                    <tr key={u.id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => onUserClick(u)}>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="size-8 rounded-full bg-[#6366F1]/10 text-[#4F46E5] font-bold text-xs flex items-center justify-center">
-                            {displayName.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-slate-900">{displayName}</div>
-                            <div className="text-[11px] text-slate-400 font-mono">{u.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4 font-medium text-slate-700 capitalize">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                          {u.role === "admin" ? "ADMIN" : u.role === "instructor" ? "LECTURER" : "STUDENT"}
-                        </span>
-                      </td>
-                      <td className="p-4 text-slate-600 font-medium">{institutionDisplay}</td>
-                      <td className="p-4"><StatusBadge status={u.status || "Active"} /></td>
-                      <td className="p-4 font-medium text-slate-900 uppercase text-[11px]">{subscriptionDisplay}</td>
-                      <td className="p-4 text-slate-400 font-mono text-[11px]">{formattedJoined}</td>
-                      <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-2">
-                          {onRoleChange && (
-                            <button
-                              onClick={() => onRoleChange(u.id, u.role === "admin" ? "user" : "admin")}
-                              title="Toggle Role"
-                              className="px-2 py-1 rounded-lg text-[11px] font-semibold text-[#6366F1] hover:bg-[#6366F1]/10 transition"
-                            >
-                              {u.role === "admin" ? "Make User" : "Make Admin"}
-                            </button>
-                          )}
-                          {onStatusChange && (
-                            <button
-                              onClick={() => onStatusChange(u.id, u.status)}
-                              title="Toggle Account Status"
-                              className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition ${
-                                u.status === "suspended" ? "text-emerald-600 hover:bg-emerald-50" : "text-rose-600 hover:bg-rose-50"
-                              }`}
-                            >
-                              {u.status === "suspended" ? "Activate" : "Suspend"}
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
+        {/* Fixed Header & Scrollable Body Container */}
+        <div className="w-full rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+          {/* Fixed Header Table */}
+          <div className="w-full bg-[#F8FAFC] border-b border-[#E2E8F0]">
+            <table className="w-full text-left text-xs min-w-[700px] table-fixed">
+              <colgroup>
+                <col className="w-[24%]" />
+                <col className="w-[12%]" />
+                <col className="w-[20%]" />
+                <col className="w-[12%]" />
+                <col className="w-[12%]" />
+                <col className="w-[12%]" />
+                <col className="w-[8%]" />
+              </colgroup>
+              <thead>
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400 font-medium text-xs">
-                    No users matching search or filter criteria.
-                  </td>
+                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">USER</th>
+                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">ROLE</th>
+                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">INSTITUTION</th>
+                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">STATUS</th>
+                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">SUBSCRIPTION</th>
+                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">JOINED</th>
+                  <th className="p-4 text-right text-slate-500 font-bold uppercase text-[10px] tracking-wider">ACTION</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-          <ScrollBar orientation="horizontal" />
-          <ScrollBar orientation="vertical" />
-        </ScrollArea>
+              </thead>
+            </table>
+          </div>
+
+          {/* Scrollable Body Table */}
+          <ScrollArea className="w-full h-[460px]">
+            <table className="w-full text-left text-xs min-w-[700px] table-fixed">
+              <colgroup>
+                <col className="w-[24%]" />
+                <col className="w-[12%]" />
+                <col className="w-[20%]" />
+                <col className="w-[12%]" />
+                <col className="w-[12%]" />
+                <col className="w-[12%]" />
+                <col className="w-[8%]" />
+              </colgroup>
+              <tbody className="divide-y divide-[#E2E8F0] bg-white">
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((u) => {
+                    const displayName = u.name || u.email.split("@")[0];
+                    const institutionDisplay = u.onboarding_data?.institution || u.onboarding_data?.field_of_study || "nil";
+                    const subscriptionDisplay = u.onboarding_data?.subscription || "nil";
+                    const formattedJoined = u.created_at
+                      ? new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                      : "May 12, 2024";
+
+                    return (
+                      <tr key={u.id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => onUserClick(u)}>
+                        <td className="p-4 truncate">
+                          <div className="flex items-center gap-3">
+                            <div className="size-8 rounded-full bg-[#6366F1]/10 text-[#4F46E5] font-bold text-xs flex items-center justify-center shrink-0">
+                              {displayName.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-slate-900 truncate">{displayName}</div>
+                              <div className="text-[11px] text-slate-400 font-mono truncate">{u.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 font-medium text-slate-700 capitalize">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                            {u.role === "admin" ? "ADMIN" : u.role === "instructor" ? "LECTURER" : "STUDENT"}
+                          </span>
+                        </td>
+                        <td className="p-4 text-slate-600 font-medium truncate">{institutionDisplay}</td>
+                        <td className="p-4"><StatusBadge status={u.status || "Active"} /></td>
+                        <td className="p-4 font-medium text-slate-900 uppercase text-[11px]">{subscriptionDisplay}</td>
+                        <td className="p-4 text-slate-400 font-mono text-[11px]">{formattedJoined}</td>
+                        <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-2">
+                            {onRoleChange && (
+                              <button
+                                onClick={() => onRoleChange(u.id, u.role === "admin" ? "user" : "admin")}
+                                title="Toggle Role"
+                                className="px-2 py-1 rounded-lg text-[11px] font-semibold text-[#6366F1] hover:bg-[#6366F1]/10 transition shrink-0"
+                              >
+                                {u.role === "admin" ? "Make User" : "Make Admin"}
+                              </button>
+                            )}
+                            {onStatusChange && (
+                              <button
+                                onClick={() => onStatusChange(u.id, u.status)}
+                                title="Toggle Account Status"
+                                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition shrink-0 ${
+                                  u.status === "suspended" ? "text-emerald-600 hover:bg-emerald-50" : "text-rose-600 hover:bg-rose-50"
+                                }`}
+                              >
+                                {u.status === "suspended" ? "Activate" : "Suspend"}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-slate-400 font-medium text-xs">
+                      No users matching search or filter criteria.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <ScrollBar orientation="horizontal" />
+            <ScrollBar orientation="vertical" />
+          </ScrollArea>
+        </div>
       </div>
 
       {/* Add User Modal */}
