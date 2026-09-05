@@ -441,23 +441,38 @@ export default function Home() {
                 </div>
               ))
             ) : (
-              <div className="history-list">
-                {dbConversations.length > 0 ? (
-                  dbConversations.map((chat) => (
-                    <button
-                      type="button"
-                      className={`history-item ${activeConversationId === chat.id ? "active" : ""}`}
-                      key={chat.id}
-                      onClick={() => selectConversation(chat.id)}
-                    >
-                      <span>{chat.title}</span>
-                      <small>Live</small>
-                    </button>
-                  ))
-                ) : (
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 px-3 py-1.5 block">No learning sessions yet</span>
-                )}
-              </div>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 px-3 py-1 block">No folders created</span>
+            )}
+          </div>
+        </section>
+
+        {/* Dedicated CHATS Section */}
+        <section className="history-section mt-4" aria-labelledby="chats-label">
+          <div className="section-title-row mb-1">
+            <span id="chats-label" className="nav-caption">CHATS</span>
+            <button
+              type="button"
+              aria-label="New chat"
+              onClick={startNewSession}
+            >
+              <Plus size={15} />
+            </button>
+          </div>
+          <div className="history-list">
+            {dbConversations.length > 0 ? (
+              dbConversations.map((chat) => (
+                <button
+                  type="button"
+                  className={`history-item ${activeConversationId === chat.id ? "active" : ""}`}
+                  key={chat.id}
+                  onClick={() => selectConversation(chat.id)}
+                >
+                  <span>{chat.title}</span>
+                  <small>Live</small>
+                </button>
+              ))
+            ) : (
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 px-3 py-1.5 block">No learning sessions yet</span>
             )}
           </div>
         </section>
