@@ -582,7 +582,7 @@ export default function Home() {
           <button type="button" className={`nav-item ${activeView === "settings" ? "active" : ""}`} onClick={() => selectView("settings")}><Settings2 size={16} /><span>Settings</span></button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="student-badge w-full text-left cursor-pointer hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors border-0">
+              <button type="button" className="student-badge w-full text-left cursor-pointer hover:bg-[#DDE8DF]/50 dark:hover:bg-[#232D2D] transition-colors border-0">
                 <div className="student-avatar overflow-hidden">
                   {user?.avatar ? (
                     <img src={user.avatar} alt={user?.name || "User Avatar"} className="w-full h-full object-cover" />
@@ -591,28 +591,28 @@ export default function Home() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <strong className="block truncate">{user?.name || "Student User"}</strong>
-                  <span className="block truncate text-xs text-slate-500">{user?.email || "student@summa.ai"}</span>
+                  <strong className="block truncate text-[#102B2B] dark:text-[#FBFAF6] font-semibold">{user?.name || "Student User"}</strong>
+                  <span className="block truncate text-xs text-[#6D7E78] dark:text-[#8FA29B]">{user?.email || "student@summa.ai"}</span>
                 </div>
-                <ChevronDown size={14} className="text-slate-400 flex-shrink-0" />
+                <ChevronDown size={14} className="text-[#6D7E78] dark:text-[#8FA29B] flex-shrink-0" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side="top"
               align="start"
               sideOffset={8}
-              className="w-56 p-1.5 shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl z-[999]"
+              className="w-56 p-1.5 shadow-2xl border border-[#DDE8DF] dark:border-[#2A3838] bg-[#FBFAF6] dark:bg-[#1C2323] text-[#102B2B] dark:text-[#FBFAF6] rounded-xl z-[999]"
             >
-              <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-slate-500 flex items-center justify-between">
+              <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-[#6D7E78] dark:text-[#8FA29B] flex items-center justify-between">
                 <span>Account Overview</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 uppercase font-mono">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#DDE8DF] dark:bg-[#2A3838] text-[#003F3F] dark:text-[#B8FF4D] uppercase font-mono">
                   {user?.role || UserRole.USER}
                 </span>
               </DropdownMenuLabel>
               {user?.role === UserRole.ADMIN && (
                 <DropdownMenuItem
                   onClick={() => window.location.href = "/admin"}
-                  className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40"
+                  className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold text-[#005A57] dark:text-[#B8FF4D] hover:bg-[#DDE8DF] dark:hover:bg-[#232D2D]"
                 >
                   <Shield size={14} />
                   <span>Admin Infrastructure</span>
@@ -620,12 +620,12 @@ export default function Home() {
               )}
               <DropdownMenuItem
                 onClick={() => selectView("settings")}
-                className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-600 dark:hover:text-purple-400"
+                className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-[#102B2B] dark:text-[#FBFAF6] hover:bg-[#DDE8DF] dark:hover:bg-[#232D2D]"
               >
                 <Settings2 size={14} />
                 <span>Account & Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-1 border-slate-100 dark:border-slate-800" />
+              <DropdownMenuSeparator className="my-1 border-[#DDE8DF] dark:border-[#2A3838]" />
               <DropdownMenuItem
                 onClick={() => {
                   logout();
