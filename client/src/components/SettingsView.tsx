@@ -101,7 +101,7 @@ export function SettingsView({
   };
 
   return (
-    <div className="secondary-page settings-page w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+    <div className="secondary-page settings-page w-full p-4 sm:p-6 lg:p-8 space-y-8">
       {/* Intro Header */}
       <section className="secondary-intro plain-intro flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#DDE8DF] dark:border-slate-800 pb-6">
         <div>
