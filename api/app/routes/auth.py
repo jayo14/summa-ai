@@ -189,21 +189,25 @@ async def login(payload: AuthLoginRequest):
                     body = resp.json()
                     user_data = body.get("user", {})
                     is_verified = bool(user_data.get("email_confirmed_at") or user_data.get("confirmed_at") or True)
+                    actual_user_id = user_data.get("id", user_id)
+                    user_obj = {
+                        "id": actual_user_id,
+                        "email": user_data.get("email", email_clean),
+                        "name": existing_user.get("name") if existing_user and existing_user.get("name") else (user_data.get("user_metadata", {}).get("name") or name),
+                        "avatar": existing_user.get("avatar") if existing_user and existing_user.get("avatar") else (user_data.get("user_metadata", {}).get("avatar") or payload.avatar),
+                        "bio": existing_user.get("bio") if existing_user else "",
+                        "role": role,
+                        "status": existing_user.get("status", "active") if existing_user else "active",
+                        "provider": payload.provider,
+                        "email_verified": is_verified,
+                        "onboarded": existing_user.get("onboarded", False) if existing_user else False,
+                        "onboarding_data": existing_user.get("onboarding_data", {}) if existing_user else {},
+                    }
+                    await user_store.save_user(actual_user_id, user_obj)
                     return {
                         "access_token": body["access_token"],
                         "token_type": "bearer",
-                        "user": {
-                            "id": user_data.get("id", user_id),
-                            "email": user_data.get("email", email_clean),
-                            "name": user_data.get("user_metadata", {}).get("name") or name,
-                            "avatar": user_data.get("user_metadata", {}).get("avatar") or payload.avatar,
-                            "role": role,
-                            "status": existing_user.get("status", "active") if existing_user else "active",
-                            "provider": payload.provider,
-                            "email_verified": is_verified,
-                            "onboarded": False,
-                            "onboarding_data": {},
-                        },
+                        "user": user_obj,
                     }
                 else:
                     err_json = resp.json()
@@ -234,22 +238,26 @@ async def login(payload: AuthLoginRequest):
     if not _dev_fallback_enabled():
         raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
+    user_obj = {
+        "id": user_id,
+        "email": payload.email,
+        "name": existing_user.get("name") if existing_user and existing_user.get("name") else name,
+        "avatar": existing_user.get("avatar") if existing_user and existing_user.get("avatar") else payload.avatar,
+        "bio": existing_user.get("bio") if existing_user else "",
+        "role": role,
+        "status": existing_user.get("status", "active") if existing_user else "active",
+        "provider": payload.provider,
+        "email_verified": True,
+        "onboarded": existing_user.get("onboarded", False) if existing_user else False,
+        "onboarding_data": existing_user.get("onboarding_data", {}) if existing_user else {},
+    }
+    await user_store.save_user(user_id, user_obj)
+
     token = _create_mock_jwt(user_id)
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "id": user_id,
-            "email": payload.email,
-            "name": name,
-            "avatar": payload.avatar,
-            "role": role,
-            "status": existing_user.get("status", "active") if existing_user else "active",
-            "provider": payload.provider,
-            "email_verified": True,
-            "onboarded": False,
-            "onboarding_data": {},
-        },
+        "user": user_obj,
     }
 
 
