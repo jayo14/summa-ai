@@ -169,7 +169,7 @@ export default function Home() {
   const selectConversation = async (cid: string) => {
     setActiveConversationId(cid);
     setSessionStarted(true);
-    selectView("workspace");
+    setLocation(`/c/${cid}`);
     setSidebarOpen(false);
     try {
       const data = await fetchApi<{ messages: Array<{ id: string; role: string; content: string }> }>(`/conversations/${cid}`);
@@ -283,6 +283,7 @@ export default function Home() {
         if (newConv && newConv.id) {
           activeCid = newConv.id;
           setActiveConversationId(newConv.id);
+          setLocation(`/c/${newConv.id}`);
           setDbConversations((prev) => [{ id: newConv.id, title: clean.slice(0, 35), created_at: new Date().toISOString() }, ...prev]);
         }
       } catch (err) {
@@ -393,6 +394,31 @@ export default function Home() {
       });
   }
   const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (location.startsWith("/c/")) {
+      const urlCid = location.replace("/c/", "").trim();
+      if (urlCid && urlCid !== activeConversationId) {
+        setActiveConversationId(urlCid);
+        setSessionStarted(true);
+        fetchApi<{ messages: Array<{ id: string; role: string; content: string }> }>(`/conversations/${urlCid}`)
+          .then((data) => {
+            if (data && Array.isArray(data.messages)) {
+              setMessages(
+                data.messages.map((m, idx) => ({
+                  id: Number(m.id) || Date.now() + idx,
+                  role: m.role === "user" || m.role === "student" ? "student" : "summa",
+                  content: m.content,
+                }))
+              );
+            } else {
+              setMessages([]);
+            }
+          })
+          .catch((err) => console.debug("Error loading route conversation messages:", err));
+      }
+    }
+  }, [location, activeConversationId]);
 
   const activeView: ViewName = useMemo(() => {
     if (location === "/learning" || location === "/activities") return "learning";

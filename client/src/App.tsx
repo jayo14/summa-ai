@@ -99,6 +99,9 @@ function Router() {
 
       <Route path="/welcome" component={LandingPage} />
 
+      <Route path="/c/:id">
+        {() => <ProtectedRoute component={Home} />}
+      </Route>
       <Route path="/learning">
         {() => <ProtectedRoute component={Home} />}
       </Route>
