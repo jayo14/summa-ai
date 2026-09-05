@@ -947,8 +947,8 @@ function LearningLibrary({
   favoriteFolders,
   onAssignFolder,
   onSelectProgress,
-  customFolders,
-  onCreateFolder,
+  customFolders = [],
+  onCreateFolder = () => {},
 }: {
   onResume: () => void;
   favorites: string[];
@@ -956,8 +956,8 @@ function LearningLibrary({
   favoriteFolders: Record<string, string>;
   onAssignFolder: (title: string, folder: string) => void;
   onSelectProgress?: () => void;
-  customFolders: string[];
-  onCreateFolder: (name: string) => void;
+  customFolders?: string[];
+  onCreateFolder?: (name: string) => void;
 }) {
   const [filterState, setFilterState] = useState<"all" | "active" | "onhold" | "completed">("all");
   const [sortMode, setSortMode] = useState<"recent" | "mastery" | "title">("recent");
@@ -1039,7 +1039,7 @@ function LearningLibrary({
     },
   ];
 
-  const customFoldersMapped = customFolders.map((name, idx) => ({
+  const customFoldersMapped = (customFolders || []).map((name, idx) => ({
     id: `custom-folder-${idx}`,
     title: name,
     chatsCount: 0,
