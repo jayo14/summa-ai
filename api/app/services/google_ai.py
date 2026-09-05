@@ -65,48 +65,58 @@ async def _generate_fallback_stream(
                 subject_label = line.split("Active Course / Subject:")[1].strip()
                 break
 
-    if "polymorphism" in query or "dispatch" in query:
+    clean_q = last_user_msg.strip() if last_user_msg else "your learning topic"
+    
+    if "plato" in query:
         text = (
-            f"**Summa AI Personalised Explanation [{subject_label}]**\n\n"
-            "**Polymorphism** allows objects of different concrete classes to be treated through a single common interface.\n\n"
+            "**Plato** (c. 428–348 BCE) was one of the foundational figures of Western philosophy, a student of Socrates, and the teacher of Aristotle. He established the **Academy in Athens**, widely considered the first institution of higher learning in the Western world.\n\n"
+            "### 1. Theory of Forms (Ideas)\n"
+            "Plato's central metaphysical idea is that our physical world is just a shadow of a higher, unchangeable reality of **Forms** (perfect concepts like Justice, Beauty, and Truth). Physical objects are mere imperfect copies of these transcendent Forms.\n\n"
+            "### 2. The Allegory of the Cave\n"
+            "In *The Republic* (Book VII), Plato presents prisoners chained in a cave seeing only shadows cast on a wall. Education and philosophy are the process of unchaining a prisoner and guiding them out of the cave into the sunlight to see reality as it truly is.\n\n"
+            "### 3. Political Philosophy & Tripartite Soul\n"
+            "Plato argued that human soul has three parts: **Reason**, **Spirit/Courage**, and **Appetite**. In an ideal society (*Kallipolis*), philosophers governed by Reason should rule as **Philosopher Kings**, while guardians protect and producers sustain the state.\n\n"
+            "Would you like to dive deeper into the **Theory of Forms**, the **Allegory of the Cave**, or his **Socratic Dialogues**?"
+        )
+    elif "polymorphism" in query or "dispatch" in query:
+        text = (
+            f"**Polymorphism in {subject_label}**\n\n"
+            "Polymorphism allows objects of different classes to be treated as instances of a shared superclass or interface.\n\n"
             "### Key Mechanisms:\n"
-            "1. **Interface / Parent Reference**: You declare a variable using a superclass or interface type.\n"
-            "2. **Runtime Dispatch (Dynamic Binding)**: When you invoke a method, the JVM/runtime checks the *actual underlying object* created in memory, not just the declared reference type.\n"
-            "3. **Method Overriding**: The child class provides its own implementation of a method with the exact same signature.\n\n"
-            "*Example*:\n"
+            "1. **Interface / Parent Reference**: Declaring a variable using a general superclass or interface type.\n"
+            "2. **Dynamic Method Dispatch**: At runtime, the execution engine looks up the actual instantiated object's method override rather than relying solely on reference type.\n"
+            "3. **Method Overriding**: Derived classes provide custom implementations of base methods.\n\n"
             "```java\n"
-            "Shape s = new Circle(); // Reference is Shape, actual object is Circle\n"
-            "s.draw();               // Executes Circle's overridden draw() method at runtime\n"
+            "Shape s = new Circle(); // Reference: Shape | Object: Circle\n"
+            "s.draw();               // Invokes Circle.draw() at runtime\n"
             "```\n\n"
-            "**Quick Recall Check**: If `s` was assigned `new Rectangle()`, which class's `draw()` method executes at runtime? Reply to test your understanding."
+            "Would you like to trace an example or solve a quick active recall check?"
         )
     elif "quiz" in query:
         text = (
-            f"**Summa AI Active Recall Quiz [{subject_label}]**\n\n"
-            "Here is your targeted recall check based on your current knowledge graph:\n\n"
-            "**Question 1**: What is the primary difference between *method overloading* (compile-time) and *method overriding* (runtime)?\n\n"
-            "**Question 2**: In runtime dynamic dispatch, does the executed method depend on the **reference type** or the **actual object type** created in memory?\n\n"
-            "*Take a moment to answer either question, and I will evaluate your reasoning.*"
+            f"**Active Recall Check — {subject_label}**\n\n"
+            "Here is a quick concept evaluation:\n\n"
+            "1. **Question 1**: What is the primary difference between *compile-time overloading* and *runtime overriding*?\n"
+            "2. **Question 2**: Does dynamic method dispatch evaluate the declared reference type or the instantiated runtime object type?\n\n"
+            "Reply with your answers and we'll evaluate your reasoning step by step!"
         )
     elif "plan" in query or "study" in query:
         text = (
-            f"**Summa AI Personalised Study Plan [{subject_label}]**\n\n"
-            "Based on your proficiency analysis and upcoming review targets, here is your 3-step action plan:\n\n"
-            "1. **Core Concept Review (10 mins)**: Review inheritance hierarchies and abstract method declarations.\n"
-            "2. **Active Practice (15 mins)**: Trace 4 code snippets involving dynamic dispatch and hidden overrides.\n"
-            "3. **Gap Verification (5 mins)**: Complete a 3-question active recall quiz to lock in the pattern.\n\n"
-            "Would you like to start step 1 with a quick breakdown or jump directly into practice code?"
+            f"**Targeted Study Breakdown — {subject_label}**\n\n"
+            "Here is a recommended 3-step mastery plan:\n\n"
+            "1. **Core Concept Review (10 mins)**: Clarify fundamental definitions and relationships.\n"
+            "2. **Practical Examples (15 mins)**: Work through real-world applications and code/logic tracing.\n"
+            "3. **Active Recall (5 mins)**: Test yourself with targeted questions to lock in retention.\n\n"
+            "Shall we start with step 1 or jump into practical practice?"
         )
     else:
-        clean_q = last_user_msg.strip() if last_user_msg else "your learning topic"
         text = (
-            f"**Summa AI Learning Companion [{subject_label}]**\n\n"
-            f"Regarding **\"{clean_q}\"**:\n\n"
-            "To build a deep understanding, let's break this down into core principles:\n\n"
-            "1. **Core Definition**: Every concept builds on fundamental rules. We examine the core pattern first.\n"
-            "2. **Practical Context**: We apply it to concrete examples tailored to your level and field of study.\n"
-            "3. **Active Recall**: We verify that you can explain the reasoning in your own words.\n\n"
-            "What specific aspect or example would you like to explore first?"
+            f"Here is a breakdown of **{clean_q}**:\n\n"
+            f"When studying **{clean_q}**, we focus on three core dimensions:\n\n"
+            "1. **Definition & Context**: Understanding what the concept is and why it was developed.\n"
+            "2. **Core Mechanics & Rules**: Examining the key principles, formulas, or logical structures that govern it.\n"
+            "3. **Application & Real Examples**: Seeing how it functions in practice and evaluating edge cases.\n\n"
+            f"Which specific angle or topic within **{clean_q}** would you like to explore first?"
         )
 
     # Stream text in small chunks simulating natural token generation
