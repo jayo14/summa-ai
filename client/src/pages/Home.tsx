@@ -1228,13 +1228,13 @@ function LearningLibrary({
   };
 
   return (
-    <div className="secondary-page library-page w-full p-4 sm:p-6 lg:p-8 space-y-6 text-slate-900 dark:text-slate-100">
+    <div className="secondary-page library-page w-full p-4 sm:p-6 lg:p-8 space-y-6 text-slate-900 dark:text-[#FBFAF6]">
       {/* Intro Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#102B2B] dark:text-white">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#102B2B] dark:text-[#FBFAF6]">
           My learning
         </h1>
-        <p className="text-xs sm:text-sm text-[#6D7E78] dark:text-slate-400 mt-1">
+        <p className="text-xs sm:text-sm text-[#6D7E78] dark:text-[#8FA29B] mt-1">
           Everything you're studying, all in one place.
         </p>
       </div>
@@ -1246,21 +1246,21 @@ function LearningLibrary({
           {/* Top 4 Stats Metric Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Understanding Card */}
-            <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs relative overflow-hidden flex flex-col justify-between">
+            <div className="bg-[#FBFAF6] dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl p-5 shadow-2xs relative overflow-hidden flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-[#005A57]/10 dark:bg-[#005A57]/30 text-[#005A57] dark:text-[#B8FF4D]">
+                <span className="text-xs font-semibold text-[#6D7E78] dark:text-[#8FA29B] flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-[#005A57]/10 dark:bg-[#232D2D] text-[#005A57] dark:text-[#B8FF4D]">
                     <BookOpen className="size-4" />
                   </span>
                   Understanding
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold text-[#102B2B] dark:text-white">72%</div>
-                <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Overall mastery</div>
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">72%</div>
+                <div className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">Overall mastery</div>
               </div>
               <div className="mt-3">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#005A57]/10 dark:bg-[#005A57]/30 text-[#005A57] dark:text-[#B8FF4D] text-xs font-semibold border border-[#005A57]/20 dark:border-[#B8FF4D]/30">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#005A57]/10 dark:bg-[#232D2D] text-[#005A57] dark:text-[#B8FF4D] text-xs font-semibold border border-[#005A57]/20 dark:border-[#2A3838]">
                   ↑ 8% this week
                 </span>
               </div>
@@ -1272,63 +1272,63 @@ function LearningLibrary({
             </div>
 
             {/* Study Streak Card */}
-            <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+            <div className="bg-[#FBFAF6] dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-300">
+                <span className="text-xs font-semibold text-[#6D7E78] dark:text-[#8FA29B] flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300">
                     <Flame className="size-4" />
                   </span>
                   Study streak
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold text-[#102B2B] dark:text-white">14</div>
-                <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Days in a row</div>
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">14</div>
+                <div className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">Days in a row</div>
               </div>
               <div className="mt-3">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200/60 dark:border-amber-800/40">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200/60 dark:border-amber-900/40">
                   Keep it up! 🔥
                 </span>
               </div>
             </div>
 
             {/* AI Interactions Card */}
-            <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+            <div className="bg-[#FBFAF6] dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300">
+                <span className="text-xs font-semibold text-[#6D7E78] dark:text-[#8FA29B] flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
                     <MessageSquare className="size-4" />
                   </span>
                   AI interactions
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold text-[#102B2B] dark:text-white">284</div>
-                <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Conversations</div>
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">284</div>
+                <div className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">Conversations</div>
               </div>
               <div className="mt-3">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200/60 dark:border-emerald-800/40">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200/60 dark:border-emerald-900/40">
                   ↑ 18% this week
                 </span>
               </div>
             </div>
 
             {/* Knowledge Gained Card */}
-            <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+            <div className="bg-[#FBFAF6] dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-[#DDE8DF] dark:bg-slate-800 text-[#003F3F] dark:text-[#B8FF4D]">
+                <span className="text-xs font-semibold text-[#6D7E78] dark:text-[#8FA29B] flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-[#DDE8DF] dark:bg-[#232D2D] text-[#003F3F] dark:text-[#B8FF4D]">
                     <Brain className="size-4" />
                   </span>
                   Knowledge gained
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold text-[#102B2B] dark:text-white">126</div>
-                <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">New concepts</div>
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">126</div>
+                <div className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">New concepts</div>
               </div>
               <div className="mt-3">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#DDE8DF]/70 dark:bg-slate-800 text-[#003F3F] dark:text-[#B8FF4D] text-xs font-semibold border border-[#DDE8DF] dark:border-slate-700">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#DDE8DF]/70 dark:bg-[#232D2D] text-[#003F3F] dark:text-[#B8FF4D] text-xs font-semibold border border-[#DDE8DF] dark:border-[#2A3838]">
                   ↑ 21% this week
                 </span>
               </div>
@@ -1339,17 +1339,17 @@ function LearningLibrary({
           <div className="space-y-4">
           {/* Toolbar Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-            <h2 className="text-lg sm:text-xl font-bold text-[#102B2B] dark:text-white">Your folders</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">Your folders</h2>
 
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center bg-[#F5F3EC] dark:bg-slate-800/80 p-1 rounded-xl border border-[#DDE8DF] dark:border-slate-700">
+              <div className="flex items-center bg-[#F5F3EC] dark:bg-[#181E1E] p-1 rounded-xl border border-[#DDE8DF] dark:border-[#2A3838]">
                 <button
                   type="button"
                   onClick={() => setFilterState("all")}
                   className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                     filterState === "all"
-                      ? "bg-[#003F3F] text-[#B8FF4D] shadow-2xs"
-                      : "text-[#6D7E78] dark:text-slate-400 hover:text-[#102B2B] dark:hover:text-white"
+                      ? "bg-[#003F3F] dark:bg-[#B8FF4D] text-[#B8FF4D] dark:text-[#003F3F] shadow-2xs"
+                      : "text-[#6D7E78] dark:text-[#8FA29B] hover:text-[#102B2B] dark:hover:text-[#FBFAF6]"
                   }`}
                 >
                   All ({foldersList.length})
@@ -1359,8 +1359,8 @@ function LearningLibrary({
                   onClick={() => setFilterState("active")}
                   className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                     filterState === "active"
-                      ? "bg-[#003F3F] text-[#B8FF4D] shadow-2xs"
-                      : "text-[#6D7E78] dark:text-slate-400 hover:text-[#102B2B] dark:hover:text-white"
+                      ? "bg-[#003F3F] dark:bg-[#B8FF4D] text-[#B8FF4D] dark:text-[#003F3F] shadow-2xs"
+                      : "text-[#6D7E78] dark:text-[#8FA29B] hover:text-[#102B2B] dark:hover:text-[#FBFAF6]"
                   }`}
                 >
                   Active ({foldersList.filter((f) => f.status === "active").length})
@@ -1370,8 +1370,8 @@ function LearningLibrary({
                   onClick={() => setFilterState("onhold")}
                   className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                     filterState === "onhold"
-                      ? "bg-[#003F3F] text-[#B8FF4D] shadow-2xs"
-                      : "text-[#6D7E78] dark:text-slate-400 hover:text-[#102B2B] dark:hover:text-white"
+                      ? "bg-[#003F3F] dark:bg-[#B8FF4D] text-[#B8FF4D] dark:text-[#003F3F] shadow-2xs"
+                      : "text-[#6D7E78] dark:text-[#8FA29B] hover:text-[#102B2B] dark:hover:text-[#FBFAF6]"
                   }`}
                 >
                   On hold ({foldersList.filter((f) => f.status === "onhold").length})
@@ -1381,8 +1381,8 @@ function LearningLibrary({
                   onClick={() => setFilterState("completed")}
                   className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                     filterState === "completed"
-                      ? "bg-[#003F3F] text-[#B8FF4D] shadow-2xs"
-                      : "text-[#6D7E78] dark:text-slate-400 hover:text-[#102B2B] dark:hover:text-white"
+                      ? "bg-[#003F3F] dark:bg-[#B8FF4D] text-[#B8FF4D] dark:text-[#003F3F] shadow-2xs"
+                      : "text-[#6D7E78] dark:text-[#8FA29B] hover:text-[#102B2B] dark:hover:text-[#FBFAF6]"
                   }`}
                 >
                   Completed ({foldersList.filter((f) => f.status === "completed").length})
@@ -1392,7 +1392,7 @@ function LearningLibrary({
               <select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value as any)}
-                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs font-semibold text-[#102B2B] dark:text-slate-200 focus:outline-none cursor-pointer"
+                className="px-3 py-1.5 bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] rounded-xl text-xs font-semibold text-[#102B2B] dark:text-[#FBFAF6] focus:outline-none cursor-pointer"
               >
                 <option value="recent">Recent activity</option>
                 <option value="mastery">Highest mastery</option>
@@ -1402,20 +1402,20 @@ function LearningLibrary({
           </div>
 
           {/* Folder Rows List */}
-          <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl divide-y divide-[#DDE8DF] dark:divide-slate-800/70 overflow-hidden shadow-2xs">
+          <div className="bg-[#FBFAF6] dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl divide-y divide-[#DDE8DF] dark:divide-[#2A3838] overflow-hidden shadow-2xs">
             {filteredFolders.map((folder) => (
               <div
                 key={folder.id || folder.title}
                 onClick={onResume}
-                className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#F5F3EC] dark:hover:bg-slate-800/50 transition-all cursor-pointer group"
+                className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#F5F3EC] dark:hover:bg-[#232D2D] transition-all cursor-pointer group"
               >
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                   {getFolderIcon(folder.iconType)}
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-base font-bold text-[#102B2B] dark:text-white group-hover:text-[#005A57] dark:group-hover:text-[#B8FF4D] transition-colors truncate">
+                    <h3 className="text-base font-bold text-[#102B2B] dark:text-[#FBFAF6] group-hover:text-[#005A57] dark:group-hover:text-[#B8FF4D] transition-colors truncate">
                       {folder.title}
                     </h3>
-                    <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">
+                    <div className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">
                       Created {folder.createdDate} · {folder.chatsCount} chats
                     </div>
                     <div className="w-full max-w-xs bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2 overflow-hidden">
@@ -1429,15 +1429,15 @@ function LearningLibrary({
 
                 <div className="flex items-center gap-6 sm:gap-8 shrink-0 self-end sm:self-center">
                   <div className="text-left sm:text-right">
-                    <div className="text-base font-bold text-[#102B2B] dark:text-white">{folder.mastery}%</div>
-                    <div className="text-[11px] text-[#6D7E78] dark:text-slate-400 font-medium">Mastery</div>
+                    <div className="text-base font-bold text-[#102B2B] dark:text-[#FBFAF6]">{folder.mastery}%</div>
+                    <div className="text-[11px] text-[#6D7E78] dark:text-[#8FA29B] font-medium">Mastery</div>
                   </div>
 
                   <div className="text-left sm:text-right min-w-[130px]">
                     <div className="text-[11px] font-bold text-[#005A57] dark:text-[#B8FF4D] uppercase font-mono tracking-wider">
                       Last activity
                     </div>
-                    <div className="text-xs font-medium text-[#102B2B] dark:text-slate-200 truncate max-w-[160px]">
+                    <div className="text-xs font-medium text-[#102B2B] dark:text-[#DDE8DF] truncate max-w-[160px]">
                       {folder.lastActivity}
                     </div>
                   </div>
@@ -1448,7 +1448,7 @@ function LearningLibrary({
                       e.stopPropagation();
                       onResume();
                     }}
-                    className="size-9 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 group-hover:border-[#005A57] group-hover:bg-[#005A57] group-hover:text-white dark:group-hover:bg-[#B8FF4D] dark:group-hover:text-[#003F3F] flex items-center justify-center transition-all shrink-0"
+                    className="size-9 rounded-full border border-slate-200 dark:border-[#2A3838] text-slate-500 dark:text-[#8FA29B] group-hover:border-[#005A57] group-hover:bg-[#005A57] group-hover:text-white dark:group-hover:bg-[#B8FF4D] dark:group-hover:text-[#003F3F] flex items-center justify-center transition-all shrink-0"
                   >
                     <ChevronRight className="size-4" />
                   </button>
@@ -1461,7 +1461,7 @@ function LearningLibrary({
           <button
             type="button"
             onClick={() => setIsFolderDialogOpen(true)}
-            className="w-full py-4 border-2 border-dashed border-[#DDE8DF] dark:border-slate-800 hover:border-[#005A57] dark:hover:border-[#B8FF4D] rounded-2xl text-xs sm:text-sm font-bold text-[#005A57] dark:text-[#B8FF4D] bg-[#FBFAF6]/50 dark:bg-slate-900/40 hover:bg-[#E7EFE7] dark:hover:bg-slate-800/60 flex items-center justify-center gap-2 transition-all cursor-pointer"
+            className="w-full py-4 border-2 border-dashed border-[#DDE8DF] dark:border-[#2A3838] hover:border-[#005A57] dark:hover:border-[#B8FF4D] rounded-2xl text-xs sm:text-sm font-bold text-[#005A57] dark:text-[#B8FF4D] bg-[#FBFAF6]/50 dark:bg-[#1C2323] hover:bg-[#E7EFE7] dark:hover:bg-[#232D2D] flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <Plus className="size-4" />
             <span>New folder</span>
@@ -1472,9 +1472,9 @@ function LearningLibrary({
         {/* Right Column: Sidebar Widgets */}
         <div className="lg:col-span-1 space-y-6">
           {/* Widget 1: Learning Path Gauge */}
-          <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs space-y-4">
+          <div className="bg-[#FBFAF6] dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#102B2B] dark:text-white">Learning path</h3>
+              <h3 className="text-sm font-bold text-[#102B2B] dark:text-[#FBFAF6]">Learning path</h3>
               <button
                 type="button"
                 onClick={onSelectProgress || onResume}
@@ -1485,8 +1485,8 @@ function LearningLibrary({
             </div>
 
             <div>
-              <h4 className="text-base font-bold text-[#102B2B] dark:text-white">BSc. Computer Science</h4>
-              <p className="text-xs text-[#6D7E78] dark:text-slate-400">2nd Year · Semester 2</p>
+              <h4 className="text-base font-bold text-[#102B2B] dark:text-[#FBFAF6]">BSc. Computer Science</h4>
+              <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B]">2nd Year · Semester 2</p>
             </div>
 
             {/* Arc Progress Ring */}
@@ -1498,7 +1498,7 @@ function LearningLibrary({
                   stroke="#E2E8F0"
                   strokeWidth="12"
                   strokeLinecap="round"
-                  className="dark:stroke-slate-800"
+                  className="dark:stroke-[#2A3838]"
                 />
                 <path
                   d="M 15 80 A 65 65 0 0 1 145 80"
@@ -1517,37 +1517,37 @@ function LearningLibrary({
                 </defs>
               </svg>
               <div className="absolute bottom-1 text-center">
-                <div className="text-2xl font-bold text-[#102B2B] dark:text-white">32%</div>
-                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400">Program progress</div>
+                <div className="text-2xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">32%</div>
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B]">Program progress</div>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-[#DDE8DF] dark:border-slate-800 flex items-center justify-between text-xs text-[#6D7E78] dark:text-slate-400">
+            <div className="pt-2 border-t border-[#DDE8DF] dark:border-[#2A3838] flex items-center justify-between text-xs text-[#6D7E78] dark:text-[#8FA29B]">
               <span>Target: May 2026</span>
-              <span className="font-semibold text-[#102B2B] dark:text-slate-200">78 days remaining</span>
+              <span className="font-semibold text-[#102B2B] dark:text-[#DDE8DF]">78 days remaining</span>
             </div>
           </div>
 
           {/* Widget 2: Today at a glance */}
-          <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs space-y-3">
+          <div className="bg-[#FBFAF6] dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl p-5 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-[#102B2B] dark:text-white">Today at a glance</h3>
-                <p className="text-xs text-[#6D7E78] dark:text-slate-400">Where you left off</p>
+                <h3 className="text-sm font-bold text-[#102B2B] dark:text-[#FBFAF6]">Today at a glance</h3>
+                <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B]">Where you left off</p>
               </div>
-              <span className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300 shrink-0">
+              <span className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 shrink-0">
                 <Target className="size-4" />
               </span>
             </div>
 
-            <div className="bg-white dark:bg-slate-800/80 border border-[#DDE8DF] dark:border-slate-700/80 rounded-xl p-4 space-y-3">
+            <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] rounded-xl p-4 space-y-3">
               <div>
-                <h4 className="text-sm font-bold text-[#102B2B] dark:text-white">Polymorphism foundations</h4>
-                <p className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Object-Oriented Programming</p>
+                <h4 className="text-sm font-bold text-[#102B2B] dark:text-[#FBFAF6]">Polymorphism foundations</h4>
+                <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">Object-Oriented Programming</p>
               </div>
 
               <div className="space-y-1">
-                <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-[#DDE8DF]">
                   <span>Progress</span>
                   <span>63%</span>
                 </div>
@@ -1559,7 +1559,7 @@ function LearningLibrary({
               <button
                 type="button"
                 onClick={onResume}
-                className="w-full py-2 bg-[#DDE8DF]/60 hover:bg-[#DDE8DF] dark:bg-slate-700/60 dark:hover:bg-slate-700 text-[#003F3F] dark:text-[#B8FF4D] text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-[#DDE8DF] dark:border-slate-600"
+                className="w-full py-2 bg-[#DDE8DF]/60 hover:bg-[#DDE8DF] dark:bg-[#232D2D] dark:hover:bg-[#2A3838] text-[#003F3F] dark:text-[#B8FF4D] text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-[#DDE8DF] dark:border-[#2A3838]"
               >
                 <span>Go to last topic</span>
                 <ChevronRight className="size-3.5" />
@@ -1568,50 +1568,50 @@ function LearningLibrary({
           </div>
 
           {/* Widget 3: Activity insights */}
-          <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs space-y-4">
+          <div className="bg-[#FBFAF6] dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#102B2B] dark:text-white">Activity insights</h3>
-              <select className="bg-transparent text-xs font-semibold text-[#6D7E78] dark:text-slate-400 focus:outline-none cursor-pointer">
+              <h3 className="text-sm font-bold text-[#102B2B] dark:text-[#FBFAF6]">Activity insights</h3>
+              <select className="bg-transparent text-xs font-semibold text-[#6D7E78] dark:text-[#8FA29B] focus:outline-none cursor-pointer">
                 <option>This week</option>
                 <option>This month</option>
               </select>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700/80 p-3 rounded-xl">
-                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400 truncate">Flashcards reviewed</div>
+              <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] p-3 rounded-xl">
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B] truncate">Flashcards reviewed</div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-lg font-bold text-[#102B2B] dark:text-white">128</span>
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">128</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
                     <path d="M0 12 Q 10 4, 20 8 T 40 2" fill="none" stroke="#10B981" strokeWidth="2" />
                   </svg>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700/80 p-3 rounded-xl">
-                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400 truncate">Questions answered</div>
+              <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] p-3 rounded-xl">
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B] truncate">Questions answered</div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-lg font-bold text-[#102B2B] dark:text-white">96</span>
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">96</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
                     <path d="M0 14 Q 10 2, 20 10 T 40 4" fill="none" stroke="#005A57" strokeWidth="2" />
                   </svg>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700/80 p-3 rounded-xl">
-                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400 truncate">Quiz accuracy</div>
+              <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] p-3 rounded-xl">
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B] truncate">Quiz accuracy</div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-lg font-bold text-[#102B2B] dark:text-white">78%</span>
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">78%</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
                     <path d="M0 10 Q 10 14, 20 4 T 40 8" fill="none" stroke="#00A896" strokeWidth="2" />
                   </svg>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700/80 p-3 rounded-xl">
-                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400 truncate">Time learned</div>
+              <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] p-3 rounded-xl">
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B] truncate">Time learned</div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-lg font-bold text-[#102B2B] dark:text-white">8h 24m</span>
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">8h 24m</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
                     <path d="M0 14 Q 10 8, 20 12 T 40 2" fill="none" stroke="#F59E0B" strokeWidth="2" />
                   </svg>
@@ -1621,9 +1621,9 @@ function LearningLibrary({
           </div>
 
           {/* Widget 4: Motivational Card */}
-          <div className="bg-[#E7EFE7] dark:bg-slate-800/90 border border-[#DDE8DF] dark:border-slate-700 rounded-2xl p-5 relative overflow-hidden space-y-2 shadow-2xs">
-            <h4 className="text-base font-bold text-[#102B2B] dark:text-white">Small steps, big mastery.</h4>
-            <p className="text-xs text-[#6D7E78] dark:text-slate-300 max-w-[200px] leading-relaxed">
+          <div className="bg-[#E7EFE7] dark:bg-[#232D2D] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl p-5 relative overflow-hidden space-y-2 shadow-2xs">
+            <h4 className="text-base font-bold text-[#102B2B] dark:text-[#FBFAF6]">Small steps, big mastery.</h4>
+            <p className="text-xs text-[#6D7E78] dark:text-[#DDE8DF] max-w-[200px] leading-relaxed">
               Your consistency is building knowledge that lasts.
             </p>
 
