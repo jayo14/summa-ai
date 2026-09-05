@@ -6,6 +6,7 @@ import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
   Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, Paperclip, PanelRight,
   Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck, LogOut, Terminal, Shield,
+  Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/components/LearningInteractives";
@@ -505,7 +506,19 @@ export default function Home() {
         <header className="app-header"><div className="header-left"><button type="button" className="header-icon-button mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation"><Menu size={19} /></button><div className="header-crumbs"><span>Summa AI</span><ChevronRight size={13} /><strong>{activeView === "workspace" ? "Summa AI Chat" : activeView === "learning" ? "My learning" : activeView === "progress" ? "Learning progress" : activeView === "sources" ? "Academic sources" : "Learning settings"}</strong><ChevronDown size={12} /></div></div><div className="header-actions">{activeView === "workspace" && sessionStarted && <button type="button" className="context-toggle" onClick={() => setContextOpen((value) => !value)}><PanelRight size={16} /><span>{contextOpen ? "Hide context" : "Context"}</span></button>}<button type="button" className="theme-toggle" onClick={() => setTheme((value) => value === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>{theme === "light" ? <Moon size={15} /> : <Sun size={15} />}<span>{theme === "light" ? "Dark" : "Light"}</span></button><button type="button" className="header-icon-button" onClick={() => toast("No new learning reminders.")} aria-label="Open notifications"><Bell size={17} /></button><button type="button" className="header-icon-button" onClick={() => toast("Need a hand? Summa can help you choose the next learning action.")} aria-label="Open help"><CircleHelp size={17} /></button></div></header>
         <main className="product-stage">
           {activeView === "workspace" && <WorkspaceView sessionStarted={sessionStarted} onStart={() => setSessionStarted(true)} composerValue={composerValue} setComposerValue={setComposerValue} sendMessage={sendMessage} messages={messages} isResponding={isResponding} mastery={mastery} updateMastery={updateMastery} registerEvent={registerEvent} setSourceTrayOpen={setSourceTrayOpen} dbConversations={dbConversations} />}
-          {activeView === "learning" && <LearningLibrary onResume={() => { selectView("workspace"); setSessionStarted(true); }} favorites={favorites} onToggleFavorite={toggleFavorite} favoriteFolders={favoriteFolders} onAssignFolder={assignFavoriteFolder} />}
+          {activeView === "learning" && (
+            <LearningLibrary
+              onResume={() => {
+                selectView("workspace");
+                setSessionStarted(true);
+              }}
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+              favoriteFolders={favoriteFolders}
+              onAssignFolder={assignFavoriteFolder}
+              onSelectProgress={() => selectView("progress")}
+            />
+          )}
           {activeView === "progress" && <ProgressView mastery={mastery} onContinue={() => { selectView("workspace"); setSessionStarted(true); }} />}
           {activeView === "sources" && <SourcesView onUseSource={() => { selectView("workspace"); setSessionStarted(true); setSourceTrayOpen(true); }} />}
           {activeView === "settings" && <SettingsView memoryEnabled={memoryEnabled} setMemoryEnabled={setMemoryEnabled} />}
@@ -924,250 +937,578 @@ function ContextRail({ mastery, events, onJumpToSources }: { mastery: number; ev
 
 function LedgerRow({ label, value, tone }: { label: string; value: number; tone: "strong" | "developing" }) { const activeCount = Math.max(1, Math.round(value / 10)); return <div className="ledger-row"><div><span className={`ledger-status ${tone}`} /><span>{label}</span></div><strong>{value}%</strong><div className="evidence-marks" aria-label={`${value}% evidence estimate`}>{Array.from({ length: 10 }, (_, index) => <i key={index} className={index < activeCount ? "is-active" : ""} />)}</div></div>; }
 
-function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolders, onAssignFolder }: { onResume: () => void; favorites: string[]; onToggleFavorite: (title: string) => void; favoriteFolders: Record<string, string>; onAssignFolder: (title: string, folder: string) => void }) {
-  const [sort, setSort] = useState<SortMode>("recent");
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
-  const [query, setQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [topic, setTopic] = useState("All topics");
-  const [folder, setFolder] = useState("All folders");
-  const [dbObjects, setDbObjects] = useState<Array<any>>([]);
+function LearningLibrary({
+  onResume,
+  favorites,
+  onToggleFavorite,
+  favoriteFolders,
+  onAssignFolder,
+  onSelectProgress,
+}: {
+  onResume: () => void;
+  favorites: string[];
+  onToggleFavorite: (title: string) => void;
+  favoriteFolders: Record<string, string>;
+  onAssignFolder: (title: string, folder: string) => void;
+  onSelectProgress?: () => void;
+}) {
+  const [filterState, setFilterState] = useState<"all" | "active" | "onhold" | "completed">("all");
+  const [sortMode, setSortMode] = useState<"recent" | "mastery" | "title">("recent");
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [dbFolders, setDbFolders] = useState<Array<any>>([]);
 
   useEffect(() => {
     fetchApi<Array<any>>("/activities")
       .then((data) => {
-        if (Array.isArray(data)) {
-          setDbObjects(data.map((item) => ({
-            type: (item.type || "ACTIVITY").toUpperCase(),
-            title: item.title || "Untitled Activity",
-            description: item.purpose || item.change_note || "Learning activity object",
-            meta: item.estimated_minutes ? `${item.estimated_minutes} min estimated` : "Active object",
-            action: "Open",
-            accent: item.type === "quiz" ? "coral" : item.type === "practice" ? "blue" : "ink",
-            topic: item.topic || "General",
-            date: item.created_at || new Date().toISOString(),
-          })));
+        if (Array.isArray(data) && data.length > 0) {
+          setDbFolders(
+            data.map((item, idx) => ({
+              id: item.id || `folder-${idx}`,
+              title: item.title || "Study Module",
+              chatsCount: item.chats_count || item.estimated_minutes || (128 - idx * 25),
+              createdDate: item.created_at ? new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Jan 10, 2026",
+              mastery: item.mastery || Math.max(0, 68 - idx * 15),
+              lastActivity: item.purpose || item.topic || "Discussed concepts · 2h ago",
+              status: idx === 0 || idx === 1 || idx === 2 ? "active" : idx === 3 ? "onhold" : "completed",
+              iconType: idx % 5 === 0 ? "code" : idx % 5 === 1 ? "math" : idx % 5 === 2 ? "physics" : idx % 5 === 3 ? "writing" : "book",
+            }))
+          );
         }
       })
-      .catch(() => setDbObjects([]));
+      .catch(() => {});
   }, []);
 
-  const folders = ["All folders", "Unsorted", ...Array.from(new Set(Object.values(favoriteFolders).filter(Boolean)))];
-  const topics = ["All topics", ...Array.from(new Set(dbObjects.map((item) => item.topic)))];
+  const defaultFolders = [
+    {
+      id: "f1",
+      title: "Object-Oriented Programming",
+      chatsCount: 128,
+      createdDate: "Jan 10, 2026",
+      mastery: 68,
+      lastActivity: "Discussed polymorphism · 2h ago",
+      status: "active",
+      iconType: "code",
+    },
+    {
+      id: "f2",
+      title: "Linear Algebra",
+      chatsCount: 86,
+      createdDate: "Jan 6, 2026",
+      mastery: 54,
+      lastActivity: "Matrix operations · Yesterday",
+      status: "active",
+      iconType: "math",
+    },
+    {
+      id: "f3",
+      title: "Physics – Mechanics",
+      chatsCount: 74,
+      createdDate: "Jan 2, 2026",
+      mastery: 33,
+      lastActivity: "Newton's laws · 2 days ago",
+      status: "active",
+      iconType: "physics",
+    },
+    {
+      id: "f4",
+      title: "Technical Writing",
+      chatsCount: 41,
+      createdDate: "Dec 28, 2025",
+      mastery: 18,
+      lastActivity: "Essay structure · 4 days ago",
+      status: "onhold",
+      iconType: "writing",
+    },
+    {
+      id: "f5",
+      title: "Discrete Mathematics",
+      chatsCount: 0,
+      createdDate: "Dec 12, 2025",
+      mastery: 0,
+      lastActivity: "Start learning",
+      status: "completed",
+      iconType: "book",
+    },
+  ];
 
-  const visible = dbObjects
-    .filter((item) => {
-      const haystack = `${item.title} ${item.description} ${item.topic}`.toLowerCase();
-      const itemFolder = favoriteFolders[item.title] || "Unsorted";
-      return (
-        (topic === "All topics" || item.topic === topic) &&
-        (!favoritesOnly || favorites.includes(item.title)) &&
-        (!query || haystack.includes(query.toLowerCase())) &&
-        (folder === "All folders" || itemFolder === folder)
-      );
-    })
-    .sort((a, b) =>
-      sort === "topic"
-        ? a.topic.localeCompare(b.topic)
-        : sort === "oldest"
-        ? a.date.localeCompare(b.date)
-        : b.date.localeCompare(a.date)
-    );
+  const foldersList = dbFolders.length > 0 ? dbFolders : defaultFolders;
+
+  const filteredFolders = foldersList
+    .filter((f) => filterState === "all" || f.status === filterState)
+    .sort((a, b) => {
+      if (sortMode === "mastery") return b.mastery - a.mastery;
+      if (sortMode === "title") return a.title.localeCompare(b.title);
+      return 0;
+    });
 
   const handleCreateFolder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFolderName.trim()) return;
-    const title = favorites[0] || visible[0]?.title;
-    if (title) {
-      onAssignFolder(title, newFolderName.trim());
-      toast.success(`Folder "${newFolderName.trim()}" created.`);
-    } else {
-      toast.info(`Folder "${newFolderName.trim()}" created.`);
-    }
+    onAssignFolder(newFolderName.trim(), "Active");
+    toast.success(`Folder "${newFolderName.trim()}" created.`);
     setNewFolderName("");
     setIsFolderDialogOpen(false);
   };
 
+  const getFolderIcon = (type: string) => {
+    switch (type) {
+      case "code":
+        return (
+          <div className="size-11 rounded-2xl bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300 flex items-center justify-center font-mono font-bold text-sm shrink-0">
+            &lt;/&gt;
+          </div>
+        );
+      case "math":
+        return (
+          <div className="size-11 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-serif font-bold italic text-base shrink-0">
+            f(x)
+          </div>
+        );
+      case "physics":
+        return (
+          <div className="size-11 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
+            <Atom className="size-5" />
+          </div>
+        );
+      case "writing":
+        return (
+          <div className="size-11 rounded-2xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-300 flex items-center justify-center shrink-0">
+            <PenTool className="size-5" />
+          </div>
+        );
+      default:
+        return (
+          <div className="size-11 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
+            <Book className="size-5" />
+          </div>
+        );
+    }
+  };
+
+  const getFolderProgressColor = (mastery: number) => {
+    if (mastery >= 60) return "bg-purple-600 dark:bg-purple-400";
+    if (mastery >= 40) return "bg-emerald-500 dark:bg-emerald-400";
+    if (mastery >= 20) return "bg-amber-500 dark:bg-amber-400";
+    if (mastery > 0) return "bg-blue-500 dark:bg-blue-400";
+    return "bg-slate-300 dark:bg-slate-700";
+  };
+
   return (
-    <div className="secondary-page library-page max-w-6xl mx-auto p-4 sm:p-6 space-y-6 text-slate-900 dark:text-slate-100">
-      {/* Intro Section */}
-      <section className="secondary-intro library-intro flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-6 border-b border-[#DDE8DF] dark:border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="eyebrow uppercase font-mono tracking-widest text-[#6D7E78] dark:text-emerald-400 font-semibold text-xs">
-              MY LEARNING
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-[#E7EFE7] dark:bg-[#003F3F] text-[#003F3F] dark:text-[#B8FF4D] text-[10px] font-bold font-mono border border-[#005A57]/30">
-              {visible.length} {visible.length === 1 ? "object" : "objects"}
-            </span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#102B2B] dark:text-white mt-1">
-            Objects that keep learning with you
-          </h1>
-          <p className="text-sm sm:text-base text-[#6D7E78] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
-            Your retrieval sets, practice quizzes, and guided reviews adapt dynamically as your evidence changes.
-          </p>
-        </div>
-        <img
-          src="/assets/my-learning-desk-cards.jpg"
-          alt="Study notes"
-          className="rounded-2xl border border-[#DDE8DF] dark:border-[#005A57] shadow-sm object-cover w-full md:w-56 h-36 shrink-0"
-        />
-      </section>
-
-      {/* Simplified Search & Toolbar Controls */}
-      <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 p-3 sm:p-4 rounded-2xl shadow-xs">
-          {/* Enhanced Search Input */}
-          <div className="relative flex-1 min-w-[240px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 size-4" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search saved learning objects..."
-              className="w-full pl-10 pr-9 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-[#102B2B] dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#005A57]/30 transition-all"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold"
-              >
-                ×
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto shrink-0 pt-1 sm:pt-0">
-            {/* Filter Toggle Button */}
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
-                showFilters || topic !== "All topics" || folder !== "All folders"
-                  ? "bg-[#005A57] text-white border-[#005A57]"
-                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <Filter className="size-3.5" />
-              <span>Filters</span>
-              {(topic !== "All topics" || folder !== "All folders") && (
-                <span className="size-2 rounded-full bg-[#B8FF4D]" />
-              )}
-            </button>
-
-            {/* Favorites Toggle */}
-            <button
-              type="button"
-              onClick={() => setFavoritesOnly(!favoritesOnly)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
-                favoritesOnly
-                  ? "bg-[#003F3F] text-[#B8FF4D] border-[#005A57]"
-                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <BookmarkCheck className="size-3.5" />
-              <span>Favorites ({favorites.length})</span>
-            </button>
-
-            {/* New Folder Dialog Trigger */}
-            <button
-              type="button"
-              onClick={() => setIsFolderDialogOpen(true)}
-              className="px-3.5 py-2 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
-            >
-              <Plus className="size-3.5" />
-              <span>New folder</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Collapsible Secondary Filters */}
-        {showFilters && (
-          <div className="flex flex-wrap items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-medium">Topic:</span>
-              <select
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-[#102B2B] dark:text-slate-200 focus:outline-none"
-              >
-                {topics.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-medium">Folder:</span>
-              <select
-                value={folder}
-                onChange={(e) => setFolder(e.target.value)}
-                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-[#102B2B] dark:text-slate-200 focus:outline-none"
-              >
-                {folders.map((f) => (
-                  <option key={f}>{f}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-medium">Sort:</span>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortMode)}
-                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-[#102B2B] dark:text-slate-200 focus:outline-none"
-              >
-                <option value="recent">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="topic">By topic</option>
-              </select>
-            </div>
-
-            {(topic !== "All topics" || folder !== "All folders") && (
-              <button
-                type="button"
-                onClick={() => {
-                  setTopic("All topics");
-                  setFolder("All folders");
-                }}
-                className="text-emerald-700 dark:text-emerald-400 font-bold hover:underline ml-auto"
-              >
-                Reset filters
-              </button>
-            )}
-          </div>
-        )}
+    <div className="secondary-page library-page w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 text-slate-900 dark:text-slate-100">
+      {/* Intro Header */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#102B2B] dark:text-white">
+          My learning
+        </h1>
+        <p className="text-xs sm:text-sm text-[#6D7E78] dark:text-slate-400 mt-1">
+          Everything you're studying, all in one place.
+        </p>
       </div>
 
-      {/* Grid of Learning Object Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {visible.map((item) => (
-          <LearningObject
-            key={item.title}
-            {...item}
-            favorite={favorites.includes(item.title)}
-            favoriteFolder={favoriteFolders[item.title] || "Unsorted"}
-            favoriteFolders={folders.slice(1)}
-            onToggleFavorite={onToggleFavorite}
-            onAssignFolder={onAssignFolder}
-            onClick={onResume}
-          />
-        ))}
+      {/* Top 4 Stats Metric Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Understanding Card */}
+        <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300">
+                <BookOpen className="size-4" />
+              </span>
+              Understanding
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold text-[#102B2B] dark:text-white">72%</div>
+            <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Overall mastery</div>
+          </div>
+          <div className="mt-3">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 text-xs font-semibold border border-purple-200/60 dark:border-purple-800/40">
+              ↑ 8% this week
+            </span>
+          </div>
+          <div className="absolute right-0 bottom-0 pointer-events-none opacity-20 dark:opacity-10">
+            <svg width="120" height="40" viewBox="0 0 120 40" fill="none">
+              <path d="M0 30 Q 30 10, 60 25 T 120 5 L 120 40 L 0 40 Z" fill="#8B5CF6" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Study Streak Card */}
+        <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-300">
+                <Flame className="size-4" />
+              </span>
+              Study streak
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold text-[#102B2B] dark:text-white">14</div>
+            <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Days in a row</div>
+          </div>
+          <div className="mt-3">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200/60 dark:border-amber-800/40">
+              Keep it up! 🔥
+            </span>
+          </div>
+        </div>
+
+        {/* AI Interactions Card */}
+        <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300">
+                <MessageSquare className="size-4" />
+              </span>
+              AI interactions
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold text-[#102B2B] dark:text-white">284</div>
+            <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Conversations</div>
+          </div>
+          <div className="mt-3">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200/60 dark:border-emerald-800/40">
+              ↑ 18% this week
+            </span>
+          </div>
+        </div>
+
+        {/* Knowledge Gained Card */}
+        <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-[#6D7E78] dark:text-slate-400 flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-300">
+                <Brain className="size-4" />
+              </span>
+              Knowledge gained
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold text-[#102B2B] dark:text-white">126</div>
+            <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">New concepts</div>
+          </div>
+          <div className="mt-3">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200/60 dark:border-blue-800/40">
+              ↑ 21% this week
+            </span>
+          </div>
+        </div>
       </div>
 
-      {visible.length === 0 && (
-        <div className="text-center py-12 bg-[#FBFAF6] dark:bg-slate-900/60 border border-dashed border-[#DDE8DF] dark:border-slate-800 rounded-2xl space-y-2">
-          <Sparkles className="size-8 mx-auto text-slate-400 dark:text-slate-500" />
-          <h3 className="text-sm font-bold text-[#102B2B] dark:text-slate-200">No learning objects found</h3>
-          <p className="text-xs text-[#6D7E78] dark:text-slate-400">
-            Start a new study session in the workspace to generate practice quizzes and retrieval sets.
-          </p>
+      {/* Main Two Column Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left Column: Your Folders */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Toolbar Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            <h2 className="text-lg sm:text-xl font-bold text-[#102B2B] dark:text-white">Your folders</h2>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center bg-[#F5F3EC] dark:bg-slate-800/80 p-1 rounded-xl border border-[#DDE8DF] dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setFilterState("all")}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    filterState === "all"
+                      ? "bg-[#003F3F] text-[#B8FF4D] shadow-2xs"
+                      : "text-[#6D7E78] dark:text-slate-400 hover:text-[#102B2B] dark:hover:text-white"
+                  }`}
+                >
+                  All ({foldersList.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterState("active")}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    filterState === "active"
+                      ? "bg-[#003F3F] text-[#B8FF4D] shadow-2xs"
+                      : "text-[#6D7E78] dark:text-slate-400 hover:text-[#102B2B] dark:hover:text-white"
+                  }`}
+                >
+                  Active ({foldersList.filter((f) => f.status === "active").length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterState("onhold")}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    filterState === "onhold"
+                      ? "bg-[#003F3F] text-[#B8FF4D] shadow-2xs"
+                      : "text-[#6D7E78] dark:text-slate-400 hover:text-[#102B2B] dark:hover:text-white"
+                  }`}
+                >
+                  On hold ({foldersList.filter((f) => f.status === "onhold").length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterState("completed")}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    filterState === "completed"
+                      ? "bg-[#003F3F] text-[#B8FF4D] shadow-2xs"
+                      : "text-[#6D7E78] dark:text-slate-400 hover:text-[#102B2B] dark:hover:text-white"
+                  }`}
+                >
+                  Completed ({foldersList.filter((f) => f.status === "completed").length})
+                </button>
+              </div>
+
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as any)}
+                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs font-semibold text-[#102B2B] dark:text-slate-200 focus:outline-none cursor-pointer"
+              >
+                <option value="recent">Recent activity</option>
+                <option value="mastery">Highest mastery</option>
+                <option value="title">Alphabetical</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Folder Rows List */}
+          <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl divide-y divide-[#DDE8DF] dark:divide-slate-800/70 overflow-hidden shadow-2xs">
+            {filteredFolders.map((folder) => (
+              <div
+                key={folder.id || folder.title}
+                onClick={onResume}
+                className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#F5F3EC] dark:hover:bg-slate-800/50 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  {getFolderIcon(folder.iconType)}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-bold text-[#102B2B] dark:text-white group-hover:text-[#005A57] dark:group-hover:text-[#B8FF4D] transition-colors truncate">
+                      {folder.title}
+                    </h3>
+                    <div className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">
+                      Created {folder.createdDate} · {folder.chatsCount} chats
+                    </div>
+                    <div className="w-full max-w-xs bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${getFolderProgressColor(folder.mastery)}`}
+                        style={{ width: `${folder.mastery}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-6 sm:gap-8 shrink-0 self-end sm:self-center">
+                  <div className="text-left sm:text-right">
+                    <div className="text-base font-bold text-[#102B2B] dark:text-white">{folder.mastery}%</div>
+                    <div className="text-[11px] text-[#6D7E78] dark:text-slate-400 font-medium">Mastery</div>
+                  </div>
+
+                  <div className="text-left sm:text-right min-w-[130px]">
+                    <div className="text-[11px] font-bold text-[#005A57] dark:text-[#B8FF4D] uppercase font-mono tracking-wider">
+                      Last activity
+                    </div>
+                    <div className="text-xs font-medium text-[#102B2B] dark:text-slate-200 truncate max-w-[160px]">
+                      {folder.lastActivity}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onResume();
+                    }}
+                    className="size-9 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 group-hover:border-[#005A57] group-hover:bg-[#005A57] group-hover:text-white dark:group-hover:bg-[#B8FF4D] dark:group-hover:text-[#003F3F] flex items-center justify-center transition-all shrink-0"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* New Folder Action Button */}
+          <button
+            type="button"
+            onClick={() => setIsFolderDialogOpen(true)}
+            className="w-full py-4 border-2 border-dashed border-[#DDE8DF] dark:border-slate-800 hover:border-[#005A57] dark:hover:border-[#B8FF4D] rounded-2xl text-xs sm:text-sm font-bold text-[#005A57] dark:text-[#B8FF4D] bg-[#FBFAF6]/50 dark:bg-slate-900/40 hover:bg-[#E7EFE7] dark:hover:bg-slate-800/60 flex items-center justify-center gap-2 transition-all cursor-pointer"
+          >
+            <Plus className="size-4" />
+            <span>New folder</span>
+          </button>
         </div>
-      )}
+
+        {/* Right Column: Sidebar Widgets */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Widget 1: Learning Path Gauge */}
+          <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-[#102B2B] dark:text-white">Learning path</h3>
+              <button
+                type="button"
+                onClick={onSelectProgress || onResume}
+                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                View all
+              </button>
+            </div>
+
+            <div>
+              <h4 className="text-base font-bold text-[#102B2B] dark:text-white">BSc. Computer Science</h4>
+              <p className="text-xs text-[#6D7E78] dark:text-slate-400">2nd Year · Semester 2</p>
+            </div>
+
+            {/* Arc Progress Ring */}
+            <div className="py-2 flex flex-col items-center justify-center relative">
+              <svg className="w-44 h-24" viewBox="0 0 160 90">
+                <path
+                  d="M 15 80 A 65 65 0 0 1 145 80"
+                  fill="none"
+                  stroke="#E2E8F0"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  className="dark:stroke-slate-800"
+                />
+                <path
+                  d="M 15 80 A 65 65 0 0 1 145 80"
+                  fill="none"
+                  stroke="url(#arc-gradient)"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  strokeDasharray="204"
+                  strokeDashoffset={204 * (1 - 0.32)}
+                />
+                <defs>
+                  <linearGradient id="arc-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#4F46E5" />
+                    <stop offset="100%" stopColor="#818CF8" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute bottom-1 text-center">
+                <div className="text-2xl font-bold text-[#102B2B] dark:text-white">32%</div>
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400">Program progress</div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-[#DDE8DF] dark:border-slate-800 flex items-center justify-between text-xs text-[#6D7E78] dark:text-slate-400">
+              <span>Target: May 2026</span>
+              <span className="font-semibold text-[#102B2B] dark:text-slate-200">78 days remaining</span>
+            </div>
+          </div>
+
+          {/* Widget 2: Today at a glance */}
+          <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-[#102B2B] dark:text-white">Today at a glance</h3>
+                <p className="text-xs text-[#6D7E78] dark:text-slate-400">Where you left off</p>
+              </div>
+              <span className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300 shrink-0">
+                <Target className="size-4" />
+              </span>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800/80 border border-[#DDE8DF] dark:border-slate-700/80 rounded-xl p-4 space-y-3">
+              <div>
+                <h4 className="text-sm font-bold text-[#102B2B] dark:text-white">Polymorphism foundations</h4>
+                <p className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">Object-Oriented Programming</p>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <span>Progress</span>
+                  <span>63%</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-purple-600 dark:bg-purple-400 h-full rounded-full w-[63%]" />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onResume}
+                className="w-full py-2 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-purple-200/60 dark:border-purple-800/40"
+              >
+                <span>Go to last topic</span>
+                <ChevronRight className="size-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Widget 3: Activity insights */}
+          <div className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-5 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-[#102B2B] dark:text-white">Activity insights</h3>
+              <select className="bg-transparent text-xs font-semibold text-[#6D7E78] dark:text-slate-400 focus:outline-none cursor-pointer">
+                <option>This week</option>
+                <option>This month</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700/80 p-3 rounded-xl">
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400 truncate">Flashcards reviewed</div>
+                <div className="flex items-baseline justify-between mt-1">
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-white">128</span>
+                  <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
+                    <path d="M0 12 Q 10 4, 20 8 T 40 2" fill="none" stroke="#10B981" strokeWidth="2" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700/80 p-3 rounded-xl">
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400 truncate">Questions answered</div>
+                <div className="flex items-baseline justify-between mt-1">
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-white">96</span>
+                  <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
+                    <path d="M0 14 Q 10 2, 20 10 T 40 4" fill="none" stroke="#8B5CF6" strokeWidth="2" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700/80 p-3 rounded-xl">
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400 truncate">Quiz accuracy</div>
+                <div className="flex items-baseline justify-between mt-1">
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-white">78%</span>
+                  <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
+                    <path d="M0 10 Q 10 14, 20 4 T 40 8" fill="none" stroke="#3B82F6" strokeWidth="2" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700/80 p-3 rounded-xl">
+                <div className="text-[11px] font-medium text-[#6D7E78] dark:text-slate-400 truncate">Time learned</div>
+                <div className="flex items-baseline justify-between mt-1">
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-white">8h 24m</span>
+                  <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
+                    <path d="M0 14 Q 10 8, 20 12 T 40 2" fill="none" stroke="#F59E0B" strokeWidth="2" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Widget 4: Motivational Card */}
+          <div className="bg-gradient-to-br from-purple-100/90 via-indigo-50/80 to-purple-50 dark:from-purple-950/50 dark:via-indigo-950/40 dark:to-slate-900 border border-purple-200/80 dark:border-purple-800/50 rounded-2xl p-5 relative overflow-hidden space-y-2 shadow-2xs">
+            <h4 className="text-base font-bold text-[#102B2B] dark:text-white">Small steps, big mastery.</h4>
+            <p className="text-xs text-[#6D7E78] dark:text-slate-300 max-w-[200px] leading-relaxed">
+              Your consistency is building knowledge that lasts.
+            </p>
+
+            <button
+              type="button"
+              onClick={onSelectProgress || onResume}
+              className="inline-flex items-center gap-1 text-xs font-bold text-purple-700 dark:text-purple-300 hover:underline pt-2 cursor-pointer"
+            >
+              <span>See your progress</span>
+              <ChevronRight className="size-3.5" />
+            </button>
+
+            <div className="absolute right-0 bottom-0 pointer-events-none opacity-40 dark:opacity-20">
+              <svg width="110" height="80" viewBox="0 0 110 80" fill="none">
+                <path d="M40 80 L75 25 L110 80 Z" fill="#8B5CF6" />
+                <path d="M0 80 L45 35 L90 80 Z" fill="#A78BFA" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Folder Creation Dialog Component */}
       <Dialog open={isFolderDialogOpen} onOpenChange={setIsFolderDialogOpen}>
@@ -1193,7 +1534,7 @@ function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolder
                 onChange={(e) => setNewFolderName(e.target.value)}
                 placeholder="e.g. CSC 301 · Algorithms"
                 autoFocus
-                className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs text-[#102B2B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#005A57]/30"
+                className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-sm text-[#102B2B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#005A57]/30"
               />
             </div>
 
@@ -1207,7 +1548,7 @@ function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolder
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] font-bold text-xs rounded-xl shadow-xs transition-all"
+                className="px-4 py-2 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all"
               >
                 Create folder
               </button>
