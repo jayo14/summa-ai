@@ -498,11 +498,13 @@ function WorkspaceView(props: WorkspaceProps) {
               <ThinkingBar label="Summa is retrieving concept hierarchy & analyzing code..." />
             </div>
           )}
+          <div className="mt-6">
+            <ComposerPanel {...props} active />
+          </div>
           <div ref={bottomRef} aria-hidden="true" />
         </div>
       </div>
       {showScrollButton && <ScrollButton onClick={scrollToBottom} />}
-      <ComposerPanel {...props} active />
     </div>
   );
 }

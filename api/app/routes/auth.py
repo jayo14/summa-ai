@@ -118,22 +118,26 @@ async def signup(payload: AuthLoginRequest):
     if not _dev_fallback_enabled():
         raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
+    user_store = UserStore()
+    user_obj = {
+        "id": user_id,
+        "email": payload.email.lower().strip(),
+        "name": name,
+        "avatar": payload.avatar,
+        "role": role,
+        "status": "active",
+        "provider": "credentials",
+        "email_verified": True,
+        "onboarded": False,
+        "onboarding_data": {},
+    }
+    await user_store.save_user(user_id, user_obj)
+
     token = _create_mock_jwt(user_id)
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "id": user_id,
-            "email": payload.email,
-            "name": name,
-            "avatar": payload.avatar,
-            "role": role,
-            "status": "active",
-            "provider": "credentials",
-            "email_verified": True,
-            "onboarded": False,
-            "onboarding_data": {},
-        },
+        "user": user_obj,
     }
 
 
