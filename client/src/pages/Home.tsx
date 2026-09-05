@@ -456,7 +456,7 @@ export default function Home() {
         <div className="sidebar-topline"><SummaLogo /><button className="mobile-close-button" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={19} /></button></div>
         <button type="button" className="new-session-button" onClick={startNewSession}><Plus size={16} /> New learning</button>
         <nav className="primary-nav" aria-label="Learning areas"><span className="nav-caption">LEARNING SPACE</span>{navItems.map((item) => { const Icon = item.icon; return <button type="button" className={`nav-item ${activeView === item.id ? "active" : ""}`} onClick={() => selectView(item.id)} key={item.id}><Icon size={16} /><span>{item.label}</span>{item.id === "learning" && <small>{dbActivities.length}</small>}</button>; })}</nav>
-        <div className="flex-1 overflow-y-auto min-h-0 pr-1 space-y-4">
+        <div className="flex-1 overflow-y-auto min-h-0 my-2 pr-1 space-y-4">
           <section className="history-section" aria-labelledby="folders-label">
             <div className="section-title-row">
               <span id="folders-label" className="nav-caption">FOLDERS</span>
