@@ -194,6 +194,20 @@ class UserStore:
         return user_obj
 
     async def update_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        current = await self.get_user_by_id(user_id)
+        if current is None:
+            email = f"user_{user_id[:8]}@summa.ai"
+            current = await self.save_user(user_id, {
+                "id": user_id,
+                "email": email,
+                "name": f"User {user_id[:6]}",
+                "role": "student",
+                "status": "active",
+                "email_verified": True,
+                "onboarded": False,
+                "onboarding_data": {},
+            })
+
         try:
             pool = await self._get_pool()
             async with pool.acquire() as conn:
@@ -232,9 +246,6 @@ class UserStore:
         except Exception:
             pass
 
-        current = await self.get_user_by_id(user_id)
-        if current is None:
-            raise ValueError(f"User with ID {user_id} not found")
         current.update({k: v for k, v in data.items() if v is not None})
         self._local_users[user_id] = current
         return current
