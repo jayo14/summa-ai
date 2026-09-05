@@ -95,3 +95,45 @@
 .interactive-card::before,.progress-moment::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,#ec82b5,#8fa9ff,#78d8bd);opacity:.76}
 .interactive-card:hover,.progress-moment:hover{transform:translateY(-3px);border-color:rgba(122,135,219,.32);box-shadow:0 24px 54px rgba(86,96,169,.15)}
 .interactive-heading h3,.progress-copy h3{letter-spacing:-.03em}.difficulty-pill{border:1px solid rgba(117,140,206,.18);background:rgba(255,255,255,.56);box-shadow:0 4px 12px rgba(99,104,164,.06)}.code-sample{border:1px solid rgba(129,151,212,.18);background:linear-gradient(135deg,rgba(51,62,114,.92),rgba(80,73,140,.9));box-shadow:inset 0 1px rgba(255,255,255,.14),0 10px 24px rgba(50,59,111,.12)}.practice-input{border-color:rgba(129,145,192,.18);background:rgba(255,255,255,.48);transition:border-color .2s var(--aether-ease),box-shadow .2s var(--aether-ease)}.practice-input:focus{border-color:rgba(116,131,218,.55);box-shadow:0 0 0 4px rgba(126,135,226,.1)}.interactive-primary{box-shadow:0 8px 18px rgba(112,100,208,.16);transition:transform .18s var(--aether-ease),box-shadow .18s var(--aether-ease)}.interactive-primary:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(112,100,208,.24)}.source-picker-item{transition:transform .18s var(--aether-ease),background .18s var(--aether-ease)}.source-picker-item:hover{transform:translateX(3px);background:rgba(255,255,255,.58)}.dark-mode .interactive-card,.dark-mode .progress-moment{border-color:rgba(192,207,255,.16);background:linear-gradient(135deg,rgba(36,48,89,.74),rgba(53,47,96,.62));box-shadow:0 18px 44px rgba(5,10,38,.22)}.dark-mode .difficulty-pill,.dark-mode .practice-input{background:rgba(255,255,255,.07);border-color:rgba(198,210,255,.16)}@media(prefers-reduced-motion:reduce){.interactive-card,.progress-moment,.interactive-primary,.source-picker-item{transition:none}.interactive-card:hover,.progress-moment:hover,.interactive-primary:hover,.source-picker-item:hover{transform:none}}
+
+/* Theme-adaptive custom small scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #005A57 #DDE8DF;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #DDE8DF;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #005A57;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #003F3F;
+}
+
+:is(.dark-mode, .dark, html.dark) {
+  scrollbar-color: #005A57 #181E1E;
+}
+
+:is(.dark-mode, .dark, html.dark) ::-webkit-scrollbar-track {
+  background: #181E1E;
+}
+
+:is(.dark-mode, .dark, html.dark) ::-webkit-scrollbar-thumb {
+  background: #005A57;
+}
+
+:is(.dark-mode, .dark, html.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #B8FF4D;
+}
+
