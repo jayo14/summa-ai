@@ -408,7 +408,7 @@ export default function Home() {
         setSessionStarted(true);
         fetchApi<{ messages: Array<{ id: string; role: string; content: string }> }>(`/conversations/${urlCid}`)
           .then((data) => {
-            if (data && Array.isArray(data.messages)) {
+            if (data && Array.isArray(data.messages) && data.messages.length > 0) {
               setMessages(
                 data.messages.map((m, idx) => ({
                   id: Number(m.id) || Date.now() + idx,
@@ -416,8 +416,6 @@ export default function Home() {
                   content: m.content,
                 }))
               );
-            } else {
-              setMessages([]);
             }
           })
           .catch((err) => console.debug("Error loading route conversation messages:", err));
