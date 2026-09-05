@@ -291,8 +291,9 @@ export default function Home() {
       }
     }
 
-    if (activeCid && activeCid !== "default-session" && !activeCid.startsWith("f2b37d07")) {
-      fetchApi(`/conversations/${activeCid}/messages`, {
+    const cidForPosting = activeCid;
+    if (cidForPosting && cidForPosting !== "default-session" && !cidForPosting.startsWith("f2b37d07")) {
+      await fetchApi(`/conversations/${cidForPosting}/messages`, {
         method: "POST",
         body: JSON.stringify({ role: "user", content: clean }),
       }).catch(() => {});
