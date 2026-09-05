@@ -29,8 +29,8 @@ function SettingRow({
   return (
     <div className="setting-row flex flex-col md:flex-row md:items-center justify-between gap-4 py-5 border-b border-[#DDE8DF] dark:border-slate-800/80 last:border-0">
       <div className="max-w-2xl">
-        <h3 className="text-sm font-bold text-[#102B2B] dark:text-slate-100">{title}</h3>
-        <p className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5 leading-relaxed">{description}</p>
+        <h3 className="text-base font-bold text-[#102B2B] dark:text-slate-100">{title}</h3>
+        <p className="text-xs sm:text-sm text-[#6D7E78] dark:text-slate-400 mt-1 leading-relaxed">{description}</p>
       </div>
       <div className="flex-shrink-0">{children}</div>
     </div>
@@ -105,17 +105,17 @@ export function SettingsView({
       {/* Intro Header */}
       <section className="secondary-intro plain-intro flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#DDE8DF] dark:border-slate-800 pb-6">
         <div>
-          <span className="eyebrow uppercase font-mono tracking-widest text-[#6D7E78] dark:text-emerald-400 font-semibold text-[10px]">
+          <span className="eyebrow uppercase font-mono tracking-widest text-[#6D7E78] dark:text-emerald-400 font-bold text-xs">
             ACCOUNT & PREFERENCES
           </span>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-normal text-[#102B2B] dark:text-white mt-1 tracking-tight">
             Profile & Learning Settings
           </h1>
-          <p className="text-xs sm:text-sm text-[#6D7E78] dark:text-slate-400 mt-1 max-w-2xl">
+          <p className="text-sm sm:text-base text-[#6D7E78] dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
             Customize your display identity, study avatar, memory retention controls, and account safeguards.
           </p>
         </div>
-        <div className="connect-status inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#005A57] bg-[#E7EFE7] dark:bg-[#003F3F]/60 text-[#003F3F] dark:text-[#B8FF4D] text-xs font-bold font-mono shrink-0">
+        <div className="connect-status inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#005A57] bg-[#E7EFE7] dark:bg-[#003F3F]/60 text-[#003F3F] dark:text-[#B8FF4D] text-xs sm:text-sm font-bold font-mono shrink-0">
           <span className="size-2 rounded-full bg-[#B8FF4D] animate-pulse" />
           <span>SummaStudy Synced</span>
         </div>
@@ -128,15 +128,15 @@ export function SettingsView({
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#DDE8DF] dark:border-slate-800 pb-5">
           <div>
-            <h2 className="text-base font-bold text-[#102B2B] dark:text-white">Public Profile</h2>
-            <p className="text-xs text-[#6D7E78] dark:text-slate-400 mt-0.5">
+            <h2 className="text-lg font-bold text-[#102B2B] dark:text-white">Public Profile</h2>
+            <p className="text-xs sm:text-sm text-[#6D7E78] dark:text-slate-400 mt-0.5">
               This information is displayed on your study dashboard and session headers.
             </p>
           </div>
           <button
             type="submit"
             disabled={isSaving}
-            className="px-5 py-2.5 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] font-bold text-xs rounded-full shadow-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer shrink-0"
+            className="px-5 py-2.5 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] font-bold text-xs sm:text-sm rounded-full shadow-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer shrink-0"
           >
             {isSaving ? (
               <>
@@ -177,8 +177,8 @@ export function SettingsView({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xs font-bold text-[#102B2B] dark:text-slate-200">Profile Photo</h3>
-            <p className="text-[11px] text-[#6D7E78] dark:text-slate-400">
+            <h3 className="text-sm font-bold text-[#102B2B] dark:text-slate-200">Profile Photo</h3>
+            <p className="text-xs text-[#6D7E78] dark:text-slate-400">
               Upload a custom PNG, JPG, or GIF (max 5MB).
             </p>
 
@@ -193,7 +193,7 @@ export function SettingsView({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3.5 py-1.5 bg-[#DDE8DF] hover:bg-[#c8d9cc] dark:bg-slate-800 dark:hover:bg-slate-700 text-[#003F3F] dark:text-slate-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-[#005A57]/20"
+                className="px-3.5 py-1.5 bg-[#DDE8DF] hover:bg-[#c8d9cc] dark:bg-slate-800 dark:hover:bg-slate-700 text-[#003F3F] dark:text-slate-200 text-xs sm:text-sm font-semibold rounded-lg transition-colors cursor-pointer border border-[#005A57]/20"
               >
                 Upload avatar
               </button>
@@ -201,7 +201,7 @@ export function SettingsView({
                 <button
                   type="button"
                   onClick={handleRemoveAvatar}
-                  className="px-3.5 py-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                  className="px-3.5 py-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs sm:text-sm font-semibold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <Trash2 className="size-3" />
                   Remove
@@ -214,7 +214,7 @@ export function SettingsView({
         {/* Input Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-[#DDE8DF] dark:border-slate-800">
           <div>
-            <label className="block text-xs font-bold text-[#102B2B] dark:text-slate-200 mb-1.5">
+            <label className="block text-xs sm:text-sm font-bold text-[#102B2B] dark:text-slate-200 mb-1.5">
               Display Name
             </label>
             <div className="relative">
@@ -224,13 +224,13 @@ export function SettingsView({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your full name"
-                className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs text-[#102B2B] dark:text-white placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57]/30 focus:border-[#005A57] transition-all"
+                className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-sm text-[#102B2B] dark:text-white placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57]/30 focus:border-[#005A57] transition-all"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#102B2B] dark:text-slate-200 mb-1.5">
+            <label className="block text-xs sm:text-sm font-bold text-[#102B2B] dark:text-slate-200 mb-1.5">
               Email Address
             </label>
             <div className="relative">
@@ -239,16 +239,16 @@ export function SettingsView({
                 type="email"
                 value={user?.email || ""}
                 disabled
-                className="w-full pl-10 pr-24 py-2.5 bg-[#F5F3EC] dark:bg-slate-800/30 border border-[#DDE8DF] dark:border-slate-800 rounded-xl text-xs text-[#6D7E78] dark:text-slate-400 cursor-not-allowed font-medium"
+                className="w-full pl-10 pr-24 py-2.5 bg-[#F5F3EC] dark:bg-slate-800/30 border border-[#DDE8DF] dark:border-slate-800 rounded-xl text-sm text-[#6D7E78] dark:text-slate-400 cursor-not-allowed font-medium"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#005A57] dark:text-[#B8FF4D] bg-[#E7EFE7] dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-full border border-[#005A57]/30 font-mono">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#005A57] dark:text-[#B8FF4D] bg-[#E7EFE7] dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-full border border-[#005A57]/30 font-mono">
                 Verified
               </span>
             </div>
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-[#102B2B] dark:text-slate-200 mb-1.5">
+            <label className="block text-xs sm:text-sm font-bold text-[#102B2B] dark:text-slate-200 mb-1.5">
               Bio / Study Focus
             </label>
             <div className="relative">
@@ -258,7 +258,7 @@ export function SettingsView({
                 onChange={(e) => setBio(e.target.value)}
                 rows={3}
                 placeholder="Share your major, active courses, or learning goals..."
-                className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs text-[#102B2B] dark:text-white placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57]/30 focus:border-[#005A57] transition-all resize-none"
+                className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800/60 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-sm text-[#102B2B] dark:text-white placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57]/30 focus:border-[#005A57] transition-all resize-none"
               />
             </div>
           </div>
@@ -267,7 +267,7 @@ export function SettingsView({
 
       {/* Learning & Memory Controls Sheet */}
       <section className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
-        <h2 className="text-base font-bold text-[#102B2B] dark:text-white pb-3 border-b border-[#DDE8DF] dark:border-slate-800">
+        <h2 className="text-lg font-bold text-[#102B2B] dark:text-white pb-3 border-b border-[#DDE8DF] dark:border-slate-800">
           Learning & Memory Controls
         </h2>
 
@@ -296,7 +296,7 @@ export function SettingsView({
               setExplanationPref(e.target.value);
               toast.success("Explanation style preference saved!");
             }}
-            className="px-3.5 py-2 bg-white dark:bg-slate-800 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs font-semibold text-[#003F3F] dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#005A57]/30 cursor-pointer"
+            className="px-3.5 py-2 bg-white dark:bg-slate-800 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs sm:text-sm font-semibold text-[#003F3F] dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#005A57]/30 cursor-pointer"
           >
             <option value="examples">Examples before abstractions</option>
             <option value="concepts">Concept-first breakdown</option>
@@ -310,7 +310,7 @@ export function SettingsView({
         >
           <button
             type="button"
-            className="px-3.5 py-1.5 bg-[#DDE8DF] hover:bg-[#c8d9cc] dark:bg-slate-800 dark:hover:bg-slate-700 text-[#003F3F] dark:text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1 transition-colors cursor-pointer border border-[#005A57]/20"
+            className="px-3.5 py-1.5 bg-[#DDE8DF] hover:bg-[#c8d9cc] dark:bg-slate-800 dark:hover:bg-slate-700 text-[#003F3F] dark:text-slate-200 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-1 transition-colors cursor-pointer border border-[#005A57]/20"
             onClick={() => toast("Resource permissions are managed through SummaStudy.")}
           >
             Manage access <ChevronRight className="size-3.5" />
@@ -323,7 +323,7 @@ export function SettingsView({
         >
           <button
             type="button"
-            className="px-3.5 py-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold rounded-xl flex items-center gap-1 transition-colors cursor-pointer border border-rose-200/60"
+            className="px-3.5 py-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-1 transition-colors cursor-pointer border border-rose-200/60"
             onClick={() => toast("For safety, data deletion requires secondary password confirmation.")}
           >
             Review controls <ChevronRight className="size-3.5" />
@@ -333,7 +333,7 @@ export function SettingsView({
 
       {/* Account Safeguards & Auth Sheet */}
       <section className="bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
-        <h2 className="text-base font-bold text-[#102B2B] dark:text-[#FBFAF6] pb-3 border-b border-[#DDE8DF] dark:border-slate-800">
+        <h2 className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6] pb-3 border-b border-[#DDE8DF] dark:border-slate-800">
           Account Safeguards & Security
         </h2>
 
@@ -341,7 +341,7 @@ export function SettingsView({
           title="Authentication provider"
           description="Your account is secured via Supabase Auth with encrypted JWT session management."
         >
-          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-[#E7EFE7] dark:bg-slate-800 rounded-xl text-xs font-semibold text-[#003F3F] dark:text-slate-200 border border-[#005A57]/30">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-[#E7EFE7] dark:bg-slate-800 rounded-xl text-xs sm:text-sm font-semibold text-[#003F3F] dark:text-slate-200 border border-[#005A57]/30">
             <Shield className="size-3.5 text-[#005A57]" />
             <span>Supabase Auth</span>
           </div>
@@ -351,7 +351,7 @@ export function SettingsView({
           title="Active sessions"
           description="Logged in on this device with valid access token."
         >
-          <span className="text-xs font-mono font-bold text-[#005A57] dark:text-[#B8FF4D] bg-[#E7EFE7] dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-[#005A57]/30">
+          <span className="text-xs sm:text-sm font-mono font-bold text-[#005A57] dark:text-[#B8FF4D] bg-[#E7EFE7] dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-[#005A57]/30">
             1 Active Session
           </span>
         </SettingRow>
