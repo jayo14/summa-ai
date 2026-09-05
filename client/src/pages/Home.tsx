@@ -554,8 +554,12 @@ export default function Home() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button type="button" className="student-badge w-full text-left cursor-pointer hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors border-0">
-                <div className="student-avatar">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+                <div className="student-avatar overflow-hidden">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user?.name || "User Avatar"} className="w-full h-full object-cover" />
+                  ) : (
+                    user?.name ? user.name.charAt(0).toUpperCase() : user?.email ? user.email.charAt(0).toUpperCase() : "U"
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <strong className="block truncate">{user?.name || "Student User"}</strong>
@@ -945,8 +949,12 @@ function ConversationTurn({ message }: { message: ConversationMessage }) {
   return (
     <div className={`message-block ${isStudent ? "student-message" : "summa-message dynamic-message"}`}>
       {isStudent && (
-        <div className="student-message-avatar bg-gradient-to-tr from-[#005A57] to-[#003F3F] text-[#B8FF4D] font-bold text-xs flex items-center justify-center rounded-xl size-7 shadow-sm">
-          {initials}
+        <div className="student-message-avatar bg-gradient-to-tr from-[#005A57] to-[#003F3F] text-[#B8FF4D] font-bold text-xs flex items-center justify-center rounded-xl size-7 shadow-sm overflow-hidden shrink-0">
+          {user?.avatar ? (
+            <img src={user.avatar} alt={user?.name || "Student Avatar"} className="w-full h-full object-cover" />
+          ) : (
+            initials
+          )}
         </div>
       )}
       <div className="message-content">
