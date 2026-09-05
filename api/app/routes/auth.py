@@ -82,21 +82,24 @@ async def signup(payload: AuthLoginRequest):
                     user_data = body.get("user", {})
                     is_verified = bool(user_data.get("email_confirmed_at") or user_data.get("confirmed_at"))
                     token = body.get("access_token") or _create_mock_jwt(user_data.get("id", user_id))
+                    user_obj = {
+                        "id": user_data.get("id", user_id),
+                        "email": user_data.get("email", payload.email),
+                        "name": user_data.get("user_metadata", {}).get("name") or name,
+                        "avatar": user_data.get("user_metadata", {}).get("avatar") or payload.avatar,
+                        "role": role,
+                        "status": "active",
+                        "provider": "credentials",
+                        "email_verified": is_verified,
+                        "onboarded": False,
+                        "onboarding_data": {},
+                    }
+                    user_store = UserStore()
+                    await user_store.save_user(user_obj["id"], user_obj)
                     return {
                         "access_token": token,
                         "token_type": "bearer",
-                        "user": {
-                            "id": user_data.get("id", user_id),
-                            "email": user_data.get("email", payload.email),
-                            "name": user_data.get("user_metadata", {}).get("name") or name,
-                            "avatar": user_data.get("user_metadata", {}).get("avatar") or payload.avatar,
-                            "role": role,
-                            "status": "active",
-                            "provider": "credentials",
-                            "email_verified": is_verified,
-                            "onboarded": False,
-                            "onboarding_data": {},
-                        },
+                        "user": user_obj,
                     }
                 else:
                     detail = (

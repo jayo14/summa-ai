@@ -134,7 +134,7 @@ export default function Home() {
 
   const [customFolders, setCustomFolders] = useState<string[]>(() => {
     const saved = window.localStorage.getItem("summa-custom-folders");
-    return saved ? JSON.parse(saved) : ["CSC 201 · OOP", "CSC 203 · Databases"];
+    return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
@@ -187,14 +187,14 @@ export default function Home() {
   useEffect(() => { window.localStorage.setItem("summa-favorite-folders", JSON.stringify(favoriteFolders)); }, [favoriteFolders]);
   function assignFavoriteFolder(title: string, folder: string) { setFavoriteFolders((items) => ({ ...items, [title]: folder })); }
   function toggleFavorite(title: string) { setFavorites((items) => items.includes(title) ? items.filter((item) => item !== title) : [...items, title]); }
-  const contextSummary = useMemo(() => `${dbMaterials.length || sourceItems.length} approved resources`, [dbMaterials.length]);
+  const contextSummary = useMemo(() => `${dbMaterials.length} approved resources`, [dbMaterials.length]);
 
   function updateMastery(amount: number) { setMastery((value) => Math.min(91, value + amount)); }
   function registerEvent(kind: string, detail: string) {
     const label = `${kind === "retrieval" ? "Retrieval" : kind === "confidence" ? "Review" : kind === "hint" ? "Scaffold" : "Practice"}: ${detail}`;
     setEvents((current) => [label, ...current].slice(0, 4));
   }
-  const activeSources = useMemo(() => sourceItems.filter((s) => s.selected).map((s) => s.title), []);
+  const activeSources = useMemo(() => dbMaterials.map((m) => m.title), [dbMaterials]);
 
   async function sendMessage(message = composerValue) {
     const clean = message.trim();
@@ -377,37 +377,57 @@ export default function Home() {
             </button>
           </div>
           <div className="folder-list">
-            {customFolders.map((folderName, idx) => (
-              <div className="folder-group" key={folderName}>
-                <button type="button" className="folder-heading">
-                  <FolderOpen size={14} />
-                  <span>{folderName}</span>
-                </button>
-                <div className="history-list">
-                  {dbConversations
-                    .filter((c: any) => (c.folder || (idx === 0 ? folderName : "")) === folderName || dbConversations.length === 0 || idx === 0)
-                    .slice(0, idx === 0 ? 3 : 2)
-                    .map((chat) => (
-                      <button
-                        type="button"
-                        className="history-item"
-                        key={chat.id}
-                        onClick={() => {
-                          selectView("workspace");
-                          setSessionStarted(true);
-                          setSidebarOpen(false);
-                        }}
-                      >
-                        <span>{chat.title}</span>
-                        <small>Live</small>
-                      </button>
-                    ))}
-                  {dbConversations.length === 0 && (
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 px-7 py-1 block">No sessions yet</span>
-                  )}
+            {customFolders.length > 0 ? (
+              customFolders.map((folderName, idx) => (
+                <div className="folder-group" key={folderName}>
+                  <button type="button" className="folder-heading">
+                    <FolderOpen size={14} />
+                    <span>{folderName}</span>
+                  </button>
+                  <div className="history-list">
+                    {dbConversations
+                      .filter((c: any) => c.folder === folderName)
+                      .map((chat) => (
+                        <button
+                          type="button"
+                          className="history-item"
+                          key={chat.id}
+                          onClick={() => {
+                            selectView("workspace");
+                            setSessionStarted(true);
+                            setSidebarOpen(false);
+                          }}
+                        >
+                          <span>{chat.title}</span>
+                          <small>Live</small>
+                        </button>
+                      ))}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="history-list">
+                {dbConversations.length > 0 ? (
+                  dbConversations.map((chat) => (
+                    <button
+                      type="button"
+                      className="history-item"
+                      key={chat.id}
+                      onClick={() => {
+                        selectView("workspace");
+                        setSessionStarted(true);
+                        setSidebarOpen(false);
+                      }}
+                    >
+                      <span>{chat.title}</span>
+                      <small>Live</small>
+                    </button>
+                  ))
+                ) : (
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 px-3 py-1.5 block">No learning sessions yet</span>
+                )}
               </div>
-            ))}
+            )}
           </div>
         </section>
         <div className="sidebar-bottom">
@@ -879,7 +899,7 @@ function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolder
   useEffect(() => {
     fetchApi<Array<any>>("/activities")
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setDbObjects(data.map((item) => ({
             type: (item.type || "ACTIVITY").toUpperCase(),
             title: item.title || "Untitled Activity",
@@ -890,11 +910,9 @@ function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolder
             topic: item.topic || "CSC 201",
             date: item.created_at || new Date().toISOString(),
           })));
-        } else {
-          setDbObjects(learningObjects);
         }
       })
-      .catch(() => setDbObjects(learningObjects));
+      .catch(() => setDbObjects([]));
   }, []);
 
   const folders = ["All folders", "Unsorted", ...Array.from(new Set(Object.values(favoriteFolders).filter(Boolean)))];
@@ -937,7 +955,7 @@ function SourcesView({ onUseSource }: { onUseSource: () => void }) {
   useEffect(() => {
     fetchApi<Array<any>>("/materials")
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setSources(data.map((m) => ({
             title: m.title || "Learning Resource",
             detail: m.description || m.type || "Course material",
@@ -946,11 +964,9 @@ function SourcesView({ onUseSource }: { onUseSource: () => void }) {
             date: m.created_at || new Date().toISOString(),
             selected: true,
           })));
-        } else {
-          setSources(sourceCatalog);
         }
       })
-      .catch(() => setSources(sourceCatalog));
+      .catch(() => setSources([]));
   }, []);
 
   useEffect(() => { const timer = window.setTimeout(() => setIsFiltering(false), 360); return () => window.clearTimeout(timer); }, [topic, sort]);
@@ -958,4 +974,54 @@ function SourcesView({ onUseSource }: { onUseSource: () => void }) {
   const visible = sources.filter((item) => topic === "All topics" || item.topic === topic).sort((a, b) => sort === "topic" ? a.topic.localeCompare(b.topic) : sort === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
   return <div className="secondary-page sources-page"><section className="secondary-intro plain-intro"><div><span className="eyebrow">SUMMASTUDY CONNECTION</span><h1>Your materials are learning context.</h1><p>Summa prioritizes selected academic resources, then clearly distinguishes a general explanation when your materials do not settle a question.</p></div><div className="connect-status"><span className="status-orb" /> Connected through SummaStudy</div></section><div className="discover-toolbar source-discover-toolbar"><div className="filter-label"><Filter size={14} /> <span>Filter sources</span></div><label><span className="sr-only">Topic</span><select value={topic} onChange={(event) => setTopic(event.target.value)}>{topics.map((item) => <option key={item}>{item}</option>)}</select></label><label><ArrowDownUp size={13} /><span className="sr-only">Sort sources</span><select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}><option value="recent">Newest first</option><option value="oldest">Oldest first</option><option value="topic">By topic</option></select></label><span className="result-count">{visible.length} sources</span></div>{isFiltering ? <FilterSkeletonGrid count={3} /> : <section className="source-catalog">{visible.map((source) => <article key={source.title}><div className="source-file-icon"><FileText size={20} /></div><div><span className="eyebrow">{source.type} · {source.topic}</span><h2>{source.title}</h2><p>{source.detail}</p></div><span className="source-in-use">{new Date(source.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span><button type="button" onClick={onUseSource}>Use to learn <ChevronRight size={14} /></button></article>)}</section>}<button type="button" className="add-source-button" onClick={() => { toast("SummaStudy picker opened — choose the materials to add."); onUseSource(); }}><Plus size={16} /> Add from SummaStudy</button></div>;
 }
-function SourceTray({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) { return <div className="source-tray-overlay" role="dialog" aria-modal="true" aria-labelledby="source-tray-title"><button className="source-tray-backdrop" onClick={onClose} aria-label="Close source selector" /><section className="source-tray"><header><div><span className="eyebrow">SESSION CONTEXT</span><h2 id="source-tray-title">Choose what grounds this learning.</h2><p>Summa will prioritize these approved resources before general knowledge.</p></div><button type="button" onClick={onClose} aria-label="Close source selector"><X size={19} /></button></header><div className="source-picker-list">{sourceItems.map((source) => <label key={source.title} className="source-picker-item"><input type="checkbox" defaultChecked={source.selected} /><span className="custom-check"><Check size={13} /></span><FileText size={17} /><span><strong>{source.title}</strong><small>{source.detail}</small></span><em>{source.type}</em></label>)}</div><footer><button type="button" className="secondary-action" onClick={() => toast("Upload control will be available after secure file storage is configured.")}><Paperclip size={14} /> Upload a resource</button><button type="button" className="interactive-primary" onClick={onConfirm}>Use selected sources <Send size={14} /></button></footer></section></div>; }
+function SourceTray({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
+  const [items, setItems] = useState<Array<any>>([]);
+  useEffect(() => {
+    fetchApi<Array<any>>("/materials")
+      .then((res) => {
+        if (Array.isArray(res)) {
+          setItems(res.map((m) => ({ title: m.title || "Resource", detail: m.description || "Course material", type: m.type || "Doc", selected: true })));
+        }
+      })
+      .catch(() => setItems([]));
+  }, []);
+
+  return (
+    <div className="source-tray-overlay" role="dialog" aria-modal="true" aria-labelledby="source-tray-title">
+      <button className="source-tray-backdrop" onClick={onClose} aria-label="Close source selector" />
+      <section className="source-tray">
+        <header>
+          <div>
+            <span className="eyebrow">SESSION CONTEXT</span>
+            <h2 id="source-tray-title">Choose what grounds this learning.</h2>
+            <p>Summa will prioritize these approved resources before general knowledge.</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close source selector"><X size={19} /></button>
+        </header>
+        <div className="source-picker-list">
+          {items.length > 0 ? (
+            items.map((source) => (
+              <label key={source.title} className="source-picker-item">
+                <input type="checkbox" defaultChecked={source.selected} />
+                <span className="custom-check"><Check size={13} /></span>
+                <FileText size={17} />
+                <span><strong>{source.title}</strong><small>{source.detail}</small></span>
+                <em>{source.type}</em>
+              </label>
+            ))
+          ) : (
+            <div className="p-4 text-center text-xs text-slate-400 dark:text-slate-500">No connected materials yet</div>
+          )}
+        </div>
+        <footer>
+          <button type="button" className="secondary-action" onClick={() => toast("Upload control will be available after secure file storage is configured.")}>
+            <Paperclip size={14} /> Upload a resource
+          </button>
+          <button type="button" className="interactive-primary" onClick={onConfirm}>
+            Use selected sources <Send size={14} />
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+}
