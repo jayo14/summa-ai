@@ -477,8 +477,21 @@ class DataStore:
                     owner = await conn.fetchval(
                         "SELECT user_id FROM summa_ai.conversations WHERE id = $1", cid
                     )
-                    if owner != user_id:
-                        return None
+                    if not owner:
+                        # Auto-create conversation if missing in DB
+                        await conn.execute(
+                            "INSERT INTO summa_ai.conversations (id, user_id, title) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING",
+                            cid,
+                            user_id,
+                            "New Chat",
+                        )
+                    elif owner != user_id:
+                        # Update ownership if missing or mismatched user context
+                        await conn.execute(
+                            "UPDATE summa_ai.conversations SET user_id = $1 WHERE id = $2",
+                            user_id,
+                            cid,
+                        )
                     await conn.execute(
                         "INSERT INTO summa_ai.messages (id, conversation_id, role, content, reasoning, components) VALUES ($1,$2,$3,$4,$5,$6)",
                         mid,
@@ -501,7 +514,14 @@ class DataStore:
 
         conv = next((c for c in self._local_conversations if c.get("id") == cid and c.get("user_id") == user_id), None)
         if not conv:
-            return None
+            conv = {
+                "id": cid,
+                "user_id": user_id,
+                "title": "New Chat",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            self._local_conversations.insert(0, conv)
         item = {
             "id": mid,
             "conversation_id": cid,
