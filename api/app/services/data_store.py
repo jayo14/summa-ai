@@ -331,7 +331,7 @@ class DataStore:
         return self._local_conversations
 
     async def create_conversation(
-        self, user_id: str, title: str = "New chat", snippet: Optional[str] = None
+        self, user_id: str, title: str = "New chat", snippet: Optional[str] = None, folder: Optional[str] = None
     ) -> Dict[str, Any]:
         cid = str(uuid.uuid4())
         try:
@@ -339,11 +339,12 @@ class DataStore:
             if pool is not None:
                 async with pool.acquire() as conn:
                     await conn.execute(
-                        "INSERT INTO summa_ai.conversations (id, user_id, title, snippet) VALUES ($1,$2,$3,$4)",
+                        "INSERT INTO summa_ai.conversations (id, user_id, title, snippet, folder) VALUES ($1,$2,$3,$4,$5)",
                         cid,
                         user_id,
                         title,
                         snippet,
+                        folder,
                     )
                     row = await conn.fetchrow(
                         "SELECT * FROM summa_ai.conversations WHERE id = $1", cid
@@ -359,12 +360,48 @@ class DataStore:
             "user_id": user_id,
             "title": title,
             "snippet": snippet,
+            "folder": folder,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "archived": False,
         }
         self._local_conversations.insert(0, item)
         return item
+
+    async def update_conversation(
+        self, cid: str, user_id: str, data: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                sets = []
+                vals = []
+                for key in ("title", "folder", "archived"):
+                    if key in data:
+                        sets.append(f"{key} = ${len(vals) + 1}")
+                        vals.append(data[key])
+                if sets:
+                    sets.append("updated_at = NOW()")
+                    vals.append(cid)
+                    vals.append(user_id)
+                    async with pool.acquire() as conn:
+                        await conn.execute(
+                            f"UPDATE summa_ai.conversations SET {', '.join(sets)} WHERE id = ${len(vals) - 1} AND user_id = ${len(vals)}",
+                            *vals,
+                        )
+                        row = await conn.fetchrow(
+                            "SELECT * FROM summa_ai.conversations WHERE id = $1 AND user_id = $2", cid, user_id
+                        )
+                    if row:
+                        return dict(row)
+        except Exception:
+            pass
+
+        for c in self._local_conversations:
+            if c.get("id") == cid and c.get("user_id") == user_id:
+                c.update({k: v for k, v in data.items() if v is not None})
+                return c
+        return None
 
     async def get_conversation(self, cid: str, user_id: str) -> Optional[Dict[str, Any]]:
         try:

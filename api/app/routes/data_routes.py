@@ -154,8 +154,18 @@ async def create_conversation(
 ):
     user_id = resolve_user_id()
     return await _store.create_conversation(
-        user_id, title=data.title, snippet=data.snippet
+        user_id, title=data.title, snippet=data.snippet, folder=data.folder
     )
+
+
+@conv_router.patch(
+    "/conversations/{cid}",
+    summary="Update conversation",
+    description="Update a conversation's title or folder",
+)
+async def update_conversation(cid: str, data: dict):
+    user_id = resolve_user_id()
+    return await _store.update_conversation(cid, user_id, data)
 
 
 @conv_router.get(

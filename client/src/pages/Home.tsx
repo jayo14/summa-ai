@@ -22,6 +22,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { ChatComponentRenderer, LearningActivityEnvelope } from "@/components/chat/ChatComponentRenderer";
 
@@ -147,6 +155,9 @@ export default function Home() {
   useEffect(() => {
     window.localStorage.setItem("summa-custom-folders", JSON.stringify(customFolders));
   }, [customFolders]);
+
+  const [isSidebarFolderDialogOpen, setIsSidebarFolderDialogOpen] = useState(false);
+  const [sidebarFolderName, setSidebarFolderName] = useState("");
 
   const [dbConversations, setDbConversations] = useState<Array<{ id: string; title: string; created_at: string }>>([]);
   const [dbMaterials, setDbMaterials] = useState<Array<{ id: string; title: string; type: string; description?: string }>>([]);
@@ -372,13 +383,7 @@ export default function Home() {
             <button
               type="button"
               aria-label="Create folder"
-              onClick={() => {
-                const folderName = window.prompt("Enter new folder name (e.g. CSC 301 · Algorithms):");
-                if (folderName?.trim()) {
-                  setCustomFolders((prev) => Array.from(new Set([...prev, folderName.trim()])));
-                  toast.success(`Folder "${folderName.trim()}" created.`);
-                }
-              }}
+              onClick={() => setIsSidebarFolderDialogOpen(true)}
             >
               <Plus size={15} />
             </button>
@@ -508,6 +513,64 @@ export default function Home() {
       </section>
       {activeView === "workspace" && contextOpen && sessionStarted && <ContextRail mastery={mastery} events={events} onJumpToSources={() => setSourceTrayOpen(true)} />}
       {sourceTrayOpen && <SourceTray onClose={() => setSourceTrayOpen(false)} onConfirm={() => { setSourceTrayOpen(false); toast(`${contextSummary} are grounding this learning session.`); }} />}
+
+      {/* Sidebar Folder Creation Dialog Component */}
+      <Dialog open={isSidebarFolderDialogOpen} onOpenChange={setIsSidebarFolderDialogOpen}>
+        <DialogContent showCloseButton className="sm:max-w-md bg-[#FBFAF6] dark:bg-slate-900 border-[#DDE8DF] dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-[#102B2B] dark:text-white flex items-center gap-2">
+              <FolderOpen className="size-4 text-[#005A57] dark:text-[#B8FF4D]" />
+              <span>Create Course Folder</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[#6D7E78] dark:text-slate-400">
+              Create a new folder to organize your chat sessions and study contexts.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (sidebarFolderName.trim()) {
+                setCustomFolders((prev) => Array.from(new Set([...prev, sidebarFolderName.trim()])));
+                toast.success(`Folder "${sidebarFolderName.trim()}" created.`);
+                setSidebarFolderName("");
+                setIsSidebarFolderDialogOpen(false);
+              }
+            }}
+            className="space-y-4 pt-2"
+          >
+            <div>
+              <label className="block text-xs font-bold text-[#102B2B] dark:text-slate-200 mb-1.5">
+                Folder Name
+              </label>
+              <input
+                type="text"
+                value={sidebarFolderName}
+                onChange={(e) => setSidebarFolderName(e.target.value)}
+                placeholder="e.g. CSC 301 · Algorithms"
+                autoFocus
+                className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs text-[#102B2B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#005A57]/30"
+              />
+            </div>
+
+            <DialogFooter className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setIsSidebarFolderDialogOpen(false)}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] font-bold text-xs rounded-xl shadow-xs transition-all"
+              >
+                Create folder
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -869,14 +932,15 @@ function ContextRail({ mastery, events, onJumpToSources }: { mastery: number; ev
 function LedgerRow({ label, value, tone }: { label: string; value: number; tone: "strong" | "developing" }) { const activeCount = Math.max(1, Math.round(value / 10)); return <div className="ledger-row"><div><span className={`ledger-status ${tone}`} /><span>{label}</span></div><strong>{value}%</strong><div className="evidence-marks" aria-label={`${value}% evidence estimate`}>{Array.from({ length: 10 }, (_, index) => <i key={index} className={index < activeCount ? "is-active" : ""} />)}</div></div>; }
 
 function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolders, onAssignFolder }: { onResume: () => void; favorites: string[]; onToggleFavorite: (title: string) => void; favoriteFolders: Record<string, string>; onAssignFolder: (title: string, folder: string) => void }) {
-  const [topic, setTopic] = useState("All topics");
   const [sort, setSort] = useState<SortMode>("recent");
-  const [isFiltering, setIsFiltering] = useState(true);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [query, setQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [topic, setTopic] = useState("All topics");
   const [folder, setFolder] = useState("All folders");
-
   const [dbObjects, setDbObjects] = useState<Array<any>>([]);
+  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
 
   useEffect(() => {
     fetchApi<Array<any>>("/activities")
@@ -885,11 +949,11 @@ function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolder
           setDbObjects(data.map((item) => ({
             type: (item.type || "ACTIVITY").toUpperCase(),
             title: item.title || "Untitled Activity",
-            description: item.purpose || item.change_note || "Learning activity",
+            description: item.purpose || item.change_note || "Learning activity object",
             meta: item.estimated_minutes ? `${item.estimated_minutes} min estimated` : "Active object",
             action: "Open",
             accent: item.type === "quiz" ? "coral" : item.type === "practice" ? "blue" : "ink",
-            topic: item.topic || "CSC 201",
+            topic: item.topic || "General",
             date: item.created_at || new Date().toISOString(),
           })));
         }
@@ -898,13 +962,361 @@ function LearningLibrary({ onResume, favorites, onToggleFavorite, favoriteFolder
   }, []);
 
   const folders = ["All folders", "Unsorted", ...Array.from(new Set(Object.values(favoriteFolders).filter(Boolean)))];
-  useEffect(() => { const timer = window.setTimeout(() => setIsFiltering(false), 360); return () => window.clearTimeout(timer); }, [topic, sort, favoritesOnly, query, folder]);
   const topics = ["All topics", ...Array.from(new Set(dbObjects.map((item) => item.topic)))];
-  const visible = dbObjects.filter((item) => { const haystack = `${item.title} ${item.description} ${item.meta} ${item.topic}`.toLowerCase(); const itemFolder = favoriteFolders[item.title] || "Unsorted"; return (topic === "All topics" || item.topic === topic) && (!favoritesOnly || favorites.includes(item.title)) && (!query || haystack.includes(query.toLowerCase())) && (folder === "All folders" || itemFolder === folder); }).sort((a, b) => sort === "topic" ? a.topic.localeCompare(b.topic) : sort === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
 
-  return <div className="secondary-page library-page"><section className="secondary-intro library-intro"><div><span className="eyebrow">MY LEARNING</span><h1>Objects that keep learning with you.</h1><p>Your retrieval sets, practice, and quizzes are organized by course and adjust as your evidence changes.</p></div><img src="/assets/my-learning-desk-cards.jpg" alt="Study notes and index cards arranged on a desk." className="rounded-2xl border border-[#DDE8DF] dark:border-[#005A57] shadow-md object-cover" /></section><div className="discover-toolbar"><div className="filter-label"><Filter size={14} /> <span>Filter learning</span></div><label className="learning-search"><Search size={13} /><span className="sr-only">Search saved learning</span><input value={query} onChange={(event) => { setQuery(event.target.value); setIsFiltering(true); }} placeholder="Search saved learning…" /></label><label><span className="sr-only">Topic</span><select value={topic} onChange={(event) => setTopic(event.target.value)}>{topics.map((item) => <option key={item}>{item}</option>)}</select></label><label><ArrowDownUp size={13} /><span className="sr-only">Sort learning</span><select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}><option value="recent">Newest first</option><option value="oldest">Oldest first</option><option value="topic">By topic</option></select></label><button type="button" className={`favorites-filter ${favoritesOnly ? "active" : ""}`} onClick={() => { setFavoritesOnly((value) => !value); setIsFiltering(true); }}><BookmarkCheck size={13} /> Favorites {favorites.length}</button><label><span className="sr-only">Favorite folder</span><select value={folder} onChange={(event) => { setFolder(event.target.value); setIsFiltering(true); }}>{folders.map((item) => <option key={item}>{item}</option>)}</select></label><button type="button" className="folder-create-button" onClick={() => { const next = window.prompt("Name this favorite folder"); if (next?.trim()) { const title = favorites[0]; if (title) onAssignFolder(title, next.trim()); toast(`${next.trim()} folder created for your first favorite.`); } }}><Plus size={12} /> New folder</button><span className="result-count">{visible.length} objects</span></div>{isFiltering ? <FilterSkeletonGrid count={4} /> : <><div className="library-grid">{visible.map((item) => <LearningObject key={item.title} {...item} favorite={favorites.includes(item.title)} favoriteFolder={favoriteFolders[item.title] || "Unsorted"} favoriteFolders={folders.slice(1)} onToggleFavorite={onToggleFavorite} onAssignFolder={onAssignFolder} onClick={onResume} />)}</div>{visible.length === 0 && <div className="empty-filter-state">No learning objects match this topic yet.</div>}</>}</div>;
+  const visible = dbObjects
+    .filter((item) => {
+      const haystack = `${item.title} ${item.description} ${item.topic}`.toLowerCase();
+      const itemFolder = favoriteFolders[item.title] || "Unsorted";
+      return (
+        (topic === "All topics" || item.topic === topic) &&
+        (!favoritesOnly || favorites.includes(item.title)) &&
+        (!query || haystack.includes(query.toLowerCase())) &&
+        (folder === "All folders" || itemFolder === folder)
+      );
+    })
+    .sort((a, b) =>
+      sort === "topic"
+        ? a.topic.localeCompare(b.topic)
+        : sort === "oldest"
+        ? a.date.localeCompare(b.date)
+        : b.date.localeCompare(a.date)
+    );
+
+  const handleCreateFolder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFolderName.trim()) return;
+    const title = favorites[0] || visible[0]?.title;
+    if (title) {
+      onAssignFolder(title, newFolderName.trim());
+      toast.success(`Folder "${newFolderName.trim()}" created.`);
+    } else {
+      toast.info(`Folder "${newFolderName.trim()}" created.`);
+    }
+    setNewFolderName("");
+    setIsFolderDialogOpen(false);
+  };
+
+  return (
+    <div className="secondary-page library-page max-w-6xl mx-auto p-4 sm:p-6 space-y-6 text-slate-900 dark:text-slate-100">
+      {/* Intro Section */}
+      <section className="secondary-intro library-intro flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-6 border-b border-[#DDE8DF] dark:border-slate-800">
+        <div>
+          <span className="eyebrow uppercase font-mono tracking-widest text-[#6D7E78] dark:text-emerald-400 font-semibold text-xs">
+            MY LEARNING
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#102B2B] dark:text-white mt-1">
+            Objects that keep learning with you
+          </h1>
+          <p className="text-sm sm:text-base text-[#6D7E78] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
+            Your retrieval sets, practice quizzes, and guided reviews adapt dynamically as your evidence changes.
+          </p>
+        </div>
+        <img
+          src="/assets/my-learning-desk-cards.jpg"
+          alt="Study notes"
+          className="rounded-2xl border border-[#DDE8DF] dark:border-[#005A57] shadow-sm object-cover w-full md:w-56 h-36 shrink-0"
+        />
+      </section>
+
+      {/* Simplified Search & Toolbar Controls */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 p-3 sm:p-4 rounded-2xl shadow-xs">
+          {/* Enhanced Search Input */}
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 size-4" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search saved learning objects..."
+              className="w-full pl-10 pr-9 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-[#102B2B] dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#005A57]/30 transition-all"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto shrink-0 pt-1 sm:pt-0">
+            {/* Filter Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                showFilters || topic !== "All topics" || folder !== "All folders"
+                  ? "bg-[#005A57] text-white border-[#005A57]"
+                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <Filter className="size-3.5" />
+              <span>Filters</span>
+              {(topic !== "All topics" || folder !== "All folders") && (
+                <span className="size-2 rounded-full bg-[#B8FF4D]" />
+              )}
+            </button>
+
+            {/* Favorites Toggle */}
+            <button
+              type="button"
+              onClick={() => setFavoritesOnly(!favoritesOnly)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                favoritesOnly
+                  ? "bg-[#003F3F] text-[#B8FF4D] border-[#005A57]"
+                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <BookmarkCheck className="size-3.5" />
+              <span>Favorites ({favorites.length})</span>
+            </button>
+
+            {/* New Folder Dialog Trigger */}
+            <button
+              type="button"
+              onClick={() => setIsFolderDialogOpen(true)}
+              className="px-3.5 py-2 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+            >
+              <Plus className="size-3.5" />
+              <span>New folder</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Collapsible Secondary Filters */}
+        {showFilters && (
+          <div className="flex flex-wrap items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 font-medium">Topic:</span>
+              <select
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-[#102B2B] dark:text-slate-200 focus:outline-none"
+              >
+                {topics.map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 font-medium">Folder:</span>
+              <select
+                value={folder}
+                onChange={(e) => setFolder(e.target.value)}
+                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-[#102B2B] dark:text-slate-200 focus:outline-none"
+              >
+                {folders.map((f) => (
+                  <option key={f}>{f}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 font-medium">Sort:</span>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortMode)}
+                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-[#102B2B] dark:text-slate-200 focus:outline-none"
+              >
+                <option value="recent">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="topic">By topic</option>
+              </select>
+            </div>
+
+            {(topic !== "All topics" || folder !== "All folders") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTopic("All topics");
+                  setFolder("All folders");
+                }}
+                className="text-emerald-700 dark:text-emerald-400 font-bold hover:underline ml-auto"
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Grid of Learning Object Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {visible.map((item) => (
+          <LearningObject
+            key={item.title}
+            {...item}
+            favorite={favorites.includes(item.title)}
+            favoriteFolder={favoriteFolders[item.title] || "Unsorted"}
+            favoriteFolders={folders.slice(1)}
+            onToggleFavorite={onToggleFavorite}
+            onAssignFolder={onAssignFolder}
+            onClick={onResume}
+          />
+        ))}
+      </div>
+
+      {visible.length === 0 && (
+        <div className="text-center py-12 bg-[#FBFAF6] dark:bg-slate-900/60 border border-dashed border-[#DDE8DF] dark:border-slate-800 rounded-2xl space-y-2">
+          <Sparkles className="size-8 mx-auto text-slate-400 dark:text-slate-500" />
+          <h3 className="text-sm font-bold text-[#102B2B] dark:text-slate-200">No learning objects found</h3>
+          <p className="text-xs text-[#6D7E78] dark:text-slate-400">
+            Start a new study session in the workspace to generate practice quizzes and retrieval sets.
+          </p>
+        </div>
+      )}
+
+      {/* Folder Creation Dialog Component */}
+      <Dialog open={isFolderDialogOpen} onOpenChange={setIsFolderDialogOpen}>
+        <DialogContent showCloseButton className="sm:max-w-md bg-[#FBFAF6] dark:bg-slate-900 border-[#DDE8DF] dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-[#102B2B] dark:text-white flex items-center gap-2">
+              <FolderOpen className="size-4 text-[#005A57] dark:text-[#B8FF4D]" />
+              <span>Create Learning Folder</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[#6D7E78] dark:text-slate-400">
+              Organize your study cards, quizzes, and learning objects into dedicated course folders.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateFolder} className="space-y-4 pt-2">
+            <div>
+              <label className="block text-xs font-bold text-[#102B2B] dark:text-slate-200 mb-1.5">
+                Folder Name
+              </label>
+              <input
+                type="text"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="e.g. CSC 301 · Algorithms"
+                autoFocus
+                className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs text-[#102B2B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#005A57]/30"
+              />
+            </div>
+
+            <DialogFooter className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setIsFolderDialogOpen(false)}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] font-bold text-xs rounded-xl shadow-xs transition-all"
+              >
+                Create folder
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
-function LearningObject({ type, title, description, meta, action, onClick, accent, topic, date, favorite, favoriteFolder, favoriteFolders, onToggleFavorite, onAssignFolder }: { type: string; title: string; description: string; meta: string; action: string; onClick: () => void; accent: string; topic: string; date: string; favorite: boolean; favoriteFolder: string; favoriteFolders: string[]; onToggleFavorite: (title: string) => void; onAssignFolder: (title: string, folder: string) => void }) { const note = `${title}\n${description}\n${topic} · ${new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}\n${meta}`; return <article className={`learning-object object-${accent}`}><span className="object-tab">{type}</span><div><h2>{title}</h2><p>{description}</p></div><footer><span>{topic} · {new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span><div className="object-actions"><button type="button" className="card-share has-tooltip" data-tooltip="Share learning card" onClick={() => shareText(title, note, `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.txt`)} aria-label={`Share ${title}`}><Share2 size={12} /></button><button type="button" className="card-share has-tooltip" data-tooltip="Export as text file" onClick={() => exportText(title, note, `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.txt`)} aria-label={`Export ${title}`}><Download size={12} /></button><button type="button" className={`card-share favorite-button has-tooltip ${favorite ? "is-favorite" : ""}`} data-tooltip={favorite ? "Remove from favorites" : "Save to favorites"} onClick={() => onToggleFavorite(title)} aria-label={favorite ? `Remove ${title} from favorites` : `Save ${title} to favorites`}>{favorite ? <BookmarkCheck size={12} /> : <Bookmark size={12} />}</button>{favorite && <label className="card-folder-select has-tooltip" data-tooltip="Organize this favorite"><FolderOpen size={11} /><span className="sr-only">Favorite folder for {title}</span><select value={favoriteFolder} onChange={(event) => onAssignFolder(title, event.target.value)}>{favoriteFolders.map((item) => <option key={item}>{item}</option>)}</select></label>}<button type="button" onClick={onClick}>{action} <ChevronRight size={14} /></button></div></footer></article>; }
+function LearningObject({
+  type,
+  title,
+  description,
+  meta,
+  action,
+  onClick,
+  accent,
+  topic,
+  date,
+  favorite,
+  favoriteFolder,
+  favoriteFolders,
+  onToggleFavorite,
+  onAssignFolder,
+}: {
+  type: string;
+  title: string;
+  description: string;
+  meta: string;
+  action: string;
+  onClick: () => void;
+  accent: string;
+  topic: string;
+  date: string;
+  favorite: boolean;
+  favoriteFolder: string;
+  favoriteFolders: string[];
+  onToggleFavorite: (title: string) => void;
+  onAssignFolder: (title: string, folder: string) => void;
+}) {
+  const note = `${title}\n${description}\n${topic} · ${new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}\n${meta}`;
+
+  return (
+    <article className="group relative bg-[#FBFAF6] dark:bg-slate-900/90 border border-[#DDE8DF] dark:border-slate-800 hover:border-[#005A57] dark:hover:border-[#B8FF4D] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+      <div>
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <span className="px-2.5 py-1 rounded-lg bg-[#E7EFE7] dark:bg-[#003F3F] text-[#003F3F] dark:text-[#B8FF4D] text-xs font-bold font-mono tracking-wide uppercase">
+            {type}
+          </span>
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            {new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </span>
+        </div>
+
+        <h2 className="text-base sm:text-lg font-bold text-[#102B2B] dark:text-white group-hover:text-[#005A57] dark:group-hover:text-[#B8FF4D] transition-colors leading-snug">
+          {title}
+        </h2>
+        <p className="text-xs sm:text-sm text-[#6D7E78] dark:text-slate-300 mt-1.5 leading-relaxed">
+          {description}
+        </p>
+      </div>
+
+      <footer className="pt-4 border-t border-[#DDE8DF] dark:border-slate-800 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => shareText(title, note, `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.txt`)}
+            className="p-2 text-slate-500 hover:text-[#003F3F] dark:hover:text-[#B8FF4D] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+            title="Share card summary"
+          >
+            <Share2 className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => exportText(title, note, `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.txt`)}
+            className="p-2 text-slate-500 hover:text-[#003F3F] dark:hover:text-[#B8FF4D] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+            title="Export as text file"
+          >
+            <Download className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggleFavorite(title)}
+            className={`p-2 rounded-xl transition-colors cursor-pointer ${
+              favorite
+                ? "bg-[#003F3F] text-[#B8FF4D]"
+                : "text-slate-500 hover:text-[#003F3F] dark:hover:text-[#B8FF4D] hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+            title={favorite ? "Remove from favorites" : "Save to favorites"}
+          >
+            {favorite ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClick}
+          className="px-4 py-2 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] text-xs sm:text-sm font-bold rounded-full shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer"
+        >
+          <span>{action}</span>
+          <ChevronRight className="size-4" />
+        </button>
+      </footer>
+    </article>
+  );
+}
 
 function ProgressView({ mastery, onContinue }: { mastery: number; onContinue: () => void }) {
   const [completedTitles, setCompletedTitles] = useState<string[]>(() => JSON.parse(window.localStorage.getItem("summa-completed-milestones") || '["Polymorphism foundations"]'));

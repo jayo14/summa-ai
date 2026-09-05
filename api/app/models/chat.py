@@ -41,6 +41,7 @@ class Conversation(BaseModel):
     user_id: str
     title: str = "New chat"
     snippet: Optional[str] = None
+    folder: Optional[str] = None
     archived: bool = False
     created_at: datetime
     updated_at: datetime
@@ -50,6 +51,7 @@ class Conversation(BaseModel):
 class ConversationCreate(BaseModel):
     title: str = "New chat"
     snippet: Optional[str] = None
+    folder: Optional[str] = None
 
 
 class Message(BaseModel):
