@@ -331,9 +331,9 @@ class DataStore:
         return self._local_conversations
 
     async def create_conversation(
-        self, user_id: str, title: str = "New chat", snippet: Optional[str] = None, folder: Optional[str] = None
+        self, user_id: str, title: str = "New chat", snippet: Optional[str] = None, folder: Optional[str] = None, cid: Optional[str] = None
     ) -> Dict[str, Any]:
-        cid = str(uuid.uuid4())
+        cid = cid or str(uuid.uuid4())
         try:
             pool = await self._get_pool()
             if pool is not None:

@@ -148,12 +148,16 @@ async def stream_gemini_completion(
         async with httpx.AsyncClient(timeout=GEMINI_STREAM_TIMEOUT) as client:
             async with client.stream("POST", url, json=payload) as response:
                 if response.status_code != 200:
-                    error_text = await response.aread()
+                    raw_err = (await response.aread()).decode("utf-8", errors="ignore")
                     logger.warning(
-                        "Gemini API returned %d: %s. Using intelligent fallback stream.",
+                        "Gemini API returned %d: %s.",
                         response.status_code,
-                        error_text.decode("utf-8", errors="ignore"),
+                        raw_err,
                     )
+                    error_msg = f"\n\n> ⚠️ **Gemini AI Service Notice ({response.status_code})**: API quota/rate limit or endpoint error encountered. Switching to offline intelligent fallback.\n\n"
+                    if "RESOURCE_EXHAUSTED" in raw_err or "quota" in raw_err.lower():
+                        error_msg = "\n\n> ⚠️ **AI Quota Exhausted**: Google Gemini API quota limit reached. Using offline intelligent fallback stream.\n\n"
+                    yield {"type": "content", "delta": error_msg}
                     async for chunk in _generate_fallback_stream(messages, system_prompt):
                         yield chunk
                     return
