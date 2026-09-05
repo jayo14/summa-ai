@@ -49,12 +49,13 @@ async def _fetch_jwks() -> Optional[Dict]:
     return None
 
 
+current_user_claims: ContextVar[Optional[Dict]] = ContextVar("current_user_claims", default=None)
+
+
 def verify_supabase_jwt(token: str) -> Optional[str]:
     """
     Verify a Supabase JWT and return the user's ``sub`` claim on success.
-
-    On any failure the function returns ``None`` — no silent fallback that
-    accepts unsigned tokens.
+    Also stores payload claims in contextvar.
     """
     if not token or token in ("null", "undefined") or len(token.split(".")) != 3:
         return None
@@ -70,6 +71,7 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
         logger.warning("Rejected JWT with alg: none")
         return None
 
+    payload = None
     # 1. HS256 verification via SUPABASE_JWT_SECRET
     if alg == "HS256":
         if not settings.SUPABASE_JWT_SECRET:
@@ -86,7 +88,6 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
             if aud and aud not in ("authenticated", "anon"):
                 logger.warning("Rejected JWT with invalid aud: %s", aud)
                 return None
-            return payload.get("sub")
         except pyjwt.ExpiredSignatureError:
             logger.warning("JWT has expired (HS256)")
             return None
@@ -95,7 +96,7 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
             return None
 
     # 2. RS256 / ES256 verification via JWKS
-    if alg in ("RS256", "ES256"):
+    elif alg in ("RS256", "ES256"):
         from app.core.jwks import get_cached_jwks, invalidate_jwks_cache
 
         jwks = get_cached_jwks()
@@ -124,7 +125,6 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
                 algorithms=[alg],
                 options={"verify_aud": False},
             )
-            return payload.get("sub")
         except pyjwt.ExpiredSignatureError:
             logger.warning("JWT has expired (asymmetric)")
             return None
@@ -132,7 +132,11 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
             logger.warning("JWT asymmetric decode error: %s", exc)
             return None
 
-    logger.warning("Unsupported JWT algorithm '%s'; rejecting token", alg)
+    if payload and isinstance(payload, dict):
+        user_id = payload.get("sub")
+        current_user_claims.set(payload)
+        return user_id
+
     return None
 
 

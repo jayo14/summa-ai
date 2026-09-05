@@ -274,11 +274,14 @@ async def get_user():
     current = await _user_store.get_user_by_id(user_id)
     if current is None:
         # Create user profile entry on-the-fly for verified JWT users
-        email = f"user_{user_id[:8]}@summa.ai"
+        claims = current_user_claims.get() or {}
+        user_metadata = claims.get("user_metadata") or {}
+        email = claims.get("email") or ""
+        name = user_metadata.get("name") or user_metadata.get("full_name") or claims.get("name") or (email.split("@")[0] if email else f"User {user_id[:6]}")
         current = await _user_store.save_user(user_id, {
             "id": user_id,
             "email": email,
-            "name": f"User {user_id[:6]}",
+            "name": name,
             "role": "student",
             "status": "active",
             "email_verified": True,

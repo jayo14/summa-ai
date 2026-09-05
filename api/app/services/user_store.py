@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 
 import asyncpg
 
+from app.core.security import current_user_claims
 from app.services.db_pool import get_pool
 
 
@@ -144,7 +145,7 @@ class UserStore:
     async def save_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         user_obj = {
             "id": user_id,
-            "email": data.get("email", f"user_{user_id[:8]}@summa.ai"),
+            "email": data.get("email", ""),
             "name": data.get("name"),
             "avatar": data.get("avatar"),
             "bio": data.get("bio"),
@@ -196,11 +197,14 @@ class UserStore:
     async def update_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         current = await self.get_user_by_id(user_id)
         if current is None:
-            email = f"user_{user_id[:8]}@summa.ai"
+            claims = current_user_claims.get() or {}
+            user_metadata = claims.get("user_metadata") or {}
+            email = data.get("email") or claims.get("email") or ""
+            name = data.get("name") or user_metadata.get("name") or user_metadata.get("full_name") or claims.get("name") or (email.split("@")[0] if email else f"User {user_id[:6]}")
             current = await self.save_user(user_id, {
                 "id": user_id,
                 "email": email,
-                "name": f"User {user_id[:6]}",
+                "name": name,
                 "role": "student",
                 "status": "active",
                 "email_verified": True,
