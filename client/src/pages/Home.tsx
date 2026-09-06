@@ -351,8 +351,9 @@ export default function Home() {
       .then(async (response) => {
         if (!response.ok || !response.body) {
           if (response.status === 401 || response.status === 403) {
-            localStorage.removeItem("summa_access_token");
-            window.dispatchEvent(new CustomEvent("summa:unauthorized"));
+            // Don't auto-logout on a chat stream 401 — the JWKS cache may have
+            // been cold. Show an inline error instead so the user can retry.
+            throw new Error(`Authentication error (${response.status}) — please try again`);
           }
           throw new Error(`HTTP error ${response.status}`);
         }
@@ -817,7 +818,22 @@ function WorkspaceView(props: WorkspaceProps) {
         <div className="conversation-column">
 
           {props.messages.map((message) => (
-            <ConversationTurn message={message} key={message.id} />
+            <ConversationTurn
+              message={message}
+              key={message.id}
+              onRetry={
+                message.error && message.role === "summa"
+                  ? () => {
+                      // Find the preceding student message and resend it
+                      const idx = props.messages.findIndex((m) => m.id === message.id);
+                      const preceding = idx > 0 ? props.messages[idx - 1] : null;
+                      if (preceding && preceding.role === "student") {
+                        props.sendMessage(preceding.content);
+                      }
+                    }
+                  : undefined
+              }
+            />
           ))}
           {props.isResponding && (
             <div className="my-3 space-y-2">

@@ -31,14 +31,15 @@ export async function fetchApi<T = any>(
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
       // Only auto-logout for authenticated app requests — never for auth
-      // handshake endpoints or the initial session-restore GET /user call.
-      // initializeAuth handles its own 401 by clearing state gracefully.
-      const isAuthRequest =
-        endpoint.includes("/auth/login") ||
-        endpoint.includes("/auth/signup") ||
-        endpoint.includes("/auth/callback") ||
-        endpoint === "/user";
-      if (!isAuthRequest) {
+      // handshake endpoints, the initial session-restore GET /user call,
+      // or chat/stream (a transient 401 from JWKS warmup must not destroy
+      // the session; the chat error state handles it inline).
+      const noAutoLogout =
+        endpoint.includes("/auth/") ||
+        endpoint === "/user" ||
+        endpoint.includes("/chat/stream") ||
+        endpoint.includes("/conversations");
+      if (!noAutoLogout) {
         localStorage.removeItem("summa_access_token");
         window.dispatchEvent(new CustomEvent("summa:unauthorized"));
       }
