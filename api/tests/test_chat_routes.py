@@ -315,6 +315,45 @@ class TestChatStreamEndpoint:
             finally:
                 reset_current_user_id(token)
 
+    @pytest.mark.asyncio
+    @patch("app.routes.chat.DataStore")
+    @patch("app.routes.chat.cognee")
+    async def test_stream_persists_messages_to_datastore(self, mock_cognee, mock_datastore_cls):
+        mock_cognee.recall_context = AsyncMock(return_value={"results": []})
+        mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
+        mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
+        mock_cognee.remember_conversation = AsyncMock()
+
+        mock_ds = AsyncMock()
+        mock_datastore_cls.return_value = mock_ds
+
+        async def fake_stream(*args, **kwargs):
+            yield 'data: {"type": "thinking", "delta": "Analyzing query..."}\n\n'
+            yield 'data: {"type": "content", "delta": "Hello student"}\n\n'
+            yield "data: [DONE]\n\n"
+
+        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
+            token = set_current_user_id("user-1")
+            try:
+                response = client.post(
+                    "/api/v1/chat/stream",
+                    headers=_auth_headers(),
+                    json={
+                        "conversation_id": "conv-test-123",
+                        "messages": [{"role": "user", "content": "Explain OOP"}],
+                    },
+                )
+                assert response.status_code == 200
+                _ = b"".join(response.iter_bytes())
+                assert mock_ds.add_message.call_count == 2
+                user_call = mock_ds.add_message.call_args_list[0]
+                assistant_call = mock_ds.add_message.call_args_list[1]
+                assert user_call.args == ("conv-test-123", "user-1", "user", "Explain OOP")
+                assert assistant_call.args[0:4] == ("conv-test-123", "user-1", "assistant", "Hello student")
+                assert assistant_call.kwargs.get("reasoning") == "Analyzing query..."
+            finally:
+                reset_current_user_id(token)
+
 
 class TestChatEndpoint:
     @pytest.mark.asyncio
