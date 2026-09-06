@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: summa-ai-api
+    env: docker
+    dockerfilePath: api/Dockerfile
+    dockerContext: api
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: QDRANT_CLUSTER_ENDPOINT
+        sync: false
+      - key: BACKEND_CORS_ORIGINS
+        value: '["http://localhost:3000","https://summa-ai-app.vercel.app"]'
