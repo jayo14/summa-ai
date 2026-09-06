@@ -178,7 +178,10 @@ async def get_conversation(cid: str):
     c = await _store.get_conversation(cid, user_id)
     if c is None:
         raise HTTPException(404, "Not found")
-    return c
+    messages = await _store.list_messages(cid, user_id)
+    res = dict(c)
+    res["messages"] = messages
+    return res
 
 
 @conv_router.get(
