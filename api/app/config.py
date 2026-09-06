@@ -73,11 +73,11 @@ class Settings(BaseSettings):
     ADVANCED_ANALYTICS: bool = False
 
     # Z.ai configuration (set via environment variables — do not hardcode)
-    ZAI_API_KEY: str = ""
-    ZAI_TOKEN: str = ""
-    ZAI_USER_ID: str = ""
-    ZAI_API_BASE: str = "https://internal-api.z.ai/v1"
-    ZAI_MODEL: str = "glm-4.5"
+    ZAI_API_KEY: str = os.getenv("ZAI_API_KEY", "")
+    ZAI_TOKEN: str = os.getenv("ZAI_TOKEN", "")
+    ZAI_USER_ID: str = os.getenv("ZAI_USER_ID", "")
+    ZAI_API_BASE: str = os.getenv("ZAI_API_BASE", "https://internal-api.z.ai/v1")
+    ZAI_MODEL: str = os.getenv("ZAI_MODEL", "glm-4.5")
 
     # Hybrid memory (SummaStudy integration)
     HYBRID_MEMORY_ENABLED: bool = True
