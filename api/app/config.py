@@ -62,8 +62,8 @@ class Settings(BaseSettings):
     )
     SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
 
-    # CORS - Allow production frontend URLs
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    # CORS - Driven strictly by BACKEND_CORS_ORIGINS envvar; no hardcoded defaults
+    BACKEND_CORS_ORIGINS: List[str] = []
 
     # Feature flags
     WEBSOCKET_ENABLED: bool = True

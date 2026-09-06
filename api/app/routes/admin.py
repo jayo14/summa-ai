@@ -2,17 +2,28 @@
 role assignment, account status, usage telemetry, and security audit logs.
 """
 
+from datetime import datetime, timezone
 import logging
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
+from app.config import settings
 from app.core.rbac import UserRole, require_admin
 from app.services.user_store import UserStore
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+_system_settings: Dict[str, Any] = {
+    "platform_name": "Summa AI",
+    "default_currency": "NGN",
+    "maintenance_mode": False,
+    "websocket_enabled": True,
+    "hybrid_memory_enabled": True,
+    "summastudy_enabled": False,
+}
 
 
 class UpdateRoleRequest(BaseModel):
@@ -206,3 +217,71 @@ async def create_institution(
         "joined": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
     }
     return {"success": True, "institution": new_inst}
+
+
+class UpdateSettingsRequest(BaseModel):
+    platform_name: Optional[str] = None
+    default_currency: Optional[str] = None
+    maintenance_mode: Optional[bool] = None
+    websocket_enabled: Optional[bool] = None
+    hybrid_memory_enabled: Optional[bool] = None
+    summastudy_enabled: Optional[bool] = None
+
+
+@router.get("/settings", summary="Get global platform settings & feature flags")
+async def get_platform_settings(current_user: dict = Depends(require_admin)):
+    """Returns global platform settings, operational switches, and feature flags."""
+    _system_settings["websocket_enabled"] = settings.WEBSOCKET_ENABLED
+    _system_settings["hybrid_memory_enabled"] = settings.HYBRID_MEMORY_ENABLED
+    _system_settings["summastudy_enabled"] = settings.SUMMASTUDY_ENABLED
+    return {"success": True, "settings": _system_settings}
+
+
+@router.patch("/settings", summary="Update global platform settings & feature flags")
+async def update_platform_settings(
+    payload: UpdateSettingsRequest,
+    current_user: dict = Depends(require_admin),
+):
+    """Updates runtime feature flags (WebSocket, Hybrid Memory, SummaStudy) and platform settings."""
+    actor_id = current_user.get("id", "system")
+    actor_email = current_user.get("email", "admin@summa.ai")
+
+    updates = payload.model_dump(exclude_unset=True)
+
+    if "websocket_enabled" in updates and updates["websocket_enabled"] is not None:
+        settings.WEBSOCKET_ENABLED = bool(updates["websocket_enabled"])
+        _system_settings["websocket_enabled"] = settings.WEBSOCKET_ENABLED
+
+    if "hybrid_memory_enabled" in updates and updates["hybrid_memory_enabled"] is not None:
+        settings.HYBRID_MEMORY_ENABLED = bool(updates["hybrid_memory_enabled"])
+        _system_settings["hybrid_memory_enabled"] = settings.HYBRID_MEMORY_ENABLED
+
+    if "summastudy_enabled" in updates and updates["summastudy_enabled"] is not None:
+        settings.SUMMASTUDY_ENABLED = bool(updates["summastudy_enabled"])
+        _system_settings["summastudy_enabled"] = settings.SUMMASTUDY_ENABLED
+
+    if "platform_name" in updates and updates["platform_name"]:
+        _system_settings["platform_name"] = str(updates["platform_name"])
+
+    if "default_currency" in updates and updates["default_currency"]:
+        _system_settings["default_currency"] = str(updates["default_currency"])
+
+    if "maintenance_mode" in updates and updates["maintenance_mode"] is not None:
+        _system_settings["maintenance_mode"] = bool(updates["maintenance_mode"])
+
+    # Log to audit trail
+    user_store = UserStore()
+    user_store._audit_logs.append({
+        "id": f"audit-{len(user_store._audit_logs) + 1}",
+        "actor_id": actor_id,
+        "actor_email": actor_email,
+        "action": "SYSTEM_POLICY_UPDATED",
+        "target_user_id": "SYSTEM",
+        "target_email": "system@summa.ai",
+        "details": f"Updated platform settings & feature flags: {updates}",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
+    logger.info("Platform settings updated by admin %s: %s", actor_id, updates)
+    return {"success": True, "settings": _system_settings}
+

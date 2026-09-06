@@ -1265,42 +1265,221 @@ export function IntegrationsView() {
 // --- 13. SETTINGS PAGE ---
 
 export function AdminSettingsView() {
+  const [platformName, setPlatformName] = useState("Summa AI");
+  const [defaultCurrency, setDefaultCurrency] = useState("NGN");
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [websocketEnabled, setWebsocketEnabled] = useState(true);
+  const [hybridMemoryEnabled, setHybridMemoryEnabled] = useState(true);
+  const [summastudyEnabled, setSummastudyEnabled] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const loadSettings = async () => {
+    setLoading(true);
+    try {
+      const res = await fetchApi<any>("/admin/settings");
+      if (res?.settings) {
+        setPlatformName(res.settings.platform_name || "Summa AI");
+        setDefaultCurrency(res.settings.default_currency || "NGN");
+        setMaintenanceMode(Boolean(res.settings.maintenance_mode));
+        setWebsocketEnabled(Boolean(res.settings.websocket_enabled));
+        setHybridMemoryEnabled(Boolean(res.settings.hybrid_memory_enabled));
+        setSummastudyEnabled(Boolean(res.settings.summastudy_enabled));
+      }
+    } catch (err) {
+      toast.error("Failed to load platform settings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const handleSaveSettings = async (overrideData?: Record<string, any>) => {
+    setIsSaving(true);
+    const body = overrideData || {
+      platform_name: platformName,
+      default_currency: defaultCurrency,
+      maintenance_mode: maintenanceMode,
+      websocket_enabled: websocketEnabled,
+      hybrid_memory_enabled: hybridMemoryEnabled,
+      summastudy_enabled: summastudyEnabled,
+    };
+
+    try {
+      const res = await fetchApi<any>("/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+
+      if (res?.settings) {
+        setPlatformName(res.settings.platform_name);
+        setDefaultCurrency(res.settings.default_currency);
+        setMaintenanceMode(Boolean(res.settings.maintenance_mode));
+        setWebsocketEnabled(Boolean(res.settings.websocket_enabled));
+        setHybridMemoryEnabled(Boolean(res.settings.hybrid_memory_enabled));
+        setSummastudyEnabled(Boolean(res.settings.summastudy_enabled));
+        toast.success("Platform settings and feature flags updated!");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update platform settings.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleToggle = (key: string, currentValue: boolean, setter: (val: boolean) => void) => {
+    const newValue = !currentValue;
+    setter(newValue);
+    handleSaveSettings({ [key]: newValue });
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-8 max-w-3xl space-y-4 shadow-2xs text-xs text-slate-500">
+        Loading platform settings & feature flags...
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border border-[#E2E8F0] rounded-2xl p-8 max-w-3xl space-y-6 shadow-2xs text-xs">
       <div className="border-b border-[#E2E8F0] pb-4 space-y-1">
-        <h3 className="font-bold text-base text-slate-900">Platform Settings</h3>
-        <p className="text-slate-400">Configure global Summa AI admin behavior and environment flags.</p>
+        <h3 className="font-bold text-base text-slate-900">Platform Settings & Feature Flags</h3>
+        <p className="text-slate-400">Configure global Summa AI admin behavior, operational switches, and feature toggles.</p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-1.5">
           <label className="font-semibold text-slate-700">Platform Name</label>
-          <input type="text" defaultValue="Summa AI" className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none" />
+          <input
+            type="text"
+            value={platformName}
+            onChange={(e) => setPlatformName(e.target.value)}
+            className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none focus:border-[#6366F1]"
+          />
         </div>
 
         <div className="space-y-1.5">
           <label className="font-semibold text-slate-700">Default Currency</label>
-          <select className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none">
-            <option>Nigerian Naira (₦ - NGN)</option>
-            <option>US Dollar ($ - USD)</option>
+          <select
+            value={defaultCurrency}
+            onChange={(e) => setDefaultCurrency(e.target.value)}
+            className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none focus:border-[#6366F1]"
+          >
+            <option value="NGN">Nigerian Naira (₦ - NGN)</option>
+            <option value="USD">US Dollar ($ - USD)</option>
           </select>
         </div>
 
-        <div className="flex items-center justify-between py-3 border-t border-[#E2E8F0]">
-          <div>
-            <div className="font-semibold text-slate-900">Maintenance Mode</div>
-            <div className="text-slate-400 text-[11px]">Temporarily restrict student portal access for core updates.</div>
+        {/* Feature Flags Section */}
+        <div className="pt-4 border-t border-[#E2E8F0] space-y-3">
+          <h4 className="font-bold text-xs text-slate-500 uppercase tracking-wider">
+            Global Feature Flags
+          </h4>
+
+          {/* WebSocket Feature Flag */}
+          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+            <div>
+              <div className="font-semibold text-slate-900">WebSocket Realtime Engine (WEBSOCKET_ENABLED)</div>
+              <div className="text-slate-400 text-[11px]">Enables low-latency bidirectional socket connections for live study streams.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleToggle("websocket_enabled", websocketEnabled, setWebsocketEnabled)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
+                websocketEnabled ? "bg-[#6366F1]" : "bg-slate-300"
+              }`}
+            >
+              <div
+                className={`size-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                  websocketEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
-          <input type="checkbox" className="size-4 accent-[#6366F1]" />
+
+          {/* Hybrid Memory Feature Flag */}
+          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+            <div>
+              <div className="font-semibold text-slate-900">Hybrid Memory Layer (HYBRID_MEMORY_ENABLED)</div>
+              <div className="text-slate-400 text-[11px]">Activates Cognee graph memory and Qdrant vector retrieval during chat sessions.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleToggle("hybrid_memory_enabled", hybridMemoryEnabled, setHybridMemoryEnabled)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
+                hybridMemoryEnabled ? "bg-[#6366F1]" : "bg-slate-300"
+              }`}
+            >
+              <div
+                className={`size-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                  hybridMemoryEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* SummaStudy Integration Feature Flag */}
+          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+            <div>
+              <div className="font-semibold text-slate-900">SummaStudy API Integration (SUMMASTUDY_ENABLED)</div>
+              <div className="text-slate-400 text-[11px]">Gates microservice requests for study planner, spaced repetition, & recommendations.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleToggle("summastudy_enabled", summastudyEnabled, setSummastudyEnabled)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
+                summastudyEnabled ? "bg-[#6366F1]" : "bg-slate-300"
+              }`}
+            >
+              <div
+                className={`size-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                  summastudyEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Maintenance Mode */}
+          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+            <div>
+              <div className="font-semibold text-slate-900">Maintenance Mode</div>
+              <div className="text-slate-400 text-[11px]">Temporarily restrict student portal access for core backend updates.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleToggle("maintenance_mode", maintenanceMode, setMaintenanceMode)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
+                maintenanceMode ? "bg-rose-500" : "bg-slate-300"
+              }`}
+            >
+              <div
+                className={`size-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                  maintenanceMode ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="pt-4 border-t border-[#E2E8F0] flex justify-end gap-3">
-        <button onClick={() => toast.info("Settings discarded.")} className="px-5 py-2.5 rounded-xl border border-[#E2E8F0] font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
-          Cancel
+        <button
+          onClick={loadSettings}
+          className="px-5 py-2.5 rounded-xl border border-[#E2E8F0] font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+        >
+          Reset
         </button>
-        <button onClick={() => toast.success("Platform settings saved successfully.")} className="px-5 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold hover:bg-[#4F46E5] transition shadow-2xs cursor-pointer">
-          Save Settings
+        <button
+          onClick={() => handleSaveSettings()}
+          disabled={isSaving}
+          className="px-5 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold hover:bg-[#4F46E5] transition shadow-2xs cursor-pointer disabled:opacity-50"
+        >
+          {isSaving ? "Saving..." : "Save Settings"}
         </button>
       </div>
     </div>
