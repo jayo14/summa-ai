@@ -6,7 +6,7 @@ import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
   Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, MoreVertical, Paperclip, PanelRight,
   Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck, LogOut, Terminal, Shield,
-  Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus,
+  Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus, Edit2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/components/LearningInteractives";
@@ -167,6 +167,9 @@ export default function Home() {
   const [isSidebarFolderDialogOpen, setIsSidebarFolderDialogOpen] = useState(false);
   const [sidebarFolderName, setSidebarFolderName] = useState("");
 
+  const [renameChatTarget, setRenameChatTarget] = useState<{ id: string; title: string } | null>(null);
+  const [renameChatTitle, setRenameChatTitle] = useState("");
+
   const [dbConversations, setDbConversations] = useState<Array<{ id: string; title: string; created_at: string }>>([]);
   const [dbMaterials, setDbMaterials] = useState<Array<{ id: string; title: string; type: string; description?: string }>>([]);
   const [dbActivities, setDbActivities] = useState<Array<any>>([]);
@@ -212,6 +215,23 @@ export default function Home() {
       toast.success("Conversation deleted");
     } catch (err: any) {
       toast.error(err.message || "Failed to delete conversation");
+    }
+  };
+
+  const renameConversationHandler = async (cid: string, newTitle: string) => {
+    const cleanTitle = newTitle.trim();
+    if (!cleanTitle) return;
+    try {
+      await fetchApi(`/conversations/${cid}`, {
+        method: "PATCH",
+        body: JSON.stringify({ title: cleanTitle }),
+      });
+      setDbConversations((prev) =>
+        prev.map((c) => (c.id === cid ? { ...c, title: cleanTitle } : c))
+      );
+      toast.success("Chat renamed successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to rename conversation");
     }
   };
 
@@ -611,6 +631,16 @@ export default function Home() {
                           </>
                         )}
                         <DropdownMenuItem
+                          onClick={() => {
+                            setRenameChatTarget({ id: chat.id, title: chat.title });
+                            setRenameChatTitle(chat.title);
+                          }}
+                          className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-[#102B2B] dark:text-[#FBFAF6] hover:bg-[#DDE8DF] dark:hover:bg-[#232D2D]"
+                        >
+                          <Edit2 size={14} className="text-[#005A57] dark:text-[#B8FF4D]" />
+                          <span>Rename</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           onClick={() => deleteConversationHandler(chat.id)}
                           className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium"
                         >
@@ -770,6 +800,62 @@ export default function Home() {
                 className="px-4 py-2 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] font-bold text-xs rounded-xl shadow-xs transition-all"
               >
                 Create folder
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename Chat Dialog Component */}
+      <Dialog open={Boolean(renameChatTarget)} onOpenChange={(open) => { if (!open) setRenameChatTarget(null); }}>
+        <DialogContent showCloseButton className="sm:max-w-md bg-[#FBFAF6] dark:bg-slate-900 border-[#DDE8DF] dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-[#102B2B] dark:text-white flex items-center gap-2">
+              <Edit2 className="size-4 text-[#005A57] dark:text-[#B8FF4D]" />
+              <span>Rename Chat</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[#6D7E78] dark:text-slate-400">
+              Enter a new name for this learning conversation.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (renameChatTarget && renameChatTitle.trim()) {
+                renameConversationHandler(renameChatTarget.id, renameChatTitle.trim());
+                setRenameChatTarget(null);
+              }
+            }}
+            className="space-y-4 pt-2"
+          >
+            <div>
+              <label className="block text-xs font-bold text-[#102B2B] dark:text-slate-200 mb-1.5">
+                Chat Title
+              </label>
+              <input
+                type="text"
+                value={renameChatTitle}
+                onChange={(e) => setRenameChatTitle(e.target.value)}
+                placeholder="e.g. Dynamic Programming & Memoization"
+                autoFocus
+                className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-[#DDE8DF] dark:border-slate-700 rounded-xl text-xs text-[#102B2B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#005A57]/30"
+              />
+            </div>
+
+            <DialogFooter className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setRenameChatTarget(null)}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] border border-[#005A57] font-bold text-xs rounded-xl shadow-xs transition-all"
+              >
+                Save title
               </button>
             </DialogFooter>
           </form>
