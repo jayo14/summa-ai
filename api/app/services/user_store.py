@@ -40,86 +40,12 @@ class UserStore:
                     "timestamp": "2026-09-02T14:30:00Z",
                 },
             ]
-            cls._instance._local_users: Dict[str, Dict[str, Any]] = {
-                "eb39900f-6706-5803-8c1f-c66e00be722b": {
-                    "id": "eb39900f-6706-5803-8c1f-c66e00be722b",
-                    "email": "admin@summa.ai",
-                    "name": "System Administrator",
-                    "role": "admin",
-                    "status": "active",
-                    "avatar": None,
-                    "provider": "credentials",
-                    "onboarded": True,
-                    "onboarding_data": {"degree": "M.S. Systems & Security", "field_of_study": "AI Infrastructure"},
-                    "last_active": "2026-09-04T02:42:00Z",
-                    "created_at": "2026-08-01T00:00:00Z",
-                },
-                "119f677f-cd51-526d-acf3-3bd68d95b57b": {
-                    "id": "119f677f-cd51-526d-acf3-3bd68d95b57b",
-                    "email": "alex@summa.ai",
-                    "name": "Alex Rivera",
-                    "role": "admin",
-                    "status": "active",
-                    "avatar": None,
-                    "provider": "credentials",
-                    "onboarded": True,
-                    "onboarding_data": {"degree": "M.S. Computer Science", "field_of_study": "AI & Systems"},
-                    "last_active": "2026-09-03T13:10:00Z",
-                    "created_at": "2026-08-01T00:00:00Z",
-                },
-                "usr-prof-1": {
-                    "id": "usr-prof-1",
-                    "email": "prof.marcus@university.edu",
-                    "name": "Dr. Marcus Vance",
-                    "role": "instructor",
-                    "status": "active",
-                    "avatar": None,
-                    "provider": "credentials",
-                    "onboarded": True,
-                    "onboarding_data": {"degree": "Ph.D. Software Engineering", "field_of_study": "Object-Oriented Design"},
-                    "last_active": "2026-09-03T11:45:00Z",
-                    "created_at": "2026-08-10T00:00:00Z",
-                },
-                "usr-student-1": {
-                    "id": "usr-student-1",
-                    "email": "sarah.chen@student.edu",
-                    "name": "Sarah Chen",
-                    "role": "student",
-                    "status": "active",
-                    "avatar": None,
-                    "provider": "credentials",
-                    "onboarded": True,
-                    "onboarding_data": {"degree": "B.S. Computer Science", "field_of_study": "Data Structures"},
-                    "last_active": "2026-09-03T09:20:00Z",
-                    "created_at": "2026-08-15T00:00:00Z",
-                },
-                "usr-student-2": {
-                    "id": "usr-student-2",
-                    "email": "david.k@student.edu",
-                    "name": "David Kim",
-                    "role": "student",
-                    "status": "active",
-                    "avatar": None,
-                    "provider": "credentials",
-                    "onboarded": True,
-                    "onboarding_data": {"degree": "B.S. Information Technology", "field_of_study": "Web Systems"},
-                    "last_active": "2026-09-02T16:00:00Z",
-                    "created_at": "2026-08-20T00:00:00Z",
-                },
-                "usr-student-3": {
-                    "id": "usr-student-3",
-                    "email": "maya.lin@student.edu",
-                    "name": "Maya Lin",
-                    "role": "student",
-                    "status": "suspended",
-                    "avatar": None,
-                    "provider": "credentials",
-                    "onboarded": False,
-                    "onboarding_data": {},
-                    "last_active": "2026-08-28T10:00:00Z",
-                    "created_at": "2026-08-25T00:00:00Z",
-                },
-            }
+            # Intentionally empty: no hardcoded seed users.
+            # get_user_by_id() returns None when the DB has no row — it never
+            # returns a fake "Student User" identity for a real signed-up account.
+            # save_user() may write here as a short-lived per-process cache after a
+            # successful DB upsert, but the authoritative source is always the DB.
+            cls._instance._local_users: Dict[str, Dict[str, Any]] = {}
         return cls._instance
 
     async def _get_pool(self) -> asyncpg.Pool:
@@ -140,7 +66,10 @@ class UserStore:
         except Exception:
             pass
 
-        return self._local_users.get(user_id)
+        # Fall back to in-process cache only — never return a generic anonymous
+        # identity.  If the DB is unreachable AND the user has not been seen in
+        # this process yet, callers receive None and must handle it explicitly.
+        return self._local_users.get(user_id)  # returns None when not cached
 
     async def save_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         user_obj = {
@@ -165,11 +94,16 @@ class UserStore:
                         INSERT INTO summa_ai.user_profiles (id, email, name, avatar, bio, role, status, provider, email_verified, onboarded, onboarding_data)
                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                         ON CONFLICT (id) DO UPDATE SET
-                            email = EXCLUDED.email,
-                            name = COALESCE(EXCLUDED.name, summa_ai.user_profiles.name),
-                            role = EXCLUDED.role,
-                            status = EXCLUDED.status,
-                            email_verified = EXCLUDED.email_verified
+                            email            = EXCLUDED.email,
+                            name             = COALESCE(summa_ai.user_profiles.name, EXCLUDED.name),
+                            avatar           = COALESCE(summa_ai.user_profiles.avatar, EXCLUDED.avatar),
+                            bio              = COALESCE(summa_ai.user_profiles.bio, EXCLUDED.bio),
+                            role             = EXCLUDED.role,
+                            status           = EXCLUDED.status,
+                            provider         = COALESCE(summa_ai.user_profiles.provider, EXCLUDED.provider),
+                            email_verified   = EXCLUDED.email_verified,
+                            onboarded        = COALESCE(summa_ai.user_profiles.onboarded, EXCLUDED.onboarded),
+                            onboarding_data  = COALESCE(summa_ai.user_profiles.onboarding_data, EXCLUDED.onboarding_data)
                         RETURNING *
                         """,
                         user_id,

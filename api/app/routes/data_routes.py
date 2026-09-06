@@ -1,5 +1,6 @@
 """Artifacts, Conversations, Timeline, User, Settings, Materials, Concepts, Analytics routes — Postgres-backed."""
 
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException, Query, Response
@@ -7,10 +8,13 @@ from fastapi.responses import JSONResponse
 from app.models.activity import ActivityCreate, ActivityUpdate, ActivityVersionRestore
 from app.models.chat import ConversationCreate, MessageCreate
 from app.models.timeline import TimelineEventCreate, MaterialCreate, ConceptCreate
-from app.core.security import resolve_user_id
+from app.config import settings
+from app.core.security import resolve_user_id, current_user_claims
 from app.services.user_store import UserStore
 from app.services.data_store import DataStore
 from app.services.cognee_service import CogneeService
+
+logger = logging.getLogger(__name__)
 
 _store = DataStore()
 
@@ -341,10 +345,16 @@ async def upload_file(data: dict):
             ext = file_name.split(".")[-1] if "." in file_name else "png"
             storage_path = f"{user_id}/{int(datetime.now(timezone.utc).timestamp())}.{ext}"
             upload_endpoint = f"{settings.SUPABASE_URL}/storage/v1/object/{bucket}/{storage_path}"
-            
+
+            # Use the caller's JWT as the Bearer token so Supabase Storage RLS
+            # policies (e.g. "owner = auth.uid()") resolve correctly.  Fall back
+            # to the anon key only if no user token is available (dev fallback).
+            from app.core.security import resolve_jwt_token
+            user_token = resolve_jwt_token() or settings.SUPABASE_ANON_KEY
+
             headers = {
                 "apikey": settings.SUPABASE_ANON_KEY,
-                "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}",
+                "Authorization": f"Bearer {user_token}",
                 "Content-Type": content_type,
                 "x-upsert": "true",
             }

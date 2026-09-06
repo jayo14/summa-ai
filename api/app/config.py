@@ -66,7 +66,10 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 
     # Feature flags
-    ALLOW_DEV_AUTH_FALLBACK: bool = True
+    # Off by default — must be explicitly set to true in non-production environments
+    # only. The middleware's _dev_fallback_enabled() also checks is_production, so
+    # this can never be enabled in production even if accidentally set.
+    ALLOW_DEV_AUTH_FALLBACK: bool = False
     SCHEDULER_ENABLED: bool = True
     WEBSOCKET_ENABLED: bool = True
     NEW_CHAT_UI: bool = False

@@ -67,7 +67,7 @@ async def signup(payload: AuthLoginRequest):
 
     if SUPABASE_AUTH_URL and not settings.SUPABASE_URL.startswith("https://xxx"):
         try:
-            async with httpx.AsyncClient(timeout=2.0) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
                     f"{SUPABASE_AUTH_URL}/signup",
                     headers={"apikey": settings.SUPABASE_ANON_KEY},
@@ -95,11 +95,12 @@ async def signup(payload: AuthLoginRequest):
                         "onboarding_data": {},
                     }
                     user_store = UserStore()
-                    await user_store.save_user(user_obj["id"], user_obj)
+                    saved = await user_store.save_user(user_obj["id"], user_obj)
+                    fresh = await user_store.get_user_by_id(user_obj["id"]) or saved
                     return {
                         "access_token": token,
                         "token_type": "bearer",
-                        "user": user_obj,
+                        "user": user_store.serialize_user(fresh),
                     }
                 else:
                     detail = (
@@ -134,13 +135,14 @@ async def signup(payload: AuthLoginRequest):
         "onboarded": False,
         "onboarding_data": {},
     }
-    await user_store.save_user(user_id, user_obj)
+    saved = await user_store.save_user(user_id, user_obj)
+    fresh = await user_store.get_user_by_id(user_id) or saved
 
     token = _create_mock_jwt(user_id)
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": user_obj,
+        "user": user_store.serialize_user(fresh),
     }
 
 
@@ -190,24 +192,32 @@ async def login(payload: AuthLoginRequest):
                     user_data = body.get("user", {})
                     is_verified = bool(user_data.get("email_confirmed_at") or user_data.get("confirmed_at") or True)
                     actual_user_id = user_data.get("id", user_id)
+                    # Re-fetch profile by the real Supabase UUID — the pre-login
+                    # uuid5 lookup may have found nothing or a different row.
+                    real_existing = await user_store.get_user_by_id(actual_user_id) or existing_user
+                    actual_role = real_existing.get("role") if real_existing and real_existing.get("role") else role
+                    actual_name = real_existing.get("name") if real_existing and real_existing.get("name") else (user_data.get("user_metadata", {}).get("name") or name)
                     user_obj = {
                         "id": actual_user_id,
                         "email": user_data.get("email", email_clean),
-                        "name": existing_user.get("name") if existing_user and existing_user.get("name") else (user_data.get("user_metadata", {}).get("name") or name),
-                        "avatar": existing_user.get("avatar") if existing_user and existing_user.get("avatar") else (user_data.get("user_metadata", {}).get("avatar") or payload.avatar),
-                        "bio": existing_user.get("bio") if existing_user else "",
-                        "role": role,
-                        "status": existing_user.get("status", "active") if existing_user else "active",
+                        "name": actual_name,
+                        "avatar": real_existing.get("avatar") if real_existing and real_existing.get("avatar") else (user_data.get("user_metadata", {}).get("avatar") or payload.avatar),
+                        "bio": real_existing.get("bio") if real_existing else "",
+                        "role": actual_role,
+                        "status": real_existing.get("status", "active") if real_existing else "active",
                         "provider": payload.provider,
                         "email_verified": is_verified,
-                        "onboarded": existing_user.get("onboarded", False) if existing_user else False,
-                        "onboarding_data": existing_user.get("onboarding_data", {}) if existing_user else {},
+                        "onboarded": real_existing.get("onboarded", False) if real_existing else False,
+                        "onboarding_data": real_existing.get("onboarding_data", {}) if real_existing else {},
                     }
-                    await user_store.save_user(actual_user_id, user_obj)
+                    saved = await user_store.save_user(actual_user_id, user_obj)
+                    # Re-read from DB so the response reflects the persisted row
+                    # (picks up bio/avatar/name that were updated via PATCH /user)
+                    fresh = await user_store.get_user_by_id(actual_user_id) or saved
                     return {
                         "access_token": body["access_token"],
                         "token_type": "bearer",
-                        "user": user_obj,
+                        "user": user_store.serialize_user(fresh),
                     }
                 else:
                     err_json = resp.json()
@@ -251,13 +261,14 @@ async def login(payload: AuthLoginRequest):
         "onboarded": existing_user.get("onboarded", False) if existing_user else False,
         "onboarding_data": existing_user.get("onboarding_data", {}) if existing_user else {},
     }
-    await user_store.save_user(user_id, user_obj)
+    saved = await user_store.save_user(user_id, user_obj)
+    fresh = await user_store.get_user_by_id(user_id) or saved
 
     token = _create_mock_jwt(user_id)
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": user_obj,
+        "user": user_store.serialize_user(fresh),
     }
 
 
@@ -279,7 +290,9 @@ async def forgot_password(payload: ForgotPasswordRequest):
                     json={"email": payload.email},
                 )
         except Exception as exc:
-            logger.warning("Supabase password recovery error: %s", exc)
+            # ERROR not WARNING — a misconfigured Supabase URL means password
+            # reset emails are silently never sent, which must be visible in logs.
+            logger.error("Supabase password recovery unreachable: %s", exc)
 
     return {
         "message": "If an account exists for this email address, password reset instructions have been sent."
@@ -307,7 +320,7 @@ async def reset_password(
         try:
             token = authorization.split(" ", 1)[1] if " " in authorization else authorization
             async with httpx.AsyncClient(timeout=10.0) as client:
-                await client.put(
+                resp = await client.put(
                     f"{SUPABASE_AUTH_URL}/user",
                     headers={
                         "apikey": settings.SUPABASE_ANON_KEY,
@@ -315,8 +328,23 @@ async def reset_password(
                     },
                     json={"password": payload.password},
                 )
+            if resp.status_code not in (200, 204):
+                err = resp.json()
+                detail = (
+                    err.get("error_description")
+                    or err.get("msg")
+                    or err.get("error")
+                    or "Password update failed"
+                )
+                logger.warning("Supabase reset-password failed (%d): %s", resp.status_code, detail)
+                raise HTTPException(status_code=400, detail=detail)
+        except HTTPException:
+            raise
         except Exception as exc:
-            logger.warning("Supabase reset password update error: %s", exc)
+            logger.error("Supabase reset-password connection error: %s", exc)
+            raise HTTPException(status_code=502, detail="Authentication service unavailable — password was not changed")
+    elif not authorization:
+        raise HTTPException(status_code=401, detail="Authorization token required to reset password")
 
     return {"message": "Password updated successfully. You can now sign in with your new password."}
 
@@ -332,12 +360,13 @@ async def verify_otp(payload: VerifyOtpRequest):
         raise HTTPException(status_code=400, detail="Email and OTP code (token) are required")
 
     email_clean = payload.email.lower().strip()
-    user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email_clean))
+    fallback_user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email_clean))
     role = get_user_role({"email": email_clean})
+    user_store = UserStore()
 
     if SUPABASE_AUTH_URL and not settings.SUPABASE_URL.startswith("https://xxx"):
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
                     f"{SUPABASE_AUTH_URL}/verify",
                     headers={"apikey": settings.SUPABASE_ANON_KEY},
@@ -347,45 +376,56 @@ async def verify_otp(payload: VerifyOtpRequest):
                         "token": payload.token,
                     },
                 )
-                if resp.status_code == 200:
-                    body = resp.json()
-                    user_data = body.get("user", {})
-                    token = body.get("access_token") or _create_mock_jwt(user_data.get("id", user_id))
-                    return {
-                        "access_token": token,
-                        "token_type": "bearer",
-                        "user": {
-                            "id": user_data.get("id", user_id),
-                            "email": user_data.get("email", email_clean),
-                            "name": user_data.get("user_metadata", {}).get("name") or email_clean.split("@")[0].capitalize(),
-                            "avatar": user_data.get("user_metadata", {}).get("avatar"),
-                            "role": role,
-                            "status": "active",
-                            "provider": "credentials",
-                            "email_verified": True,
-                            "onboarded": False,
-                            "onboarding_data": {},
-                        },
-                    }
+            if resp.status_code == 200:
+                body = resp.json()
+                user_data = body.get("user", {})
+                actual_user_id = user_data.get("id", fallback_user_id)
+                access_token = body.get("access_token") or _create_mock_jwt(actual_user_id)
+                user_obj = {
+                    "id": actual_user_id,
+                    "email": user_data.get("email", email_clean),
+                    "name": user_data.get("user_metadata", {}).get("name") or email_clean.split("@")[0].capitalize(),
+                    "avatar": user_data.get("user_metadata", {}).get("avatar"),
+                    "role": role,
+                    "status": "active",
+                    "provider": "credentials",
+                    "email_verified": True,
+                    "onboarded": False,
+                    "onboarding_data": {},
+                }
+                saved = await user_store.save_user(actual_user_id, user_obj)
+                fresh = await user_store.get_user_by_id(actual_user_id) or saved
+                return {
+                    "access_token": access_token,
+                    "token_type": "bearer",
+                    "user": user_store.serialize_user(fresh),
+                }
+            else:
+                err = resp.json()
+                detail = err.get("error_description") or err.get("msg") or "Invalid or expired verification code"
+                # Dev bypass: accept well-known test codes when fallback is enabled
+                if _dev_fallback_enabled() and payload.token in ("123456", "000000", "111111"):
+                    logger.info("Dev fallback OTP bypass for code '%s'", payload.token)
+                    # fall through to dev fallback below
                 else:
-                    err = resp.json()
-                    detail = err.get("error_description") or err.get("msg") or "Invalid or expired verification code"
-                    if _dev_fallback_enabled() and payload.token in ("123456", "000000", "111111"):
-                        logger.info("Dev fallback OTP bypass for code '%s'", payload.token)
-                    else:
-                        raise HTTPException(status_code=400, detail=detail)
+                    raise HTTPException(status_code=400, detail=detail)
         except HTTPException:
             raise
         except Exception as exc:
-            logger.warning("Supabase verify-otp error: %s", exc)
+            logger.warning("Supabase verify-otp connection error: %s", exc)
+            if not _dev_fallback_enabled():
+                raise HTTPException(status_code=502, detail="Authentication service unavailable")
+            # fall through to dev fallback below
 
-    user_store = UserStore()
-    uid = user_data.get("id", user_id) if 'user_data' in locals() else user_id
+    # Dev fallback — only when explicitly enabled
+    if not _dev_fallback_enabled():
+        raise HTTPException(status_code=502, detail="Authentication service unavailable")
+
     user_obj = {
-        "id": uid,
+        "id": fallback_user_id,
         "email": email_clean,
-        "name": user_data.get("user_metadata", {}).get("name") if 'user_data' in locals() else email_clean.split("@")[0].capitalize(),
-        "avatar": user_data.get("user_metadata", {}).get("avatar") if 'user_data' in locals() else None,
+        "name": email_clean.split("@")[0].capitalize(),
+        "avatar": None,
         "role": role,
         "status": "active",
         "provider": "credentials",
@@ -393,13 +433,13 @@ async def verify_otp(payload: VerifyOtpRequest):
         "onboarded": False,
         "onboarding_data": {},
     }
-    await user_store.save_user(uid, user_obj)
-
-    token = _create_mock_jwt(uid)
+    saved = await user_store.save_user(fallback_user_id, user_obj)
+    fresh = await user_store.get_user_by_id(fallback_user_id) or saved
+    access_token = _create_mock_jwt(fallback_user_id)
     return {
-        "access_token": token,
+        "access_token": access_token,
         "token_type": "bearer",
-        "user": user_obj,
+        "user": user_store.serialize_user(fresh),
     }
 
 
@@ -422,7 +462,9 @@ async def resend_otp(payload: ResendOtpRequest):
                     json={"type": payload.type or "signup", "email": email_clean},
                 )
         except Exception as exc:
-            logger.warning("Supabase resend-otp error: %s", exc)
+            # ERROR not WARNING — user will never receive their verification code
+            # if this fails silently; needs to be visible in production logs.
+            logger.error("Supabase resend-otp unreachable: %s", exc)
 
     return {"message": "Verification code sent to your email."}
 

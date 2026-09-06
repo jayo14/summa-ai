@@ -137,6 +137,13 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
         current_user_claims.set(payload)
         return user_id
 
+    # Reached only for algorithms that are neither HS256 nor RS256/ES256
+    logger.warning(
+        "verify_supabase_jwt: unrecognised algorithm '%s' — token rejected. "
+        "Expected HS256 (symmetric) or RS256/ES256 (JWKS). "
+        "Check SUPABASE_JWT_SECRET and SUPABASE_URL.",
+        alg,
+    )
     return None
 
 
