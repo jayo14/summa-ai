@@ -392,14 +392,17 @@ export default function Home() {
                       : msg
                   )
                 );
-              } else if (parsed.type === "artifact" && parsed.data) {
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === summaMsgId
-                      ? { ...msg, activity: { id: parsed.id, title: parsed.title, type: parsed.type, data: parsed.data } }
-                      : msg
-                  )
-                );
+              } else if (parsed.type === "artifact") {
+                const act = parsed.artifact || parsed;
+                if (act && (act.data || act.type)) {
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === summaMsgId
+                        ? { ...msg, activity: { id: act.id, title: act.title, type: act.type, data: act.data } }
+                        : msg
+                    )
+                  );
+                }
               } else if (parsed.type === "error") {
                 toast.error(parsed.message || "AI response error");
                 setMessages((prev) =>
