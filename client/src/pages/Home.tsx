@@ -35,7 +35,14 @@ import {
 import { ChatComponentRenderer, LearningActivityEnvelope } from "@/components/chat/ChatComponentRenderer";
 
 type ViewName = "workspace" | "learning" | "progress" | "sources" | "settings";
-type ConversationMessage = { id: number; role: "student" | "summa"; content: string; activity?: LearningActivityEnvelope };
+type ConversationMessage = {
+  id: number;
+  role: "student" | "summa";
+  content: string;
+  thinking?: string;
+  error?: boolean;
+  activity?: LearningActivityEnvelope;
+};
 
 const navItems: Array<{ id: ViewName; label: string; icon: typeof LayoutPanelTop }> = [
   { id: "workspace", label: "Workspace", icon: LayoutPanelTop },
@@ -377,6 +384,14 @@ export default function Home() {
                       : msg
                   )
                 );
+              } else if (parsed.type === "thinking" && parsed.delta) {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === summaMsgId
+                      ? { ...msg, thinking: (msg.thinking || "") + parsed.delta }
+                      : msg
+                  )
+                );
               } else if (parsed.type === "artifact" && parsed.data) {
                 setMessages((prev) =>
                   prev.map((msg) =>
@@ -387,6 +402,13 @@ export default function Home() {
                 );
               } else if (parsed.type === "error") {
                 toast.error(parsed.message || "AI response error");
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === summaMsgId
+                      ? { ...msg, error: true, content: msg.content || "Summa couldn't complete the response." }
+                      : msg
+                  )
+                );
               }
             } catch (err) {
               // ignore json parse errors for partial lines
@@ -397,7 +419,13 @@ export default function Home() {
       .catch((err) => {
         console.error("Live SSE stream error:", err);
         toast.error("Failed to connect to Summa AI backend.");
-        setMessages((prev) => prev.filter((msg) => msg.id !== summaMsgId));
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === summaMsgId
+              ? { ...msg, error: true, content: msg.content || "Summa couldn't respond." }
+              : msg
+          )
+        );
       })
       .finally(() => {
         setIsResponding(false);
@@ -975,19 +1003,19 @@ function parseInlineMarkdown(text: string) {
   });
 }
 
-function ConversationTurn({ message }: { message: ConversationMessage }) {
+function ConversationTurn({ message, onRetry }: { message: ConversationMessage; onRetry?: () => void }) {
   const isStudent = message.role === "student";
   const { user } = useAuth();
   const initials = (user?.name || user?.email || "Student").split(" ").map((p) => p[0]).join("").toUpperCase().slice(0, 2);
 
   // Extract reasoning steps if present in assistant response
-  let reasoningText: string | undefined;
+  let reasoningText: string | undefined = message.thinking;
   let cleanContent = message.content;
   if (!isStudent && message.content.includes("<think>")) {
     const thinkStart = message.content.indexOf("<think>");
     const thinkEnd = message.content.indexOf("</think>");
     if (thinkEnd > thinkStart) {
-      reasoningText = message.content.slice(thinkStart + 7, thinkEnd).trim();
+      reasoningText = (reasoningText ? reasoningText + "\n" : "") + message.content.slice(thinkStart + 7, thinkEnd).trim();
       cleanContent = (message.content.slice(0, thinkStart) + message.content.slice(thinkEnd + 8)).trim();
     }
   }
@@ -1005,9 +1033,32 @@ function ConversationTurn({ message }: { message: ConversationMessage }) {
       )}
       <div className="message-content">
         {!isStudent && reasoningText && (
-          <ChainOfThought reasoningText={reasoningText} defaultExpanded={false} />
+          <ChainOfThought reasoningText={reasoningText} defaultExpanded={true} />
         )}
-        {isStudent ? <p>{cleanContent}</p> : <FormattedMarkdown content={cleanContent} />}
+        {isStudent ? (
+          <p>{cleanContent}</p>
+        ) : cleanContent ? (
+          <FormattedMarkdown content={cleanContent} />
+        ) : (
+          <div className="flex items-center gap-2 text-xs text-[#6D7E78] dark:text-[#8FA29B] italic py-1">
+            <span className="inline-block size-2 rounded-full bg-[#005A57] dark:bg-[#B8FF4D] animate-ping" />
+            <span>Thinking and rendering explanation...</span>
+          </div>
+        )}
+        {message.error && (
+          <div className="mt-2 flex items-center gap-3 p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400">
+            <span>Summa couldn't complete this response.</span>
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="px-2.5 py-1 rounded-lg bg-red-600 text-white dark:bg-red-500 hover:bg-red-700 text-[11px] font-semibold transition-colors shrink-0"
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        )}
         {message.activity && (
           <div className="mt-3">
             <ChatComponentRenderer activity={message.activity} />
