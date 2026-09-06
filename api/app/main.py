@@ -75,6 +75,12 @@ async def lifespan(app: FastAPI):
             + ", ".join(missing)
             + ". Set these environment variables before deploying."
         )
+    if not (settings.GEMINI_API_KEY or settings.OPENAI_API_KEY or settings.ZAI_API_KEY or settings.LLM_API_KEY):
+        logger.warning("⚠️  No LLM provider key configured! (GEMINI_API_KEY, ZAI_API_KEY, OPENAI_API_KEY, or LLM_API_KEY). Chat completions will fail or return errors.")
+    else:
+        active_llm = "Gemini" if settings.GEMINI_API_KEY else ("Z.ai" if settings.ZAI_API_KEY else "OpenAI/LLM")
+        logger.info("🤖 Active LLM Provider: %s", active_llm)
+
     await CogneeService.initialize()
     await load_jwks_at_startup()
     logger.info("🚀 Summa AI API Started")
