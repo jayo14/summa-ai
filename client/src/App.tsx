@@ -19,6 +19,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 import { SummaPreloader } from "@/components/SummaPreloader";
+import { ServerWarmupBanner } from "@/components/ServerWarmupBanner";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -144,6 +145,7 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <Toaster />
+            <ServerWarmupBanner />
             <Router />
           </TooltipProvider>
         </AuthProvider>
