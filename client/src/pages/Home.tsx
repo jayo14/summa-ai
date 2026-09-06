@@ -6,7 +6,7 @@ import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
   Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, MoreVertical, Paperclip, PanelRight,
   Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck, LogOut, Terminal, Shield,
-  Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus, Edit2,
+  Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus, Edit2, FolderMinus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/components/LearningInteractives";
@@ -241,6 +241,13 @@ export default function Home() {
       prev.map((c) => (c.id === cid ? { ...c, folder: folderName } : c))
     );
     toast.success(`Chat added to folder "${folderName}"`);
+  };
+
+  const removeChatFromFolder = (cid: string) => {
+    setDbConversations((prev) =>
+      prev.map((c) => (c.id === cid ? { ...c, folder: undefined } : c))
+    );
+    toast.success("Chat removed from folder");
   };
 
   const loadConversations = useCallback(() => {
@@ -605,6 +612,18 @@ export default function Home() {
                         sideOffset={4}
                         className="w-48 p-1 shadow-lg border border-[#DDE8DF] dark:border-[#2A3838] bg-[#FBFAF6] dark:bg-[#1C2323] text-[#102B2B] dark:text-[#FBFAF6] rounded-xl z-[999]"
                       >
+                        {chat.folder && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => removeChatFromFolder(chat.id)}
+                              className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-[#102B2B] dark:text-[#FBFAF6] hover:bg-[#DDE8DF] dark:hover:bg-[#232D2D]"
+                            >
+                              <FolderMinus size={14} className="text-amber-600 dark:text-amber-400" />
+                              <span>Remove from folder</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="my-1 border-[#DDE8DF] dark:border-[#2A3838]" />
+                          </>
+                        )}
                         {customFolders.length > 0 && (
                           <>
                             <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold text-[#6D7E78] dark:text-[#8FA29B] uppercase tracking-wider">
