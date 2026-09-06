@@ -92,7 +92,7 @@ class UserStore:
                     row = await conn.fetchrow(
                         """
                         INSERT INTO summa_ai.user_profiles (id, email, name, avatar, bio, role, status, provider, email_verified, onboarded, onboarding_data)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                        VALUES ($1, $2, $3, $4, $5, $6::summa_ai.user_role_enum, $7, $8, $9, $10, $11)
                         ON CONFLICT (id) DO UPDATE SET
                             email            = EXCLUDED.email,
                             name             = COALESCE(summa_ai.user_profiles.name, EXCLUDED.name),
@@ -139,7 +139,7 @@ class UserStore:
                 "id": user_id,
                 "email": email,
                 "name": name,
-                "role": "student",
+                "role": "user",
                 "status": "active",
                 "email_verified": True,
                 "onboarded": False,
@@ -163,10 +163,13 @@ class UserStore:
                     if row:
                         sets = []
                         values = []
-                        for key in ("name", "avatar", "bio", "role"):
+                        for key in ("name", "avatar", "bio"):
                             if key in data:
                                 sets.append(f"{key} = ${len(values) + 1}")
                                 values.append(data[key])
+                        if "role" in data:
+                            sets.append(f"role = ${len(values) + 1}::summa_ai.user_role_enum")
+                            values.append(data["role"])
                         if "email" in data and isinstance(data["email"], str) and data["email"].strip():
                             sets.append(f"email = ${len(values) + 1}")
                             values.append(data["email"].lower().strip())
