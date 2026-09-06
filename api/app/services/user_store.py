@@ -225,7 +225,7 @@ class UserStore:
         else:
             onboarding_data = onboarding_raw or {}
         return {
-            "id": user["id"],
+            "id": str(user["id"]),
             "email": user["email"],
             "name": user.get("name"),
             "avatar": user.get("avatar"),

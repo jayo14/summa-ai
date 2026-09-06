@@ -45,6 +45,7 @@ interface AuthState {
   resetPassword: (password: string) => Promise<string>;
   updateUser: (data: Partial<User>) => Promise<User>;
   logout: () => void;
+  setUserFromCallback: (user: any, token: string) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -141,10 +142,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   resetPassword: async (password: string): Promise<string> => {
+    // Use the recovery token stored by /callback for password-reset flows.
+    // Fall back to the regular session token for in-session password changes.
+    const recoveryToken = localStorage.getItem("summa_reset_token");
+    const sessionToken = localStorage.getItem("summa_access_token");
+    const tokenToUse = recoveryToken || sessionToken;
+
     const res = await fetchApi<{ message: string }>("/auth/reset-password", {
       method: "POST",
+      headers: tokenToUse ? { Authorization: `Bearer ${tokenToUse}` } : {},
       body: JSON.stringify({ password }),
     });
+    // Clear the one-time recovery token after use
+    if (recoveryToken) localStorage.removeItem("summa_reset_token");
     return res.message;
   },
 
@@ -161,6 +171,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem("summa_access_token");
     set({ token: null, user: null, isAuthenticated: false, isLoading: false });
+  },
+
+  setUserFromCallback: (userData: any, token: string) => {
+    const normalized = normalizeUser(userData);
+    localStorage.setItem("summa_access_token", token);
+    set({ token, user: normalized, isAuthenticated: true, isLoading: false, initialized: true });
   },
 }));
 

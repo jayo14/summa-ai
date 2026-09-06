@@ -167,6 +167,7 @@ PUBLIC_PATHS = {
     f"{settings.API_V1_STR}/auth/login",
     f"{settings.API_V1_STR}/auth/signup",
     f"{settings.API_V1_STR}/auth/verify-otp",
+    f"{settings.API_V1_STR}/auth/callback",
     f"{settings.API_V1_STR}/auth/resend-otp",
     f"{settings.API_V1_STR}/auth/forgot-password",
     f"{settings.API_V1_STR}/auth/reset-password",

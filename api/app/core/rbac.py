@@ -46,19 +46,12 @@ async def get_current_user_with_role(request: Request) -> dict:
     """Dependency that fetches the active user and attaches role & status."""
     user_id = getattr(request.state, "user_id", None)
     if not user_id:
-        # Fallback for dev mode
-        user_id = "119f677f-cd51-526d-acf3-3bd68d95b57b"
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
     user_store = UserStore()
-    user = await user_store.get_user_by_id(user_id)
+    user = await user_store.get_user_by_id(str(user_id))
     if not user:
-        user = {
-            "id": user_id,
-            "email": "admin@summa.ai",
-            "name": "Admin User",
-            "role": UserRole.ADMIN.value,
-            "status": UserStatus.ACTIVE.value,
-        }
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     user["role"] = get_user_role(user)
     user["status"] = user.get("status", UserStatus.ACTIVE.value)

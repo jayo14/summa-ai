@@ -333,6 +333,84 @@ async def forgot_password(payload: ForgotPasswordRequest):
 
 
 @router.post(
+    "/auth/callback",
+    response_model=AuthLoginResponse,
+    summary="Auth callback",
+    description="Exchange a Supabase callback token (from email confirmation link or OAuth redirect) for a session. Accepts access_token directly or resolves via token+type.",
+)
+async def auth_callback(data: dict):
+    """
+    Called from the frontend /callback page. Supabase email confirmation links
+    redirect to /callback?access_token=...&refresh_token=...&type=signup
+    (or type=recovery for password reset). This endpoint:
+    1. Accepts the access_token from the query params
+    2. Fetches the user from Supabase using the token
+    3. Upserts the profile row
+    4. Returns the same AuthLoginResponse shape as login
+    """
+    access_token = data.get("access_token", "").strip()
+    if not access_token:
+        raise HTTPException(status_code=400, detail="access_token is required")
+
+    auth_url = _supabase_auth_url()
+    headers = _supabase_headers()
+
+    # Fetch the user object from Supabase using the token
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"{auth_url}/user",
+                headers={**headers, "Authorization": f"Bearer {access_token}"},
+            )
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Authentication service timed out")
+    except Exception as exc:
+        logger.error("Supabase callback user fetch error: %s", exc)
+        raise HTTPException(status_code=502, detail="Authentication service unavailable")
+
+    if resp.status_code != 200:
+        err = resp.json()
+        detail = err.get("error_description") or err.get("msg") or "Invalid or expired callback token"
+        raise HTTPException(status_code=401, detail=detail)
+
+    user_data = resp.json()
+    actual_user_id = user_data.get("id") or str(uuid.uuid5(uuid.NAMESPACE_DNS, user_data.get("email", "")))
+    email = user_data.get("email", "")
+    role = get_user_role({"email": email})
+
+    user_obj = {
+        "id": actual_user_id,
+        "email": email,
+        "name": user_data.get("user_metadata", {}).get("name") or email.split("@")[0].capitalize(),
+        "avatar": user_data.get("user_metadata", {}).get("avatar"),
+        "role": role,
+        "status": "active",
+        "provider": user_data.get("app_metadata", {}).get("provider", "credentials"),
+        "email_verified": bool(user_data.get("email_confirmed_at") or user_data.get("confirmed_at")),
+        "onboarded": False,
+        "onboarding_data": {},
+    }
+    user_store = UserStore()
+    existing = await user_store.get_user_by_id(actual_user_id)
+    if existing:
+        # Preserve existing profile fields — only update email_verified
+        user_obj["name"] = existing.get("name") or user_obj["name"]
+        user_obj["avatar"] = existing.get("avatar") or user_obj["avatar"]
+        user_obj["bio"] = existing.get("bio", "")
+        user_obj["onboarded"] = existing.get("onboarded", False)
+        user_obj["onboarding_data"] = existing.get("onboarding_data", {})
+        user_obj["role"] = existing.get("role") or role
+
+    saved = await user_store.save_user(actual_user_id, user_obj)
+    fresh = await user_store.get_user_by_id(actual_user_id) or saved
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user_store.serialize_user(fresh),
+    }
+
+
+@router.post(
     "/auth/reset-password",
     summary="Reset password",
     description="Update account password via Supabase Auth",

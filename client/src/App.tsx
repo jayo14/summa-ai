@@ -10,6 +10,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
 import VerifyEmail from "@/pages/VerifyEmail";
+import Callback from "@/pages/Callback";
 import AdminDashboard from "@/pages/AdminDashboard";
 import { AdminRoute } from "@/components/AdminRoute";
 import { UserRole } from "@/types/roles";
@@ -89,6 +90,9 @@ function Router() {
       </Route>
       <Route path="/verify-email">
         {() => <VerifyEmail />}
+      </Route>
+      <Route path="/callback">
+        {() => <Callback />}
       </Route>
       <Route path="/forgot-password">
         {() => <PublicAuthRoute component={ForgotPassword} />}
