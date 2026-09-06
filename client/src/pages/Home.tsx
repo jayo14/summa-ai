@@ -845,7 +845,7 @@ function EmptyWorkspace(props: WorkspaceProps & { dbConversations?: Array<{ id: 
       <ComposerPanel {...props} />
       <div className="empty-actions" aria-label="Learning shortcuts">
         {emptyActions.map(({ label, icon: Icon }) => (
-          <button type="button" key={label} onClick={() => { props.setComposerValue(label); props.onStart(); }}>
+          <button type="button" key={label} onClick={() => props.sendMessage(label)}>
             <Icon size={15} /> {label}
           </button>
         ))}
