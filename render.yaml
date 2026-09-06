@@ -1,9 +1,10 @@
 services:
   - type: web
     name: summa-ai-api
-    env: docker
-    dockerfilePath: api/Dockerfile
-    dockerContext: api
+    env: python
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     region: oregon
     plan: free
     healthCheckPath: /health
