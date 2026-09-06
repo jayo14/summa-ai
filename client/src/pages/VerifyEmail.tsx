@@ -10,7 +10,7 @@ export default function VerifyEmail() {
   const [email, setEmail] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(60);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const { user, verifyOtp, resendOtp } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -36,6 +36,21 @@ export default function VerifyEmail() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
+  const handleResend = async () => {
+    if (resendCooldown > 0 || !email) return;
+    setIsResending(true);
+    try {
+      const msg = await resendOtp(email);
+      toast.success(msg || "New verification code sent to your email!");
+      setResendCooldown(60);
+      setCode("");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to resend verification code");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code || code.trim().length < 6) {
@@ -57,22 +72,27 @@ export default function VerifyEmail() {
         window.location.href = "/";
       }, 100);
     } catch (err: any) {
-      toast.error(err.message || "Invalid or expired verification code");
+      const msg: string = err.message || "";
+      const isExpired = msg.toLowerCase().includes("expired") || msg.toLowerCase().includes("invalid");
+      if (isExpired) {
+        toast.error("That code has expired. A fresh code has been sent to your email.");
+        setCode("");
+        // Auto-resend so the user doesn't have to click
+        if (email && resendCooldown === 0) {
+          setIsResending(true);
+          try {
+            await resendOtp(email);
+            setResendCooldown(60);
+          } catch {
+            // resend failure is a secondary concern — primary error already shown
+          } finally {
+            setIsResending(false);
+          }
+        }
+      } else {
+        toast.error(msg || "Verification failed. Please try again.");
+      }
       setIsVerifying(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (resendCooldown > 0 || !email) return;
-    setIsResending(true);
-    try {
-      const msg = await resendOtp(email);
-      toast.success(msg || "Verification code sent to your email!");
-      setResendCooldown(60);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to resend verification code");
-    } finally {
-      setIsResending(false);
     }
   };
 
@@ -154,13 +174,6 @@ export default function VerifyEmail() {
           <CheckCircle2 className="size-4 text-[#005A57] flex-shrink-0 mt-0.5" />
           <p>
             Once verified, your account will be fully activated and you can start creating course workflows and AI note cards!
-          </p>
-        </div>
-
-        {/* Development mode indicator */}
-        <div className="text-center pt-2">
-          <p className="text-[11px] text-[#6D7E78]">
-            <span className="font-mono text-[10px] bg-[#E7EFE7] px-1.5 py-0.5 rounded border border-[#DDE8DF] text-[#005A57]">DEV MODE</span> You can enter any 6-digit code (e.g. <code className="font-mono font-bold text-[#005A57]">123456</code>) to verify instantly!
           </p>
         </div>
       </form>
