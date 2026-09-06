@@ -277,7 +277,16 @@ async def chat_stream(request: ChatRequest):
                 }
             yield f"data: {json.dumps({'type': 'artifact', 'artifact': artifact_event})}\n\n"
 
+        # P0-8: Persist user message to DataStore
+        if request.conversation_id and last_query:
+            try:
+                ds = DataStore()
+                await ds.add_message(request.conversation_id, user_id, "user", last_query)
+            except Exception:
+                logger.warning("Failed to persist user message", exc_info=True)
+
         full_response = ""
+        accumulated_reasoning = ""
         async for event in _stream_ai_response(
             messages, request.enable_thinking, context=orch_prompt
         ):
@@ -287,10 +296,26 @@ async def chat_stream(request: ChatRequest):
                     data = json.loads(event[6:])
                     if data.get("type") == "content":
                         full_response += data.get("delta", "")
+                    elif data.get("type") == "thinking":
+                        accumulated_reasoning += data.get("delta", "")
                 except Exception:
                     pass
 
         if full_response:
+            # P0-8: Persist assistant message to DataStore
+            if request.conversation_id:
+                try:
+                    ds = DataStore()
+                    await ds.add_message(
+                        request.conversation_id,
+                        user_id,
+                        "assistant",
+                        full_response,
+                        reasoning=accumulated_reasoning or None,
+                    )
+                except Exception:
+                    logger.warning("Failed to persist assistant message", exc_info=True)
+
             await cognee.remember_conversation(
                 user_id, last_query, full_response, session_id=request.conversation_id
             )
