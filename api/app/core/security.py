@@ -113,8 +113,10 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
                 break
 
         if matching_key is None:
+            # kid not in cache — treat as possible key rotation, invalidate so
+            # the next request triggers a fresh fetch via ensure_jwks_loaded().
             invalidate_jwks_cache()
-            logger.warning("JWT kid '%s' not found in JWKS; cache invalidated", kid)
+            logger.warning("JWT kid '%s' not found in JWKS; cache invalidated for refresh", kid)
             return None
 
         try:

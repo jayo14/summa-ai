@@ -192,6 +192,15 @@ async def auth_middleware(request: Request, call_next):
         return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
     token = auth_header.split(" ", 1)[1].strip()
+
+    # Ensure JWKS is loaded before attempting asymmetric JWT verification.
+    # fetch_jwks() is a no-op if the cache is fresh; it only hits the network
+    # when the cache is empty or expired (first request after startup, or after
+    # a key-rotation invalidation).
+    from app.core.jwks import fetch_jwks, get_cached_jwks
+    if not get_cached_jwks():
+        await fetch_jwks()
+
     user_id = verify_supabase_jwt(token)
     if not user_id:
         return JSONResponse({"detail": "Unauthorized"}, status_code=401)
