@@ -477,6 +477,8 @@ class DataStore:
                     owner = await conn.fetchval(
                         "SELECT user_id FROM summa_ai.conversations WHERE id = $1", cid
                     )
+                    if owner and owner != user_id:
+                        return None
                     if not owner:
                         # Auto-create conversation if missing in DB
                         await conn.execute(
@@ -484,13 +486,6 @@ class DataStore:
                             cid,
                             user_id,
                             "New Chat",
-                        )
-                    elif owner != user_id:
-                        # Update ownership if missing or mismatched user context
-                        await conn.execute(
-                            "UPDATE summa_ai.conversations SET user_id = $1 WHERE id = $2",
-                            user_id,
-                            cid,
                         )
                     await conn.execute(
                         "INSERT INTO summa_ai.messages (id, conversation_id, role, content, reasoning, components) VALUES ($1,$2,$3,$4,$5,$6)",
@@ -512,7 +507,9 @@ class DataStore:
         except Exception:
             pass
 
-        conv = next((c for c in self._local_conversations if c.get("id") == cid and c.get("user_id") == user_id), None)
+        conv = next((c for c in self._local_conversations if c.get("id") == cid), None)
+        if conv and conv.get("user_id") != user_id:
+            return None
         if not conv:
             conv = {
                 "id": cid,

@@ -1486,6 +1486,449 @@ export function AdminSettingsView() {
   );
 }
 
+// --- 13B. COMPONENTS LIBRARY PAGE (Mirror-Perfect Implementation) ---
+
+export function ComponentsView() {
+  const [search, setSearch] = useState("");
+
+  const components = [
+    {
+      id: "flashcard",
+      title: "Flashcard",
+      desc: "Quick, focused cards to help you recall and remember key concepts with spaced repetition.",
+      badgeBg: "bg-purple-100/70 text-purple-600",
+      icon: (
+        <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <rect x="5" y="4" width="14" height="16" rx="2" />
+          <path strokeLinecap="round" d="M9 9h6M9 13h4" />
+        </svg>
+      ),
+      preview: (
+        <div className="relative w-full h-[140px] flex items-center justify-center p-2">
+          {/* Stacked card effect behind */}
+          <div className="absolute w-[82%] h-[90px] bg-gradient-to-r from-purple-200/50 to-indigo-200/50 rounded-2xl border border-purple-200/40 translate-y-3 blur-[0.5px]" />
+          <div className="absolute w-[87%] h-[95px] bg-purple-100/60 rounded-2xl border border-purple-200/60 translate-y-1.5" />
+          {/* Main Card */}
+          <div className="relative z-10 w-[92%] h-[100px] bg-white rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center p-4 text-center">
+            <p className="text-xs font-semibold text-slate-800 tracking-tight">What is photosynthesis?</p>
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600 transition cursor-pointer">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Flip</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "quiz",
+      title: "Quiz",
+      desc: "Short, targeted quizzes to test your understanding and identify knowledge gaps.",
+      badgeBg: "bg-emerald-100/80 text-emerald-600",
+      icon: (
+        <div className="w-6 h-6 rounded-md bg-emerald-500 text-white flex items-center justify-center font-bold text-xs">
+          ✓
+        </div>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3.5 shadow-2xs flex flex-col justify-center space-y-2">
+          <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+            Which of the following is a renewable energy source?
+          </p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] text-slate-600">
+              <div className="size-3 rounded-full border border-slate-300" />
+              <span>Coal</span>
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] text-slate-700 bg-blue-50/80 border border-blue-200/60 font-medium">
+              <div className="size-3 rounded-full border-2 border-blue-500 flex items-center justify-center">
+                <div className="size-1.5 rounded-full bg-blue-500" />
+              </div>
+              <span>Solar</span>
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] text-slate-600">
+              <div className="size-3 rounded-full border border-slate-300" />
+              <span>Natural gas</span>
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] text-slate-600">
+              <div className="size-3 rounded-full border border-slate-300" />
+              <span>Oil</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "multiple_choice",
+      title: "Multiple Choice",
+      desc: "Choose the best answer and get instant, helpful feedback to strengthen your understanding.",
+      badgeBg: "bg-blue-100/80 text-blue-600",
+      icon: (
+        <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3.5 shadow-2xs flex flex-col justify-center space-y-2">
+          <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+            What is the main function of mitochondria?
+          </p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] text-slate-600">
+              <div className="size-3 rounded-full border border-slate-300" />
+              <span>Protein synthesis</span>
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] text-slate-700 bg-blue-50/80 border border-blue-200/60 font-medium">
+              <div className="size-3 rounded-full border-2 border-blue-500 flex items-center justify-center">
+                <div className="size-1.5 rounded-full bg-blue-500" />
+              </div>
+              <span>Energy production</span>
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] text-slate-600">
+              <div className="size-3 rounded-full border border-slate-300" />
+              <span>Cell division</span>
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] text-slate-600">
+              <div className="size-3 rounded-full border border-slate-300" />
+              <span>Waste removal</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "short_answer",
+      title: "Short Answer",
+      desc: "Type your answer and get smart, personalized feedback and guidance.",
+      badgeBg: "bg-amber-100/80 text-amber-600",
+      icon: (
+        <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3.5 shadow-2xs flex flex-col justify-between">
+          <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+            Explain the concept of supply and demand in your own words.
+          </p>
+          <div className="relative mt-2">
+            <div className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-[11px] text-slate-400 font-sans">
+              Type your answer...
+            </div>
+            <button className="absolute right-2 bottom-2 size-6 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-xs hover:bg-blue-600 transition">
+              <ArrowRight size={12} />
+            </button>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "matching",
+      title: "Matching",
+      desc: "Match related items to build stronger connections between concepts.",
+      badgeBg: "bg-pink-100/80 text-pink-600",
+      icon: (
+        <svg className="w-5 h-5 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+      ),
+      preview: (
+        <div className="relative w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex items-center justify-between">
+          {/* Left Column */}
+          <div className="space-y-2.5 z-10">
+            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+              Photosynthesis
+            </div>
+            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+              Mitochondria
+            </div>
+            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+              Nucleus
+            </div>
+          </div>
+
+          {/* SVG Connector Lines */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-current" viewBox="0 0 200 120">
+            <path d="M 80 30 C 120 30, 110 85, 140 85" stroke="#34D399" strokeWidth="1.5" fill="none" />
+            <path d="M 80 60 C 110 60, 110 28, 140 28" stroke="#60A5FA" strokeWidth="1.5" fill="none" />
+            <path d="M 80 90 C 110 90, 120 58, 140 58" stroke="#A78BFA" strokeWidth="1.5" fill="none" />
+          </svg>
+
+          {/* Right Column */}
+          <div className="space-y-2.5 z-10 text-right">
+            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+              Site of energy production
+            </div>
+            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+              Holds genetic material
+            </div>
+            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+              Site of protein synthesis
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "ordering",
+      title: "Ordering",
+      desc: "Put the steps in the correct order to build your understanding of processes and sequences.",
+      badgeBg: "bg-indigo-100/80 text-indigo-600",
+      icon: (
+        <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-2.5 shadow-2xs space-y-1.5 flex flex-col justify-center">
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+            <span className="size-4 rounded-full bg-blue-500 text-white font-bold text-[9px] flex items-center justify-center shrink-0">1</span>
+            <span className="text-[10px] font-medium text-slate-700">Glycolysis</span>
+          </div>
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+            <span className="size-4 rounded-full bg-slate-200 text-slate-600 font-bold text-[9px] flex items-center justify-center shrink-0">2</span>
+            <span className="text-[10px] font-medium text-slate-700">Krebs cycle</span>
+          </div>
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+            <span className="size-4 rounded-full bg-slate-200 text-slate-600 font-bold text-[9px] flex items-center justify-center shrink-0">3</span>
+            <span className="text-[10px] font-medium text-slate-700">Electron transport chain</span>
+          </div>
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+            <span className="size-4 rounded-full bg-slate-200 text-slate-600 font-bold text-[9px] flex items-center justify-center shrink-0">4</span>
+            <span className="text-[10px] font-medium text-slate-700">ATP production</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "scenario",
+      title: "Scenario / Case Study",
+      desc: "Apply what you've learned to real-world situations and build critical thinking.",
+      badgeBg: "bg-teal-100/80 text-teal-600",
+      icon: (
+        <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex gap-2.5 items-center">
+          <img
+            src="https://images.unsplash.com/photo-1511497584788-8767611136f6?auto=format&fit=crop&w=200&q=80"
+            alt="Scenario Forest"
+            className="w-16 h-20 rounded-lg object-cover shrink-0"
+          />
+          <div className="flex-1 space-y-2">
+            <p className="text-[10px] text-slate-700 leading-snug">
+              A company wants to reduce its carbon footprint. Which of the following strategies would be most effective in the short term?
+            </p>
+            <div className="flex justify-end">
+              <button className="size-5 rounded-full bg-blue-500 text-white flex items-center justify-center">
+                <ArrowRight size={10} />
+              </button>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "video",
+      title: "Video",
+      desc: "Watch short, focused videos to visualize complex ideas and concepts.",
+      badgeBg: "bg-sky-100/80 text-sky-600",
+      icon: (
+        <svg className="w-5 h-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      preview: (
+        <div className="relative w-full h-[140px] bg-slate-900 rounded-xl overflow-hidden shadow-2xs flex items-center justify-center group">
+          <img
+            src="https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?auto=format&fit=crop&w=400&q=80"
+            alt="Space Earth Video"
+            className="absolute inset-0 w-full h-full object-cover opacity-80"
+          />
+          <div className="relative z-10 size-9 rounded-full bg-white/30 backdrop-blur-xs flex items-center justify-center border border-white/50 text-white shadow-md">
+            <svg className="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+          <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 text-[10px] text-white font-mono">
+            <div className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
+              <div className="w-1/3 h-full bg-blue-500 rounded-full" />
+            </div>
+            <span>4:32</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "progress_card",
+      title: "Progress & Stats Card",
+      desc: "Track your progress, see your strengths and weaknesses, and stay motivated.",
+      badgeBg: "bg-emerald-100/80 text-emerald-600",
+      icon: (
+        <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex items-center justify-around">
+          {/* Donut Chart */}
+          <div className="relative size-16 flex items-center justify-center">
+            <svg className="size-full transform -rotate-90" viewBox="0 0 36 36">
+              <path
+                className="text-slate-100 stroke-current"
+                strokeWidth="4"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                className="text-emerald-500 stroke-current"
+                strokeDasharray="72, 100"
+                strokeWidth="4"
+                strokeLinecap="round"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            </svg>
+            <div className="absolute flex flex-col items-center leading-none">
+              <span className="text-xs font-bold text-slate-800">72%</span>
+              <span className="text-[7px] text-slate-400 scale-90">Overall Mastery</span>
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="space-y-1.5 text-[9px]">
+            <div className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-emerald-500" />
+              <span className="font-semibold text-slate-700">Strong</span>
+              <span className="text-slate-400">4 topics</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-blue-500" />
+              <span className="font-semibold text-slate-700">Developing</span>
+              <span className="text-slate-400">3 topics</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-amber-500" />
+              <span className="font-semibold text-slate-700">Needs work</span>
+              <span className="text-slate-400">2 topics</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "study_plan",
+      title: "Study Plan",
+      desc: "Get a personalized study plan with recommended topics, sessions and deadlines.",
+      badgeBg: "bg-rose-100/80 text-rose-600",
+      icon: (
+        <svg className="w-5 h-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs space-y-2 flex flex-col justify-center">
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-800">
+            <span>Today</span>
+            <span className="text-slate-400 text-[10px]">25 min</span>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[10px]">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-rose-500" />
+                <span className="font-medium text-slate-700">Photosynthesis</span>
+              </div>
+              <span className="text-slate-400 font-mono">10 min</span>
+            </div>
+            <div className="flex items-center justify-between text-[10px]">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-blue-500" />
+                <span className="font-medium text-slate-700">Quiz: Cell Biology</span>
+              </div>
+              <span className="text-slate-400 font-mono">10 min</span>
+            </div>
+            <div className="flex items-center justify-between text-[10px]">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-amber-500" />
+                <span className="font-medium text-slate-700">Review</span>
+              </div>
+              <span className="text-slate-400 font-mono">5 min</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const filteredComponents = components.filter((c) =>
+    c.title.toLowerCase().includes(search.toLowerCase()) ||
+    c.desc.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Title Header */}
+      <div className="space-y-1">
+        <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-400 uppercase">
+          COMPONENTS
+        </span>
+        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
+          Learning Components Library
+        </h2>
+        <p className="text-sm text-slate-500 max-w-2xl leading-relaxed">
+          Beautiful, focused learning experiences designed to help you understand, practice and master your goals.
+        </p>
+      </div>
+
+      {/* Grid of 10 Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+        {filteredComponents.map((item) => (
+          <div
+            key={item.id}
+            className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-4 group"
+          >
+            <div className="space-y-3">
+              {/* Badge Icon */}
+              <div className={`size-10 rounded-2xl ${item.badgeBg} flex items-center justify-center shadow-2xs`}>
+                {item.icon}
+              </div>
+
+              {/* Title & Description */}
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-base text-slate-900 group-hover:text-blue-600 transition">
+                  {item.title}
+                </h3>
+                <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-3">
+                  {item.desc}
+                </p>
+              </div>
+
+              {/* Interactive Component Preview */}
+              <div className="pt-2">
+                {item.preview}
+              </div>
+            </div>
+
+            {/* Bottom Arrow Button */}
+            <div className="pt-1 flex justify-start">
+              <button
+                onClick={() => toast.info(`Component ${item.title} selected`)}
+                className="size-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-800 transition cursor-pointer shadow-2xs"
+              >
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // --- 14. AUDIT LOGS PAGE ---
 
 export function AuditLogsView() {

@@ -58,6 +58,7 @@ import {
   MessagesView,
   FeedbackView,
   IntegrationsView,
+  ComponentsView,
   AdminSettingsView,
   AuditLogsView,
   NotificationsDrawer,
@@ -107,6 +108,7 @@ type NavItem =
   | "messages"
   | "feedback"
   | "integrations"
+  | "components"
   | "settings"
   | "audit"
   | "team";
@@ -147,6 +149,7 @@ export default function AdminDashboard() {
     messages: { title: "Messages", desc: "Broadcast announcements, system notifications, and direct user messages." },
     feedback: { title: "Feedback", desc: "Centralize user bug reports, feature requests, and satisfaction ratings." },
     integrations: { title: "Integrations", desc: "External API services, payment gateways, and AI provider health." },
+    components: { title: "Components", desc: "Beautiful, focused learning experiences designed to help you understand, practice and master your goals." },
     settings: { title: "Platform Settings", desc: "Configure global Summa AI admin behavior and environment flags." },
     audit: { title: "Audit Logs", desc: "Immutable administrative activity trail and security telemetry." },
     team: { title: "Team Governance", desc: "RBAC policies and administrative account permissions." },
@@ -272,6 +275,7 @@ export default function AdminDashboard() {
     { key: "messages", label: "Messages", icon: <MessageSquare size={18} /> },
     { key: "feedback", label: "Feedback", icon: <MessageSquare size={18} /> },
     { key: "integrations", label: "Integrations", icon: <Layers size={18} /> },
+    { key: "components", label: "Components", icon: <LayoutDashboard size={18} /> },
     { key: "settings", label: "Settings", icon: <Settings size={18} /> },
     { key: "audit", label: "Audit Logs", icon: <FileText size={18} /> },
   ];
@@ -862,6 +866,7 @@ export default function AdminDashboard() {
           {activeItem === "messages" && <MessagesView />}
           {activeItem === "feedback" && <FeedbackView />}
           {activeItem === "integrations" && <IntegrationsView />}
+          {activeItem === "components" && <ComponentsView />}
           {activeItem === "settings" && <AdminSettingsView />}
           {activeItem === "audit" && <AuditLogsView />}
           
