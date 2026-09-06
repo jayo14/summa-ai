@@ -214,39 +214,51 @@ class UserStore:
 
         try:
             pool = await self._get_pool()
-            async with pool.acquire() as conn:
-                row = await conn.fetchrow(
-                    "SELECT * FROM summa_ai.user_profiles WHERE id = $1",
-                    user_id,
-                )
-                if row:
-                    sets = []
-                    values = []
-                    for key in ("name", "avatar", "bio", "role"):
-                        if key in data:
-                            sets.append(f"{key} = ${len(values) + 1}")
-                            values.append(data[key])
-                    if "email" in data and isinstance(data["email"], str) and data["email"].strip():
-                        sets.append(f"email = ${len(values) + 1}")
-                        values.append(data["email"].lower().strip())
-                    if "onboarded" in data:
-                        sets.append(f"onboarded = ${len(values) + 1}")
-                        values.append(bool(data["onboarded"]))
-                    if "email_verified" in data:
-                        sets.append(f"email_verified = ${len(values) + 1}")
-                        values.append(bool(data["email_verified"]))
-                    if "onboarding_data" in data:
-                        sets.append(f"onboarding_data = ${len(values) + 1}")
-                        values.append(json.dumps(data["onboarding_data"]))
-                    if "provider" in data:
-                        sets.append(f"provider = ${len(values) + 1}")
-                        values.append(data["provider"])
-                    if sets:
-                        values.append(user_id)
-                        query = f"UPDATE summa_ai.user_profiles SET {', '.join(sets)} WHERE id = ${len(values)} RETURNING *"
-                        updated = await conn.fetchrow(query, *values)
-                        return dict(updated)
-                    return dict(row)
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    row = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.user_profiles WHERE id = $1",
+                        user_id,
+                    )
+                    if not row:
+                        await self.save_user(user_id, current)
+                        row = await conn.fetchrow(
+                            "SELECT * FROM summa_ai.user_profiles WHERE id = $1",
+                            user_id,
+                        )
+                    if row:
+                        sets = []
+                        values = []
+                        for key in ("name", "avatar", "bio", "role"):
+                            if key in data:
+                                sets.append(f"{key} = ${len(values) + 1}")
+                                values.append(data[key])
+                        if "email" in data and isinstance(data["email"], str) and data["email"].strip():
+                            sets.append(f"email = ${len(values) + 1}")
+                            values.append(data["email"].lower().strip())
+                        if "onboarded" in data:
+                            sets.append(f"onboarded = ${len(values) + 1}")
+                            values.append(bool(data["onboarded"]))
+                        if "email_verified" in data:
+                            sets.append(f"email_verified = ${len(values) + 1}")
+                            values.append(bool(data["email_verified"]))
+                        if "onboarding_data" in data:
+                            sets.append(f"onboarding_data = ${len(values) + 1}")
+                            values.append(json.dumps(data["onboarding_data"]))
+                        if "provider" in data:
+                            sets.append(f"provider = ${len(values) + 1}")
+                            values.append(data["provider"])
+                        if sets:
+                            values.append(user_id)
+                            query = f"UPDATE summa_ai.user_profiles SET {', '.join(sets)} WHERE id = ${len(values)} RETURNING *"
+                            updated = await conn.fetchrow(query, *values)
+                            if updated:
+                                res = dict(updated)
+                                self._local_users[user_id] = res
+                                return res
+                        res = dict(row)
+                        self._local_users[user_id] = res
+                        return res
         except Exception:
             pass
 
