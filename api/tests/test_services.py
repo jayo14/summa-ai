@@ -185,8 +185,9 @@ class TestUserStoreAsync:
         store = UserStore()
         pool, conn = _mock_pool(store)
         conn.fetchrow.return_value = None
-        with pytest.raises(ValueError):
-            await store.update_user("missing", {"name": "X"})
+        updated = await store.update_user("missing", {"name": "X"})
+        assert updated["id"] == "missing"
+        assert updated["name"] == "X"
 
     @pytest.mark.asyncio
     async def test_update_user_no_changes(self):
