@@ -150,20 +150,24 @@ async def login(payload: AuthLoginRequest):
         raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
     if resp.status_code != 200:
-        err = resp.json()
+        try:
+            err = resp.json()
+        except Exception:
+            err = {}
         detail = (
             err.get("error_description")
             or err.get("msg")
             or err.get("error")
-            or "Authentication failed"
+            or f"Authentication failed ({resp.status_code})"
         )
         if "email not confirmed" in detail.lower() or "email_not_confirmed" in str(err).lower():
             raise HTTPException(
                 status_code=403,
                 detail="Email not verified. Please check your inbox for the verification code.",
             )
+        status_code = resp.status_code if resp.status_code in (400, 401, 403, 404, 422) else 502
         raise HTTPException(
-            status_code=401 if resp.status_code < 500 else 502,
+            status_code=status_code,
             detail=detail,
         )
 
