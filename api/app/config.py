@@ -66,10 +66,6 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 
     # Feature flags
-    # Off by default — must be explicitly set to true in non-production environments
-    # only. The middleware's _dev_fallback_enabled() also checks is_production, so
-    # this can never be enabled in production even if accidentally set.
-    ALLOW_DEV_AUTH_FALLBACK: bool = False
     SCHEDULER_ENABLED: bool = True
     WEBSOCKET_ENABLED: bool = True
     NEW_CHAT_UI: bool = False
@@ -91,9 +87,6 @@ class Settings(BaseSettings):
 
     # Observability
     SENTRY_DSN: str = ""
-
-    # Demo account
-    DEMO_USER_EMAIL: str = "alex@summa.ai"
 
     # Server configuration for production
     PORT: int = int(os.getenv("PORT", "8000"))
