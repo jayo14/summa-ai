@@ -68,9 +68,6 @@ export default function VerifyEmail() {
       toast.success("Email verified successfully! Welcome to Summa AI.");
       localStorage.removeItem("summa_pending_email");
       setLocation("/");
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 100);
     } catch (err: any) {
       const msg: string = err.message || "";
       const isExpired = msg.toLowerCase().includes("expired") || msg.toLowerCase().includes("invalid");

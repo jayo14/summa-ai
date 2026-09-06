@@ -26,9 +26,6 @@ export default function SignIn() {
       await login(email, password);
       toast.success("Welcome back!");
       setLocation("/");
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 100);
     } catch (err: any) {
       const errMsg = err.message || "";
       if (errMsg.toLowerCase().includes("not verified") || errMsg.toLowerCase().includes("not confirmed")) {
