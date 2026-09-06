@@ -30,8 +30,14 @@ export async function fetchApi<T = any>(
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-      // Don't auto-logout if the request was to the auth/login or auth/signup endpoints
-      const isAuthRequest = endpoint.includes("/auth/login") || endpoint.includes("/auth/signup");
+      // Only auto-logout for authenticated app requests — never for auth
+      // handshake endpoints or the initial session-restore GET /user call.
+      // initializeAuth handles its own 401 by clearing state gracefully.
+      const isAuthRequest =
+        endpoint.includes("/auth/login") ||
+        endpoint.includes("/auth/signup") ||
+        endpoint.includes("/auth/callback") ||
+        endpoint === "/user";
       if (!isAuthRequest) {
         localStorage.removeItem("summa_access_token");
         window.dispatchEvent(new CustomEvent("summa:unauthorized"));

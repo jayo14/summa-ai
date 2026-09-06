@@ -120,13 +120,13 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
             return None
 
         try:
-            if alg in ("ES256", "ES256K", "ES384", "ES512"):
-                public_key = pyjwt.algorithms.ECAlgorithm.from_jwk(matching_key)
-            else:
-                public_key = pyjwt.algorithms.RSAAlgorithm.from_jwk(matching_key)
+            # PyJWK is the canonical high-level key loader in PyJWT >= 2.4.
+            # It handles EC/RSA/OKP internally and doesn't require calling
+            # algorithm classes directly, which vary by PyJWT version.
+            jwk_obj = pyjwt.PyJWK(matching_key)
             payload = pyjwt.decode(
                 token,
-                public_key,
+                jwk_obj,
                 algorithms=[alg],
                 options={"verify_aud": False},
             )
