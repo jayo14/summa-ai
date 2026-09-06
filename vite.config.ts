@@ -235,6 +235,15 @@ const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(
 
 export default defineConfig({
   plugins,
+  envPrefix: ["VITE_", "NEXT_PUBLIC_", "FASTAPI_"],
+  define: {
+    "process.env.FASTAPI_BASE_URL": JSON.stringify(
+      process.env.FASTAPI_BASE_URL || process.env.NEXT_PUBLIC_FASTAPI_BASE_URL || process.env.VITE_FASTAPI_BASE_URL || ""
+    ),
+    "process.env.NEXT_PUBLIC_FASTAPI_BASE_URL": JSON.stringify(
+      process.env.NEXT_PUBLIC_FASTAPI_BASE_URL || process.env.FASTAPI_BASE_URL || process.env.VITE_FASTAPI_BASE_URL || ""
+    ),
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
@@ -254,7 +263,7 @@ export default defineConfig({
     host: true,
     proxy: {
       "/api": {
-        target: process.env.API_URL || "http://127.0.0.1:8000",
+        target: process.env.FASTAPI_BASE_URL || process.env.NEXT_PUBLIC_FASTAPI_BASE_URL || process.env.API_URL || "http://127.0.0.1:8000",
         changeOrigin: true,
       },
     },

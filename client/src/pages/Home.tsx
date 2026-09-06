@@ -14,7 +14,7 @@ import { SummaLogo } from "@/components/SummaLogo";
 import { SettingsView } from "@/components/SettingsView";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types/roles";
-import { fetchApi } from "@/lib/api";
+import { fetchApi, getApiBaseUrl } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -171,7 +171,7 @@ export default function Home() {
   const [renameChatTarget, setRenameChatTarget] = useState<{ id: string; title: string } | null>(null);
   const [renameChatTitle, setRenameChatTitle] = useState("");
 
-  const [dbConversations, setDbConversations] = useState<Array<{ id: string; title: string; created_at: string }>>([]);
+  const [dbConversations, setDbConversations] = useState<Array<{ id: string; title: string; created_at: string; folder?: string }>>([]);
   const [dbMaterials, setDbMaterials] = useState<Array<{ id: string; title: string; type: string; description?: string }>>([]);
   const [dbActivities, setDbActivities] = useState<Array<any>>([]);
 
@@ -251,7 +251,7 @@ export default function Home() {
   };
 
   const loadConversations = useCallback(() => {
-    fetchApi<{ conversations: Array<{ id: string; title: string; created_at: string }> }>("/conversations")
+    fetchApi<{ conversations: Array<{ id: string; title: string; created_at: string; folder?: string }> }>("/conversations")
       .then((data) => {
         if (data && Array.isArray(data.conversations)) {
           setDbConversations(data.conversations);
@@ -357,7 +357,10 @@ export default function Home() {
 
     let fullAiResponse = "";
 
-    fetch("/api/v1/chat/stream", {
+    const base = getApiBaseUrl();
+    const streamUrl = base ? `${base}/chat/stream` : "/api/v1/chat/stream";
+
+    fetch(streamUrl, {
       method: "POST",
       headers,
       body: JSON.stringify({

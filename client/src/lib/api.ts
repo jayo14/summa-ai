@@ -3,7 +3,21 @@
  * Automatically attaches Authorization header when token is present in localStorage.
  */
 
-const API_BASE = "/api/v1";
+export function getApiBaseUrl(): string {
+  const envUrl =
+    (typeof process !== "undefined" &&
+      (process.env.FASTAPI_BASE_URL || process.env.NEXT_PUBLIC_FASTAPI_BASE_URL)) ||
+    (typeof import.meta !== "undefined" &&
+      import.meta.env &&
+      (import.meta.env.FASTAPI_BASE_URL ||
+        import.meta.env.NEXT_PUBLIC_FASTAPI_BASE_URL ||
+        import.meta.env.VITE_FASTAPI_BASE_URL)) ||
+    "";
+
+  const trimmed = envUrl.trim().replace(/\/+$/, "");
+  if (!trimmed) return "";
+  return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
+}
 
 export async function fetchApi<T = any>(
   endpoint: string,
@@ -19,7 +33,21 @@ export async function fetchApi<T = any>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const url = endpoint.startsWith("/") ? `${API_BASE}${endpoint}` : `${API_BASE}/${endpoint}`;
+  const base = getApiBaseUrl();
+  let url: string;
+  if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+    url = endpoint;
+  } else {
+    const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    if (base) {
+      const route = cleanEndpoint.startsWith("/api/v1/")
+        ? cleanEndpoint.replace(/^\/api\/v1/, "")
+        : cleanEndpoint;
+      url = `${base}${route}`;
+    } else {
+      url = cleanEndpoint.startsWith("/api/v1/") ? cleanEndpoint : `/api/v1${cleanEndpoint}`;
+    }
+  }
 
   const response = await fetch(url, {
     ...options,

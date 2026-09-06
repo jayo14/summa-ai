@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Zap, CheckCircle2 } from "lucide-react";
+import { getApiBaseUrl } from "@/lib/api";
 
 export function ServerWarmupBanner({ apiBaseUrl }: { apiBaseUrl?: string }) {
   const [status, setStatus] = useState<"idle" | "warming" | "ready" | "hidden">("idle");
 
   useEffect(() => {
-    const rawUrl = apiBaseUrl || import.meta.env.VITE_FASTAPI_BASE_URL || "/api/v1";
+    const rawUrl = apiBaseUrl || getApiBaseUrl() || "/api/v1";
     const healthUrl = `${rawUrl.replace(/\/api\/v1\/?$/, "")}/health`;
     let isMounted = true;
 
