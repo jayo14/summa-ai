@@ -314,6 +314,8 @@ async def update_user(data: dict):
     description="Upload an avatar or media file to public storage bucket",
 )
 async def upload_file(data: dict):
+    import base64
+    import httpx
     user_id = resolve_user_id()
     file_data = data.get("file_data")
     file_name = data.get("file_name", "avatar.png")
@@ -322,13 +324,46 @@ async def upload_file(data: dict):
     if not file_data or not isinstance(file_data, str):
         raise HTTPException(400, "Invalid file_data provided")
 
-    # Save to user profile if bucket is avatars
+    avatar_url = file_data
+
+    # If file_data is a base64 Data URL, extract content & type
+    content_type = "image/png"
+    binary_content = None
+    if file_data.startswith("data:"):
+        header, encoded = file_data.split(",", 1)
+        if ";" in header and "base64" in header:
+            content_type = header.split(";")[0].replace("data:", "")
+        binary_content = base64.b64decode(encoded)
+
+    # Attempt to upload to Supabase Storage REST API if configured
+    if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY and binary_content:
+        try:
+            ext = file_name.split(".")[-1] if "." in file_name else "png"
+            storage_path = f"{user_id}/{int(datetime.now(timezone.utc).timestamp())}.{ext}"
+            upload_endpoint = f"{settings.SUPABASE_URL}/storage/v1/object/{bucket}/{storage_path}"
+            
+            headers = {
+                "apikey": settings.SUPABASE_ANON_KEY,
+                "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}",
+                "Content-Type": content_type,
+                "x-upsert": "true",
+            }
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(upload_endpoint, headers=headers, content=binary_content)
+                if res.status_code in (200, 201):
+                    avatar_url = f"{settings.SUPABASE_URL}/storage/v1/object/public/{bucket}/{storage_path}"
+                else:
+                    logger.warning("Supabase storage upload failed (%d: %s). Falling back to data URL.", res.status_code, res.text)
+        except Exception as exc:
+            logger.warning("Supabase storage connection error: %s. Falling back to data URL.", exc)
+
+    # Save public URL or data URL to user profile avatar column
     if bucket == "avatars":
-        await _user_store.update_user(user_id, {"avatar": file_data})
+        await _user_store.update_user(user_id, {"avatar": avatar_url})
 
     return {
         "status": "success",
-        "url": file_data,
+        "url": avatar_url,
         "bucket": bucket,
         "filename": file_name,
     }

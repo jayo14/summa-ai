@@ -83,9 +83,8 @@ export function SettingsView({
     const reader = new FileReader();
     reader.onload = async () => {
       const result = reader.result as string;
-      setAvatar(result);
       try {
-        await fetchApi("/storage/upload", {
+        const uploadRes = await fetchApi<{ url: string }>("/storage/upload", {
           method: "POST",
           body: JSON.stringify({
             file_data: result,
@@ -93,7 +92,9 @@ export function SettingsView({
             bucket: "avatars",
           }),
         });
-        await updateUser({ avatar: result });
+        const finalUrl = uploadRes?.url || result;
+        setAvatar(finalUrl);
+        await updateUser({ avatar: finalUrl });
         toast.success("Avatar uploaded and saved to profile!");
       } catch (err: any) {
         toast.error(err.message || "Failed to upload avatar to storage bucket");
