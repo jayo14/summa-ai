@@ -158,14 +158,21 @@ async def login(payload: AuthLoginRequest):
             err.get("error_description")
             or err.get("msg")
             or err.get("error")
-            or f"Authentication failed ({resp.status_code})"
+            or err.get("detail")
+            or f"Authentication service error ({resp.status_code})"
+        )
+        logger.warning(
+            "Supabase Auth error status=%d response=%s for email=%s",
+            resp.status_code,
+            resp.text,
+            email_clean,
         )
         if "email not confirmed" in detail.lower() or "email_not_confirmed" in str(err).lower():
             raise HTTPException(
                 status_code=403,
                 detail="Email not verified. Please check your inbox for the verification code.",
             )
-        status_code = resp.status_code if resp.status_code in (400, 401, 403, 404, 422) else 502
+        status_code = resp.status_code if 400 <= resp.status_code < 500 else 502
         raise HTTPException(
             status_code=status_code,
             detail=detail,
