@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { ChatComponentRenderer, LearningActivityEnvelope } from "@/components/chat/ChatComponentRenderer";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 type ViewName = "workspace" | "learning" | "progress" | "sources" | "settings";
 type ConversationMessage = {
@@ -330,13 +331,9 @@ export default function Home() {
       }
     }
 
-    const cidForPosting = activeCid;
-    if (cidForPosting && cidForPosting !== "default-session" && !cidForPosting.startsWith("f2b37d07")) {
-      await fetchApi(`/conversations/${cidForPosting}/messages`, {
-        method: "POST",
-        body: JSON.stringify({ role: "user", content: clean }),
-      }).catch(() => {});
-    }
+    // NOTE: do NOT POST the user message to /conversations/{cid}/messages here.
+    // chat_stream() on the backend already calls ds.add_message() for both the
+    // user turn and the assistant turn — posting here would create duplicates.
 
     const historyForBackend = updatedMessages.map((m) => ({
       role: m.role === "student" ? "user" : "assistant",
@@ -454,12 +451,8 @@ export default function Home() {
       .finally(() => {
         setIsResponding(false);
         registerEvent("practice", "New learning intent captured");
-        if (fullAiResponse && activeCid && activeCid !== "default-session" && !activeCid.startsWith("f2b37d07")) {
-          fetchApi(`/conversations/${activeCid}/messages`, {
-            method: "POST",
-            body: JSON.stringify({ role: "assistant", content: fullAiResponse }),
-          }).catch(() => {});
-        }
+        // NOTE: do NOT POST the assistant message here — chat_stream() already
+        // persists it via ds.add_message() once the stream completes.
       });
   }
   const [location, setLocation] = useLocation();
@@ -1143,7 +1136,7 @@ function ConversationTurn({ message, onRetry }: { message: ConversationMessage; 
         {isStudent ? (
           <p>{cleanContent}</p>
         ) : cleanContent ? (
-          <FormattedMarkdown content={cleanContent} />
+          <MarkdownRenderer content={cleanContent} />
         ) : (
           <div className="flex items-center gap-2 text-xs text-[#6D7E78] dark:text-[#8FA29B] italic py-1">
             <span className="inline-block size-2 rounded-full bg-[#005A57] dark:bg-[#B8FF4D] animate-ping" />
