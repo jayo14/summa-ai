@@ -40,15 +40,6 @@ class TestWebSocketBroadcast:
             assert response.json()["status"] == "broadcasted"
 
 
-class TestFeatureFlags:
-    def test_default_feature_flags(self):
-        from app.config import settings
-
-        assert hasattr(settings, "WEBSOCKET_ENABLED")
-        assert hasattr(settings, "NEW_CHAT_UI")
-        assert hasattr(settings, "ADVANCED_ANALYTICS")
-
-
 class TestRateLimiting:
     def test_rate_limit_headers(self):
         response = client.get("/health", headers=_auth_headers())

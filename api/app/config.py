@@ -66,10 +66,8 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 
     # Feature flags
-    SCHEDULER_ENABLED: bool = True
     WEBSOCKET_ENABLED: bool = True
-    NEW_CHAT_UI: bool = False
-    ADVANCED_ANALYTICS: bool = False
+    HYBRID_MEMORY_ENABLED: bool = True
 
     # Z.ai configuration (set via environment variables — do not hardcode)
     ZAI_API_KEY: str = os.getenv("ZAI_API_KEY", "")
