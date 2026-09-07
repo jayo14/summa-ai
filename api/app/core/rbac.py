@@ -1,10 +1,15 @@
 """Summa AI Role-Based Access Control (RBAC) System.
-Defines user roles (admin, instructor, student), permission checks, and FastAPI dependencies.
+
+Defines user roles, permission checks, and FastAPI dependencies.
+
+Roles are SERVER-CONTROLLED. Clients never select roles.
+The only exception is the INITIAL_ADMIN_EMAIL env var bootstrap.
 """
 
 import logging
+import os
 from enum import Enum
-from typing import List, Optional
+from typing import List
 from fastapi import Depends, HTTPException, Request, status
 
 from app.services.user_store import UserStore
@@ -22,26 +27,42 @@ class UserStatus(str, Enum):
     SUSPENDED = "suspended"
 
 
-import os
-
 def get_user_role(user: dict) -> str:
-    """Extracts role for a user dict based strictly on stored role or INITIAL_ADMIN_EMAIL env var."""
+    """Determine role from stored profile data only.
+
+    Roles are derived from:
+    1. The role field in the application profile (set by admin or sync)
+    2. INITIAL_ADMIN_EMAIL env var for bootstrap
+
+    The client NEVER selects roles.
+    """
     if not user:
         return UserRole.USER.value
 
-    # Check explicit role field first
+    # Check explicit role field in stored profile
     explicit_role = str(user.get("role", "")).lower().strip()
     if explicit_role == UserRole.ADMIN.value:
         return UserRole.ADMIN.value
-    if explicit_role in (UserRole.USER.value, "student", "instructor"):
-        return UserRole.USER.value
 
-    # Optional initial admin bootstrap via environment variable
+    # Only INITIAL_ADMIN_EMAIL can bootstrap admin access
     email = (user.get("email") or "").lower().strip()
     initial_admin = (os.getenv("INITIAL_ADMIN_EMAIL") or "").lower().strip()
     if initial_admin and email and email == initial_admin:
         return UserRole.ADMIN.value
 
+    return UserRole.USER.value
+
+
+def derive_initial_role(email: str) -> str:
+    """Determine the initial role for a newly created user.
+
+    Called during profile sync. Only INITIAL_ADMIN_EMAIL gets admin.
+    All other users get 'user'. The client never controls this.
+    """
+    email_clean = (email or "").lower().strip()
+    initial_admin = (os.getenv("INITIAL_ADMIN_EMAIL") or "").lower().strip()
+    if initial_admin and email_clean and email_clean == initial_admin:
+        return UserRole.ADMIN.value
     return UserRole.USER.value
 
 
@@ -56,6 +77,7 @@ async def get_current_user_with_role(request: Request) -> dict:
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
+    # Role is always resolved from the stored profile — never from the request
     user["role"] = get_user_role(user)
     user["status"] = user.get("status", UserStatus.ACTIVE.value)
 
