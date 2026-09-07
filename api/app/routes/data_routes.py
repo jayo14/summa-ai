@@ -284,13 +284,28 @@ async def get_user():
     user_id = resolve_user_id()
     current = await _user_store.get_user_by_id(user_id)
     if current is None:
-        # Profile doesn't exist — sync from Supabase Auth claims via UserService.
-        # Never fabricate profiles from raw JWT claims in the router.
-        from app.core.security import current_user_claims
-        claims = current_user_claims.get() or {}
+        # Profile doesn't exist — fetch full Supabase user and sync.
+        # Never fabricate profiles from raw JWT claims.
+        from app.core.security import current_jwt_token
+        token = current_jwt_token.get()
+        if not token:
+            raise HTTPException(status_code=401, detail="No authentication token available")
+        from app.services.supabase_auth import SupabaseAuthService
+        from app.services.user_service import UserService
+        auth_service = SupabaseAuthService()
         user_service = UserService()
         try:
-            current = await user_service.sync_user_profile(claims)
+            result = await auth_service.get_user(token)
+        except Exception as exc:
+            logger.error("Failed to fetch Supabase user for profile sync: %s", exc)
+            raise HTTPException(status_code=502, detail="Authentication service unavailable")
+        if result.get("error"):
+            raise HTTPException(status_code=401, detail="Invalid authentication token")
+        supabase_user = (result.get("data") or {}).get("user") or {}
+        if not supabase_user.get("id"):
+            raise HTTPException(status_code=502, detail="Authentication service returned invalid response")
+        try:
+            current = await user_service.sync_user_profile(supabase_user)
         except Exception as exc:
             logger.error("Failed to sync user profile for %s: %s", user_id, exc)
             raise HTTPException(status_code=502, detail="Could not resolve user profile")
