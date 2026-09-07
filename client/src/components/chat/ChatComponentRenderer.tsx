@@ -7,7 +7,19 @@ import { Check, Sparkles, HelpCircle } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 
 export type ComponentData = {
-  type: "quiz" | "flashcards" | "study-plan" | "hexagon" | "graph" | "timeline" | "gap-analysis";
+  type:
+    | "quiz"
+    | "flashcards"
+    | "study-plan"
+    | "hexagon"
+    | "graph"
+    | "timeline"
+    | "gap-analysis"
+    | "comparison"
+    | "hint-ladder"
+    | "worked-example"
+    | "short-answer"
+    | "recall-prompt";
   [key: string]: any;
 };
 
@@ -40,6 +52,22 @@ export function ChatComponentRenderer({
     return <FlashcardsRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
   }
 
+  if (data.type === "comparison") {
+    return <ComparisonRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+
+  if (data.type === "hint-ladder") {
+    return <HintLadderRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+
+  if (data.type === "worked-example") {
+    return <WorkedExampleRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+
+  if (data.type === "short-answer" || data.type === "recall-prompt") {
+    return <ShortAnswerRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+
   return (
     <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-4 text-sm text-foreground">
       <div className="flex items-center gap-2 font-medium text-indigo-400 mb-1">
@@ -47,6 +75,136 @@ export function ChatComponentRenderer({
         <span>{activity.title || data.title || "Interactive Component"}</span>
       </div>
       <pre className="mt-2 overflow-x-auto text-xs opacity-80">{JSON.stringify(data, null, 2)}</pre>
+    </div>
+  );
+}
+
+function ComparisonRenderer({ data, activityId, onComplete }: { data: any; activityId?: string; onComplete?: () => void }) {
+  return (
+    <div className="my-3 rounded-2xl border border-indigo-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
+        Compare & Contrast: {data.conceptA} vs {data.conceptB}
+      </div>
+      <div className="space-y-2.5">
+        {data.distinctions?.map((d: any, idx: number) => (
+          <div key={idx} className="rounded-lg border border-border/40 bg-secondary/20 p-3 text-xs">
+            <div className="font-semibold text-indigo-300 mb-1">{d.aspect}</div>
+            <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+              <div className="bg-background/50 p-2 rounded"><span className="font-medium text-foreground block">{data.conceptA}:</span> {d.conceptA}</div>
+              <div className="bg-background/50 p-2 rounded"><span className="font-medium text-foreground block">{data.conceptB}:</span> {d.conceptB}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HintLadderRenderer({ data, activityId, onComplete }: { data: any; activityId?: string; onComplete?: () => void }) {
+  const [hintLevel, setHintLevel] = useState(0);
+  return (
+    <div className="my-3 rounded-2xl border border-amber-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-400 flex justify-between items-center">
+        <span>Guided Problem Scaffolding</span>
+        <span className="font-mono text-[10px]">Hints ({hintLevel}/{data.hints?.length || 0})</span>
+      </div>
+      <p className="text-sm font-medium mb-3 text-foreground">{data.problem}</p>
+      <div className="space-y-2">
+        {data.hints?.slice(0, hintLevel).map((h: any, idx: number) => (
+          <div key={idx} className="rounded-lg border border-amber-500/20 bg-amber-950/20 p-2.5 text-xs text-amber-200">
+            <span className="font-bold mr-1">Hint {h.stepNumber || idx + 1}:</span> {h.hintText}
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex gap-2">
+        {hintLevel < (data.hints?.length || 0) && (
+          <button
+            onClick={() => setHintLevel((prev) => prev + 1)}
+            className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-medium border border-amber-500/30"
+          >
+            Reveal Hint {hintLevel + 1}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function WorkedExampleRenderer({ data, activityId, onComplete }: { data: any; activityId?: string; onComplete?: () => void }) {
+  return (
+    <div className="my-3 rounded-2xl border border-emerald-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-400">
+        Worked Example
+      </div>
+      <p className="text-sm font-semibold mb-3 text-foreground">{data.problem}</p>
+      <div className="space-y-2">
+        {data.steps?.map((s: any, idx: number) => (
+          <div key={idx} className="rounded-lg border border-emerald-500/20 bg-emerald-950/20 p-2.5 text-xs">
+            <div className="font-bold text-emerald-300 mb-0.5">Step {idx + 1}: {s.step}</div>
+            <div className="text-muted-foreground">{s.explanation}</div>
+          </div>
+        ))}
+      </div>
+      {data.takeaway && (
+        <div className="mt-3 rounded-lg bg-emerald-950/40 border border-emerald-500/30 p-2.5 text-xs text-emerald-200 font-medium">
+          💡 Key Takeaway: {data.takeaway}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ShortAnswerRenderer({ data, activityId, onComplete }: { data: any; activityId?: string; onComplete?: () => void }) {
+  const [ans, setAns] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  return (
+    <div className="my-3 rounded-2xl border border-indigo-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
+        {data.type === "recall-prompt" ? "Active Recall Check" : "Practice Question"}
+      </div>
+      <p className="text-sm font-medium mb-3 text-foreground">{data.question || data.prompt}</p>
+      {!submitted ? (
+        <div className="space-y-2">
+          <textarea
+            value={ans}
+            onChange={(e) => setAns(e.target.value)}
+            placeholder="Type your reasoning here..."
+            className="w-full rounded-xl border border-border/50 bg-secondary/20 p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500 min-h-[70px]"
+          />
+          <button
+            onClick={async () => {
+              if (!ans.trim()) return;
+              setSubmitted(true);
+              try {
+                await fetchApi("/interactions/quiz-result", {
+                  method: "POST",
+                  body: JSON.stringify({
+                    artifact_id: activityId || "short-answer",
+                    topic: data.question || data.prompt,
+                    score: 100,
+                    answers: { answer: ans },
+                  }),
+                });
+              } catch (e) {}
+              if (onComplete) onComplete();
+            }}
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
+          >
+            Submit Answer
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-lg bg-indigo-950/30 border border-indigo-500/20 p-3 text-xs text-indigo-200">
+          <div className="font-semibold text-emerald-400 mb-1">Answer Submitted</div>
+          <div className="opacity-90 italic mb-2">"{ans}"</div>
+          {(data.sampleAnswer || data.answer) && (
+            <div className="mt-2 pt-2 border-t border-indigo-500/20 text-muted-foreground">
+              <span className="font-semibold text-foreground block">Model Answer:</span>
+              {data.sampleAnswer || data.answer}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

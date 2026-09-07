@@ -175,6 +175,44 @@ class ComparisonComponent(BaseComponent):
     distinctions: List[ComparisonDistinction] = Field(min_length=1)
 
 
+class HintStep(BaseModel):
+    stepNumber: int
+    hintText: str
+
+
+class HintLadderComponent(BaseComponent):
+    type: Literal["hint-ladder"] = "hint-ladder"
+    problem: str
+    hints: List[HintStep] = Field(min_length=1)
+    solution: Optional[str] = None
+
+
+class WorkedExampleStep(BaseModel):
+    step: str
+    explanation: str
+
+
+class WorkedExampleComponent(BaseComponent):
+    type: Literal["worked-example"] = "worked-example"
+    problem: str
+    steps: List[WorkedExampleStep] = Field(min_length=1)
+    takeaway: Optional[str] = None
+
+
+class ShortAnswerComponent(BaseComponent):
+    type: Literal["short-answer"] = "short-answer"
+    question: str
+    sampleAnswer: Optional[str] = None
+    keyConcepts: List[str] = Field(default_factory=list)
+
+
+class RecallPromptComponent(BaseComponent):
+    type: Literal["recall-prompt"] = "recall-prompt"
+    prompt: str
+    hint: Optional[str] = None
+    answer: str
+
+
 ComponentData = Union[
     HexagonComponent,
     QuizComponent,
@@ -184,6 +222,10 @@ ComponentData = Union[
     TimelineComponent,
     GapAnalysisComponent,
     ComparisonComponent,
+    HintLadderComponent,
+    WorkedExampleComponent,
+    ShortAnswerComponent,
+    RecallPromptComponent,
 ]
 
 COMPONENT_TYPE_MAP = {
@@ -195,8 +237,35 @@ COMPONENT_TYPE_MAP = {
     "timeline": TimelineComponent,
     "gap-analysis": GapAnalysisComponent,
     "comparison": ComparisonComponent,
+    "hint-ladder": HintLadderComponent,
+    "worked-example": WorkedExampleComponent,
+    "short-answer": ShortAnswerComponent,
+    "recall-prompt": RecallPromptComponent,
+}
+
+ACTION_TO_COMPONENT = {
+    "QUIZ": "quiz",
+    "FLASHCARD": "flashcards",
+    "PLAN": "study-plan",
+    "ASSESS": "hexagon",
+    "REVIEW": "gap-analysis",
+    "COMPARE": "comparison",
+    "RECALL": "recall-prompt",
+    "PRACTICE": "short-answer",
+    "EXAMPLE": "worked-example",
 }
 
 ComponentType = Literal[
-    "hexagon", "quiz", "flashcards", "study-plan", "graph", "timeline", "gap-analysis", "comparison"
+    "hexagon",
+    "quiz",
+    "flashcards",
+    "study-plan",
+    "graph",
+    "timeline",
+    "gap-analysis",
+    "comparison",
+    "hint-ladder",
+    "worked-example",
+    "short-answer",
+    "recall-prompt",
 ]

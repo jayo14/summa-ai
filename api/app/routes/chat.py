@@ -312,26 +312,31 @@ async def chat_stream(request: ChatRequest):
         }
         yield f"data: {json.dumps(next_action_event)}\n\n"
 
-        if intent:
-            payload = await generate_component_payload(intent, last_query, orch_prompt)
+        from app.models.components import ACTION_TO_COMPONENT
+        component_type_to_deploy = intent or ACTION_TO_COMPONENT.get(decision.action)
+
+        if component_type_to_deploy:
+            payload = await generate_component_payload(component_type_to_deploy, last_query, orch_prompt)
             if payload is not None:
                 artifact_event = {
                     "id": payload.id,
                     "title": payload.title,
                     "type": payload.type,
                     "data": payload.data.model_dump(by_alias=True, mode="json"),
+                    "purpose": decision.action,
+                    "difficulty": decision.suggested_difficulty,
                 }
             else:
                 logger.info(
-                    "Component generation unavailable for intent=%s; emitting "
+                    "Component generation unavailable for type=%s; emitting "
                     "skeleton artifact event with no data (frontend renders "
                     "plain text only).",
-                    intent,
+                    component_type_to_deploy,
                 )
                 artifact_event = {
-                    "id": f"pending-{intent}",
-                    "title": intent.replace("-", " ").title(),
-                    "type": intent,
+                    "id": f"pending-{component_type_to_deploy}",
+                    "title": component_type_to_deploy.replace("-", " ").title(),
+                    "type": component_type_to_deploy,
                 }
             yield f"data: {json.dumps({'type': 'artifact', 'artifact': artifact_event})}\n\n"
 
