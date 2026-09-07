@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from app.config import settings
 from app.core.rbac import UserRole, require_admin
 from app.services.user_store import UserStore
+from app.services.supabase_auth import SupabaseAuthService
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class UpdateStatusRequest(BaseModel):
 class CreateUserRequest(BaseModel):
     name: str
     email: str
+    password: str
     role: str = "user"
     institution: Optional[str] = None
 
@@ -57,26 +59,46 @@ async def list_admin_users(current_user: dict = Depends(require_admin)):
     return {"success": True, "users": users, "count": len(users)}
 
 
-@router.post("/users", summary="Create or invite new user")
+@router.post("/users", summary="Create or invite new user via Supabase Auth")
 async def create_admin_user(
     payload: CreateUserRequest,
     current_user: dict = Depends(require_admin),
 ):
-    """Creates a new user profile with assigned RBAC role and institution."""
-    import uuid
+    """Creates a new user via Supabase Auth and syncs their application profile.
+
+    User creation MUST go through Supabase Auth — no synthetic IDs are manufactured.
+    """
+    auth_service = SupabaseAuthService()
+    try:
+        result = await auth_service.signup(
+            email=payload.email,
+            password=payload.password,
+            data={
+                "name": payload.name,
+                "role": UserRole.ADMIN.value if payload.role.lower() == "admin" else UserRole.USER.value,
+            },
+        )
+    except Exception as exc:
+        logger.error("Supabase signup failed for admin-created user %s: %s", payload.email, exc)
+        raise HTTPException(status_code=502, detail="Authentication service unavailable")
+
+    user_data = result.get("user") or {}
+    user_id = user_data.get("id")
+    if not user_id:
+        logger.error("Supabase returned no user ID for admin-created user %s", payload.email)
+        raise HTTPException(status_code=502, detail="Authentication service returned invalid response")
+
     user_store = UserStore()
-    user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, payload.email.lower().strip()))
-    actor_id = current_user.get("id", "system")
-    
+    normalized_role = UserRole.ADMIN.value if payload.role.lower() == "admin" else UserRole.USER.value
     new_user = {
         "id": user_id,
         "email": payload.email.lower().strip(),
         "name": payload.name,
-        "role": UserRole.ADMIN.value if payload.role.lower() == "admin" else UserRole.USER.value,
+        "role": normalized_role,
         "status": "active",
         "email_verified": True,
         "onboarded": False,
-        "onboarding_data": {"institution": payload.institution or "General"}
+        "onboarding_data": {"institution": payload.institution or "General"},
     }
     created = await user_store.save_user(user_id, new_user)
     return {"success": True, "user": created}
