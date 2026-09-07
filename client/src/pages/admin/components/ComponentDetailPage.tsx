@@ -2,22 +2,95 @@ import React, { useEffect } from "react";
 import { Link, useRoute } from "wouter";
 import { components } from "./component-data";
 import {
-  FlashcardPreview,
   MultipleChoicePreview,
-  TrueFalsePreview,
-  ProgressCardPreview,
-  RecallPromptPreview,
   ShortAnswerPreview,
+  TrueFalsePreview,
   FillBlankPreview,
-  ConfidenceCheckPreview,
   MatchingPreview,
   OrderingPreview,
   CategorizationPreview,
+  TeachBackPreview,
+  ConfidenceCheckPreview,
   ScenarioPreview,
+  ExplanationCardPreview,
+  WorkedExamplePreview,
+  HintLadderPreview,
   ConceptBreakdownPreview,
-  ExamCountdownPreview,
+  CompareContrastPreview,
+  AnalogyCardPreview,
+  CommonMistakePreview,
+  WhyItWorksPreview,
+  RecallPromptPreview,
+  SpacedReviewPreview,
+  RapidRecallPreview,
+  RetrievalGridPreview,
+  MemoryCheckPreview,
+  FlashcardPreview,
+  ProgressCardPreview,
   LearningPathPreview,
+  MilestoneCardPreview,
+  MasteryCardPreview,
+  ReadinessCardPreview,
+  WeakAreaPreview,
+  NextActionPreview,
+  SessionPlanPreview,
+  SessionProgressPreview,
+  SessionSummaryPreview,
+  ResumeLearningPreview,
+  ExamCountdownPreview,
+  ExamReadinessPreview,
+  TopicCoveragePreview,
+  PastQuestionPreview,
+  PredictedPracticePreview,
+  ExamSimulationPreview,
+  PostExamReflectionPreview,
+  ResourceCardPreview,
+  SourceCardPreview,
+  RecommendedResourcePreview,
+  ResourceSectionPreview,
+  CitationDrawerPreview,
 } from "./InteractivePreviews";
+
+// Component-specific sizing configuration
+const COMPONENT_SIZING: Record<string, { className?: string; style?: React.CSSProperties }> = {
+  flashcard_card: { className: "max-w-[360px] h-[240px]" },
+  compare_contrast: { className: "max-w-[640px]" },
+  matching: { className: "max-w-[640px]" },
+  ordering: { className: "max-w-[560px]" },
+  retrieval_grid: { className: "max-w-[560px]" },
+  session_plan: { className: "max-w-[560px]" },
+  resource_section: { className: "max-w-[560px]" },
+  exam_simulation: { className: "max-w-[640px]" },
+  citation_drawer: { className: "max-w-[560px]" },
+  learning_path: { className: "max-w-[560px]" },
+  progress_card: { className: "max-w-[480px]" },
+  mastery_card: { className: "max-w-[480px]" },
+  readiness_card: { className: "max-w-[480px]" },
+  topic_coverage: { className: "max-w-[560px]" },
+  scenario: { className: "max-w-[520px]" },
+  worked_example: { className: "max-w-[520px]" },
+  explanation_card: { className: "max-w-[520px]" },
+  hint_ladder: { className: "max-w-[480px]" },
+  analogy_card: { className: "max-w-[480px]" },
+  common_mistake: { className: "max-w-[520px]" },
+  why_it_works: { className: "max-w-[520px]" },
+  recalled_prompt: { className: "max-w-[480px]" },
+  rapid_recall: { className: "max-w-[480px]" },
+  memory_check: { className: "max-w-[480px]" },
+  milestone_card: { className: "max-w-[480px]" },
+  weak_area: { className: "max-w-[480px]" },
+  next_action: { className: "max-w-[480px]" },
+  session_progress: { className: "max-w-[480px]" },
+  session_summary: { className: "max-w-[480px]" },
+  resume_learning: { className: "max-w-[480px]" },
+  exam_readiness: { className: "max-w-[480px]" },
+  past_question: { className: "max-w-[520px]" },
+  predicted_practice: { className: "max-w-[520px]" },
+  post_exam_reflection: { className: "max-w-[520px]" },
+  resource_card: { className: "max-w-[480px]" },
+  source_card: { className: "max-w-[480px]" },
+  recommended_resource: { className: "max-w-[480px]" },
+};
 
 export function ComponentDetailPage() {
   const [, params] = useRoute("/admin/components/:id");
@@ -27,23 +100,63 @@ export function ComponentDetailPage() {
     ? components.find((c) => c.id === componentId) || null
     : null;
 
-  // Map component IDs to interactive previews
+  // Map all 47 component IDs to interactive previews
   const interactivePreviews: Record<string, React.ReactNode> = {
-    flashcard_card: <FlashcardPreview />,
+    // Core Learning
     multiple_choice: <MultipleChoicePreview />,
-    true_false: <TrueFalsePreview />,
-    progress_card: <ProgressCardPreview />,
-    recall_prompt: <RecallPromptPreview />,
     short_answer: <ShortAnswerPreview />,
+    true_false: <TrueFalsePreview />,
     fill_blank: <FillBlankPreview />,
-    confidence_check: <ConfidenceCheckPreview />,
     matching: <MatchingPreview />,
     ordering: <OrderingPreview />,
     categorization: <CategorizationPreview />,
+    teach_back: <TeachBackPreview />,
+    confidence_check: <ConfidenceCheckPreview />,
     scenario: <ScenarioPreview />,
+    // Teaching
+    explanation_card: <ExplanationCardPreview />,
+    worked_example: <WorkedExamplePreview />,
+    hint_ladder: <HintLadderPreview />,
     concept_breakdown: <ConceptBreakdownPreview />,
-    exam_countdown: <ExamCountdownPreview />,
+    compare_contrast: <CompareContrastPreview />,
+    analogy_card: <AnalogyCardPreview />,
+    common_mistake: <CommonMistakePreview />,
+    why_it_works: <WhyItWorksPreview />,
+    // Active Recall
+    recall_prompt: <RecallPromptPreview />,
+    spaced_review: <SpacedReviewPreview />,
+    rapid_recall: <RapidRecallPreview />,
+    retrieval_grid: <RetrievalGridPreview />,
+    memory_check: <MemoryCheckPreview />,
+    // Interactive Cards
+    flashcard_card: <FlashcardPreview />,
+    progress_card: <ProgressCardPreview />,
+    // Progress
     learning_path: <LearningPathPreview />,
+    milestone_card: <MilestoneCardPreview />,
+    mastery_card: <MasteryCardPreview />,
+    readiness_card: <ReadinessCardPreview />,
+    weak_area: <WeakAreaPreview />,
+    next_action: <NextActionPreview />,
+    // Session
+    session_plan: <SessionPlanPreview />,
+    session_progress: <SessionProgressPreview />,
+    session_summary: <SessionSummaryPreview />,
+    resume_learning: <ResumeLearningPreview />,
+    // Exam
+    exam_countdown: <ExamCountdownPreview />,
+    exam_readiness: <ExamReadinessPreview />,
+    topic_coverage: <TopicCoveragePreview />,
+    past_question: <PastQuestionPreview />,
+    predicted_practice: <PredictedPracticePreview />,
+    exam_simulation: <ExamSimulationPreview />,
+    post_exam_reflection: <PostExamReflectionPreview />,
+    // Resource
+    resource_card: <ResourceCardPreview />,
+    source_card: <SourceCardPreview />,
+    recommended_resource: <RecommendedResourcePreview />,
+    resource_section: <ResourceSectionPreview />,
+    citation_drawer: <CitationDrawerPreview />,
   };
 
   useEffect(() => {
@@ -210,11 +323,13 @@ export function ComponentDetailPage() {
               </div>
               {/* Interactive preview or static fallback */}
               <div className="w-full flex items-center justify-center p-4 pt-10">
-                {interactivePreviews[component.id] ?? (
-                  <div className="w-full max-w-[400px]">
-                    {component.preview}
-                  </div>
-                )}
+                <div className={`w-full ${COMPONENT_SIZING[component.id]?.className ?? "max-w-[480px]"}`}>
+                  {interactivePreviews[component.id] ?? (
+                    <div className="w-full">
+                      {component.preview}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </section>
