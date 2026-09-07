@@ -28,6 +28,9 @@ export function ChatComponentRenderer({
   onInteractionComplete?: () => void;
 }) {
   const data = activity.data;
+  if (!data || Object.keys(data).length === 0) {
+    return null;
+  }
 
   if (data.type === "quiz") {
     return <QuizRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;

@@ -450,11 +450,12 @@ export default function Home() {
       })
       .catch((err) => {
         console.error("Live SSE stream error:", err);
-        toast.error("Failed to connect to Summa AI backend.");
+        const errMsg = err instanceof Error ? err.message : "Network error";
+        toast.error(`Connection issue: ${errMsg}. Please try again.`);
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === summaMsgId
-              ? { ...msg, error: true, content: msg.content || "Summa couldn't respond." }
+              ? { ...msg, error: true, content: msg.content || "Summa encountered a connection issue while generating a response." }
               : msg
           )
         );
