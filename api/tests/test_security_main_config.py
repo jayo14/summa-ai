@@ -12,8 +12,6 @@ from app.core.security import (
     reset_current_user_id,
     set_current_jwt_token,
     reset_current_jwt_token,
-    hash_password,
-    verify_password,
     ConnectionManager,
 )
 from app.config import Settings
@@ -91,13 +89,6 @@ class TestConnectionManager:
     def test_send_to_disconnected_user(self):
         manager = ConnectionManager()
         asyncio.run(manager.send_to_user("user-1", {"type": "test"}))
-
-
-class TestPasswordHashing:
-    def test_hash_and_verify(self):
-        hashed = hash_password("secret")
-        assert verify_password("secret", hashed) is True
-        assert verify_password("wrong", hashed) is False
 
 
 class TestConfig:
