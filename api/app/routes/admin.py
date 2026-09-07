@@ -177,6 +177,9 @@ async def get_system_health(current_user: dict = Depends(require_admin)):
     return {"success": True, "data": health}
 
 
+_registered_institutions: List[Dict[str, Any]] = []
+
+
 class CreateInstitutionRequest(BaseModel):
     name: str
     type: str = "Federal"
@@ -186,15 +189,8 @@ class CreateInstitutionRequest(BaseModel):
 
 @router.get("/institutions", summary="List registered partner institutions")
 async def list_institutions(current_user: dict = Depends(require_admin)):
-    """Returns all partner institutions, seat counts, MRR, and plan tiers."""
-    insts = [
-        {"id": "inst-1", "name": "University of Lagos", "type": "Federal", "users": 2341, "active": 1842, "plan": "Enterprise", "mrr": 420000, "status": "active", "joined": "2024-01-15"},
-        {"id": "inst-2", "name": "LASUSTECH", "type": "State", "users": 1832, "active": 1425, "plan": "Pro", "mrr": 250000, "status": "active", "joined": "2024-02-10"},
-        {"id": "inst-3", "name": "University of Ibadan", "type": "Federal", "users": 1201, "active": 978, "plan": "Pro", "mrr": 180000, "status": "active", "joined": "2024-03-01"},
-        {"id": "inst-4", "name": "Babcock University", "type": "Private", "users": 987, "active": 754, "plan": "Pro", "mrr": 150000, "status": "active", "joined": "2024-04-12"},
-        {"id": "inst-5", "name": "Covenant University", "type": "Private", "users": 842, "active": 623, "plan": "Basic", "mrr": 72000, "status": "trial", "joined": "2024-05-05"},
-    ]
-    return {"success": True, "institutions": insts, "count": len(insts)}
+    """Returns registered partner institutions."""
+    return {"success": True, "institutions": _registered_institutions, "count": len(_registered_institutions)}
 
 
 @router.post("/institutions", summary="Register new partner institution")
@@ -209,13 +205,14 @@ async def create_institution(
         "id": f"inst-{uuid.uuid4().hex[:6]}",
         "name": payload.name,
         "type": payload.type,
-        "users": 1,
-        "active": 1,
+        "domain": payload.domain,
+        "users": 0,
+        "active": 0,
         "plan": payload.plan,
-        "mrr": 100000 if payload.plan == "Pro" else 300000,
         "status": "active",
         "joined": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
     }
+    _registered_institutions.append(new_inst)
     return {"success": True, "institution": new_inst}
 
 
