@@ -5,15 +5,6 @@ import jwt as pyjwt
 from fastapi import HTTPException, WebSocket
 from app.config import settings
 
-try:
-    from passlib.context import CryptContext
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    _has_passlib = True
-except ImportError:
-    import hashlib
-    import secrets
-    _has_passlib = False
-
 logger = logging.getLogger(__name__)
 current_user_id: ContextVar[Optional[str]] = ContextVar("current_user_id", default=None)
 current_jwt_token: ContextVar[Optional[str]] = ContextVar(
@@ -168,17 +159,6 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
     return None
 
 
-def create_access_token(data: dict, expires_delta: Optional[int] = None) -> str:
-    """Create a local signed JWT fallback token using SUPABASE_JWT_SECRET or a fallback secret."""
-    import time
-    secret = settings.SUPABASE_JWT_SECRET or "local-dev-jwt-secret-fallback-key-32bytes"
-    to_encode = data.copy()
-    now = int(time.time())
-    expire = now + (expires_delta if expires_delta is not None else 86400 * 7)
-    to_encode.update({"iat": now, "exp": expire, "aud": "authenticated"})
-    return pyjwt.encode(to_encode, secret, algorithm="HS256")
-
-
 async def load_jwks_at_startup() -> None:
     """Eagerly fetch Supabase JWKS during app startup so the first request
     doesn't have to wait for an async HTTP call."""
@@ -220,41 +200,6 @@ def reset_current_user_id(token):
 def reset_current_jwt_token(token):
     if token is not None:
         current_jwt_token.reset(token)
-
-
-try:
-    import bcrypt
-
-    def hash_password(password: str) -> str:
-        pwd_bytes = password.encode("utf-8")[:72]
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
-
-    def verify_password(plain: str, hashed: str) -> bool:
-        try:
-            pwd_bytes = plain.encode("utf-8")[:72]
-            return bcrypt.checkpw(pwd_bytes, hashed.encode("utf-8"))
-        except Exception:
-            return False
-
-except ImportError:
-    import hashlib
-    import secrets
-
-    def hash_password(password: str) -> str:
-        salt = secrets.token_hex(16)
-        key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
-        return f"pbkdf2:{salt}:{key.hex()}"
-
-    def verify_password(plain: str, hashed: str) -> bool:
-        if not hashed.startswith("pbkdf2:"):
-            return False
-        parts = hashed.split(":")
-        if len(parts) != 3:
-            return False
-        salt, key = parts[1], parts[2]
-        check_key = hashlib.pbkdf2_hmac("sha256", plain.encode("utf-8"), salt.encode("utf-8"), 100000)
-        return check_key.hex() == key
 
 
 class ConnectionManager:
