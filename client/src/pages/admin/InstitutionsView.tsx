@@ -107,22 +107,22 @@ export function InstitutionsView() {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-ink dark:bg-[#121616]/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-mist-green dark:border-[#2A3838]">
+        <div className="fixed inset-0 z-50 bg-ink/80 dark:bg-[#121616]/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1C2323] rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-mist-green dark:border-[#2A3838]">
             <div className="flex items-center justify-between border-b border-mist-green dark:border-[#2A3838] pb-3">
               <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Add Partner Institution</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-grey-green dark:text-[#8FA29B] hover:text-grey-green dark:text-[#8FA29B]"><X size={18} /></button>
+              <button onClick={() => setShowAddModal(false)} className="text-grey-green dark:text-[#8FA29B] hover:text-ink dark:hover:text-cream-soft"><X size={18} /></button>
             </div>
 
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Institution Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Obafemi Awolowo University" className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft" />
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Obafemi Awolowo University" className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft placeholder:text-grey-green/50 dark:placeholder:text-[#8FA29B]/50 focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Category / Type</label>
-                  <select value={type} onChange={(e) => setType(e.target.value)} className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft">
+                  <select value={type} onChange={(e) => setType(e.target.value)} className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime">
                     <option value="Federal">Federal</option>
                     <option value="State">State</option>
                     <option value="Private">Private</option>
@@ -130,7 +130,7 @@ export function InstitutionsView() {
                 </div>
                 <div>
                   <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Plan</label>
-                  <select value={plan} onChange={(e) => setPlan(e.target.value)} className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft">
+                  <select value={plan} onChange={(e) => setPlan(e.target.value)} className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime">
                     <option value="Enterprise">Enterprise</option>
                     <option value="Pro">Pro</option>
                     <option value="Basic">Basic</option>
@@ -140,22 +140,22 @@ export function InstitutionsView() {
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-mist-green dark:border-[#2A3838] text-ink dark:text-cream-soft font-semibold text-xs">Cancel</button>
-              <button onClick={handleCreate} className="px-4 py-2 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition">Register Institution</button>
+              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-mist-green dark:border-[#2A3838] text-ink dark:text-cream-soft font-semibold text-xs hover:bg-cream-light dark:hover:bg-[#232D2D] transition">Cancel</button>
+              <button onClick={handleCreate} className="px-4 py-2 rounded-xl bg-teal-dark dark:bg-accent-lime text-white dark:text-ink font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition">Register Institution</button>
             </div>
           </div>
         </div>
       )}
 
       {selectedInst && (
-        <div className="fixed inset-0 z-50 bg-ink dark:bg-[#121616]/80 backdrop-blur-sm flex justify-end">
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl p-6 overflow-y-auto space-y-6 animate-in slide-in-from-right duration-200">
+        <div className="fixed inset-0 z-50 bg-ink/80 dark:bg-[#121616]/80 backdrop-blur-sm flex justify-end">
+          <div className="w-full max-w-lg bg-white dark:bg-[#1C2323] h-full shadow-2xl p-6 overflow-y-auto space-y-6 animate-in slide-in-from-right duration-200 border-l border-mist-green dark:border-[#2A3838]">
             <div className="flex items-center justify-between border-b border-mist-green dark:border-[#2A3838] pb-4">
               <div>
                 <h3 className="font-bold text-base text-ink dark:text-cream-soft">{selectedInst.name}</h3>
                 <p className="text-xs text-grey-green dark:text-[#8FA29B] font-mono">ID: INST-{selectedInst.name.substring(0, 4).toUpperCase()}</p>
               </div>
-              <button onClick={() => setSelectedInst(null)} className="p-2 rounded-xl text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft">
+              <button onClick={() => setSelectedInst(null)} className="p-2 rounded-xl text-grey-green dark:text-[#8FA29B] hover:text-ink dark:hover:text-cream-soft hover:bg-mist-green/50 dark:hover:bg-[#2A3838] transition">
                 <X size={18} />
               </button>
             </div>
@@ -190,7 +190,7 @@ export function InstitutionsView() {
             </div>
 
             <div className="pt-4 border-t border-mist-green dark:border-[#2A3838] flex gap-3">
-              <button onClick={() => toast.success("Institution details updated.")} className="flex-1 py-2.5 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition">
+              <button onClick={() => toast.success("Institution details updated.")} className="flex-1 py-2.5 rounded-xl bg-teal-dark dark:bg-accent-lime text-white dark:text-ink font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition">
                 Manage Contract
               </button>
             </div>
