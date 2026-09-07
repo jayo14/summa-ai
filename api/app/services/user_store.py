@@ -1,14 +1,24 @@
-"""Postgres-backed user store — queries summa_ai.user_profiles via asyncpg."""
+"""Postgres-backed user store — queries summa_ai.user_profiles via asyncpg.
+
+UserStore is an APPLICATION-LEVEL data store only. It MUST NOT:
+- verify passwords
+- authenticate users
+- issue authentication tokens
+- act as an authentication fallback
+- manufacture user identities from JWT claims
+"""
 
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Optional
+import logging
+from typing import Any, Dict, List, Optional
 
 import asyncpg
 
-from app.core.security import current_user_claims
 from app.services.db_pool import get_pool
+
+logger = logging.getLogger(__name__)
 
 
 class UserStore:
@@ -129,20 +139,15 @@ class UserStore:
     async def update_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         current = await self.get_user_by_id(user_id)
         if current is None:
-            claims = current_user_claims.get() or {}
-            user_metadata = claims.get("user_metadata") or {}
-            email = data.get("email") or claims.get("email") or ""
-            name = data.get("name") or user_metadata.get("name") or user_metadata.get("full_name") or claims.get("name") or (email.split("@")[0] if email else f"User {user_id[:6]}")
-            current = await self.save_user(user_id, {
-                "id": user_id,
-                "email": email,
-                "name": name,
-                "role": "user",
-                "status": "active",
-                "email_verified": True,
-                "onboarded": False,
-                "onboarding_data": {},
-            })
+            # User does not exist in application DB — this is a data inconsistency.
+            # The caller (UserService) should have synced the profile first.
+            # Never fabricate a profile from JWT claims or email alone.
+            logger.warning(
+                "update_user called for non-existent user %s — "
+                "profile should be synced via UserService.sync_user_profile first",
+                user_id,
+            )
+            return {}
 
         try:
             pool = await self._get_pool()
