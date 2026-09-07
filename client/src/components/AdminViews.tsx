@@ -2331,6 +2331,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Quick, focused cards to help recall and remember key concepts with spaced repetition.",
+      whySummaUsesIt: "Summa uses flashcards for efficient retrieval practice. Each card tests one concept, and spaced repetition ensures optimal review timing.",
+      techniques: ["Active Recall", "Spaced Repetition", "Retrieval Practice"],
+      whenSummaUsesIt: ["A concept needs retrieval practice", "Quick, focused recall is appropriate", "Spaced repetition scheduling is active", "The concept fits a flashcard format"],
+      example: "What is photosynthesis? Flip to reveal answer. Rate your recall strength to schedule next review.",
+      whatHappensAfter: [{ step: "Card presented", detail: "Concept shown for recall" }, { step: "Student attempts recall", detail: "Answer formulated mentally" }, { step: "Answer revealed", detail: "Correct answer shown" }, { step: "Recall rated", detail: "Student rates difficulty, interval adjusted" }],
+      usedWith: ["Spaced Review", "Recall Prompt", "Confidence Check"],
+      decisionSignals: ["Quick recall practice needed", "Single concept focus", "Spaced repetition active"],
     },
     {
       id: "progress_card",
@@ -2366,6 +2374,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Track your progress, see strengths and weaknesses, and stay motivated by evidence.",
+      whySummaUsesIt: "Summa uses progress cards to give transparent visibility into learning health. The student sees their overall mastery, strong areas, and developing areas at a glance.",
+      techniques: ["Progress Visualization", "Mastery Tracking", "Motivation Through Evidence"],
+      whenSummaUsesIt: ["The student wants to see overall progress", "Strengths and weaknesses need visibility", "Motivation from evidence is needed", "Learning health should be transparent"],
+      example: "Overall Mastery: 72%. Strong areas: 4. Developing areas: 3. See your progress over time.",
+      whatHappensAfter: [{ step: "Progress displayed", detail: "Overall mastery and breakdown shown" }, { step: "Student reviews", detail: "Strengths and weaknesses identified" }, { step: "Motivation maintained", detail: "Evidence-based progress keeps momentum" }, { step: "Focus adjusted", detail: "Student directs effort to developing areas" }],
+      usedWith: ["Mastery Card", "Weak Area Card", "Session Summary"],
+      decisionSignals: ["Progress visibility needed", "Motivation from evidence", "Strengths and weaknesses matter"],
     },
 
     // --- PROGRESS / GUIDANCE ---
@@ -2769,6 +2785,14 @@ export function ComponentsView() {
           <div className="text-[8px] text-grey-green dark:text-[#8FA29B] text-center">Focus: Graph algorithms (38% mastery)</div>
         </div>
       ),
+      whatIsIt: "Shows days remaining with readiness status and recommended focus areas.",
+      whySummaUsesIt: "Summa uses exam countdowns to create urgency and focus. Knowing exactly how many days remain helps the student allocate effort to the highest-impact areas.",
+      techniques: ["Urgency Creation", "Focus Allocation", "Time Management"],
+      whenSummaUsesIt: ["An exam date is known and approaching", "The student needs motivation from time pressure", "Focus areas need to be prioritized by deadline", "Study time should be allocated efficiently"],
+      example: "CSC 201 Final: 12 days remaining. Focus: Graph algorithms (38% mastery).",
+      whatHappensAfter: [{ step: "Countdown displayed", detail: "Days remaining and focus areas shown" }, { step: "Student adjusts plan", detail: "Study plan prioritizes weak areas" }, { step: "Focus narrows", detail: "Effort concentrated on high-impact topics" }, { step: "Readiness tracked", detail: "Daily readiness improvement monitored" }],
+      usedWith: ["Exam Readiness", "Weak Area Card", "Next Action Card"],
+      decisionSignals: ["Exam date known", "Time pressure helps", "Focus allocation matters"],
     },
     {
       id: "exam_readiness",
@@ -2803,6 +2827,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Overall readiness percentage with topic breakdown and risk areas.",
+      whySummaUsesIt: "Summa uses exam readiness to give an honest, evidence-based assessment of preparation. No false confidence, just data.",
+      techniques: ["Readiness Assessment", "Risk Analysis", "Preparation Planning"],
+      whenSummaUsesIt: ["An exam is approaching and readiness needs assessment", "The student wants an honest readiness number", "Topic-level breakdown is needed", "Risk areas must be identified"],
+      example: "Exam Readiness: 68%. Strong: OOP, Memory Mgmt. Partial: Graphs, Trees. Weak: B-Trees, Hashing.",
+      whatHappensAfter: [{ step: "Readiness calculated", detail: "Overall percentage computed" }, { step: "Topics broken down", detail: "Strong, partial, and weak areas listed" }, { step: "Risk areas flagged", detail: "High-risk topics highlighted" }, { step: "Study plan adjusted", detail: "Focus shifts to weak areas" }],
+      usedWith: ["Exam Countdown", "Topic Coverage", "Weak Area Card"],
+      decisionSignals: ["Exam approaching", "Honest assessment needed", "Topic-level breakdown matters"],
     },
     {
       id: "topic_coverage",
@@ -2841,6 +2873,14 @@ export function ComponentsView() {
           <div className="text-[7px] text-grey-green dark:text-[#8FA29B]">18 covered · 4 partial · 2 missing</div>
         </div>
       ),
+      whatIsIt: "Shows which syllabus topics are covered, partially covered, or missing.",
+      whySummaUsesIt: "Summa uses topic coverage to give visibility into syllabus completion. The student sees exactly what has been learned and what gaps remain.",
+      techniques: ["Coverage Analysis", "Gap Identification", "Syllabus Tracking"],
+      whenSummaUsesIt: ["The syllabus needs to be tracked", "Coverage gaps need to be visible", "The student wants to see what is missing", "Exam preparation requires full coverage"],
+      example: "Syllabus Coverage: 85% strong, 60% partial, 25% missing. 18 covered, 4 partial, 2 missing.",
+      whatHappensAfter: [{ step: "Coverage displayed", detail: "Topic-level completion shown" }, { step: "Gaps identified", detail: "Missing and partial topics highlighted" }, { step: "Study plan updated", detail: "Gaps prioritized for study" }, { step: "Coverage tracked", detail: "Progress toward full coverage monitored" }],
+      usedWith: ["Exam Readiness", "Learning Path", "Weak Area Card"],
+      decisionSignals: ["Syllabus tracking needed", "Coverage gaps visible", "Full coverage required"],
     },
     {
       id: "past_question",
@@ -2872,6 +2912,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Analyzes past exam patterns to identify frequently tested topics.",
+      whySummaUsesIt: "Summa uses past question analysis to focus study on what is most likely to appear on the exam. Pattern analysis reveals what the examiner actually tests.",
+      techniques: ["Pattern Analysis", "Exam Prediction", "Strategic Study"],
+      whenSummaUsesIt: ["Past exam papers are available", "The student wants to know what to focus on", "Exam patterns can be identified", "Strategic preparation is valuable"],
+      example: "Past Questions (5 years): Trees and Graphs every year. Memory Management 4 of 5 years. B-Trees 3 of 5 years.",
+      whatHappensAfter: [{ step: "Patterns analyzed", detail: "Frequently tested topics identified" }, { step: "Focus areas recommended", detail: "Study prioritized by exam frequency" }, { step: "Practice aligned", detail: "Practice questions matched to exam patterns" }, { step: "Confidence built", detail: "Student knows what to expect" }],
+      usedWith: ["Predicted Practice", "Exam Readiness", "Topic Coverage"],
+      decisionSignals: ["Past papers available", "Pattern analysis valuable", "Strategic study helps"],
     },
     {
       id: "predicted_practice",
@@ -2901,6 +2949,14 @@ export function ComponentsView() {
           <div className="text-[7px] text-grey-green dark:text-[#8FA29B] italic">Based on 5-year exam pattern analysis</div>
         </div>
       ),
+      whatIsIt: "Generated practice questions based on patterns, clearly labeled as AI-generated.",
+      whySummaUsesIt: "Summa uses predicted practice to provide exam-like practice that mirrors likely question patterns. Always labeled as generated to maintain trust and transparency.",
+      techniques: ["Pattern-Based Practice", "Exam Simulation", "Transparent Generation"],
+      whenSummaUsesIt: ["Exam patterns suggest likely topics", "Practice questions aligned with exam style are needed", "The student wants realistic exam preparation", "Transparency about generation source matters"],
+      example: "Predicted Questions (AI-Generated): Explain BFS vs DFS with a real-world use case. Write pseudocode for inserting into a BST.",
+      whatHappensAfter: [{ step: "Questions generated", detail: "Pattern-aligned practice created" }, { step: "Student attempts", detail: "Practice completed with exam conditions" }, { step: "Performance assessed", detail: "Readiness updated based on results" }, { step: "Next questions generated", detail: "Adaptive practice continues" }],
+      usedWith: ["Past Question Analysis", "Exam Simulation", "Exam Readiness"],
+      decisionSignals: ["Patterns available", "Realistic practice needed", "Transparency matters"],
     },
     {
       id: "exam_simulation",
@@ -2931,6 +2987,14 @@ export function ComponentsView() {
           <div className="text-[8px] text-grey-green dark:text-[#8FA29B]">No hints · No lookup · Timed</div>
         </div>
       ),
+      whatIsIt: "Timed realistic practice exam with conditions matching the actual test.",
+      whySummaUsesIt: "Summa uses exam simulations to give the student authentic test experience. No hints, no lookup, timed conditions build exam readiness.",
+      techniques: ["Exam Simulation", "Timed Practice", "Authentic Conditions"],
+      whenSummaUsesIt: ["The exam is approaching and realistic practice is needed", "The student needs to experience timed conditions", "Full-length practice under exam rules", "Stamina and pacing need practice"],
+      example: "Exam Simulation: 1 hour 45 minutes. 30 of 40 questions completed. No hints, no lookup, timed.",
+      whatHappensAfter: [{ step: "Simulation starts", detail: "Timed exam conditions activated" }, { step: "Student completes exam", detail: "All responses captured under time pressure" }, { step: "Results evaluated", detail: "Score, time per question, and weak areas analyzed" }, { step: "Readiness recalculated", detail: "Exam readiness updated based on performance" }],
+      usedWith: ["Exam Readiness", "Post-Exam Reflection", "Predicted Practice"],
+      decisionSignals: ["Realistic practice needed", "Timed conditions important", "Exam stamina matters"],
     },
     {
       id: "post_exam_reflection",
@@ -2956,6 +3020,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Guided reflection on what felt difficult and where gaps remain.",
+      whySummaUsesIt: "Summa uses post-exam reflection to help students process their performance. Reflection turns exam experience into learning insight.",
+      techniques: ["Reflective Learning", "Metacognition", "Performance Processing"],
+      whenSummaUsesIt: ["An exam or practice exam was completed", "The student needs to process what happened", "Gaps need to be identified through reflection", "Emotional processing of performance matters"],
+      example: "Post-Exam Reflection: What felt difficult? Graph traversal questions felt unclear. Focus area: BFS/DFS implementation.",
+      whatHappensAfter: [{ step: "Reflection prompts delivered", detail: "Guided questions about the exam experience" }, { step: "Student reflects", detail: "Difficult areas and feelings captured" }, { step: "Gaps identified", detail: "Specific weaknesses surfaced through reflection" }, { step: "Study plan updated", detail: "Reflected insights incorporated into next steps" }],
+      usedWith: ["Exam Simulation", "Weak Area Card", "Next Action Card"],
+      decisionSignals: ["Exam completed", "Reflection valuable", "Emotional processing needed"],
     },
 
     // --- RESOURCE COMPONENTS ---
@@ -2980,6 +3052,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Relevant learning material surfaced during teaching, textbook, video, or article.",
+      whySummaUsesIt: "Summa uses resource cards to connect students with authoritative materials. When a concept needs deeper study, the right resource is surfaced automatically.",
+      techniques: ["Resource Curation", "Supplementary Learning", "Authority Linking"],
+      whenSummaUsesIt: ["A concept needs deeper study", "Authoritative material exists that would help", "The student benefits from external resources", "The teaching needs supplementary material"],
+      example: "Introduction to Algorithms, CLRS Chapter 12: BSTs. Relevant to: Binary Trees.",
+      whatHappensAfter: [{ step: "Resource surfaced", detail: "Relevant material presented" }, { step: "Student accesses", detail: "External resource studied" }, { step: "Understanding deepened", detail: "Concept mastery improves" }, { step: "Resource effectiveness tracked", detail: "Whether the resource helped is recorded" }],
+      usedWith: ["Resource Section", "Recommended Resource", "Citation Drawer"],
+      decisionSignals: ["Deeper study needed", "Authoritative material available", "Supplementary resource helpful"],
     },
     {
       id: "source_card",
@@ -3003,6 +3083,14 @@ export function ComponentsView() {
           <div className="text-[7px] text-grey-green dark:text-[#8FA29B] italic">Verified from uploaded material</div>
         </div>
       ),
+      whatIsIt: "Shows where Summa's teaching content originates, uploaded material or web source.",
+      whySummaUsesIt: "Summa uses source cards to maintain transparency about where information comes from. Students deserve to know the provenance of what they are learning.",
+      techniques: ["Source Transparency", "Provenance Tracking", "Trust Building"],
+      whenSummaUsesIt: ["Summa is teaching from uploaded materials", "The source of information matters", "Transparency builds trust", "The student wants to verify or explore further"],
+      example: "Source: CSC 201 Lecture Notes, Week 8. Uploaded by: Prof. Adebayo. Page 14-16: Binary Tree Properties.",
+      whatHappensAfter: [{ step: "Source displayed", detail: "Origin of teaching content shown" }, { step: "Student verifies", detail: "Can check the original material" }, { step: "Trust maintained", detail: "Transparency reinforces credibility" }, { step: "Source accessed", detail: "Student can explore the original material" }],
+      usedWith: ["Citation Drawer", "Resource Card", "Recommended Resource"],
+      decisionSignals: ["Source matters", "Transparency needed", "Student wants to verify"],
     },
     {
       id: "recommended_resource",
@@ -3027,6 +3115,14 @@ export function ComponentsView() {
           <div className="text-[7px] text-teal-dark dark:text-accent-lime font-semibold">Why: You scored 45% on BST insertion</div>
         </div>
       ),
+      whatIsIt: "Suggested external resource based on current topic and learning gaps.",
+      whySummaUsesIt: "Summa uses recommended resources to connect struggling students with materials that specifically address their gaps. Not generic, targeted.",
+      techniques: ["Gap-Targeted Resources", "Personalized Recommendation", "Learning Support"],
+      whenSummaUsesIt: ["A specific learning gap is identified", "An external resource would address the gap", "The student needs targeted support", "Generic resources would not be as effective"],
+      example: "Recommended: Visualgo, BST Operations. Why: You scored 45% on BST insertion. Interactive visualization helps.",
+      whatHappensAfter: [{ step: "Resource recommended", detail: "Gap-specific resource presented" }, { step: "Student engages", detail: "External resource studied" }, { step: "Gap addressed", detail: "Weakness improves" }, { step: "Recommendation effectiveness tracked", detail: "Whether the recommendation helped is recorded" }],
+      usedWith: ["Resource Card", "Weak Area Card", "Next Action Card"],
+      decisionSignals: ["Specific gap identified", "Targeted resource available", "Generic help insufficient"],
     },
     {
       id: "resource_section",
@@ -3055,6 +3151,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Grouped collection of relevant materials surfaced during a topic or session.",
+      whySummaUsesIt: "Summa uses resource sections to organize multiple related materials into a coherent collection. One place to find everything relevant to a topic.",
+      techniques: ["Resource Organization", "Topic-Based Collection", "Study Material Aggregation"],
+      whenSummaUsesIt: ["Multiple resources are relevant to a topic", "The student needs organized access to materials", "A topic spans multiple resource types", "Study sessions benefit from centralized resources"],
+      example: "Resources for Binary Trees: CLRS Ch. 12, MIT OCW Lecture 5, Your lecture notes (p.14-16).",
+      whatHappensAfter: [{ step: "Resources organized", detail: "Topic-relevant materials grouped" }, { step: "Student accesses", detail: "Materials studied in organized order" }, { step: "Understanding deepens", detail: "Multiple sources reinforce learning" }, { step: "Resource usage tracked", detail: "Which resources are most valuable is recorded" }],
+      usedWith: ["Resource Card", "Source Card", "Citation Drawer"],
+      decisionSignals: ["Multiple resources relevant", "Organization helps", "Topic-based access valuable"],
     },
     {
       id: "citation_drawer",
@@ -3077,6 +3181,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Expandable drawer showing exact sources when Summa teaches from uploaded materials.",
+      whySummaUsesIt: "Summa uses citation drawers to provide exact source references. When teaching from uploaded materials, the student can verify and explore the original source.",
+      techniques: ["Citation Management", "Source Verification", "Academic Integrity"],
+      whenSummaUsesIt: ["Summa teaches from uploaded materials", "The student needs exact source references", "Academic integrity requires citation", "The student wants to verify the teaching"],
+      example: "Citation: 'A BST is a binary tree where...' CSC 201 Notes, p.14, Prof. Adebayo. View full source.",
+      whatHappensAfter: [{ step: "Citation displayed", detail: "Exact source reference shown" }, { step: "Student verifies", detail: "Original source can be checked" }, { step: "Trust reinforced", detail: "Transparency builds confidence" }, { step: "Source explored", detail: "Student can dive deeper into original material" }],
+      usedWith: ["Source Card", "Resource Card", "Resource Section"],
+      decisionSignals: ["Teaching from uploads", "Citation needed", "Verification matters"],
     },
   ];
 
