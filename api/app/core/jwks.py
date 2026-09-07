@@ -30,7 +30,7 @@ async def fetch_jwks() -> Optional[Dict[str, Any]]:
 
     jwks_url = f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
     try:
-        async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
             resp = await client.get(jwks_url)
             if resp.status_code == 200:
                 _jwks_cache = resp.json()

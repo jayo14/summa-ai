@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabaseClient";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 
 /**
  * API client helper for communication with the FastAPI backend.
@@ -35,7 +35,7 @@ export async function getValidAccessToken(): Promise<string | null> {
   }
 
   try {
-    const supabase = createClient();
+    const supabase = getSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.access_token) {
       if (session.access_token !== currentToken) {
@@ -94,7 +94,6 @@ export async function fetchApi<T = any>(
       // the session; the chat error state handles it inline).
       const noAutoLogout =
         endpoint.includes("/auth/") ||
-        endpoint === "/user" ||
         endpoint.includes("/chat/stream") ||
         endpoint.includes("/conversations");
       if (!noAutoLogout) {

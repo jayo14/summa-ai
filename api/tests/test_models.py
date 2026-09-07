@@ -8,8 +8,8 @@ from app.models.user import (
     UserUpdate,
     UserSettings,
     UserSettingsUpdate,
-    AuthLoginRequest,
-    AuthLoginResponse,
+    CredentialsLoginRequest,
+    AuthSessionResponse,
 )
 from app.models.memory import (
     RememberTextRequest,
@@ -66,10 +66,10 @@ class TestUserModels:
         assert update.name == "Alice"
         assert update.email is None
 
-    def test_auth_login_request_defaults(self):
-        req = AuthLoginRequest(email="a@b.com", password="pass")
-        assert req.provider == "credentials"
-        assert req.name is None
+    def test_credentials_login_request_defaults(self):
+        req = CredentialsLoginRequest(email="a@b.com", password="pass")
+        assert req.email == "a@b.com"
+        assert req.password == "pass"
 
 
 class TestMemoryModels:

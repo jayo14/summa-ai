@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import { fetchApi } from "@/lib/api";
 import { UserRole, UserStatus } from "@/types/roles";
 
@@ -29,13 +30,17 @@ function normalizeUser(userData: any): User {
   };
 }
 
+function getSupabase(): ReturnType<typeof getSupabaseClient> {
+  return getSupabaseClient();
+}
+
 interface AuthState {
   user: User | null;
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   initialized: boolean;
-  
+
   initializeAuth: () => Promise<void>;
   login: (email: string, password?: string) => Promise<void>;
   signup: (email: string, password?: string, name?: string) => Promise<void>;
@@ -44,32 +49,40 @@ interface AuthState {
   forgotPassword: (email: string) => Promise<string>;
   resetPassword: (password: string) => Promise<string>;
   updateUser: (data: Partial<User>) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
   setUserFromCallback: (user: any, token: string) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: localStorage.getItem("summa_access_token"),
+  token: null,
   isLoading: true,
   isAuthenticated: false,
   initialized: false,
 
   initializeAuth: async () => {
-    const storedToken = localStorage.getItem("summa_access_token");
-    if (!storedToken || storedToken === "undefined" || storedToken === "null" || storedToken.trim() === "") {
-      localStorage.removeItem("summa_access_token");
-      set({ token: null, user: null, isAuthenticated: false, isLoading: false, initialized: true });
-      return;
-    }
-
     try {
-      const rawUserData = await fetchApi<any>("/user");
-      const normalized = normalizeUser(rawUserData);
-      set({ token: storedToken, user: normalized, isAuthenticated: true, isLoading: false, initialized: true });
-    } catch (err) {
-      console.warn("Auth token verification failed, clearing session:", err);
-      localStorage.removeItem("summa_access_token");
+      const supabase = getSupabase();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        set({ token: null, user: null, isAuthenticated: false, isLoading: false, initialized: true });
+        return;
+      }
+
+      const token = session.access_token;
+
+      // Fetch application profile from FastAPI
+      try {
+        const rawUserData = await fetchApi<any>("/auth/me");
+        const normalized = normalizeUser(rawUserData?.user || rawUserData);
+        set({ token, user: normalized, isAuthenticated: true, isLoading: false, initialized: true });
+      } catch {
+        // Profile fetch failed — clear Supabase session too
+        await supabase.auth.signOut();
+        set({ token: null, user: null, isAuthenticated: false, isLoading: false, initialized: true });
+      }
+    } catch {
       set({ token: null, user: null, isAuthenticated: false, isLoading: false, initialized: true });
     }
   },
@@ -77,14 +90,28 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email: string, password?: string) => {
     set({ isLoading: true });
     try {
-      const res = await fetchApi<{ access_token: string; user: any }>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password, provider: "credentials" }),
-      });
+      const supabase = getSupabase();
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password: password || "" });
 
-      localStorage.setItem("summa_access_token", res.access_token);
-      const normalized = normalizeUser(res.user);
-      set({ token: res.access_token, user: normalized, isAuthenticated: true, isLoading: false });
+      if (error) {
+        // Check for email not verified
+        if (error.message.toLowerCase().includes("email not confirmed") ||
+            error.message.toLowerCase().includes("not verified")) {
+          throw new Error("not verified");
+        }
+        throw error;
+      }
+
+      if (!data.session?.access_token) {
+        throw new Error("Authentication failed — no session");
+      }
+
+      const token = data.session.access_token;
+
+      // Fetch application profile
+      const rawUserData = await fetchApi<any>("/auth/me");
+      const normalized = normalizeUser(rawUserData?.user || rawUserData);
+      set({ token, user: normalized, isAuthenticated: true, isLoading: false });
     } catch (err) {
       set({ isLoading: false });
       throw err;
@@ -94,14 +121,25 @@ export const useAuthStore = create<AuthState>((set) => ({
   signup: async (email: string, password?: string, name?: string) => {
     set({ isLoading: true });
     try {
-      const res = await fetchApi<{ access_token: string; user: any }>("/auth/signup", {
-        method: "POST",
-        body: JSON.stringify({ email, password, name, provider: "credentials" }),
+      const supabase = getSupabase();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: password || "",
+        options: { data: { name: name || email.split("@")[0] } },
       });
 
-      localStorage.setItem("summa_access_token", res.access_token);
-      const normalized = normalizeUser(res.user);
-      set({ token: res.access_token, user: normalized, isAuthenticated: true, isLoading: false });
+      if (error) throw error;
+
+      // If email confirmation is required, data.session may be null
+      if (data.session?.access_token) {
+        const token = data.session.access_token;
+        const rawUserData = await fetchApi<any>("/auth/me");
+        const normalized = normalizeUser(rawUserData?.user || rawUserData);
+        set({ token, user: normalized, isAuthenticated: true, isLoading: false });
+      } else {
+        // Email verification required — not authenticated yet
+        set({ isLoading: false });
+      }
     } catch (err) {
       set({ isLoading: false });
       throw err;
@@ -111,51 +149,50 @@ export const useAuthStore = create<AuthState>((set) => ({
   verifyOtp: async (email: string, code: string, type: string = "signup") => {
     set({ isLoading: true });
     try {
-      const res = await fetchApi<{ access_token: string; user: any }>("/auth/verify-otp", {
-        method: "POST",
-        body: JSON.stringify({ email, token: code, type }),
+      const supabase = getSupabase();
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: type as any,
       });
 
-      localStorage.setItem("summa_access_token", res.access_token);
-      const normalized = normalizeUser(res.user);
-      set({ token: res.access_token, user: normalized, isAuthenticated: true, isLoading: false });
+      if (error) throw error;
+
+      if (!data.session?.access_token) {
+        throw new Error("Verification failed — no session");
+      }
+
+      const token = data.session.access_token;
+      const rawUserData = await fetchApi<any>("/auth/me");
+      const normalized = normalizeUser(rawUserData?.user || rawUserData);
+      set({ token, user: normalized, isAuthenticated: true, isLoading: false });
     } catch (err) {
       set({ isLoading: false });
       throw err;
     }
   },
 
-  resendOtp: async (email: string, type: string = "signup"): Promise<string> => {
-    const res = await fetchApi<{ message: string }>("/auth/resend-otp", {
-      method: "POST",
-      body: JSON.stringify({ email, type }),
-    });
-    return res.message;
+  resendOtp: async (email: string, _type: string = "signup"): Promise<string> => {
+    const supabase = getSupabase();
+    const { error } = await supabase.auth.resend({ type: "signup", email });
+    if (error) throw error;
+    return "Verification code sent to your email.";
   },
 
   forgotPassword: async (email: string): Promise<string> => {
-    const res = await fetchApi<{ message: string }>("/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ email }),
+    const supabase = getSupabase();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/callback?type=recovery`,
     });
-    return res.message;
+    if (error) throw error;
+    return "If an account exists for this email address, password reset instructions have been sent.";
   },
 
   resetPassword: async (password: string): Promise<string> => {
-    // Use the recovery token stored by /callback for password-reset flows.
-    // Fall back to the regular session token for in-session password changes.
-    const recoveryToken = localStorage.getItem("summa_reset_token");
-    const sessionToken = localStorage.getItem("summa_access_token");
-    const tokenToUse = recoveryToken || sessionToken;
-
-    const res = await fetchApi<{ message: string }>("/auth/reset-password", {
-      method: "POST",
-      headers: tokenToUse ? { Authorization: `Bearer ${tokenToUse}` } : {},
-      body: JSON.stringify({ password }),
-    });
-    // Clear the one-time recovery token after use
-    if (recoveryToken) localStorage.removeItem("summa_reset_token");
-    return res.message;
+    const supabase = getSupabase();
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    return "Password updated successfully. You can now sign in with your new password.";
   },
 
   updateUser: async (data: Partial<User>): Promise<User> => {
@@ -168,7 +205,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     return normalized;
   },
 
-  logout: () => {
+  logout: async () => {
+    try {
+      const supabase = getSupabase();
+      await supabase.auth.signOut();
+    } catch {
+      // Sign-out errors are non-critical — proceed with local cleanup
+    }
     localStorage.removeItem("summa_access_token");
     set({ token: null, user: null, isAuthenticated: false, isLoading: false });
   },

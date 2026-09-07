@@ -1,8 +1,14 @@
-"""Tests for SupabaseAuthService — verifies centralized error handling, client reuse, status code mapping."""
+"""Tests for SupabaseAuthService — token validation only.
+
+All authentication operations are handled by the frontend.
+This service is ONLY used for token validation on protected routes.
+"""
 
 import pytest
+import httpx
 from unittest.mock import AsyncMock, patch, MagicMock
-from app.services.supabase_auth import SupabaseAuthService, SupabaseAuthError, _SUPABASE_ERROR_MAP
+
+from app.services.supabase_auth import SupabaseAuthService, SupabaseAuthError
 
 
 def _mock_settings():
@@ -24,6 +30,11 @@ class TestSupabaseAuthServiceInit:
             with pytest.raises(ValueError, match="SUPABASE_ANON_KEY"):
                 SupabaseAuthService()
 
+    def test_init_success(self):
+        with _mock_settings():
+            service = SupabaseAuthService()
+            assert service.base_url == "https://test.supabase.co/auth/v1"
+
 
 class TestSafeJsonParsing:
     def test_valid_json(self):
@@ -42,42 +53,65 @@ class TestSafeJsonParsing:
         assert SupabaseAuthService._safe_json(resp) == {}
 
 
-class TestErrorExtraction:
-    def test_known_error_code(self):
-        body = {"error_code": "invalid_credentials", "msg": "Bad"}
-        assert SupabaseAuthService._extract_error(body, 401) == "Invalid email or password"
-
-    def test_unknown_error_400(self):
-        body = {"msg": "Something wrong"}
-        assert SupabaseAuthService._extract_error(body, 400) == "Something wrong"
-
-    def test_unknown_error_401(self):
-        body = {}
-        assert SupabaseAuthService._extract_error(body, 401) == "Invalid email or password"
-
-    def test_unknown_error_429(self):
-        body = {}
-        assert SupabaseAuthService._extract_error(body, 429) == "Too many requests. Please try again later."
-
-    def test_500_hides_infrastructure(self):
-        body = {"msg": "Database connection pool exhausted"}
-        error = SupabaseAuthService._extract_error(body, 500)
-        assert "Database" not in error
-        assert "unavailable" in error.lower()
-
-    def test_weak_password_code(self):
-        body = {"error_code": "weak_password", "msg": "Too short"}
-        assert SupabaseAuthService._extract_error(body, 422) == "Password does not meet strength requirements"
-
-    def test_rate_limit_code(self):
-        body = {"error_code": "over_request_rate_limit"}
-        assert SupabaseAuthService._extract_error(body, 429) == "Too many requests. Please try again later."
-
-
-class TestSupabaseAuthErrorMapping:
+class TestGetUser:
     @pytest.mark.asyncio
-    async def test_timeout_raises_error(self):
-        import httpx
+    async def test_get_user_success(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "user": {"id": "u1", "email": "a@b.com"},
+        }
+
+        with _mock_settings():
+            service = SupabaseAuthService()
+            mock_client = AsyncMock()
+            mock_client.request.return_value = mock_response
+            mock_client.is_closed = False
+            with patch.object(service, "_get_client", return_value=mock_client):
+                result = await service.get_user("valid-token")
+                assert result["status_code"] == 200
+                assert result["data"]["user"]["id"] == "u1"
+                assert result["error"] is None
+
+    @pytest.mark.asyncio
+    async def test_get_user_invalid_token_returns_401(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+        mock_response.json.return_value = {
+            "error_code": "invalid_token",
+            "msg": "Invalid token",
+        }
+
+        with _mock_settings():
+            service = SupabaseAuthService()
+            mock_client = AsyncMock()
+            mock_client.request.return_value = mock_response
+            mock_client.is_closed = False
+            with patch.object(service, "_get_client", return_value=mock_client):
+                result = await service.get_user("bad-token")
+                assert result["status_code"] == 401
+                assert result["error"] is not None
+
+    @pytest.mark.asyncio
+    async def test_get_user_expired_token_returns_401(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+        mock_response.json.return_value = {
+            "error_code": "token_expired",
+            "msg": "Token has expired",
+        }
+
+        with _mock_settings():
+            service = SupabaseAuthService()
+            mock_client = AsyncMock()
+            mock_client.request.return_value = mock_response
+            mock_client.is_closed = False
+            with patch.object(service, "_get_client", return_value=mock_client):
+                result = await service.get_user("expired-token")
+                assert result["status_code"] == 401
+
+    @pytest.mark.asyncio
+    async def test_get_user_timeout_raises_error(self):
         with _mock_settings():
             service = SupabaseAuthService()
             mock_client = AsyncMock()
@@ -85,12 +119,11 @@ class TestSupabaseAuthErrorMapping:
             mock_client.is_closed = False
             with patch.object(service, "_get_client", return_value=mock_client):
                 with pytest.raises(SupabaseAuthError) as exc:
-                    await service.login("a@b.com", "pass")
+                    await service.get_user("token")
                 assert exc.value.status_code == 504
 
     @pytest.mark.asyncio
-    async def test_connection_error_raises_error(self):
-        import httpx
+    async def test_get_user_connection_error_raises_error(self):
         with _mock_settings():
             service = SupabaseAuthService()
             mock_client = AsyncMock()
@@ -98,12 +131,59 @@ class TestSupabaseAuthErrorMapping:
             mock_client.is_closed = False
             with patch.object(service, "_get_client", return_value=mock_client):
                 with pytest.raises(SupabaseAuthError) as exc:
-                    await service.login("a@b.com", "pass")
+                    await service.get_user("token")
                 assert exc.value.status_code == 502
 
+    @pytest.mark.asyncio
+    async def test_get_user_server_error_returns_error(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.json.return_value = {"msg": "Internal Server Error"}
 
-class TestSupabaseAuthErrorMap:
-    def test_all_known_codes_have_messages(self):
-        for code in _SUPABASE_ERROR_MAP:
-            assert isinstance(_SUPABASE_ERROR_MAP[code], str)
-            assert len(_SUPABASE_ERROR_MAP[code]) > 0
+        with _mock_settings():
+            service = SupabaseAuthService()
+            mock_client = AsyncMock()
+            mock_client.request.return_value = mock_response
+            mock_client.is_closed = False
+            with patch.object(service, "_get_client", return_value=mock_client):
+                result = await service.get_user("token")
+                assert result["status_code"] == 500
+                assert "unavailable" in result["error"].lower()
+
+    @pytest.mark.asyncio
+    async def test_get_user_includes_auth_header(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"user": {"id": "u1"}}
+
+        with _mock_settings():
+            service = SupabaseAuthService()
+            mock_client = AsyncMock()
+            mock_client.request.return_value = mock_response
+            mock_client.is_closed = False
+            with patch.object(service, "_get_client", return_value=mock_client):
+                await service.get_user("my-token")
+                call_args = mock_client.request.call_args
+                headers = call_args[1]["headers"]
+                assert headers["Authorization"] == "Bearer my-token"
+
+
+class TestClientReuse:
+    def test_get_client_creates_singleton(self):
+        SupabaseAuthService._client = None
+        with _mock_settings():
+            service = SupabaseAuthService()
+            client1 = service._get_client()
+            client2 = service._get_client()
+            assert client1 is client2
+        SupabaseAuthService._client = None
+
+    def test_get_client_creates_new_when_closed(self):
+        mock_closed = MagicMock()
+        mock_closed.is_closed = True
+        SupabaseAuthService._client = mock_closed
+        with _mock_settings():
+            service = SupabaseAuthService()
+            client = service._get_client()
+            assert client is not mock_closed
+        SupabaseAuthService._client = None

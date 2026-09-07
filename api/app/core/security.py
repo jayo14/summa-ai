@@ -11,35 +11,6 @@ current_jwt_token: ContextVar[Optional[str]] = ContextVar(
     "current_jwt_token", default=None
 )
 
-# ---------------------------------------------------------------------------
-# JWKS cache — fetched once per process, refreshed on key miss
-# ---------------------------------------------------------------------------
-_jwks_cache: Optional[Dict] = None
-
-
-async def _fetch_jwks() -> Optional[Dict]:
-    """Fetch Supabase's public JWKS and cache it in-process."""
-    global _jwks_cache
-    if _jwks_cache is not None:
-        return _jwks_cache
-
-    if not settings.SUPABASE_URL:
-        return None
-
-    jwks_url = f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
-    try:
-        import httpx
-
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(jwks_url)
-            if resp.status_code == 200:
-                _jwks_cache = resp.json()
-                return _jwks_cache
-    except Exception as exc:
-        logger.warning("Failed to fetch Supabase JWKS from %s: %s", jwks_url, exc)
-    return None
-
-
 current_user_claims: ContextVar[Optional[Dict]] = ContextVar("current_user_claims", default=None)
 
 
@@ -88,24 +59,9 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
 
     # 2. RS256 / ES256 verification via JWKS
     elif alg in ("RS256", "ES256"):
-        from app.core.jwks import get_cached_jwks, invalidate_jwks_cache, fetch_jwks
+        from app.core.jwks import get_cached_jwks, invalidate_jwks_cache
 
         jwks = get_cached_jwks()
-        if not jwks:
-            # Fallback for direct sync calls outside auth_middleware
-            try:
-                import httpx, time
-                if settings.SUPABASE_URL:
-                    jwks_url = f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
-                    with httpx.Client(timeout=5.0, follow_redirects=True) as client:
-                        resp = client.get(jwks_url)
-                        if resp.status_code == 200:
-                            jwks = resp.json()
-                            from app.core import jwks as jwks_module
-                            jwks_module._jwks_cache = jwks
-                            jwks_module._jwks_cached_at = time.time()
-            except Exception as exc:
-                logger.warning("Synchronous JWKS fetch fallback failed: %s", exc)
 
         if not jwks:
             logger.warning("JWKS not cached; cannot verify asymmetric JWT '%s'", alg)
