@@ -239,12 +239,12 @@ class ConnectionManager:
                 self.disconnect(ws, user_id)
 
     async def broadcast(self, message: dict):
-        for conns in self._connections.values():
+        for user_id, conns in list(self._connections.items()):
             for ws in list(conns):
                 try:
                     await ws.send_json(message)
-                except:
-                    self.disconnect(ws, ws)
+                except Exception:
+                    self.disconnect(ws, user_id)
 
     def get_online_count(self) -> int:
         return sum(len(c) for c in self._connections.values())
