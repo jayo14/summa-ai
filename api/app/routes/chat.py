@@ -77,7 +77,11 @@ async def detect_knowledge_gaps(user_id: str) -> Optional[dict]:
 
 
 async def build_orchestrator_prompt(
-    user_id: str, query: str, messages: list[dict], request: Optional[ChatRequest] = None
+    user_id: str,
+    query: str,
+    messages: list[dict],
+    request: Optional[ChatRequest] = None,
+    decision: Optional[Any] = None,
 ) -> str:
     memory_context = await cognee.recall_context(user_id, query)
     exams_context = await cognee.recall_exams(user_id)
@@ -90,6 +94,36 @@ async def build_orchestrator_prompt(
         "tracking gaps, and tailoring explanations to their academic level and style. "
         "Keep explanations clear, engaging, concise, and formatted with Markdown. Use analogies and step-by-step logic."
     ]
+
+    if decision:
+        action_directives = {
+            "TEACH": "Focus on structured, step-by-step concept instruction using clear analogies.",
+            "EXPLAIN": "Provide a crisp, illuminating conceptual explanation answering the student's core question.",
+            "EXAMPLE": "Provide concrete, real-world case studies or code examples demonstrating the concept in action.",
+            "RECALL": "Conduct an active recall check or ask a diagnostic question before giving the full answer.",
+            "FLASHCARD": "Present flashcard-style key terms and definitions to test retention.",
+            "QUIZ": "Include a targeted diagnostic question with multiple choices to test understanding.",
+            "PRACTICE": "Pose an applied practice problem or scenario for the student to solve step-by-step.",
+            "ASSESS": "Analyze the student's current proficiency level and summarize their mastery readiness.",
+            "REVIEW": "Revisit previously learned concepts and highlight key takeaways to strengthen long-term memory.",
+            "COMPARE": "Explicitly contrast two concepts to resolve active misconceptions or confusion.",
+            "APPLY": "Ask the student to apply knowledge to a realistic problem or novel scenario.",
+            "REFLECT": "Prompt the student to reflect on their confidence and metacognition.",
+            "SIMULATE": "Walk through a simulation, memory layout, or stack frame execution trace.",
+            "PREDICT": "Analyze exam probability and predict key assessment patterns.",
+            "PLAN": "Structure a step-by-step study schedule and milestones.",
+            "REST": "Recommend a short break or consolidation period to optimize cognitive load.",
+        }
+        directive = action_directives.get(decision.action, "Explain clearly and check understanding.")
+        parts.append(
+            _section(
+                f"\nPEDAGOGICAL ACTION DIRECTIVE ({decision.action}):\n"
+                f"Reasoning: {decision.reasoning}\n"
+                f"Target Concepts: {', '.join(decision.target_concept_ids) if decision.target_concept_ids else 'General'}\n"
+                f"Suggested Difficulty: {decision.suggested_difficulty}\n"
+                f"Instruction: {directive}"
+            )
+        )
 
     # Injected ChatRequest personalization parameters
     if request:
@@ -167,6 +201,20 @@ async def build_orchestrator_prompt(
         )
 
     try:
+        from app.services.spaced_repetition import SpacedRepetitionEngine
+        sr = SpacedRepetitionEngine()
+        due_items = await sr.get_due_reviews(user_id)
+        if due_items:
+            parts.append(
+                _section(
+                    f"\nSPACED REPETITION REVIEWS DUE:\n{json.dumps(due_items, indent=2)}\n"
+                    "These concepts are due for spaced review based on SM-2 retention decay."
+                )
+            )
+    except Exception as exc:
+        logger.debug("Spaced repetition recall skipped: %s", exc)
+
+    try:
         materials_mem = await cognee._recall(query, cognee._dataset(user_id, "materials"), limit=5)
         if materials_mem:
             parts.append(_section(f"\nCONNECTED STUDY MATERIALS (from Cognee memory):\n{json.dumps(materials_mem, indent=2)}"))
@@ -241,7 +289,7 @@ async def chat_stream(request: ChatRequest):
     decision = await orchestrator.decide_next_action(user_id, last_query, messages)
     
     intent = detect_intent(last_query)
-    orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages, request=request)
+    orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages, request=request, decision=decision)
 
     async def generate():
         # Emit orchestrator next_action event
