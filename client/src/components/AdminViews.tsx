@@ -1546,6 +1546,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "A question with several answer options where the learner selects the best fit. Provides immediate correctness feedback.",
+      whySummaUsesIt: "Summa uses multiple choice when it needs to quickly assess baseline comprehension of a concept. It is efficient for covering breadth and identifying specific misconceptions through distractor analysis.",
+      techniques: ["Assessment", "Recall", "Misconception Detection"],
+      whenSummaUsesIt: ["New concept was just introduced", "Summa needs to verify understanding before moving on", "Multiple related concepts need quick differentiation", "Exam preparation requires breadth coverage"],
+      example: "You are studying cellular biology. Summa introduces mitochondria and immediately asks a multiple choice question to verify you grasped the core function before moving to ATP synthesis.",
+      whatHappensAfter: [{ step: "Student selects answer", detail: "Response captured and evaluated" }, { step: "Feedback delivered", detail: "Correct: reinforcement. Incorrect: targeted explanation" }, { step: "Learner Model updated", detail: "Comprehension level recorded for this concept" }, { step: "Next Best Action calculated", detail: "Advance, review, or deepen based on result" }],
+      usedWith: ["Short Answer", "Confidence Check", "Spaced Review"],
+      decisionSignals: ["Concept newly introduced", "Breadth check needed", "Distractor analysis valuable"],
     },
     {
       id: "short_answer",
@@ -1573,6 +1581,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "An open-ended question where the student writes a free-text response. Summa evaluates key ideas and provides precise feedback.",
+      whySummaUsesIt: "Summa uses short answer when it needs to evaluate understanding beyond recognition, when the learner must actively construct an explanation. This reveals depth that multiple choice cannot.",
+      techniques: ["Active Recall", "Elaborative Learning", "Assessment"],
+      whenSummaUsesIt: ["Student has learned a concept and needs to demonstrate understanding", "Summa wants to check if the student can articulate, not just recognize", "The concept has multiple key ideas that need coverage", "Before marking a concept as understood"],
+      example: "After explaining stack vs heap memory, Summa asks you to write a short explanation of the difference. Your response is evaluated for completeness and accuracy.",
+      whatHappensAfter: [{ step: "Student writes response", detail: "Free text captured" }, { step: "Summa evaluates key ideas", detail: "Checks for required concepts and accuracy" }, { step: "Feedback delivered", detail: "What was correct, what was missing, what was wrong" }, { step: "Mastery estimate updated", detail: "Depth of understanding recorded" }],
+      usedWith: ["Explanation Card", "Worked Example", "Mastery Card"],
+      decisionSignals: ["Depth check needed", "Articulation reveals true understanding", "Concept has nuance"],
     },
     {
       id: "true_false",
@@ -1603,6 +1619,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "A statement that the learner judges as true or false. Rapid-fire validation to clear misconceptions quickly.",
+      whySummaUsesIt: "Summa uses true/false for quick, low-friction checks that keep the learning pace moving. Especially useful for testing factual recall and exposing common misunderstandings.",
+      techniques: ["Rapid Recall", "Misconception Detection", "Factual Validation"],
+      whenSummaUsesIt: ["Multiple factual claims need quick validation", "A common misconception needs direct confrontation", "Pace needs to stay fast during review sessions", "The concept has clear binary boundaries"],
+      example: "Summa states: Java interfaces can contain private helper methods in Java 9+. You evaluate, this tests whether you know the Java 9+ interface enhancement.",
+      whatHappensAfter: [{ step: "Student judges True/False", detail: "Response captured" }, { step: "Instant feedback", detail: "Explanation of why the statement is true or false" }, { step: "Misconception flagged", detail: "If incorrect, the specific misunderstanding is logged" }, { step: "Recall strength updated", detail: "Contributes to retention estimate" }],
+      usedWith: ["Multiple Choice", "Rapid Recall", "Confidence Check"],
+      decisionSignals: ["Factual claim needs validation", "Quick pace required", "Binary concept boundaries"],
     },
     {
       id: "fill_blank",
@@ -1625,6 +1649,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "A sentence or formula with a missing term that the learner must complete. Excellent for terminology and exact formulas.",
+      whySummaUsesIt: "Summa uses fill-in-the-blank when precise terminology or exact formulas must be memorized. It forces active recall of specific terms rather than recognition.",
+      techniques: ["Active Recall", "Terminology Mastery", "Precision Training"],
+      whenSummaUsesIt: ["Key terminology must be remembered exactly", "Formulas or syntax require precise recall", "The student tends to approximate rather than recall precisely", "Exam requires exact terms"],
+      example: "In OOP, _____ allows dynamic method dispatch at runtime. You must recall the exact term: polymorphism.",
+      whatHappensAfter: [{ step: "Student fills in the blank", detail: "Response compared against correct answer" }, { step: "Precision evaluated", detail: "Exact match, close match, or incorrect" }, { step: "Feedback delivered", detail: "Confirmation or correction with context" }, { step: "Terminology mastery tracked", detail: "Recorded for spaced review scheduling" }],
+      usedWith: ["Recall Prompt", "Spaced Review", "Memory Check"],
+      decisionSignals: ["Exact term recall needed", "Formula precision required", "Student approximates terms"],
     },
     {
       id: "matching",
@@ -1661,6 +1693,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Match concepts to their definitions, properties, or related items. Builds structural associations between related ideas.",
+      whySummaUsesIt: "Summa uses matching when it needs to build or verify structural associations between concepts. Particularly effective for vocabulary, terminology networks, and concept mapping.",
+      techniques: ["Association Building", "Structural Learning", "Concept Mapping"],
+      whenSummaUsesIt: ["Multiple related concepts need to be connected", "Vocabulary or terminology network is being built", "The student confuses similar concepts", "Review of related concept pairs"],
+      example: "Match: Photosynthesis to Light into glucose. Mitochondria to ATP energy production. This reinforces the relationship between organelles and their functions.",
+      whatHappensAfter: [{ step: "Student matches pairs", detail: "All pairings captured" }, { step: "Correct matches confirmed", detail: "Correct associations reinforced" }, { step: "Incorrect matches corrected", detail: "Wrong associations explicitly corrected" }, { step: "Association strength updated", detail: "Concept pair relationships recorded" }],
+      usedWith: ["Categorization", "Compare & Contrast", "Retrieval Grid"],
+      decisionSignals: ["Concept pairs need reinforcement", "Vocabulary network building", "Confusion between similar items"],
     },
     {
       id: "ordering",
@@ -1689,6 +1729,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Arrange events, steps, or processes into the correct sequence. Tests understanding of procedural and chronological knowledge.",
+      whySummaUsesIt: "Summa uses ordering when the sequence of events or steps is critical to understanding. It reveals whether the learner understands not just what happens, but in what order and why.",
+      techniques: ["Procedural Knowledge", "Sequential Reasoning", "Process Understanding"],
+      whenSummaUsesIt: ["A process has critical sequential dependencies", "Algorithm steps need to be understood in order", "Historical events require chronological knowledge", "The student understands components but not the flow"],
+      example: "Put in order: Compile Source Code, Generate Bytecode, Load via JVM ClassLoader. This tests understanding of the Java compilation pipeline.",
+      whatHappensAfter: [{ step: "Student orders items", detail: "Sequence captured" }, { step: "Sequence validated", detail: "Correct order confirmed or corrected" }, { step: "Procedural understanding assessed", detail: "Whether student grasps dependencies" }, { step: "Next action determined", detail: "Advance or review based on accuracy" }],
+      usedWith: ["Categorization", "Concept Breakdown", "Worked Example"],
+      decisionSignals: ["Sequence matters", "Process understanding needed", "Steps have dependencies"],
     },
     {
       id: "categorization",
@@ -1715,6 +1763,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Sort or drag concepts into appropriate categories or taxonomy buckets. Tests classification and conceptual boundaries.",
+      whySummaUsesIt: "Summa uses categorization when it needs to verify that the learner can classify concepts correctly. This reveals whether the student understands the boundaries and properties that define categories.",
+      techniques: ["Classification", "Conceptual Boundaries", "Taxonomy Building"],
+      whenSummaUsesIt: ["Concepts belong to distinct categories", "The student needs to understand what makes something belong to a group", "Classification rules need to be learned", "Multiple categories with overlapping features"],
+      example: "Sort into Linear vs Non-Linear: Arrays goes to Linear. Linked Lists goes to Linear. Trees goes to Non-Linear. Graphs goes to Non-Linear.",
+      whatHappensAfter: [{ step: "Student categorizes items", detail: "All placements captured" }, { step: "Categories validated", detail: "Correct classifications confirmed" }, { step: "Boundary understanding assessed", detail: "Whether student grasps category definitions" }, { step: "Concept map updated", detail: "Taxonomy relationships recorded" }],
+      usedWith: ["Matching", "Compare & Contrast", "Concept Breakdown"],
+      decisionSignals: ["Classification needed", "Category boundaries unclear", "Taxonomy learning in progress"],
     },
     {
       id: "teach_back",
@@ -1740,6 +1796,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Explain this like you are teaching someone. Forces Feynman-style active articulation of understanding.",
+      whySummaUsesIt: "Summa uses teach-back when it needs the deepest possible assessment of understanding. If you can teach it, you know it. This reveals gaps that recognition-based methods miss entirely.",
+      techniques: ["Retrieval Practice", "Elaborative Learning", "Metacognition"],
+      whenSummaUsesIt: ["A concept has been learned and needs deep verification", "The student thinks they understand but may not", "The concept is important enough to warrant thorough checking", "Pre-exam or pre-assessment verification"],
+      example: "How would you explain recursion to a 10-year-old without using technical jargon? Your response reveals whether you truly understand the core idea.",
+      whatHappensAfter: [{ step: "Student writes explanation", detail: "Free-form teaching response captured" }, { step: "Summa evaluates explanation", detail: "Checks for clarity, accuracy, completeness" }, { step: "Gaps identified", detail: "What the student missed or got wrong" }, { step: "Mastery confirmed or deepened", detail: "If gaps found, targeted follow-up deployed" }],
+      usedWith: ["Explanation Card", "Confidence Check", "Mastery Card"],
+      decisionSignals: ["Deep verification needed", "Student may have surface understanding", "Concept is high-stakes"],
     },
     {
       id: "confidence_check",
@@ -1774,6 +1838,14 @@ export function ComponentsView() {
           <div className="text-[9px] text-grey-green dark:text-[#8FA29B] text-center font-medium">1 = Unsure · 5 = Mastered</div>
         </div>
       ),
+      whatIsIt: "Rate how confident you feel (1 to 5) and pair it directly with actual test performance. Surfaces overconfidence and underconfidence.",
+      whySummaUsesIt: "Summa uses confidence checks to calibrate the learner's self-awareness. Knowing what you don't know is as important as knowing what you do. This pairing reveals calibration gaps.",
+      techniques: ["Metacognition", "Self-Assessment Calibration", "Learning Awareness"],
+      whenSummaUsesIt: ["After a quiz or practice session", "The student may be overconfident or underconfident", "Calibration of self-assessment is needed", "Before recommending next steps"],
+      example: "How confident do you feel about Big-O time complexity analysis? You rate 4 out of 5. Then you score 60% on a quiz, revealing overconfidence.",
+      whatHappensAfter: [{ step: "Student rates confidence", detail: "Self-assessment captured (1-5)" }, { step: "Performance compared", detail: "Confidence vs actual score analyzed" }, { step: "Calibration gap flagged", detail: "Over or under-confidence identified" }, { step: "Next action adjusted", detail: "If overconfident: more practice. If underconfident: encouragement plus proof" }],
+      usedWith: ["Multiple Choice", "Short Answer", "Mastery Card"],
+      decisionSignals: ["Self-awareness check needed", "After assessment", "Calibration matters"],
     },
     {
       id: "scenario",
@@ -1802,6 +1874,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Give a realistic engineering or academic situation for the student to apply knowledge in context.",
+      whySummaUsesIt: "Summa uses scenarios when it needs to verify that the learner can apply knowledge to real-world situations. This bridges the gap between theoretical understanding and practical application.",
+      techniques: ["Applied Learning", "Contextual Reasoning", "Problem Solving"],
+      whenSummaUsesIt: ["Concepts need to be applied in realistic contexts", "The student knows the theory but has not applied it", "Exam questions use scenario-based formats", "Engineering or professional context requires application"],
+      example: "A high-traffic web server drops requests during peak hours. Which caching pattern resolves this? You must apply caching knowledge to a realistic problem.",
+      whatHappensAfter: [{ step: "Student analyzes scenario", detail: "Problem-solving approach captured" }, { step: "Solution evaluated", detail: "Correct approach and reasoning checked" }, { step: "Application skill assessed", detail: "Whether student can transfer knowledge" }, { step: "Contextual understanding recorded", detail: "Real-world application ability tracked" }],
+      usedWith: ["Worked Example", "Short Answer", "Common Mistake Card"],
+      decisionSignals: ["Application needed", "Theory-to-practice gap", "Exam uses scenarios"],
     },
 
     // --- TEACHING COMPONENTS ---
