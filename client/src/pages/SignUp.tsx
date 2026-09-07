@@ -12,8 +12,14 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signup } = useAuth();
+  const { signup, user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
+
+  React.useEffect(() => {
+    if (user || isAuthenticated) {
+      setLocation("/");
+    }
+  }, [user, isAuthenticated, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
