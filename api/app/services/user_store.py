@@ -18,28 +18,7 @@ class UserStore:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._pool: Optional[asyncpg.Pool] = None
-            cls._instance._audit_logs: list[dict[str, Any]] = [
-                {
-                    "id": "audit-1",
-                    "actor_id": "119f677f-cd51-526d-acf3-3bd68d95b57b",
-                    "actor_email": "alex@summa.ai",
-                    "action": "ROLE_ELEVATED",
-                    "target_user_id": "usr-prof-1",
-                    "target_email": "prof.marcus@university.edu",
-                    "details": "Assigned Instructor role for CSC 201 course management",
-                    "timestamp": "2026-09-03T10:15:00Z",
-                },
-                {
-                    "id": "audit-2",
-                    "actor_id": "119f677f-cd51-526d-acf3-3bd68d95b57b",
-                    "actor_email": "alex@summa.ai",
-                    "action": "SYSTEM_POLICY_UPDATED",
-                    "target_user_id": "SYSTEM",
-                    "target_email": "system@summa.ai",
-                    "details": "Enabled Hybrid Memory Vector Indexing & Gemini API Rate Limits",
-                    "timestamp": "2026-09-02T14:30:00Z",
-                },
-            ]
+            cls._instance._audit_logs: list[dict[str, Any]] = []
             # Intentionally empty: no hardcoded seed users.
             # get_user_by_id() returns None when the DB has no row — it never
             # returns a fake "Student User" identity for a real signed-up account.
