@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
 import { SummaLogo } from "@/components/SummaLogo";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowRight,
   Brain,
@@ -32,6 +33,8 @@ import {
 } from "lucide-react";
 
 export default function LandingPage() {
+  const { user, isAuthenticated } = useAuth();
+  const isLoggedIn = Boolean(user || isAuthenticated);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -98,28 +101,32 @@ export default function LandingPage() {
             </nav>
 
             <div className="hidden sm:flex items-center gap-4">
+              {!isLoggedIn && (
+                <Link
+                  href="/sign-in"
+                  className="text-xs font-semibold text-[#DDE8DF] hover:text-white px-3 py-2 transition-colors"
+                >
+                  Sign In
+                </Link>
+              )}
               <Link
-                href="/sign-in"
-                className="text-xs font-semibold text-[#DDE8DF] hover:text-white px-3 py-2 transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/sign-up"
+                href={isLoggedIn ? "/app" : "/sign-up"}
                 className="px-5 py-2.5 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
-                Get started free
+                {isLoggedIn ? "Dashboard" : "Get started free"}
               </Link>
             </div>
 
             {/* Mobile Hamburger Button */}
             <div className="flex md:hidden items-center gap-2">
-              <Link
-                href="/sign-in"
-                className="text-xs font-semibold text-[#DDE8DF] hover:text-white px-2 py-1"
-              >
-                Sign In
-              </Link>
+              {!isLoggedIn && (
+                <Link
+                  href="/sign-in"
+                  className="text-xs font-semibold text-[#DDE8DF] hover:text-white px-2 py-1"
+                >
+                  Sign In
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -166,11 +173,11 @@ export default function LandingPage() {
               </nav>
               <div className="pt-3 border-t border-[#005A57] flex flex-col gap-2.5">
                 <Link
-                  href="/sign-up"
+                  href={isLoggedIn ? "/app" : "/sign-up"}
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full py-3 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold text-center shadow-md transition-all"
                 >
-                  Get started free
+                  {isLoggedIn ? "Dashboard" : "Get started free"}
                 </Link>
               </div>
             </div>
