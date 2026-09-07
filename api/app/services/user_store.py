@@ -293,39 +293,11 @@ class UserStore:
 
     async def get_feedback_analysis(self) -> Dict[str, Any]:
         return {
-            "satisfaction_score": 96.4,
-            "total_ratings": 312,
-            "positive_ratings": 301,
-            "negative_ratings": 11,
-            "recent_feedback": [
-                {
-                    "id": "fb-1",
-                    "user_email": "sarah.chen@student.edu",
-                    "rating": "up",
-                    "topic": "Dynamic Dispatch",
-                    "comment": "The step-by-step memory pointer explanation made runtime overriding click immediately!",
-                    "timestamp": "2026-09-04T02:15:30Z",
-                    "status": "resolved",
-                },
-                {
-                    "id": "fb-2",
-                    "user_email": "maya.lin@student.edu",
-                    "rating": "down",
-                    "topic": "Recursion Stack",
-                    "comment": "Hit rate limit during practice session.",
-                    "timestamp": "2026-09-04T01:30:19Z",
-                    "status": "flagged",
-                },
-                {
-                    "id": "fb-3",
-                    "user_email": "david.k@student.edu",
-                    "rating": "up",
-                    "topic": "Database 3NF",
-                    "comment": "Quiz questions were directly aligned with our CSC 203 syllabus.",
-                    "timestamp": "2026-09-04T02:10:12Z",
-                    "status": "resolved",
-                },
-            ],
+            "satisfaction_score": None,
+            "total_ratings": 0,
+            "positive_ratings": 0,
+            "negative_ratings": 0,
+            "recent_feedback": [],
         }
 
     async def get_system_health(self) -> Dict[str, Any]:
