@@ -92,6 +92,7 @@ async def _generate_content(
         raw_json = await google_ai.generate_gemini_json(
             messages=[{"role": "user", "content": user_content}],
             system_prompt=system_prompt,
+            json_schema=schema.model_json_schema(),
         )
         if raw_json:
             return schema.model_validate(raw_json)

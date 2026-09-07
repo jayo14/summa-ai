@@ -203,6 +203,7 @@ async def generate_gemini_json(
 
     gen_config = payload.get("generationConfig", {})
     gen_config["responseMimeType"] = "application/json"
+    gen_config["maxOutputTokens"] = 4096
     if json_schema:
         gen_config["responseSchema"] = json_schema
     payload["generationConfig"] = gen_config
