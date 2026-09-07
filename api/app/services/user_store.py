@@ -328,6 +328,7 @@ class UserStore:
         mat_count = 0
         quiz_count = 0
         concept_count = 0
+        popular_topics = []
 
         try:
             pool = await self._get_pool()
@@ -342,6 +343,10 @@ class UserStore:
                     if mat_row: mat_count = mat_row["cnt"]
                     if concept_row: concept_count = concept_row["cnt"]
                     if quiz_row: quiz_count = quiz_row["cnt"]
+
+                    top_rows = await conn.fetch("SELECT name, category FROM summa_ai.concepts ORDER BY created_at DESC LIMIT 5")
+                    if top_rows:
+                        popular_topics = [{"name": r["name"], "category": r.get("category", "General")} for r in top_rows]
         except Exception:
             pass
 
@@ -358,18 +363,9 @@ class UserStore:
                 "quizzes_completed": quiz_count,
             },
             "telemetry": {
-                "total_tokens_used": (msg_count * 1150) or 1420500,
-                "input_tokens": (msg_count * 800) or 980200,
-                "output_tokens": (msg_count * 350) or 440300,
-                "estimated_cost_usd": round(((msg_count * 1150) / 1000000) * 0.075, 4) or 0.35,
-                "avg_response_latency_ms": 1120.5,
-                "cache_hit_rate_pct": 94.2,
-                "vector_search_latency_ms": 48.2,
+                "total_messages_processed": msg_count,
+                "estimated_tokens_processed": msg_count * 1150 if msg_count > 0 else 0,
+                "estimated_cost_usd": round(((msg_count * 1150) / 1000000) * 0.075, 4) if msg_count > 0 else 0.0,
             },
-            "popular_topics": [
-                {"name": "CSC 201 · Dynamic Dispatch & Polymorphism", "sessions": 148, "mastery_avg": 86},
-                {"name": "Java Collections Framework & Interfaces", "sessions": 112, "mastery_avg": 92},
-                {"name": "Data Structures · Recursion & Stack Frames", "sessions": 94, "mastery_avg": 78},
-                {"name": "Database Design & SQL Normalization", "sessions": 76, "mastery_avg": 84},
-            ],
+            "popular_topics": popular_topics,
         }
