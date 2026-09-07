@@ -1908,6 +1908,14 @@ export function ComponentsView() {
           <div className="text-[9px] text-teal-dark dark:text-accent-lime font-semibold cursor-pointer">▶ Tap to expand deep-dive</div>
         </div>
       ),
+      whatIsIt: "Structured, high-clarity explanation with progressive disclosure of key insights.",
+      whySummaUsesIt: "Summa uses explanation cards when a concept needs clear, structured teaching. Progressive disclosure prevents cognitive overload by revealing complexity gradually.",
+      techniques: ["Scaffolding", "Progressive Disclosure", "Cognitive Load Management"],
+      whenSummaUsesIt: ["A new concept needs to be taught clearly", "The concept has layers that should be revealed progressively", "The student benefits from structured presentation", "Building foundation before complexity"],
+      example: "Summa explains Dynamic Method Dispatch: starts with the core principle, then reveals how Java checks actual object type at runtime rather than reference type.",
+      whatHappensAfter: [{ step: "Explanation delivered", detail: "Structured content presented with progressive disclosure" }, { step: "Comprehension checked", detail: "Follow-up question to verify understanding" }, { step: "Depth adjusted", detail: "More examples if needed, or advance if understood" }, { step: "Concept marked as taught", detail: "Ready for practice and recall" }],
+      usedWith: ["Worked Example", "Teach-Back", "Hint Ladder"],
+      decisionSignals: ["New concept introduction", "Student needs structured teaching", "Progressive complexity appropriate"],
     },
     {
       id: "worked_example",
@@ -1932,6 +1940,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Problem, step-by-step breakdown, explicit reasoning, verified final answer.",
+      whySummaUsesIt: "Summa uses worked examples when the student needs to see expert problem-solving in action. This reduces cognitive load by providing a model before independent practice.",
+      techniques: ["Worked Examples", "Scaffolding", "Cognitive Load Management"],
+      whenSummaUsesIt: ["The student has not yet solved this type of problem", "The problem type has specific steps that need demonstration", "Before asking the student to solve independently", "The concept involves multi-step reasoning"],
+      example: "Problem: Integrate 2x dx. Step 1: Apply power rule. Step 2: 2 times x squared over 2. Result: x squared plus C.",
+      whatHappensAfter: [{ step: "Worked example shown", detail: "Expert solution with reasoning displayed" }, { step: "Student attempts similar problem", detail: "Independent practice with new parameters" }, { step: "Performance evaluated", detail: "Comparison against expert model" }, { step: "Scaffolding adjusted", detail: "More examples or independent practice based on result" }],
+      usedWith: ["Hint Ladder", "Short Answer", "Scenario"],
+      decisionSignals: ["First exposure to problem type", "Multi-step reasoning needed", "Student needs expert model"],
     },
     {
       id: "hint_ladder",
@@ -1957,6 +1973,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Progressive hints (Hint 1, Hint 2, stronger hint, solution) without immediately giving away the answer.",
+      whySummaUsesIt: "Summa uses hint ladders when a student is struggling but still has enough understanding to reach the answer independently. Instead of giving away the solution, Summa progressively increases support.",
+      techniques: ["Scaffolding", "Guided Practice", "Active Recall", "Error Correction"],
+      whenSummaUsesIt: ["Student is stuck but not completely lost", "The problem is solvable with the right nudge", "Giving the answer would skip important learning", "The student has partial understanding"],
+      example: "Stuck on recursion base case? Hint 1: What condition causes n to stop decrementing? Hint 2: Think about when n equals 0 or 1.",
+      whatHappensAfter: [{ step: "Hint 1 delivered", detail: "Gentle nudge toward the answer" }, { step: "Student responds", detail: "If correct: advance. If wrong: Hint 2" }, { step: "Progressive support", detail: "Each hint provides more specific guidance" }, { step: "Resolution", detail: "Student reaches answer with or without final reveal" }],
+      usedWith: ["Worked Example", "Short Answer", "Confidence Check"],
+      decisionSignals: ["Student is stuck", "Partial understanding exists", "Answer reveal would skip learning"],
     },
     {
       id: "concept_breakdown",
@@ -1980,6 +2004,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Deconstructs complex subjects into digestible, modular sub-concepts.",
+      whySummaUsesIt: "Summa uses concept breakdown when a topic is too complex to absorb at once. Breaking it into modules makes each piece learnable and trackable.",
+      techniques: ["Decomposition", "Modular Learning", "Complexity Management"],
+      whenSummaUsesIt: ["A concept has multiple interrelated parts", "The student is overwhelmed by complexity", "The topic spans several sub-topics", "Each sub-concept needs individual mastery tracking"],
+      example: "Database Indexing breaks down into: B-Trees, Hash Tables, Scan Overhead, Write Cost. Each module is taught and tracked separately.",
+      whatHappensAfter: [{ step: "Concept decomposed", detail: "Sub-concepts identified and ordered" }, { step: "Each module taught", detail: "Individual sub-concepts explained" }, { step: "Module mastery tracked", detail: "Each piece assessed independently" }, { step: "Assembly verified", detail: "Student demonstrates understanding of the whole" }],
+      usedWith: ["Explanation Card", "Learning Path", "Mastery Card"],
+      decisionSignals: ["Topic too complex for single pass", "Multiple sub-concepts exist", "Student overwhelmed"],
     },
     {
       id: "compare_contrast",
@@ -2006,6 +2038,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Side-by-side distinction matrix highlighting key differences between two concepts.",
+      whySummaUsesIt: "Summa uses compare and contrast when two concepts are easily confused or when understanding the differences is critical to proper application.",
+      techniques: ["Comparative Learning", "Distinction Making", "Conceptual Clarity"],
+      whenSummaUsesIt: ["Two concepts are frequently confused", "Understanding differences is critical", "The student mixes up similar items", "Exam tests distinctions between related topics"],
+      example: "Process vs Thread: Process has isolated memory space, heavy creation cost. Thread has shared process memory, lightweight execution.",
+      whatHappensAfter: [{ step: "Comparison presented", detail: "Side-by-side distinction matrix shown" }, { step: "Student identifies differences", detail: "Understanding of distinctions tested" }, { step: "Confusion resolved", detail: "Specific confusions clarified" }, { step: "Distinction knowledge recorded", detail: "Comparison mastery tracked" }],
+      usedWith: ["Matching", "Categorization", "Common Mistake Card"],
+      decisionSignals: ["Two concepts容易混淆", "Distinction is critical", "Student mixes up items"],
     },
     {
       id: "analogy_card",
@@ -2027,6 +2067,14 @@ export function ComponentsView() {
           <div className="text-[9px] text-grey-green dark:text-[#8FA29B] italic">Quick memory access vs permanent storage</div>
         </div>
       ),
+      whatIsIt: "Explains abstract technical ideas using relatable real-world mental models.",
+      whySummaUsesIt: "Summa uses analogies when a concept is too abstract to grasp directly. Mapping to a familiar domain creates a mental anchor that makes the abstract concrete.",
+      techniques: ["Analogical Reasoning", "Mental Model Building", "Abstract-to-Concrete Mapping"],
+      whenSummaUsesIt: ["The concept is highly abstract", "The student lacks the background for direct explanation", "A familiar domain maps well to the concept", "The student needs a mental anchor"],
+      example: "RAM vs Hard Drive: Like your office desk space vs a filing cabinet in the basement. Quick memory access vs permanent storage.",
+      whatHappensAfter: [{ step: "Analogy presented", detail: "Familiar domain mapped to concept" }, { step: "Connection verified", detail: "Student confirms the mapping makes sense" }, { step: "Concept grasped", detail: "Abstract idea now has concrete anchor" }, { step: "Analogy retired", detail: "Direct understanding replaces the analogy over time" }],
+      usedWith: ["Explanation Card", "Teach-Back", "Why It Works"],
+      decisionSignals: ["Concept is abstract", "Familiar domain available", "Direct explanation insufficient"],
     },
     {
       id: "common_mistake",
@@ -2052,6 +2100,14 @@ export function ComponentsView() {
           </p>
         </div>
       ),
+      whatIsIt: "Highlights frequent cognitive traps and provides explicit corrections.",
+      whySummaUsesIt: "Summa uses common mistake cards when a misconception is widespread or particularly sticky. Explicitly naming and correcting the mistake is more effective than hoping the student avoids it.",
+      techniques: ["Misconception Correction", "Error Prevention", "Cognitive Trap Identification"],
+      whenSummaUsesIt: ["A misconception is common among students", "The mistake has serious consequences", "The student is likely to make this error", "Correcting the mistake prevents future problems"],
+      example: "Misconception: Overloading happens at runtime. Correction: Overloading is resolved at compile-time, not runtime.",
+      whatHappensAfter: [{ step: "Misconception named", detail: "Common mistake explicitly stated" }, { step: "Correction provided", detail: "Correct understanding explained" }, { step: "Student verifies", detail: "Confirms they did not hold the misconception" }, { step: "Mistake tracked", detail: "If student had the misconception, extra practice assigned" }],
+      usedWith: ["Compare & Contrast", "Multiple Choice", "Confidence Check"],
+      decisionSignals: ["Common misconception identified", "Mistake has high consequences", "Student likely to err"],
     },
     {
       id: "why_it_works",
@@ -2075,6 +2131,14 @@ export function ComponentsView() {
           </p>
         </div>
       ),
+      whatIsIt: "Focuses on first-principles underlying mechanics rather than shallow rote memorization.",
+      whySummaUsesIt: "Summa uses why-it-works when the student needs to understand the reasoning behind a concept, not just the fact. This builds transferable understanding.",
+      techniques: ["First-Principles Thinking", "Deep Understanding", "Transfer Learning"],
+      whenSummaUsesIt: ["The student is memorizing without understanding", "The concept has deeper mechanics worth exploring", "Transfer to new situations is needed", "The why is as important as the what"],
+      example: "Why Binary Search is O(log n): Each step cuts the remaining dataset in half (n/2, n/4, n/8), making division logarithmic.",
+      whatHappensAfter: [{ step: "Underlying principle explained", detail: "First-principles reasoning presented" }, { step: "Student grasps the why", detail: "Understanding goes beyond memorization" }, { step: "Transfer tested", detail: "Student applies reasoning to new situation" }, { step: "Deep understanding recorded", detail: "Conceptual depth tracked" }],
+      usedWith: ["Explanation Card", "Analogy Card", "Teach-Back"],
+      decisionSignals: ["Student memorizing without understanding", "Deeper mechanics valuable", "Transfer needed"],
     },
 
     // --- ACTIVE-RECALL / RETENTION ---
