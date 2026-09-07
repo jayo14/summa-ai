@@ -8,6 +8,7 @@ import re
 from typing import Any, AsyncGenerator, Dict, List, Optional
 import httpx
 from app.config import settings
+from app.services.schema_normalizer import normalize_for_gemini
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +207,9 @@ async def generate_gemini_json(
     gen_config["responseMimeType"] = "application/json"
     gen_config["maxOutputTokens"] = 4096
     if json_schema:
-        gen_config["responseSchema"] = json_schema
+        normalized = normalize_for_gemini(json_schema)
+        if normalized:
+            gen_config["responseSchema"] = normalized
     payload["generationConfig"] = gen_config
 
     try:
