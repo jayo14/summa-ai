@@ -301,16 +301,20 @@ class UserStore:
         }
 
     async def get_system_health(self) -> Dict[str, Any]:
+        db_status = "operational"
+        try:
+            pool = await self._get_pool()
+            if pool is None:
+                db_status = "degraded (in-memory fallback)"
+        except Exception:
+            db_status = "error"
+
         return {
-            "status": "healthy",
-            "uptime_pct": 99.98,
-            "active_connections": 14,
-            "cache_memory_mb": 184,
+            "status": "healthy" if db_status == "operational" else "degraded",
             "services": [
-                {"name": "Google Gemini LLM Engine", "type": "LLM Provider", "status": "operational", "latency_ms": 210},
-                {"name": "Cognee Memory Vector Index", "type": "Vector DB", "status": "operational", "latency_ms": 32},
-                {"name": "Postgres User Store Pool", "type": "Database", "status": "operational", "latency_ms": 8},
-                {"name": "Redis Rate Limiter & Cache", "type": "Cache", "status": "operational", "latency_ms": 2},
+                {"name": "Google Gemini LLM Engine", "type": "LLM Provider", "status": "operational"},
+                {"name": "Cognee Memory Vector Index", "type": "Vector DB", "status": "operational"},
+                {"name": "Postgres User Store Pool", "type": "Database", "status": db_status},
             ],
         }
 
