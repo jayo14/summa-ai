@@ -210,7 +210,21 @@ class MasteryEngine:
         else:
             consistency = None
 
-        creativity = problem_solving * 0.9 if problem_solving is not None else None
+        # Creativity: performance on high-difficulty items (difficulty >= 3 or synthesis/interactive type)
+        high_diff_attempts = [
+            a for a in attempts
+            if a.get("difficulty", 1) >= 3 or a.get("type") in ("synthesis", "open-ended", "interactive", "code")
+        ]
+        if high_diff_attempts:
+            total_creat_score = 0.0
+            for a in high_diff_attempts:
+                s = a.get("score", 0.0)
+                score_pct = s * 100.0 if s <= 1.0 else s
+                diff_weight = 0.5 + 0.5 * (min(5, max(1, a.get("difficulty", 3))) / 5.0)
+                total_creat_score += score_pct * diff_weight
+            creativity = min(100.0, max(0.0, total_creat_score / len(high_diff_attempts)))
+        else:
+            creativity = None
         evidence_count = len(attempts)
 
         last_att_time = attempts[-1].get("created_at") or now

@@ -481,37 +481,35 @@ class CogneeService:
             "topic": topic,
         }
 
-    async def get_hexagon_dimensions(self, user_id: str) -> Dict[str, float]:
+    async def get_hexagon_dimensions(self, user_id: str) -> Dict[str, Optional[float]]:
         try:
             from app.services.mastery_engine import MasteryEngine
             engine = MasteryEngine()
-            # Retrieve aggregated concepts or default concepts
-            concepts = ["overall"]
             mastery = await engine.compute_mastery(user_id, "overall")
             
-            # Map mastery dimensions (0..100) to 0.0..1.0 float scale
-            def _normalize(val: Optional[float], default: float) -> float:
+            # Map mastery dimensions (0..100) to 0.0..1.0 float scale, preserving None for no evidence
+            def _normalize(val: Optional[float]) -> Optional[float]:
                 if val is None:
-                    return default
+                    return None
                 return round(max(0.0, min(1.0, val / 100.0)), 2)
 
             return {
-                "depth": _normalize(mastery.get("depth"), 0.0),
-                "problem_solving": _normalize(mastery.get("problem_solving"), 0.0),
-                "speed": _normalize(mastery.get("speed"), 0.0),
-                "consistency": _normalize(mastery.get("consistency"), 0.0),
-                "confidence": _normalize(mastery.get("confidence"), 0.0),
-                "creativity": _normalize(mastery.get("creativity"), 0.0),
+                "depth": _normalize(mastery.get("depth")),
+                "problem_solving": _normalize(mastery.get("problem_solving")),
+                "speed": _normalize(mastery.get("speed")),
+                "consistency": _normalize(mastery.get("consistency")),
+                "confidence": _normalize(mastery.get("confidence")),
+                "creativity": _normalize(mastery.get("creativity")),
             }
         except Exception as exc:
             logger.warning("get_hexagon_dimensions delegation error: %s", exc)
             return {
-                "depth": 0.0,
-                "problem_solving": 0.0,
-                "speed": 0.0,
-                "consistency": 0.0,
-                "confidence": 0.0,
-                "creativity": 0.0,
+                "depth": None,
+                "problem_solving": None,
+                "speed": None,
+                "consistency": None,
+                "confidence": None,
+                "creativity": None,
             }
 
     # ─────────────────────────────────────────────────────────────────────────
