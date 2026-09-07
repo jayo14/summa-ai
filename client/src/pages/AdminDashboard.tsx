@@ -21,6 +21,7 @@ import { MessagesPage } from "@/pages/admin/MessagesPage";
 import { FeedbackPage } from "@/pages/admin/FeedbackPage";
 import { IntegrationsPage } from "@/pages/admin/IntegrationsPage";
 import { ComponentsPage } from "@/pages/admin/ComponentsPage";
+import { ComponentDetailPage } from "@/pages/admin/components/ComponentDetailPage";
 import { SettingsPage } from "@/pages/admin/SettingsPage";
 import { AuditPage } from "@/pages/admin/AuditPage";
 
@@ -73,7 +74,9 @@ type AdminTab =
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [, params] = useRoute("/admin/:tab");
+  const [, componentParams] = useRoute("/admin/components/:id");
   const currentTabFromUrl = (params?.tab as AdminTab) || "overview";
+  const componentId = componentParams?.id;
 
   const [activeTab, setActiveTab] = useState<AdminTab>(currentTabFromUrl);
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -147,6 +150,11 @@ export default function AdminDashboard() {
   };
 
   const renderPage = () => {
+    // Handle component detail route
+    if (activeTab === "components" && componentId) {
+      return <ComponentDetailPage />;
+    }
+
     switch (activeTab) {
       case "overview":
         return <OverviewPage />;
