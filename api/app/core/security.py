@@ -97,9 +97,25 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
 
     # 2. RS256 / ES256 verification via JWKS
     elif alg in ("RS256", "ES256"):
-        from app.core.jwks import get_cached_jwks, invalidate_jwks_cache
+        from app.core.jwks import get_cached_jwks, invalidate_jwks_cache, fetch_jwks
 
         jwks = get_cached_jwks()
+        if not jwks:
+            # Fallback for direct sync calls outside auth_middleware
+            try:
+                import httpx, time
+                if settings.SUPABASE_URL:
+                    jwks_url = f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
+                    with httpx.Client(timeout=5.0, follow_redirects=True) as client:
+                        resp = client.get(jwks_url)
+                        if resp.status_code == 200:
+                            jwks = resp.json()
+                            from app.core import jwks as jwks_module
+                            jwks_module._jwks_cache = jwks
+                            jwks_module._jwks_cached_at = time.time()
+            except Exception as exc:
+                logger.warning("Synchronous JWKS fetch fallback failed: %s", exc)
+
         if not jwks:
             logger.warning("JWKS not cached; cannot verify asymmetric JWT '%s'", alg)
             return None
@@ -195,25 +211,39 @@ def reset_current_jwt_token(token):
         current_jwt_token.reset(token)
 
 
-def hash_password(password: str) -> str:
-    if _has_passlib:
-        return pwd_context.hash(password)
-    salt = secrets.token_hex(16)
-    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
-    return f"pbkdf2:{salt}:{key.hex()}"
+try:
+    import bcrypt
 
+    def hash_password(password: str) -> str:
+        pwd_bytes = password.encode("utf-8")[:72]
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
 
-def verify_password(plain: str, hashed: str) -> bool:
-    if _has_passlib:
-        return pwd_context.verify(plain, hashed)
-    if not hashed.startswith("pbkdf2:"):
-        return False
-    parts = hashed.split(":")
-    if len(parts) != 3:
-        return False
-    salt, key = parts[1], parts[2]
-    check_key = hashlib.pbkdf2_hmac("sha256", plain.encode("utf-8"), salt.encode("utf-8"), 100000)
-    return check_key.hex() == key
+    def verify_password(plain: str, hashed: str) -> bool:
+        try:
+            pwd_bytes = plain.encode("utf-8")[:72]
+            return bcrypt.checkpw(pwd_bytes, hashed.encode("utf-8"))
+        except Exception:
+            return False
+
+except ImportError:
+    import hashlib
+    import secrets
+
+    def hash_password(password: str) -> str:
+        salt = secrets.token_hex(16)
+        key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
+        return f"pbkdf2:{salt}:{key.hex()}"
+
+    def verify_password(plain: str, hashed: str) -> bool:
+        if not hashed.startswith("pbkdf2:"):
+            return False
+        parts = hashed.split(":")
+        if len(parts) != 3:
+            return False
+        salt, key = parts[1], parts[2]
+        check_key = hashlib.pbkdf2_hmac("sha256", plain.encode("utf-8"), salt.encode("utf-8"), 100000)
+        return check_key.hex() == key
 
 
 class ConnectionManager:
