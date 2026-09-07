@@ -6,6 +6,9 @@ import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
   Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, MoreVertical, Paperclip, PanelRight,
   Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus, Edit2, FolderMinus, X, Plus,
+  Settings2, Filter, ArrowDownUp, Send, ShieldAlert, Sparkles, SlidersHorizontal, RefreshCw, Layers, CheckCircle2,
+  Sliders, CircleSlash, ListChecks, Lightbulb, Share2, Download, BookmarkCheck, Bookmark, Trophy, LoaderCircle,
+  Shield, LogOut, Moon, Sun,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SummaLogo } from "@/components/SummaLogo";
