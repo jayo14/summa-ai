@@ -2163,6 +2163,14 @@ export function ComponentsView() {
           <button className="py-1 bg-teal-dark/10 dark:bg-accent-lime text-white text-[9px] font-bold rounded-lg shadow-xs">Reveal Answer</button>
         </div>
       ),
+      whatIsIt: "Without looking, explain... Active memory retrieval prompt before showing hints.",
+      whySummaUsesIt: "Summa uses recall prompts to force active retrieval from memory. The effort of recalling strengthens the memory trace more than re-reading or re-explanation.",
+      techniques: ["Retrieval Practice", "Active Recall", "Memory Strengthening"],
+      whenSummaUsesIt: ["A concept was previously learned and needs recall testing", "The student has not retrieved this information recently", "Active effort will strengthen the memory", "Before showing any hints or answers"],
+      example: "Without looking at your notes, state the 3 ACID properties in database transactions.",
+      whatHappensAfter: [{ step: "Student attempts recall", detail: "Memory retrieval effort captured" }, { step: "Success or struggle noted", detail: "Recall strength assessed" }, { step: "Feedback delivered", detail: "Correct answers confirmed or gaps filled" }, { step: "Recall strength updated", detail: "Retention estimate adjusted" }],
+      usedWith: ["Flashcard Stack", "Spaced Review", "Confidence Check"],
+      decisionSignals: ["Concept previously learned", "Recall effort strengthens memory", "No hints needed yet"],
     },
     {
       id: "spaced_review",
@@ -2190,6 +2198,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Previously learned concept resurfacing at optimal decay intervals using SM-2 algorithm.",
+      whySummaUsesIt: "Summa uses spaced review when a concept is approaching its review window. Resurfacing material at the right moment prevents forgetting while minimizing study time.",
+      techniques: ["Spaced Repetition", "Retrieval Practice", "Forgetting Curve Optimization"],
+      whenSummaUsesIt: ["A concept was previously learned and recall is declining", "The review interval has arrived", "The concept is important for retention", "The student has not reviewed it recently"],
+      example: "You learned SQL Group By vs Having 6 days ago. Summa resurfaces it now because your recall strength is declining and the optimal review window has arrived.",
+      whatHappensAfter: [{ step: "Review card presented", detail: "Concept resurfaced for review" }, { step: "Student attempts recall", detail: "Active retrieval before hints" }, { step: "Interval adjusted", detail: "If correct: longer interval. If wrong: shorter interval" }, { step: "Retention estimate updated", detail: "Next review scheduled" }],
+      usedWith: ["Recall Prompt", "Flashcard Stack", "Memory Check"],
+      decisionSignals: ["Review interval arrived", "Recall strength declining", "Concept important for retention"],
     },
     {
       id: "rapid_recall",
@@ -2217,6 +2233,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Sequence of short, timed questions to build instant recognition speed.",
+      whySummaUsesIt: "Summa uses rapid recall when the student needs to build automaticity. Speed of recall is itself a measure of mastery, not just correctness.",
+      techniques: ["Speed Training", "Automaticity Building", "Fluency Development"],
+      whenSummaUsesIt: ["The student knows the material but needs faster recall", "Automaticity is the learning goal", "The student is preparing for timed assessments", "Quick-fire review session is appropriate"],
+      example: "What is the default value of a boolean in Java? You have 14 seconds. Answer: false.",
+      whatHappensAfter: [{ step: "Timed question presented", detail: "Question with countdown" }, { step: "Response captured", detail: "Answer and time recorded" }, { step: "Speed assessed", detail: "Correctness plus speed evaluated" }, { step: "Automaticity tracked", detail: "Recall speed trend monitored" }],
+      usedWith: ["Rapid Recall", "Confidence Check", "Spaced Review"],
+      decisionSignals: ["Speed matters", "Automaticity needed", "Timed assessment prep"],
     },
     {
       id: "retrieval_grid",
@@ -2240,6 +2264,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Multi-concept matrix prompting recall across connected course topics.",
+      whySummaUsesIt: "Summa uses retrieval grids when multiple related concepts need simultaneous recall. This builds the connections between ideas and strengthens the network of knowledge.",
+      techniques: ["Interleaved Practice", "Network Strengthening", "Cross-Topic Retrieval"],
+      whenSummaUsesIt: ["Multiple related concepts need review", "Connections between topics matter", "Interleaved practice is appropriate", "The student needs to see the big picture"],
+      example: "Matrix Memory Check: Encapsulation, Inheritance, Polymorphism, Abstraction. Recall all four OOP pillars in context.",
+      whatHappensAfter: [{ step: "Grid presented", detail: "Multiple concepts shown simultaneously" }, { step: "Student recalls each", detail: "Individual concept recall assessed" }, { step: "Connections mapped", detail: "Which concepts link together" }, { step: "Network strength updated", detail: "Cross-concept associations recorded" }],
+      usedWith: ["Retrieval Grid", "Matching", "Categorization"],
+      decisionSignals: ["Multiple concepts need review", "Connections matter", "Interleaved practice appropriate"],
     },
     {
       id: "memory_check",
@@ -2265,6 +2297,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "What do you remember from yesterday? Daily recap to solidify long-term retention.",
+      whySummaUsesIt: "Summa uses memory checks to verify that yesterday's learning actually stuck. Daily recap prevents the forgetting curve from erasing recent gains.",
+      techniques: ["Daily Review", "Retention Verification", "Forgetting Prevention"],
+      whenSummaUsesIt: ["A new study session begins", "Yesterday's material needs retention check", "The student tends to forget recent learning", "Long-term retention is the goal"],
+      example: "Summarize 2 takeaways from yesterday's lesson on Object-Oriented Design.",
+      whatHappensAfter: [{ step: "Recall prompt delivered", detail: "Yesterday's material referenced" }, { step: "Student recalls", detail: "What stuck and what was forgotten" }, { step: "Gaps identified", detail: "Forgotten material flagged for review" }, { step: "Retention schedule adjusted", detail: "Forgotten items resurfaced sooner" }],
+      usedWith: ["Recall Prompt", "Spaced Review", "Session Summary"],
+      decisionSignals: ["New session starting", "Yesterday needs verification", "Forgetting prevention matters"],
     },
     // --- UTILITY & DASHBOARD ---
     {
@@ -2363,6 +2403,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Visual topic progression showing completed, current, and upcoming concepts in a structured path.",
+      whySummaUsesIt: "Summa uses learning paths to give students a clear roadmap. Seeing progress and what comes next reduces anxiety and maintains motivation.",
+      techniques: ["Progress Visualization", "Roadmap Learning", "Goal Setting"],
+      whenSummaUsesIt: ["A topic has multiple sequential concepts", "The student needs to see their progress", "Motivation from visible advancement is needed", "The learning journey has a clear structure"],
+      example: "Data Structures path: Arrays (done), Linked Lists (done), Binary Trees (current), Graphs (upcoming).",
+      whatHappensAfter: [{ step: "Path displayed", detail: "Current position in learning journey shown" }, { step: "Student completes concept", detail: "Progress updated on path" }, { step: "Next concept highlighted", detail: "Clear next step identified" }, { step: "Path adjusted", detail: "If struggling, path may redirect or add practice" }],
+      usedWith: ["Session Plan", "Milestone Card", "Next Action Card"],
+      decisionSignals: ["Sequential learning in progress", "Student needs roadmap", "Progress visibility helps"],
     },
     {
       id: "milestone_card",
@@ -2392,6 +2440,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Meaningful achievement based on demonstrated evidence, not points or streaks.",
+      whySummaUsesIt: "Summa uses milestones to mark genuine learning achievements. Unlike gamified rewards, milestones are evidence-based and tied to actual mastery.",
+      techniques: ["Achievement Recognition", "Evidence-Based Progress", "Motivation"],
+      whenSummaUsesIt: ["A concept has been mastered with evidence", "The student has demonstrated sustained understanding", "A meaningful learning goal was achieved", "Recognition reinforces continued effort"],
+      example: "Mastery Achieved: Binary Search Trees. Scored 92% across 3 quizzes with consistent recall after 7-day interval.",
+      whatHappensAfter: [{ step: "Milestone earned", detail: "Evidence-based achievement recorded" }, { step: "Student notified", detail: "Recognition delivered" }, { step: "Path updated", detail: "Next concept unlocked" }, { step: "Confidence boosted", detail: "Self-efficacy enhanced through evidence" }],
+      usedWith: ["Mastery Card", "Learning Path", "Session Summary"],
+      decisionSignals: ["Evidence-based mastery confirmed", "Sustained understanding proven", "Achievement worthy of recognition"],
     },
     {
       id: "mastery_card",
@@ -2419,6 +2475,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Shows concept strength with concrete evidence and decay timeline.",
+      whySummaUsesIt: "Summa uses mastery cards to give students transparent visibility into how well they know something and when they need to review.",
+      techniques: ["Mastery Tracking", "Decay Monitoring", "Transparent Assessment"],
+      whenSummaUsesIt: ["The student wants to know how well they know something", "Decay timeline needs to be communicated", "Mastery evidence should be visible", "The student is tracking their own progress"],
+      example: "Polymorphism: 88% mastery. 3 quizzes passed. Decay in 5 days.",
+      whatHappensAfter: [{ step: "Mastery displayed", detail: "Current strength shown with evidence" }, { step: "Decay predicted", detail: "When review will be needed" }, { step: "Student decides", detail: "Review now or wait until decay approaches" }, { step: "Mastery tracked over time", detail: "Trend monitored for learning health" }],
+      usedWith: ["Confidence Check", "Spaced Review", "Readiness Card"],
+      decisionSignals: ["Student wants visibility", "Decay timeline relevant", "Evidence of mastery available"],
     },
     {
       id: "readiness_card",
@@ -2447,6 +2511,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Exam or topic readiness percentage based on coverage and mastery across all relevant concepts.",
+      whySummaUsesIt: "Summa uses readiness cards to give a single, honest number that reflects how prepared the student is. No sugar-coating, just evidence-based readiness.",
+      techniques: ["Readiness Assessment", "Coverage Analysis", "Preparation Planning"],
+      whenSummaUsesIt: ["An exam or assessment is approaching", "The student wants to know if they are ready", "Coverage and mastery need to be combined into one signal", "Study planning needs a readiness baseline"],
+      example: "CSC 201 Final Exam: 74% ready. 18 topics covered, 4 partial, 2 missing.",
+      whatHappensAfter: [{ step: "Readiness calculated", detail: "Coverage plus mastery combined" }, { step: "Gaps identified", detail: "Specific weak areas highlighted" }, { step: "Study plan adjusted", detail: "Focus shifts to gaps" }, { step: "Readiness tracked", detail: "Progress toward exam readiness monitored" }],
+      usedWith: ["Exam Countdown", "Weak Area Card", "Next Action Card"],
+      decisionSignals: ["Exam approaching", "Readiness assessment needed", "Coverage plus mastery matters"],
     },
     {
       id: "weak_area",
@@ -2478,6 +2550,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Surfaces concepts that need focused attention based on performance data.",
+      whySummaUsesIt: "Summa uses weak area cards to be honest about what needs work. Instead of hiding weaknesses, it surfaces them explicitly so the student can focus energy where it matters most.",
+      techniques: ["Weakness Identification", "Focused Practice", "Performance Analysis"],
+      whenSummaUsesIt: ["Performance data reveals specific weak areas", "The student needs to know what to focus on", "Weaknesses are preventing progress", "Study time should be directed efficiently"],
+      example: "Needs Attention: Graph Traversal (38%), Hash Collisions (42%), B-Tree Insertion (45%).",
+      whatHappensAfter: [{ step: "Weak areas surfaced", detail: "Specific concepts with low mastery identified" }, { step: "Priority ordered", detail: "Weakest areas ranked by importance" }, { step: "Practice assigned", detail: "Targeted exercises for each weak area" }, { step: "Progress tracked", detail: "Mastery improvement monitored" }],
+      usedWith: ["Next Action Card", "Readiness Card", "Worked Example"],
+      decisionSignals: ["Performance data available", "Specific weaknesses identified", "Focused practice needed"],
     },
     {
       id: "next_action",
@@ -2502,6 +2582,14 @@ export function ComponentsView() {
           <button className="w-full py-1.5 bg-teal-dark dark:bg-accent-lime text-white dark:text-ink text-[9px] font-bold rounded-lg">Start Practice</button>
         </div>
       ),
+      whatIsIt: "Recommends the single best next step based on current learning state.",
+      whySummaUsesIt: "Summa uses next action cards to eliminate decision fatigue. Instead of the student wondering what to study next, Summa recommends the highest-impact action.",
+      techniques: ["Decision Support", "Optimal Sequencing", "Learning Optimization"],
+      whenSummaUsesIt: ["The student finishes a study session", "The student is unsure what to do next", "Multiple paths are available", "The highest-impact action needs identification"],
+      example: "Best Next Step: Practice applying Kirchhoff's laws to solve a 3-loop circuit problem. Based on: Weak in circuit analysis (52% mastery).",
+      whatHappensAfter: [{ step: "Action recommended", detail: "Single best next step identified" }, { step: "Student accepts or modifies", detail: "Action taken or adjusted" }, { step: "Learning state updated", detail: "Progress from action recorded" }, { step: "Next action recalculated", detail: "New recommendation generated" }],
+      usedWith: ["Session Plan", "Weak Area Card", "Learning Path"],
+      decisionSignals: ["Decision fatigue possible", "Multiple paths available", "Highest-impact action matters"],
     },
 
     // --- SESSION COMPONENTS ---
@@ -2539,6 +2627,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "Structured session outline showing review, learning, practice, and assessment.",
+      whySummaUsesIt: "Summa uses session plans to give structure to study time. A clear plan reduces cognitive load and ensures balanced coverage of review, learning, and practice.",
+      techniques: ["Session Structuring", "Balanced Learning", "Time Management"],
+      whenSummaUsesIt: ["A new study session begins", "The student needs a clear plan for the session", "Review, learning, and practice need balance", "Time should be used efficiently"],
+      example: "Today's Session: Review 2 concepts, Learn Binary Trees, Practice 5 problems, 5-question check.",
+      whatHappensAfter: [{ step: "Plan presented", detail: "Session structure shown" }, { step: "Student follows plan", detail: "Each activity completed in order" }, { step: "Progress tracked", detail: "Completion of each activity recorded" }, { step: "Plan adjusted", detail: "If stuck, plan may reorder or extend" }],
+      usedWith: ["Session Progress", "Session Summary", "Resume Learning"],
+      decisionSignals: ["Session starting", "Structure needed", "Balanced coverage matters"],
     },
     {
       id: "session_progress",
@@ -2577,6 +2673,14 @@ export function ComponentsView() {
           <div className="text-[8px] text-grey-green dark:text-[#8FA29B]">2 concepts need review before next session</div>
         </div>
       ),
+      whatIsIt: "Tracks actual learning progress during a session, not gamified points.",
+      whySummaUsesIt: "Summa uses session progress to show genuine learning advancement. No points, no streaks, just honest tracking of what was learned and what still needs work.",
+      techniques: ["Progress Tracking", "Honest Assessment", "Session Monitoring"],
+      whenSummaUsesIt: ["A study session is in progress", "The student wants to see their current progress", "Honest tracking matters more than gamification", "Session effectiveness needs monitoring"],
+      example: "Session: 32 min. Concepts Covered: 3 of 4. Quiz Accuracy: 80%. 2 concepts need review.",
+      whatHappensAfter: [{ step: "Progress displayed", detail: "Current session metrics shown" }, { step: "Student continues", detail: "Progress updates in real-time" }, { step: "Session concludes", detail: "Final progress captured" }, { step: "Summary generated", detail: "Session summary created from progress data" }],
+      usedWith: ["Session Plan", "Session Summary", "Mastery Card"],
+      decisionSignals: ["Session in progress", "Real-time tracking needed", "Honest progress matters"],
     },
     {
       id: "session_summary",
@@ -2599,6 +2703,14 @@ export function ComponentsView() {
           </div>
         </div>
       ),
+      whatIsIt: "What was learned, what remains weak, and what happens next. Post-session intelligence.",
+      whySummaUsesIt: "Summa uses session summaries to close the loop on each study session. The student leaves knowing exactly what they accomplished and what comes next.",
+      techniques: ["Session Closure", "Intelligence Summary", "Next Step Planning"],
+      whenSummaUsesIt: ["A study session is ending", "The student needs to know what they accomplished", "Weak areas need to be identified for next session", "The next study session needs to be planned"],
+      example: "Learned: Binary Tree traversal (inorder, preorder). Weak: Postorder recursion still shaky. Next: Practice 3 postorder problems.",
+      whatHappensAfter: [{ step: "Summary delivered", detail: "Learned, weak, and next steps presented" }, { step: "Student reviews", detail: "Confirms understanding of progress" }, { step: "Weak areas queued", detail: "Weaknesses scheduled for next session" }, { step: "Next session planned", detail: "Recommended activities for next session generated" }],
+      usedWith: ["Session Progress", "Weak Area Card", "Resume Learning"],
+      decisionSignals: ["Session ending", "Closure needed", "Next session planning matters"],
     },
     {
       id: "resume_learning",
@@ -2625,6 +2737,14 @@ export function ComponentsView() {
           <button className="w-full py-1.5 bg-teal-dark dark:bg-accent-lime text-white dark:text-ink text-[9px] font-bold rounded-lg">Continue</button>
         </div>
       ),
+      whatIsIt: "Continue where you stopped, picking up at the exact concept and step.",
+      whySummaUsesIt: "Summa uses resume learning to eliminate the friction of starting a new session. The student picks up exactly where they left off, with zero re-orientation needed.",
+      techniques: ["Session Continuity", "Friction Reduction", "Context Preservation"],
+      whenSummaUsesIt: ["The student returns after a break", "The previous session was incomplete", "Continuity matters for learning momentum", "Re-orientation time should be minimized"],
+      example: "Resume Where You Stopped: Binary Trees, Postorder Traversal. Step 2 of 4: Writing recursive case.",
+      whatHappensAfter: [{ step: "Context restored", detail: "Previous session state loaded" }, { step: "Student resumes", detail: "Picks up at exact stopping point" }, { step: "Session continues", detail: "Learning flows without interruption" }, { step: "Progress accumulated", detail: "New progress added to previous session" }],
+      usedWith: ["Session Plan", "Session Progress", "Learning Path"],
+      decisionSignals: ["Returning student", "Previous session incomplete", "Continuity matters"],
     },
 
     // --- EXAM COMPONENTS ---
