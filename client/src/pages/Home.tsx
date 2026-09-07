@@ -15,7 +15,7 @@ import { SummaLogo } from "@/components/SummaLogo";
 import { SettingsView } from "@/components/SettingsView";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types/roles";
-import { fetchApi, getApiBaseUrl } from "@/lib/api";
+import { fetchApi, getApiBaseUrl, getValidAccessToken } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
