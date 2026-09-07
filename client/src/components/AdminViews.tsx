@@ -61,21 +61,21 @@ import { toast } from "sonner";
 
 export function StatusBadge({ status }: { status: string }) {
   const s = status.toLowerCase();
-  let bg = "bg-slate-100 text-slate-700 border border-slate-200";
-  let dot = "bg-slate-500";
+  let bg = "bg-cream-light dark:bg-[#232D2D] text-ink dark:text-cream-soft border border-mist-green dark:border-[#2A3838]";
+  let dot = "bg-cream-light dark:bg-[#232D2D]0";
 
   if (["active", "published", "completed", "operational", "successful", "paid", "delivered", "resolved"].includes(s)) {
-    bg = "bg-emerald-50 text-emerald-700 border border-emerald-200/60";
-    dot = "bg-emerald-500";
+    bg = "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime border border-teal-dark/30 dark:border-accent-lime/30";
+    dot = "bg-teal-dark/10 dark:bg-accent-lime";
   } else if (["pending", "processing", "scheduled", "trial", "draft", "in review", "open"].includes(s)) {
-    bg = "bg-amber-50 text-amber-700 border border-amber-200/60";
-    dot = "bg-amber-500";
+    bg = "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime border border-teal-dark/30 dark:border-accent-lime/30/60";
+    dot = "bg-teal-dark/10 dark:bg-accent-lime/100";
   } else if (["suspended", "inactive", "failed", "degraded", "cancelled", "unread", "offline", "high"].includes(s)) {
-    bg = "bg-rose-50 text-rose-700 border border-rose-200/60";
-    dot = "bg-rose-500";
+    bg = "bg-destructive/10 dark:bg-[#be747e]/10 text-destructive dark:text-[#be747e] border border-destructive/30 dark:border-[#be747e]/30/60";
+    dot = "bg-destructive/10 dark:bg-[#be747e]/100";
   } else if (["live", "pro", "enterprise"].includes(s)) {
-    bg = "bg-indigo-50 text-indigo-700 border border-indigo-200/60";
-    dot = "bg-indigo-500 animate-pulse";
+    bg = "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime border border-teal-dark/30 dark:border-accent-lime/30";
+    dot = "bg-teal-dark/10 dark:bg-accent-lime animate-pulse";
   }
 
   return (
@@ -102,20 +102,20 @@ export function MetricCard({
   strokeColor?: string;
 }) {
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 space-y-2 shadow-2xs">
-      <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+    <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-4 space-y-2 shadow-2xs">
+      <div className="flex items-center justify-between text-xs text-grey-green dark:text-[#8FA29B] font-medium">
         <span>{title}</span>
-        <Info size={13} className="text-slate-400 cursor-pointer" />
+        <Info size={13} className="text-grey-green dark:text-[#8FA29B] cursor-pointer" />
       </div>
       <div className="flex items-baseline justify-between">
-        <span className="text-xl font-bold text-slate-900">{value}</span>
+        <span className="text-xl font-bold text-ink dark:text-cream-soft">{value}</span>
         {change && (
-          <span className={`text-[11px] font-semibold ${isPositive ? "text-[#10B981]" : "text-rose-500"}`}>
+          <span className={`text-[11px] font-semibold ${isPositive ? "text-teal-dark dark:text-accent-lime" : "text-rose-500"}`}>
             {change}
           </span>
         )}
       </div>
-      <div className="text-[10px] text-slate-400">{comparison}</div>
+      <div className="text-[10px] text-grey-green dark:text-[#8FA29B]">{comparison}</div>
       <svg className="w-full h-7 fill-none" viewBox="0 0 100 25" style={{ stroke: strokeColor }}>
         <path d="M0,20 Q20,10 40,22 T80,12 T100,6" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
@@ -227,16 +227,16 @@ export function UsersView({
       </div>
 
       {/* Controls & Table */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative flex-1 w-full sm:max-w-md">
-            <Search className="absolute left-3.5 top-2.5 size-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-2.5 size-4 text-grey-green dark:text-[#8FA29B]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, email, or institution..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-[#E2E8F0] rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#6366F1]"
+              className="w-full pl-10 pr-4 py-2 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-xs text-ink dark:text-cream-soft focus:outline-none focus:border-[#6366F1]"
             />
           </div>
 
@@ -244,7 +244,7 @@ export function UsersView({
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="bg-slate-50 border border-[#E2E8F0] text-slate-700 text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none"
+              className="bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] text-ink dark:text-cream-soft text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none"
             >
               <option value="ALL">All Roles</option>
               <option value="user">Students / Users</option>
@@ -254,7 +254,7 @@ export function UsersView({
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 shadow-2xs cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-teal-dark dark:bg-accent-lime text-white hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition flex items-center gap-2 shadow-2xs cursor-pointer"
             >
               <Plus size={14} /> Add User
             </button>
@@ -262,9 +262,9 @@ export function UsersView({
         </div>
 
         {/* Fixed Header & Scrollable Body Container */}
-        <div className="w-full rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+        <div className="w-full rounded-xl border border-mist-green dark:border-[#2A3838] bg-white overflow-hidden">
           {/* Fixed Header Table */}
-          <div className="w-full bg-[#F8FAFC] border-b border-[#E2E8F0]">
+          <div className="w-full bg-cream-light dark:bg-[#121616] border-b border-mist-green dark:border-[#2A3838]">
             <table className="w-full text-left text-xs min-w-[700px] table-fixed">
               <colgroup>
                 <col className="w-[24%]" />
@@ -277,13 +277,13 @@ export function UsersView({
               </colgroup>
               <thead>
                 <tr>
-                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">USER</th>
-                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">ROLE</th>
-                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">INSTITUTION</th>
-                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">STATUS</th>
-                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">SUBSCRIPTION</th>
-                  <th className="p-4 text-slate-500 font-bold uppercase text-[10px] tracking-wider">JOINED</th>
-                  <th className="p-4 text-right text-slate-500 font-bold uppercase text-[10px] tracking-wider">ACTION</th>
+                  <th className="p-4 text-grey-green dark:text-[#8FA29B] font-bold uppercase text-[10px] tracking-wider">USER</th>
+                  <th className="p-4 text-grey-green dark:text-[#8FA29B] font-bold uppercase text-[10px] tracking-wider">ROLE</th>
+                  <th className="p-4 text-grey-green dark:text-[#8FA29B] font-bold uppercase text-[10px] tracking-wider">INSTITUTION</th>
+                  <th className="p-4 text-grey-green dark:text-[#8FA29B] font-bold uppercase text-[10px] tracking-wider">STATUS</th>
+                  <th className="p-4 text-grey-green dark:text-[#8FA29B] font-bold uppercase text-[10px] tracking-wider">SUBSCRIPTION</th>
+                  <th className="p-4 text-grey-green dark:text-[#8FA29B] font-bold uppercase text-[10px] tracking-wider">JOINED</th>
+                  <th className="p-4 text-right text-grey-green dark:text-[#8FA29B] font-bold uppercase text-[10px] tracking-wider">ACTION</th>
                 </tr>
               </thead>
             </table>
@@ -312,34 +312,34 @@ export function UsersView({
                       : "May 12, 2024";
 
                     return (
-                      <tr key={u.id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => onUserClick(u)}>
+                      <tr key={u.id} className="hover:bg-cream-light dark:bg-[#232D2D] transition cursor-pointer" onClick={() => onUserClick(u)}>
                         <td className="p-4 truncate">
                           <div className="flex items-center gap-3">
-                            <div className="size-8 rounded-full bg-[#6366F1]/10 text-[#4F46E5] font-bold text-xs flex items-center justify-center shrink-0">
+                            <div className="size-8 rounded-full bg-teal-dark dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime font-bold text-xs flex items-center justify-center shrink-0">
                               {displayName.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                              <div className="font-semibold text-slate-900 truncate">{displayName}</div>
-                              <div className="text-[11px] text-slate-400 font-mono truncate">{u.email}</div>
+                              <div className="font-semibold text-ink dark:text-cream-soft truncate">{displayName}</div>
+                              <div className="text-[11px] text-grey-green dark:text-[#8FA29B] font-mono truncate">{u.email}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="p-4 font-medium text-slate-700 capitalize">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        <td className="p-4 font-medium text-ink dark:text-cream-soft capitalize">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-cream-light dark:bg-[#232D2D] text-ink dark:text-cream-soft border border-mist-green dark:border-[#2A3838]">
                             {u.role === "admin" ? "ADMIN" : u.role === "instructor" ? "LECTURER" : "STUDENT"}
                           </span>
                         </td>
-                        <td className="p-4 text-slate-600 font-medium truncate">{institutionDisplay}</td>
+                        <td className="p-4 text-grey-green dark:text-[#8FA29B] font-medium truncate">{institutionDisplay}</td>
                         <td className="p-4"><StatusBadge status={u.status || "Active"} /></td>
-                        <td className="p-4 font-medium text-slate-900 uppercase text-[11px]">{subscriptionDisplay}</td>
-                        <td className="p-4 text-slate-400 font-mono text-[11px]">{formattedJoined}</td>
+                        <td className="p-4 font-medium text-ink dark:text-cream-soft uppercase text-[11px]">{subscriptionDisplay}</td>
+                        <td className="p-4 text-grey-green dark:text-[#8FA29B] font-mono text-[11px]">{formattedJoined}</td>
                         <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-2">
                             {onRoleChange && (
                               <button
                                 onClick={() => onRoleChange(u.id, u.role === "admin" ? "user" : "admin")}
                                 title="Toggle Role"
-                                className="px-2 py-1 rounded-lg text-[11px] font-semibold text-[#6366F1] hover:bg-[#6366F1]/10 transition shrink-0"
+                                className="px-2 py-1 rounded-lg text-[11px] font-semibold text-teal-dark dark:text-accent-lime hover:bg-teal-dark dark:bg-accent-lime/10 transition shrink-0"
                               >
                                 {u.role === "admin" ? "Make User" : "Make Admin"}
                               </button>
@@ -349,7 +349,7 @@ export function UsersView({
                                 onClick={() => onStatusChange(u.id, u.status)}
                                 title="Toggle Account Status"
                                 className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition shrink-0 ${
-                                  u.status === "suspended" ? "text-emerald-600 hover:bg-emerald-50" : "text-rose-600 hover:bg-rose-50"
+                                  u.status === "suspended" ? "text-teal-dark dark:text-accent-lime hover:bg-teal-dark/10 dark:bg-accent-lime/10" : "text-destructive dark:text-[#be747e] hover:bg-destructive/10 dark:bg-[#be747e]/10"
                                 }`}
                               >
                                 {u.status === "suspended" ? "Activate" : "Suspend"}
@@ -362,7 +362,7 @@ export function UsersView({
                   })
                 ) : (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-slate-400 font-medium text-xs">
+                    <td colSpan={7} className="p-8 text-center text-grey-green dark:text-[#8FA29B] font-medium text-xs">
                       No users matching search or filter criteria.
                     </td>
                   </tr>
@@ -377,43 +377,43 @@ export function UsersView({
 
       {/* Add User Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-[#E2E8F0] animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
-              <h3 className="font-bold text-sm text-slate-900">Add New User</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">
+        <div className="fixed inset-0 z-50 bg-ink dark:bg-[#121616]/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-mist-green dark:border-[#2A3838] animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-mist-green dark:border-[#2A3838] pb-3">
+              <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Add New User</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-grey-green dark:text-[#8FA29B] hover:text-grey-green dark:text-[#8FA29B]">
                 <X size={18} />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Full Name</label>
+                <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Full Name</label>
                 <input
                   type="text"
                   value={addName}
                   onChange={(e) => setAddName(e.target.value)}
                   placeholder="e.g. Samuel Okon"
-                  className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none"
+                  className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Email Address</label>
+                <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Email Address</label>
                 <input
                   type="email"
                   value={addEmail}
                   onChange={(e) => setAddEmail(e.target.value)}
                   placeholder="e.g. samuel@unilag.edu.ng"
-                  className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none"
+                  className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft focus:outline-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Role</label>
+                  <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Role</label>
                   <select
                     value={addRole}
                     onChange={(e) => setAddRole(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none"
+                    className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft focus:outline-none"
                   >
                     <option value="user">Student (User)</option>
                     <option value="instructor">Lecturer (Instructor)</option>
@@ -421,25 +421,25 @@ export function UsersView({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Institution</label>
+                  <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Institution</label>
                   <input
                     type="text"
                     value={addInstitution}
                     onChange={(e) => setAddInstitution(e.target.value)}
                     placeholder="e.g. University of Lagos or nil"
-                    className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none"
+                    className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-[#E2E8F0] text-slate-700 font-semibold text-xs">
+              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-mist-green dark:border-[#2A3838] text-ink dark:text-cream-soft font-semibold text-xs">
                 Cancel
               </button>
               <button
                 onClick={handleCreateUser}
-                className="px-4 py-2 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition"
+                className="px-4 py-2 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition"
               >
                 Create Account
               </button>
@@ -461,33 +461,33 @@ export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }
   if (!user) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex justify-end">
+    <div className="fixed inset-0 z-50 bg-ink dark:bg-[#121616]/80 backdrop-blur-sm flex justify-end">
       <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200">
         <div>
           {/* Drawer Header */}
-          <div className="p-6 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+          <div className="p-6 border-b border-mist-green dark:border-[#2A3838] flex items-center justify-between bg-cream-light dark:bg-[#121616]">
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-full bg-[#6366F1] text-white font-bold text-sm flex items-center justify-center">
+              <div className="size-10 rounded-full bg-teal-dark dark:bg-accent-lime text-white font-bold text-sm flex items-center justify-center">
                 {user.name.charAt(0)}
               </div>
               <div>
-                <h3 className="font-bold text-sm text-slate-900">{user.name}</h3>
-                <p className="text-xs text-slate-400 font-mono">{user.email}</p>
+                <h3 className="font-bold text-sm text-ink dark:text-cream-soft">{user.name}</h3>
+                <p className="text-xs text-grey-green dark:text-[#8FA29B] font-mono">{user.email}</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/50">
+            <button onClick={onClose} className="p-2 rounded-xl text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft hover:bg-mist-green/50 dark:hover:bg-[#2A3838]/50">
               <X size={18} />
             </button>
           </div>
 
           {/* Drawer Tabs */}
-          <div className="flex border-b border-[#E2E8F0] px-6 text-xs font-semibold text-slate-500">
+          <div className="flex border-b border-mist-green dark:border-[#2A3838] px-6 text-xs font-semibold text-grey-green dark:text-[#8FA29B]">
             {(["overview", "activity", "learning", "billing"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`py-3 px-3 capitalize border-b-2 transition ${
-                  tab === t ? "border-[#6366F1] text-[#4F46E5]" : "border-transparent hover:text-slate-900"
+                  tab === t ? "border-[#6366F1] text-teal-dark dark:text-accent-lime" : "border-transparent hover:text-ink dark:text-cream-soft"
                 }`}
               >
                 {t}
@@ -500,38 +500,38 @@ export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }
             {tab === "overview" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-[#E2E8F0]">
-                    <div className="text-[10px] text-slate-400">Role</div>
-                    <div className="font-bold text-slate-900 mt-0.5">{user.role}</div>
+                  <div className="p-3 rounded-xl bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838]">
+                    <div className="text-[10px] text-grey-green dark:text-[#8FA29B]">Role</div>
+                    <div className="font-bold text-ink dark:text-cream-soft mt-0.5">{user.role}</div>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-[#E2E8F0]">
-                    <div className="text-[10px] text-slate-400">Status</div>
+                  <div className="p-3 rounded-xl bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838]">
+                    <div className="text-[10px] text-grey-green dark:text-[#8FA29B]">Status</div>
                     <div className="mt-1"><StatusBadge status={user.status} /></div>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-[#E2E8F0]">
-                    <div className="text-[10px] text-slate-400">Institution</div>
-                    <div className="font-bold text-slate-900 mt-0.5 truncate">{user.institution || user.onboarding_data?.institution || user.onboarding_data?.field_of_study || "nil"}</div>
+                  <div className="p-3 rounded-xl bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838]">
+                    <div className="text-[10px] text-grey-green dark:text-[#8FA29B]">Institution</div>
+                    <div className="font-bold text-ink dark:text-cream-soft mt-0.5 truncate">{user.institution || user.onboarding_data?.institution || user.onboarding_data?.field_of_study || "nil"}</div>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-[#E2E8F0]">
-                    <div className="text-[10px] text-slate-400">Subscription</div>
-                    <div className="font-bold text-slate-900 mt-0.5">{user.sub || user.onboarding_data?.subscription || "nil"}</div>
+                  <div className="p-3 rounded-xl bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838]">
+                    <div className="text-[10px] text-grey-green dark:text-[#8FA29B]">Subscription</div>
+                    <div className="font-bold text-ink dark:text-cream-soft mt-0.5">{user.sub || user.onboarding_data?.subscription || "nil"}</div>
                   </div>
                 </div>
 
                 <div className="space-y-2 pt-2">
-                  <div className="font-bold text-slate-900">Learning Summary</div>
-                  <div className="p-4 rounded-xl border border-[#E2E8F0] space-y-2">
-                    <div className="flex justify-between text-slate-600">
+                  <div className="font-bold text-ink dark:text-cream-soft">Learning Summary</div>
+                  <div className="p-4 rounded-xl border border-mist-green dark:border-[#2A3838] space-y-2">
+                    <div className="flex justify-between text-grey-green dark:text-[#8FA29B]">
                       <span>Total Sessions</span>
-                      <span className="font-mono font-bold text-slate-900">{user.sessions}</span>
+                      <span className="font-mono font-bold text-ink dark:text-cream-soft">{user.sessions}</span>
                     </div>
-                    <div className="flex justify-between text-slate-600">
+                    <div className="flex justify-between text-grey-green dark:text-[#8FA29B]">
                       <span>Quizzes Attempted</span>
-                      <span className="font-mono font-bold text-slate-900">28</span>
+                      <span className="font-mono font-bold text-ink dark:text-cream-soft">28</span>
                     </div>
-                    <div className="flex justify-between text-slate-600">
+                    <div className="flex justify-between text-grey-green dark:text-[#8FA29B]">
                       <span>Average Score</span>
-                      <span className="font-mono font-bold text-emerald-600">88.4%</span>
+                      <span className="font-mono font-bold text-teal-dark dark:text-accent-lime">88.4%</span>
                     </div>
                   </div>
                 </div>
@@ -545,9 +545,9 @@ export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }
                   { title: "Started Live Session: AI Ethics", time: "1 day ago" },
                   { title: "Uploaded Material: Physics_Notes.pdf", time: "3 days ago" },
                 ].map((act, idx) => (
-                  <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-[#E2E8F0] space-y-0.5">
-                    <div className="font-semibold text-slate-900">{act.title}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">{act.time}</div>
+                  <div key={idx} className="p-3 rounded-xl bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] space-y-0.5">
+                    <div className="font-semibold text-ink dark:text-cream-soft">{act.title}</div>
+                    <div className="text-[10px] text-grey-green dark:text-[#8FA29B] font-mono">{act.time}</div>
                   </div>
                 ))}
               </div>
@@ -556,11 +556,11 @@ export function UserDrawer({ user, onClose }: { user: any; onClose: () => void }
         </div>
 
         {/* Drawer Footer */}
-        <div className="p-6 border-t border-[#E2E8F0] bg-[#F8FAFC] flex gap-3">
-          <button onClick={() => toast.warning("User suspended.")} className="flex-1 py-2.5 rounded-xl border border-rose-200 text-rose-600 font-semibold text-xs hover:bg-rose-50 transition cursor-pointer">
+        <div className="p-6 border-t border-mist-green dark:border-[#2A3838] bg-cream-light dark:bg-[#121616] flex gap-3">
+          <button onClick={() => toast.warning("User suspended.")} className="flex-1 py-2.5 rounded-xl border border-destructive/30 dark:border-[#be747e]/30 text-destructive dark:text-[#be747e] font-semibold text-xs hover:bg-destructive/10 dark:bg-[#be747e]/10 transition cursor-pointer">
             Suspend Account
           </button>
-          <button onClick={() => toast.success("User details saved.")} className="flex-1 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition cursor-pointer">
+          <button onClick={() => toast.success("User details saved.")} className="flex-1 py-2.5 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition cursor-pointer">
             Edit Details
           </button>
         </div>
@@ -628,17 +628,17 @@ export function InstitutionsView() {
         <MetricCard title="Pending Trials" value="3" change="-1" isPositive={false} strokeColor="#F59E0B" />
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
         <div className="flex justify-between items-center">
-          <h3 className="font-bold text-sm text-slate-900">Registered Institutions</h3>
-          <button onClick={() => setShowAddModal(true)} className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 shadow-2xs cursor-pointer">
+          <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Registered Institutions</h3>
+          <button onClick={() => setShowAddModal(true)} className="px-4 py-2 rounded-xl text-xs font-semibold bg-teal-dark dark:bg-accent-lime text-white hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition flex items-center gap-2 shadow-2xs cursor-pointer">
             <Plus size={14} /> Add Institution
           </button>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold tracking-wider">
+            <thead className="bg-cream-light dark:bg-[#121616] text-grey-green dark:text-[#8FA29B] border-b border-mist-green dark:border-[#2A3838] uppercase text-[10px] font-semibold tracking-wider">
               <tr>
                 <th className="p-4">INSTITUTION</th>
                 <th className="p-4">TYPE</th>
@@ -652,16 +652,16 @@ export function InstitutionsView() {
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
               {insts.map((i, idx) => (
-                <tr key={idx} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => setSelectedInst(i)}>
-                  <td className="p-4 font-bold text-slate-900">{i.name}</td>
-                  <td className="p-4 text-slate-600">{i.type}</td>
-                  <td className="p-4 font-mono text-slate-700">{i.users}</td>
-                  <td className="p-4 font-mono text-slate-700">{i.active}</td>
-                  <td className="p-4 font-semibold text-slate-900">{i.plan}</td>
-                  <td className="p-4 font-mono font-bold text-slate-900">₦{(i.mrr || 0).toLocaleString()}</td>
+                <tr key={idx} className="hover:bg-cream-light dark:bg-[#232D2D] transition cursor-pointer" onClick={() => setSelectedInst(i)}>
+                  <td className="p-4 font-bold text-ink dark:text-cream-soft">{i.name}</td>
+                  <td className="p-4 text-grey-green dark:text-[#8FA29B]">{i.type}</td>
+                  <td className="p-4 font-mono text-ink dark:text-cream-soft">{i.users}</td>
+                  <td className="p-4 font-mono text-ink dark:text-cream-soft">{i.active}</td>
+                  <td className="p-4 font-semibold text-ink dark:text-cream-soft">{i.plan}</td>
+                  <td className="p-4 font-mono font-bold text-ink dark:text-cream-soft">₦{(i.mrr || 0).toLocaleString()}</td>
                   <td className="p-4"><StatusBadge status={i.status} /></td>
                   <td className="p-4 text-right">
-                    <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+                    <button className="p-1.5 rounded-lg text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft hover:bg-mist-green/50 dark:hover:bg-[#2A3838]">
                       <MoreHorizontal size={16} />
                     </button>
                   </td>
@@ -673,30 +673,30 @@ export function InstitutionsView() {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-[#E2E8F0]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
-              <h3 className="font-bold text-sm text-slate-900">Add Partner Institution</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+        <div className="fixed inset-0 z-50 bg-ink dark:bg-[#121616]/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-mist-green dark:border-[#2A3838]">
+            <div className="flex items-center justify-between border-b border-mist-green dark:border-[#2A3838] pb-3">
+              <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Add Partner Institution</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-grey-green dark:text-[#8FA29B] hover:text-grey-green dark:text-[#8FA29B]"><X size={18} /></button>
             </div>
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Institution Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Obafemi Awolowo University" className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900" />
+                <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Institution Name</label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Obafemi Awolowo University" className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Category / Type</label>
-                  <select value={type} onChange={(e) => setType(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900">
+                  <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Category / Type</label>
+                  <select value={type} onChange={(e) => setType(e.target.value)} className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft">
                     <option value="Federal">Federal</option>
                     <option value="State">State</option>
                     <option value="Private">Private</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Plan</label>
-                  <select value={plan} onChange={(e) => setPlan(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900">
+                  <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Plan</label>
+                  <select value={plan} onChange={(e) => setPlan(e.target.value)} className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft">
                     <option value="Enterprise">Enterprise</option>
                     <option value="Pro">Pro</option>
                     <option value="Basic">Basic</option>
@@ -706,48 +706,48 @@ export function InstitutionsView() {
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-[#E2E8F0] text-slate-700 font-semibold text-xs">Cancel</button>
-              <button onClick={handleCreate} className="px-4 py-2 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition">Register Institution</button>
+              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-mist-green dark:border-[#2A3838] text-ink dark:text-cream-soft font-semibold text-xs">Cancel</button>
+              <button onClick={handleCreate} className="px-4 py-2 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition">Register Institution</button>
             </div>
           </div>
         </div>
       )}
 
       {selectedInst && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex justify-end">
+        <div className="fixed inset-0 z-50 bg-ink dark:bg-[#121616]/80 backdrop-blur-sm flex justify-end">
           <div className="w-full max-w-lg bg-white h-full shadow-2xl p-6 overflow-y-auto space-y-6 animate-in slide-in-from-right duration-200">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+            <div className="flex items-center justify-between border-b border-mist-green dark:border-[#2A3838] pb-4">
               <div>
-                <h3 className="font-bold text-base text-slate-900">{selectedInst.name}</h3>
-                <p className="text-xs text-slate-400 font-mono">ID: INST-{selectedInst.name.substring(0, 4).toUpperCase()}</p>
+                <h3 className="font-bold text-base text-ink dark:text-cream-soft">{selectedInst.name}</h3>
+                <p className="text-xs text-grey-green dark:text-[#8FA29B] font-mono">ID: INST-{selectedInst.name.substring(0, 4).toUpperCase()}</p>
               </div>
-              <button onClick={() => setSelectedInst(null)} className="p-2 rounded-xl text-slate-400 hover:text-slate-700">
+              <button onClick={() => setSelectedInst(null)} className="p-2 rounded-xl text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft">
                 <X size={18} />
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
-                <div className="text-slate-400 text-[10px]">Type</div>
-                <div className="font-bold text-slate-900 mt-0.5">{selectedInst.type}</div>
+              <div className="p-3 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
+                <div className="text-grey-green dark:text-[#8FA29B] text-[10px]">Type</div>
+                <div className="font-bold text-ink dark:text-cream-soft mt-0.5">{selectedInst.type}</div>
               </div>
-              <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
-                <div className="text-slate-400 text-[10px]">Plan</div>
-                <div className="font-bold text-slate-900 mt-0.5">{selectedInst.plan}</div>
+              <div className="p-3 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
+                <div className="text-grey-green dark:text-[#8FA29B] text-[10px]">Plan</div>
+                <div className="font-bold text-ink dark:text-cream-soft mt-0.5">{selectedInst.plan}</div>
               </div>
-              <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
-                <div className="text-slate-400 text-[10px]">Monthly Recurring Revenue</div>
-                <div className="font-bold text-[#10B981] font-mono mt-0.5">{selectedInst.mrr}</div>
+              <div className="p-3 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
+                <div className="text-grey-green dark:text-[#8FA29B] text-[10px]">Monthly Recurring Revenue</div>
+                <div className="font-bold text-teal-dark dark:text-accent-lime font-mono mt-0.5">{selectedInst.mrr}</div>
               </div>
-              <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
-                <div className="text-slate-400 text-[10px]">Status</div>
+              <div className="p-3 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
+                <div className="text-grey-green dark:text-[#8FA29B] text-[10px]">Status</div>
                 <div className="mt-1"><StatusBadge status={selectedInst.status} /></div>
               </div>
             </div>
 
             <div className="space-y-3 pt-2 text-xs">
-              <h4 className="font-bold text-slate-900">Institutional Usage Telemetry</h4>
-              <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+              <h4 className="font-bold text-ink dark:text-cream-soft">Institutional Usage Telemetry</h4>
+              <div className="p-4 bg-cream-light dark:bg-[#121616] border border-mist-green dark:border-[#2A3838] rounded-xl space-y-2">
                 <div className="flex justify-between"><span>Registered Students:</span><span className="font-mono font-bold">{selectedInst.users}</span></div>
                 <div className="flex justify-between"><span>Active Students (30d):</span><span className="font-mono font-bold">{selectedInst.active}</span></div>
                 <div className="flex justify-between"><span>AI Tokens Consumed:</span><span className="font-mono font-bold">14.2M</span></div>
@@ -755,8 +755,8 @@ export function InstitutionsView() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[#E2E8F0] flex gap-3">
-              <button onClick={() => toast.success("Institution details updated.")} className="flex-1 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold text-xs hover:bg-[#4F46E5] transition">
+            <div className="pt-4 border-t border-mist-green dark:border-[#2A3838] flex gap-3">
+              <button onClick={() => toast.success("Institution details updated.")} className="flex-1 py-2.5 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition">
                 Manage Contract
               </button>
             </div>
@@ -797,67 +797,67 @@ export function AnalyticsView({ stats }: { stats?: any }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Popular Learning Topics Breakdown */}
-        <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
-          <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+        <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
+          <div className="flex justify-between items-center border-b border-mist-green dark:border-[#2A3838] pb-3">
             <div>
-              <h3 className="font-bold text-sm text-slate-900">Popular Learning Topics</h3>
-              <p className="text-xs text-slate-400">Most requested study modules across active users</p>
+              <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Popular Learning Topics</h3>
+              <p className="text-xs text-grey-green dark:text-[#8FA29B]">Most requested study modules across active users</p>
             </div>
-            <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-1 rounded-md">Live Telemetry</span>
+            <span className="text-[10px] font-mono text-grey-green dark:text-[#8FA29B] bg-cream-light dark:bg-[#232D2D] px-2 py-1 rounded-md">Live Telemetry</span>
           </div>
 
           <div className="space-y-3">
             {popularTopics.length > 0 ? (
               popularTopics.map((topic: any, idx: number) => (
-                <div key={idx} className="p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl flex items-center justify-between">
+                <div key={idx} className="p-3.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl flex items-center justify-between">
                   <div>
-                    <div className="font-semibold text-xs text-slate-900">{topic.name}</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">{topic.sessions} active practice sessions</div>
+                    <div className="font-semibold text-xs text-ink dark:text-cream-soft">{topic.name}</div>
+                    <div className="text-[11px] text-grey-green dark:text-[#8FA29B] mt-0.5">{topic.sessions} active practice sessions</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-mono font-bold text-xs text-[#10B981]">{topic.mastery_avg}%</div>
-                    <div className="text-[10px] text-slate-400">Avg. Mastery</div>
+                    <div className="font-mono font-bold text-xs text-teal-dark dark:text-accent-lime">{topic.mastery_avg}%</div>
+                    <div className="text-[10px] text-grey-green dark:text-[#8FA29B]">Avg. Mastery</div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-slate-400 text-xs font-medium">No popular topics logged yet.</div>
+              <div className="p-8 text-center text-grey-green dark:text-[#8FA29B] text-xs font-medium">No popular topics logged yet.</div>
             )}
           </div>
         </div>
 
         {/* AI Telemetry & Latency Breakdown */}
-        <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
-          <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+        <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
+          <div className="flex justify-between items-center border-b border-mist-green dark:border-[#2A3838] pb-3">
             <div>
-              <h3 className="font-bold text-sm text-slate-900">AI Telemetry & Model Performance</h3>
-              <p className="text-xs text-slate-400">LLM token distribution and response latency breakdown</p>
+              <h3 className="font-bold text-sm text-ink dark:text-cream-soft">AI Telemetry & Model Performance</h3>
+              <p className="text-xs text-grey-green dark:text-[#8FA29B]">LLM token distribution and response latency breakdown</p>
             </div>
-            <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md font-semibold">Operational</span>
+            <span className="text-[10px] font-mono text-teal-dark dark:text-accent-lime bg-teal-dark/10 dark:bg-accent-lime/10 px-2 py-1 rounded-md font-semibold">Operational</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
-              <div className="text-slate-400 text-[10px]">Input Prompt Tokens</div>
-              <div className="font-mono font-bold text-slate-900 text-sm mt-0.5">{(telemetry.input_tokens || 0).toLocaleString()}</div>
+            <div className="p-3 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
+              <div className="text-grey-green dark:text-[#8FA29B] text-[10px]">Input Prompt Tokens</div>
+              <div className="font-mono font-bold text-ink dark:text-cream-soft text-sm mt-0.5">{(telemetry.input_tokens || 0).toLocaleString()}</div>
             </div>
-            <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
-              <div className="text-slate-400 text-[10px]">Output Completion Tokens</div>
-              <div className="font-mono font-bold text-slate-900 text-sm mt-0.5">{(telemetry.output_tokens || 0).toLocaleString()}</div>
+            <div className="p-3 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
+              <div className="text-grey-green dark:text-[#8FA29B] text-[10px]">Output Completion Tokens</div>
+              <div className="font-mono font-bold text-ink dark:text-cream-soft text-sm mt-0.5">{(telemetry.output_tokens || 0).toLocaleString()}</div>
             </div>
-            <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
-              <div className="text-slate-400 text-[10px]">Average Response Latency</div>
+            <div className="p-3 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
+              <div className="text-grey-green dark:text-[#8FA29B] text-[10px]">Average Response Latency</div>
               <div className="font-mono font-bold text-[#8B5CF6] text-sm mt-0.5">{telemetry.avg_response_latency_ms || 1120} ms</div>
             </div>
-            <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl">
-              <div className="text-slate-400 text-[10px]">Vector Search Latency</div>
-              <div className="font-mono font-bold text-[#10B981] text-sm mt-0.5">{telemetry.vector_search_latency_ms || 48.2} ms</div>
+            <div className="p-3 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
+              <div className="text-grey-green dark:text-[#8FA29B] text-[10px]">Vector Search Latency</div>
+              <div className="font-mono font-bold text-teal-dark dark:text-accent-lime text-sm mt-0.5">{telemetry.vector_search_latency_ms || 48.2} ms</div>
             </div>
           </div>
 
-          <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl flex justify-between items-center text-xs">
-            <span className="text-slate-600 font-medium">Estimated LLM Infrastructure Cost:</span>
-            <span className="font-mono font-bold text-slate-900 text-sm">${telemetry.estimated_cost_usd || 0.35} USD</span>
+          <div className="p-3 bg-cream-light dark:bg-[#121616] border border-mist-green dark:border-[#2A3838] rounded-xl flex justify-between items-center text-xs">
+            <span className="text-grey-green dark:text-[#8FA29B] font-medium">Estimated LLM Infrastructure Cost:</span>
+            <span className="font-mono font-bold text-ink dark:text-cream-soft text-sm">${telemetry.estimated_cost_usd || 0.35} USD</span>
           </div>
         </div>
       </div>
@@ -883,16 +883,16 @@ export function SubscriptionsView() {
           { name: "Pro Plan", price: "₦45,000", period: "/ student / yr", subs: "184 Students", mrr: "₦690,000" },
           { name: "Basic Plan", price: "₦15,000", period: "/ student / yr", subs: "86 Students", mrr: "₦462,400" },
         ].map((plan, idx) => (
-          <div key={idx} className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-3 shadow-2xs">
-            <div className="text-xs font-semibold text-slate-500">{plan.name}</div>
-            <div className="text-xl font-bold text-slate-900">{plan.price} <span className="text-xs text-slate-400 font-normal">{plan.period}</span></div>
-            <div className="pt-2 border-t border-[#E2E8F0] flex justify-between text-xs">
-              <span className="text-slate-400">Subscribers:</span>
-              <span className="font-bold text-slate-900">{plan.subs}</span>
+          <div key={idx} className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-3 shadow-2xs">
+            <div className="text-xs font-semibold text-grey-green dark:text-[#8FA29B]">{plan.name}</div>
+            <div className="text-xl font-bold text-ink dark:text-cream-soft">{plan.price} <span className="text-xs text-grey-green dark:text-[#8FA29B] font-normal">{plan.period}</span></div>
+            <div className="pt-2 border-t border-mist-green dark:border-[#2A3838] flex justify-between text-xs">
+              <span className="text-grey-green dark:text-[#8FA29B]">Subscribers:</span>
+              <span className="font-bold text-ink dark:text-cream-soft">{plan.subs}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-slate-400">Monthly Revenue:</span>
-              <span className="font-bold font-mono text-[#10B981]">{plan.mrr}</span>
+              <span className="text-grey-green dark:text-[#8FA29B]">Monthly Revenue:</span>
+              <span className="font-bold font-mono text-teal-dark dark:text-accent-lime">{plan.mrr}</span>
             </div>
           </div>
         ))}
@@ -915,17 +915,17 @@ export function RevenueView() {
         <MetricCard title="LTV" value="₦185,000" change="+12.0%" strokeColor="#8B5CF6" />
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
-        <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
-          <h3 className="font-bold text-sm text-slate-900">Recent Revenue Transactions</h3>
-          <button onClick={() => toast.success("Exporting transactions CSV...")} className="px-3.5 py-1.5 rounded-xl border border-[#E2E8F0] text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 cursor-pointer">
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <div className="flex justify-between items-center border-b border-mist-green dark:border-[#2A3838] pb-4">
+          <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Recent Revenue Transactions</h3>
+          <button onClick={() => toast.success("Exporting transactions CSV...")} className="px-3.5 py-1.5 rounded-xl border border-mist-green dark:border-[#2A3838] text-xs font-semibold text-ink dark:text-cream-soft hover:bg-cream-light dark:bg-[#232D2D] transition flex items-center gap-1.5 cursor-pointer">
             <Download size={14} /> Export CSV
           </button>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold tracking-wider">
+            <thead className="bg-cream-light dark:bg-[#121616] text-grey-green dark:text-[#8FA29B] border-b border-mist-green dark:border-[#2A3838] uppercase text-[10px] font-semibold tracking-wider">
               <tr>
                 <th className="p-4">TRANSACTION</th>
                 <th className="p-4">CUSTOMER</th>
@@ -942,14 +942,14 @@ export function RevenueView() {
                 { id: "TXN-9011", name: "Student Monthly Pro", inst: "University of Lagos", amt: "₦4,500", prov: "Paystack", status: "Successful", date: "May 31, 2024" },
                 { id: "TXN-9010", name: "UI Enterprise Upgrade", inst: "University of Ibadan", amt: "₦180,000", prov: "Paystack", status: "Pending", date: "May 30, 2024" },
               ].map((t, idx) => (
-                <tr key={idx} className="hover:bg-slate-50 transition">
-                  <td className="p-4 font-mono font-bold text-slate-900">{t.id}</td>
-                  <td className="p-4 text-slate-800">{t.name}</td>
-                  <td className="p-4 text-slate-600">{t.inst}</td>
-                  <td className="p-4 font-mono font-bold text-slate-900">{t.amt}</td>
-                  <td className="p-4 text-slate-600">{t.prov}</td>
+                <tr key={idx} className="hover:bg-cream-light dark:bg-[#232D2D] transition">
+                  <td className="p-4 font-mono font-bold text-ink dark:text-cream-soft">{t.id}</td>
+                  <td className="p-4 text-ink dark:text-cream-soft">{t.name}</td>
+                  <td className="p-4 text-grey-green dark:text-[#8FA29B]">{t.inst}</td>
+                  <td className="p-4 font-mono font-bold text-ink dark:text-cream-soft">{t.amt}</td>
+                  <td className="p-4 text-grey-green dark:text-[#8FA29B]">{t.prov}</td>
                   <td className="p-4"><StatusBadge status={t.status} /></td>
-                  <td className="p-4 text-right text-slate-400 font-mono text-[11px]">{t.date}</td>
+                  <td className="p-4 text-right text-grey-green dark:text-[#8FA29B] font-mono text-[11px]">{t.date}</td>
                 </tr>
               ))}
             </tbody>
@@ -972,8 +972,8 @@ export function EngagementView() {
         <MetricCard title="Quiz Completion Rate" value="84.2%" change="+3.0%" strokeColor="#10B981" />
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
-        <h3 className="font-bold text-sm text-slate-900">Student Activation & Conversion Funnel</h3>
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Student Activation & Conversion Funnel</h3>
         <div className="space-y-3 pt-2">
           {[
             { step: "Registered Users", count: "12,241", pct: "100%" },
@@ -984,11 +984,11 @@ export function EngagementView() {
           ].map((f, idx) => (
             <div key={idx} className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="font-semibold text-slate-700">{f.step}</span>
-                <span className="font-mono text-slate-500">{f.count} ({f.pct})</span>
+                <span className="font-semibold text-ink dark:text-cream-soft">{f.step}</span>
+                <span className="font-mono text-grey-green dark:text-[#8FA29B]">{f.count} ({f.pct})</span>
               </div>
-              <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#6366F1]" style={{ width: f.pct }} />
+              <div className="w-full h-3 bg-cream-light dark:bg-[#232D2D] rounded-full overflow-hidden">
+                <div className="h-full bg-teal-dark dark:bg-accent-lime" style={{ width: f.pct }} />
               </div>
             </div>
           ))}
@@ -1016,16 +1016,16 @@ export function ContentView() {
         <MetricCard title="Downloads" value="48,200" change="+15.2%" strokeColor="#10B981" />
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
         <div className="flex justify-between items-center">
-          <h3 className="font-bold text-sm text-slate-900">Academic Content Repository</h3>
-          <button onClick={() => toast.info("Content upload modal opened.")} className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 cursor-pointer">
+          <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Academic Content Repository</h3>
+          <button onClick={() => toast.info("Content upload modal opened.")} className="px-4 py-2 rounded-xl text-xs font-semibold bg-teal-dark dark:bg-accent-lime text-white hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition flex items-center gap-2 cursor-pointer">
             <Plus size={14} /> Upload Content
           </button>
         </div>
 
         <table className="w-full text-left text-xs">
-          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+          <thead className="bg-cream-light dark:bg-[#121616] text-grey-green dark:text-[#8FA29B] border-b border-mist-green dark:border-[#2A3838] uppercase text-[10px] font-semibold">
             <tr>
               <th className="p-4">CONTENT TITLE</th>
               <th className="p-4">TYPE</th>
@@ -1037,12 +1037,12 @@ export function ContentView() {
           </thead>
           <tbody className="divide-y divide-[#E2E8F0]">
             {contentItems.map((c, idx) => (
-              <tr key={idx} className="hover:bg-slate-50 transition">
-                <td className="p-4 font-bold text-slate-900">{c.title}</td>
-                <td className="p-4 text-slate-600">{c.type}</td>
-                <td className="p-4 text-slate-600">{c.inst}</td>
-                <td className="p-4 text-slate-600">{c.author}</td>
-                <td className="p-4 font-mono text-slate-700">{c.views}</td>
+              <tr key={idx} className="hover:bg-cream-light dark:bg-[#232D2D] transition">
+                <td className="p-4 font-bold text-ink dark:text-cream-soft">{c.title}</td>
+                <td className="p-4 text-grey-green dark:text-[#8FA29B]">{c.type}</td>
+                <td className="p-4 text-grey-green dark:text-[#8FA29B]">{c.inst}</td>
+                <td className="p-4 text-grey-green dark:text-[#8FA29B]">{c.author}</td>
+                <td className="p-4 font-mono text-ink dark:text-cream-soft">{c.views}</td>
                 <td className="p-4"><StatusBadge status={c.status} /></td>
               </tr>
             ))}
@@ -1065,10 +1065,10 @@ export function QuizzesView() {
         <MetricCard title="Pass Rate" value="84.2%" change="+1.5%" strokeColor="#10B981" />
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
-        <h3 className="font-bold text-sm text-slate-900">Recent Assessment Runs</h3>
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Recent Assessment Runs</h3>
         <table className="w-full text-left text-xs">
-          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+          <thead className="bg-cream-light dark:bg-[#121616] text-grey-green dark:text-[#8FA29B] border-b border-mist-green dark:border-[#2A3838] uppercase text-[10px] font-semibold">
             <tr>
               <th className="p-4">QUIZ NAME</th>
               <th className="p-4">COURSE</th>
@@ -1083,12 +1083,12 @@ export function QuizzesView() {
               { name: "Calculus & Derivatives Checkpoint", course: "MAT 101", att: "1,420", score: "82.4%", pass: "89.1%", status: "Active" },
               { name: "Object-Oriented Design Principles", course: "CSC 201", att: "2,150", score: "76.0%", pass: "81.4%", status: "Active" },
             ].map((q, idx) => (
-              <tr key={idx} className="hover:bg-slate-50 transition">
-                <td className="p-4 font-bold text-slate-900">{q.name}</td>
-                <td className="p-4 text-slate-600">{q.course}</td>
-                <td className="p-4 font-mono text-slate-700">{q.att}</td>
-                <td className="p-4 font-mono font-bold text-slate-900">{q.score}</td>
-                <td className="p-4 font-mono font-bold text-emerald-600">{q.pass}</td>
+              <tr key={idx} className="hover:bg-cream-light dark:bg-[#232D2D] transition">
+                <td className="p-4 font-bold text-ink dark:text-cream-soft">{q.name}</td>
+                <td className="p-4 text-grey-green dark:text-[#8FA29B]">{q.course}</td>
+                <td className="p-4 font-mono text-ink dark:text-cream-soft">{q.att}</td>
+                <td className="p-4 font-mono font-bold text-ink dark:text-cream-soft">{q.score}</td>
+                <td className="p-4 font-mono font-bold text-teal-dark dark:text-accent-lime">{q.pass}</td>
                 <td className="p-4"><StatusBadge status={q.status} /></td>
               </tr>
             ))}
@@ -1111,17 +1111,17 @@ export function LiveSessionsView() {
         <MetricCard title="Avg Attendance Rate" value="88.5%" change="+3.2%" strokeColor="#10B981" />
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
         <div className="flex justify-between items-center">
-          <h3 className="font-bold text-sm text-slate-900">Live Broadcast Monitor</h3>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
-            <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
+          <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Live Broadcast Monitor</h3>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime text-xs font-semibold border border-teal-dark/30 dark:border-accent-lime/30">
+            <span className="size-2 rounded-full bg-teal-dark/10 dark:bg-accent-lime animate-ping" />
             3 Streams Streaming Live
           </span>
         </div>
 
         <table className="w-full text-left text-xs">
-          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+          <thead className="bg-cream-light dark:bg-[#121616] text-grey-green dark:text-[#8FA29B] border-b border-mist-green dark:border-[#2A3838] uppercase text-[10px] font-semibold">
             <tr>
               <th className="p-4">SESSION TITLE</th>
               <th className="p-4">HOST / LECTURER</th>
@@ -1136,11 +1136,11 @@ export function LiveSessionsView() {
               { title: "PHY 102: Electromagnetic Waves", host: "Prof. Kenneth Okoro", inst: "University of Ibadan", parts: "182 live", status: "Live" },
               { title: "MAT 204: Linear Algebra Q&A", host: "Dr. Sarah Alabi", inst: "LASUSTECH", parts: "94 live", status: "Live" },
             ].map((s, idx) => (
-              <tr key={idx} className="hover:bg-slate-50 transition">
-                <td className="p-4 font-bold text-slate-900">{s.title}</td>
-                <td className="p-4 text-slate-600">{s.host}</td>
-                <td className="p-4 text-slate-600">{s.inst}</td>
-                <td className="p-4 font-mono font-bold text-[#6366F1]">{s.parts}</td>
+              <tr key={idx} className="hover:bg-cream-light dark:bg-[#232D2D] transition">
+                <td className="p-4 font-bold text-ink dark:text-cream-soft">{s.title}</td>
+                <td className="p-4 text-grey-green dark:text-[#8FA29B]">{s.host}</td>
+                <td className="p-4 text-grey-green dark:text-[#8FA29B]">{s.inst}</td>
+                <td className="p-4 font-mono font-bold text-teal-dark dark:text-accent-lime">{s.parts}</td>
                 <td className="p-4"><StatusBadge status={s.status} /></td>
               </tr>
             ))}
@@ -1163,15 +1163,15 @@ export function MessagesView() {
         <MetricCard title="Failed Messages" value="90" change="-12" strokeColor="#10B981" />
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
         <div className="flex justify-between items-center">
-          <h3 className="font-bold text-sm text-slate-900">Broadcast & Announcement Center</h3>
-          <button onClick={() => toast.info("Composer opened.")} className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] text-white hover:bg-[#4F46E5] transition flex items-center gap-2 cursor-pointer">
+          <h3 className="font-bold text-sm text-ink dark:text-cream-soft">Broadcast & Announcement Center</h3>
+          <button onClick={() => toast.info("Composer opened.")} className="px-4 py-2 rounded-xl text-xs font-semibold bg-teal-dark dark:bg-accent-lime text-white hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition flex items-center gap-2 cursor-pointer">
             <Send size={14} /> Compose Message
           </button>
         </div>
 
-        <div className="p-4 bg-slate-50 border border-[#E2E8F0] rounded-xl text-xs text-slate-500">
+        <div className="p-4 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-xs text-grey-green dark:text-[#8FA29B]">
           Select target audience (All Institutions, Specific Students, or Lecturers) to send push announcements.
         </div>
       </div>
@@ -1191,10 +1191,10 @@ export function FeedbackView() {
         <MetricCard title="Feature Requests" value="118" change="+14" strokeColor="#3B82F6" />
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
-        <h3 className="font-bold text-sm text-slate-900">User Satisfaction & Reports</h3>
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <h3 className="font-bold text-sm text-ink dark:text-cream-soft">User Satisfaction & Reports</h3>
         <table className="w-full text-left text-xs">
-          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+          <thead className="bg-cream-light dark:bg-[#121616] text-grey-green dark:text-[#8FA29B] border-b border-mist-green dark:border-[#2A3838] uppercase text-[10px] font-semibold">
             <tr>
               <th className="p-4">USER</th>
               <th className="p-4">TYPE</th>
@@ -1208,11 +1208,11 @@ export function FeedbackView() {
               { user: "Amina Bello", type: "Feature Request", rating: "5 ★", msg: "Would love dark mode export for flashcard sets!", status: "Open" },
               { user: "John Doe", type: "Bug Report", rating: "4 ★", msg: "Quiz timer paused on tab switch.", status: "In Review" },
             ].map((f, idx) => (
-              <tr key={idx} className="hover:bg-slate-50 transition">
-                <td className="p-4 font-bold text-slate-900">{f.user}</td>
-                <td className="p-4 text-slate-600">{f.type}</td>
+              <tr key={idx} className="hover:bg-cream-light dark:bg-[#232D2D] transition">
+                <td className="p-4 font-bold text-ink dark:text-cream-soft">{f.user}</td>
+                <td className="p-4 text-grey-green dark:text-[#8FA29B]">{f.type}</td>
                 <td className="p-4 font-bold text-amber-500">{f.rating}</td>
-                <td className="p-4 text-slate-700">{f.msg}</td>
+                <td className="p-4 text-ink dark:text-cream-soft">{f.msg}</td>
                 <td className="p-4"><StatusBadge status={f.status} /></td>
               </tr>
             ))}
@@ -1237,21 +1237,21 @@ export function IntegrationsView() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {integrations.map((item, idx) => (
-          <div key={idx} className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs flex flex-col justify-between">
+          <div key={idx} className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs flex flex-col justify-between">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6366F1] bg-[#6366F1]/10 px-2.5 py-1 rounded-md">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-teal-dark dark:text-accent-lime bg-teal-dark dark:bg-accent-lime/10 px-2.5 py-1 rounded-md">
                   {item.category}
                 </span>
                 <StatusBadge status={item.status} />
               </div>
-              <h3 className="font-bold text-base text-slate-900">{item.name}</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
+              <h3 className="font-bold text-base text-ink dark:text-cream-soft">{item.name}</h3>
+              <p className="text-xs text-grey-green dark:text-[#8FA29B] leading-relaxed">{item.desc}</p>
             </div>
 
-            <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
-              <span className="text-slate-400 font-mono text-[11px]">Sync: {item.sync}</span>
-              <button onClick={() => toast.info(`Configuring ${item.name}`)} className="px-3 py-1.5 rounded-xl border border-[#E2E8F0] font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
+            <div className="pt-3 border-t border-mist-green dark:border-[#2A3838] flex items-center justify-between text-xs">
+              <span className="text-grey-green dark:text-[#8FA29B] font-mono text-[11px]">Sync: {item.sync}</span>
+              <button onClick={() => toast.info(`Configuring ${item.name}`)} className="px-3 py-1.5 rounded-xl border border-mist-green dark:border-[#2A3838] font-semibold text-ink dark:text-cream-soft hover:bg-cream-light dark:bg-[#232D2D] transition cursor-pointer">
                 Configure
               </button>
             </div>
@@ -1339,36 +1339,36 @@ export function AdminSettingsView() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-8 max-w-3xl space-y-4 shadow-2xs text-xs text-slate-500">
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-8 max-w-3xl space-y-4 shadow-2xs text-xs text-grey-green dark:text-[#8FA29B]">
         Loading platform settings & feature flags...
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-2xl p-8 max-w-3xl space-y-6 shadow-2xs text-xs">
-      <div className="border-b border-[#E2E8F0] pb-4 space-y-1">
-        <h3 className="font-bold text-base text-slate-900">Platform Settings & Feature Flags</h3>
-        <p className="text-slate-400">Configure global Summa AI admin behavior, operational switches, and feature toggles.</p>
+    <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-8 max-w-3xl space-y-6 shadow-2xs text-xs">
+      <div className="border-b border-mist-green dark:border-[#2A3838] pb-4 space-y-1">
+        <h3 className="font-bold text-base text-ink dark:text-cream-soft">Platform Settings & Feature Flags</h3>
+        <p className="text-grey-green dark:text-[#8FA29B]">Configure global Summa AI admin behavior, operational switches, and feature toggles.</p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <label className="font-semibold text-slate-700">Platform Name</label>
+          <label className="font-semibold text-ink dark:text-cream-soft">Platform Name</label>
           <input
             type="text"
             value={platformName}
             onChange={(e) => setPlatformName(e.target.value)}
-            className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none focus:border-[#6366F1]"
+            className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft focus:outline-none focus:border-[#6366F1]"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="font-semibold text-slate-700">Default Currency</label>
+          <label className="font-semibold text-ink dark:text-cream-soft">Default Currency</label>
           <select
             value={defaultCurrency}
             onChange={(e) => setDefaultCurrency(e.target.value)}
-            className="w-full p-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-slate-900 focus:outline-none focus:border-[#6366F1]"
+            className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft focus:outline-none focus:border-[#6366F1]"
           >
             <option value="NGN">Nigerian Naira (₦ - NGN)</option>
             <option value="USD">US Dollar ($ - USD)</option>
@@ -1376,22 +1376,22 @@ export function AdminSettingsView() {
         </div>
 
         {/* Feature Flags Section */}
-        <div className="pt-4 border-t border-[#E2E8F0] space-y-3">
-          <h4 className="font-bold text-xs text-slate-500 uppercase tracking-wider">
+        <div className="pt-4 border-t border-mist-green dark:border-[#2A3838] space-y-3">
+          <h4 className="font-bold text-xs text-grey-green dark:text-[#8FA29B] uppercase tracking-wider">
             Global Feature Flags
           </h4>
 
           {/* WebSocket Feature Flag */}
-          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+          <div className="flex items-center justify-between p-3.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
             <div>
-              <div className="font-semibold text-slate-900">WebSocket Realtime Engine (WEBSOCKET_ENABLED)</div>
-              <div className="text-slate-400 text-[11px]">Enables low-latency bidirectional socket connections for live study streams.</div>
+              <div className="font-semibold text-ink dark:text-cream-soft">WebSocket Realtime Engine (WEBSOCKET_ENABLED)</div>
+              <div className="text-grey-green dark:text-[#8FA29B] text-[11px]">Enables low-latency bidirectional socket connections for live study streams.</div>
             </div>
             <button
               type="button"
               onClick={() => handleToggle("websocket_enabled", websocketEnabled, setWebsocketEnabled)}
               className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
-                websocketEnabled ? "bg-[#6366F1]" : "bg-slate-300"
+                websocketEnabled ? "bg-teal-dark dark:bg-accent-lime" : "bg-slate-300"
               }`}
             >
               <div
@@ -1403,16 +1403,16 @@ export function AdminSettingsView() {
           </div>
 
           {/* Hybrid Memory Feature Flag */}
-          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+          <div className="flex items-center justify-between p-3.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
             <div>
-              <div className="font-semibold text-slate-900">Hybrid Memory Layer (HYBRID_MEMORY_ENABLED)</div>
-              <div className="text-slate-400 text-[11px]">Activates Cognee graph memory and Qdrant vector retrieval during chat sessions.</div>
+              <div className="font-semibold text-ink dark:text-cream-soft">Hybrid Memory Layer (HYBRID_MEMORY_ENABLED)</div>
+              <div className="text-grey-green dark:text-[#8FA29B] text-[11px]">Activates Cognee graph memory and Qdrant vector retrieval during chat sessions.</div>
             </div>
             <button
               type="button"
               onClick={() => handleToggle("hybrid_memory_enabled", hybridMemoryEnabled, setHybridMemoryEnabled)}
               className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
-                hybridMemoryEnabled ? "bg-[#6366F1]" : "bg-slate-300"
+                hybridMemoryEnabled ? "bg-teal-dark dark:bg-accent-lime" : "bg-slate-300"
               }`}
             >
               <div
@@ -1424,16 +1424,16 @@ export function AdminSettingsView() {
           </div>
 
           {/* SummaStudy Integration Feature Flag */}
-          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+          <div className="flex items-center justify-between p-3.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
             <div>
-              <div className="font-semibold text-slate-900">SummaStudy API Integration (SUMMASTUDY_ENABLED)</div>
-              <div className="text-slate-400 text-[11px]">Gates microservice requests for study planner, spaced repetition, & recommendations.</div>
+              <div className="font-semibold text-ink dark:text-cream-soft">SummaStudy API Integration (SUMMASTUDY_ENABLED)</div>
+              <div className="text-grey-green dark:text-[#8FA29B] text-[11px]">Gates microservice requests for study planner, spaced repetition, & recommendations.</div>
             </div>
             <button
               type="button"
               onClick={() => handleToggle("summastudy_enabled", summastudyEnabled, setSummastudyEnabled)}
               className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
-                summastudyEnabled ? "bg-[#6366F1]" : "bg-slate-300"
+                summastudyEnabled ? "bg-teal-dark dark:bg-accent-lime" : "bg-slate-300"
               }`}
             >
               <div
@@ -1445,16 +1445,16 @@ export function AdminSettingsView() {
           </div>
 
           {/* Maintenance Mode */}
-          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl">
+          <div className="flex items-center justify-between p-3.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl">
             <div>
-              <div className="font-semibold text-slate-900">Maintenance Mode</div>
-              <div className="text-slate-400 text-[11px]">Temporarily restrict student portal access for core backend updates.</div>
+              <div className="font-semibold text-ink dark:text-cream-soft">Maintenance Mode</div>
+              <div className="text-grey-green dark:text-[#8FA29B] text-[11px]">Temporarily restrict student portal access for core backend updates.</div>
             </div>
             <button
               type="button"
               onClick={() => handleToggle("maintenance_mode", maintenanceMode, setMaintenanceMode)}
               className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
-                maintenanceMode ? "bg-rose-500" : "bg-slate-300"
+                maintenanceMode ? "bg-destructive/10 dark:bg-[#be747e]/100" : "bg-slate-300"
               }`}
             >
               <div
@@ -1467,17 +1467,17 @@ export function AdminSettingsView() {
         </div>
       </div>
 
-      <div className="pt-4 border-t border-[#E2E8F0] flex justify-end gap-3">
+      <div className="pt-4 border-t border-mist-green dark:border-[#2A3838] flex justify-end gap-3">
         <button
           onClick={loadSettings}
-          className="px-5 py-2.5 rounded-xl border border-[#E2E8F0] font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+          className="px-5 py-2.5 rounded-xl border border-mist-green dark:border-[#2A3838] font-semibold text-ink dark:text-cream-soft hover:bg-cream-light dark:bg-[#232D2D] transition cursor-pointer"
         >
           Reset
         </button>
         <button
           onClick={() => handleSaveSettings()}
           disabled={isSaving}
-          className="px-5 py-2.5 rounded-xl bg-[#6366F1] text-white font-semibold hover:bg-[#4F46E5] transition shadow-2xs cursor-pointer disabled:opacity-50"
+          className="px-5 py-2.5 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition shadow-2xs cursor-pointer disabled:opacity-50"
         >
           {isSaving ? "Saving..." : "Save Settings"}
         </button>
@@ -1488,39 +1488,58 @@ export function AdminSettingsView() {
 
 // --- 13B. COMPONENTS LIBRARY PAGE (Mirror-Perfect Implementation) ---
 
+interface ComponentMeta {
+  id: string;
+  title: string;
+  category: string;
+  desc: string;
+  badgeBg: string;
+  icon: React.ReactNode;
+  preview: React.ReactNode;
+  whatIsIt?: string;
+  whySummaUsesIt?: string;
+  techniques?: string[];
+  whenSummaUsesIt?: string[];
+  example?: string;
+  interactiveExample?: React.ReactNode;
+  whatHappensAfter?: { step: string; detail: string }[];
+  usedWith?: string[];
+  decisionSignals?: string[];
+}
+
 export function ComponentsView() {
   const [search, setSearch] = useState("");
 
-  const components = [
+  const components: ComponentMeta[] = [
     // --- CORE LEARNING ---
     {
       id: "multiple_choice",
       title: "1. Multiple Choice",
       category: "Core Learning",
       desc: "Question + options + instant feedback. Pick the best answer to test baseline comprehension.",
-      badgeBg: "bg-blue-100/80 text-blue-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-center space-y-1.5">
-          <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-center space-y-1.5">
+          <p className="text-[11px] font-semibold text-ink dark:text-cream-soft leading-tight">
             What is the main function of mitochondria?
           </p>
           <div className="space-y-1">
-            <div className="flex items-center gap-2 px-2 py-0.5 rounded-lg text-[10px] text-slate-600">
+            <div className="flex items-center gap-2 px-2 py-0.5 rounded-lg text-[10px] text-grey-green dark:text-[#8FA29B]">
               <div className="size-2.5 rounded-full border border-slate-300" />
               <span>Protein synthesis</span>
             </div>
-            <div className="flex items-center gap-2 px-2 py-0.5 rounded-lg text-[10px] text-slate-700 bg-blue-50/80 border border-blue-200/60 font-medium">
-              <div className="size-2.5 rounded-full border-2 border-blue-500 flex items-center justify-center">
-                <div className="size-1 rounded-full bg-blue-500" />
+            <div className="flex items-center gap-2 px-2 py-0.5 rounded-lg text-[10px] text-ink dark:text-cream-soft bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 font-medium">
+              <div className="size-2.5 rounded-full border-2 border-teal-dark dark:border-accent-lime flex items-center justify-center">
+                <div className="size-1 rounded-full bg-teal-dark/10 dark:bg-accent-lime" />
               </div>
               <span>Energy production (ATP)</span>
             </div>
-            <div className="flex items-center gap-2 px-2 py-0.5 rounded-lg text-[10px] text-slate-600">
+            <div className="flex items-center gap-2 px-2 py-0.5 rounded-lg text-[10px] text-grey-green dark:text-[#8FA29B]">
               <div className="size-2.5 rounded-full border border-slate-300" />
               <span>Cellular division</span>
             </div>
@@ -1533,22 +1552,22 @@ export function ComponentsView() {
       title: "2. Short Answer",
       desc: "Student writes an open explanation → Summa evaluates key ideas and offers precise feedback.",
       category: "Core Learning",
-      badgeBg: "bg-amber-100/80 text-amber-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
-          <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <p className="text-[11px] font-semibold text-ink dark:text-cream-soft leading-tight">
             Explain the difference between stack and heap memory.
           </p>
           <div className="relative mt-1.5">
-            <div className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl p-2 text-[10px] text-slate-500 font-sans leading-tight">
+            <div className="w-full h-14 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl p-2 text-[10px] text-grey-green dark:text-[#8FA29B] font-sans leading-tight">
               Stack holds static local frames; heap allocates dynamic objects...
             </div>
-            <button className="absolute right-1.5 bottom-1.5 size-5 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-xs">
+            <button className="absolute right-1.5 bottom-1.5 size-5 rounded-full bg-teal-dark/10 dark:bg-accent-lime/100 text-white flex items-center justify-center shadow-xs">
               <ArrowRight size={10} />
             </button>
           </div>
@@ -1560,25 +1579,25 @@ export function ComponentsView() {
       title: "3. True / False",
       desc: "Simple, rapid-fire statement validation to quickly clear misconceptions.",
       category: "Core Learning",
-      badgeBg: "bg-emerald-100/80 text-emerald-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
           <div className="space-y-1">
-            <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wide">Rapid Check</span>
-            <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+            <span className="text-[9px] font-bold text-teal-dark dark:text-accent-lime uppercase tracking-wide">Rapid Check</span>
+            <p className="text-[11px] font-semibold text-ink dark:text-cream-soft leading-tight">
               Java interfaces can contain private helper methods in Java 9+.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 pt-1">
-            <div className="py-2 bg-emerald-50 border border-emerald-300 rounded-lg text-center font-bold text-xs text-emerald-700">
+            <div className="py-2 bg-teal-dark/10 dark:bg-accent-lime/10 border border-emerald-300 rounded-lg text-center font-bold text-xs text-teal-dark dark:text-accent-lime">
               TRUE ✓
             </div>
-            <div className="py-2 bg-slate-50 border border-slate-200 rounded-lg text-center font-bold text-xs text-slate-400 opacity-60">
+            <div className="py-2 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-lg text-center font-bold text-xs text-grey-green dark:text-[#8FA29B] opacity-60">
               FALSE
             </div>
           </div>
@@ -1590,19 +1609,19 @@ export function ComponentsView() {
       title: "4. Fill in the Blank",
       desc: "Excellent for locking in essential technical terminology, syntax, and exact formulas.",
       category: "Core Learning",
-      badgeBg: "bg-purple-100/80 text-purple-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-center space-y-3">
-          <p className="text-[11px] text-slate-700 leading-relaxed">
-            In OOP, <span className="inline-block px-2 py-0.5 bg-purple-50 border border-purple-300 text-purple-700 font-bold rounded">polymorphism</span> allows dynamic method dispatch at runtime.
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-center space-y-3">
+          <p className="text-[11px] text-ink dark:text-cream-soft leading-relaxed">
+            In OOP, <span className="inline-block px-2 py-0.5 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 text-teal-dark dark:text-accent-lime font-bold rounded">polymorphism</span> allows dynamic method dispatch at runtime.
           </p>
-          <div className="flex items-center gap-1 text-[10px] text-slate-400">
-            <span className="font-semibold text-purple-600">Hint:</span> Means "many forms"
+          <div className="flex items-center gap-1 text-[10px] text-grey-green dark:text-[#8FA29B]">
+            <span className="font-semibold text-teal-dark dark:text-accent-lime">Hint:</span> Means "many forms"
           </div>
         </div>
       ),
@@ -1612,31 +1631,31 @@ export function ComponentsView() {
       title: "5. Matching",
       category: "Core Learning",
       desc: "Match concepts ↔ definitions to build strong structural associations.",
-      badgeBg: "bg-pink-100/80 text-pink-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
       ),
       preview: (
-        <div className="relative w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex items-center justify-between">
+        <div className="relative w-full h-[140px] bg-white rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex items-center justify-between">
           <div className="space-y-2 z-10">
-            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+            <div className="px-2 py-1 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-lg text-[9px] font-medium text-ink dark:text-cream-soft">
               Photosynthesis
             </div>
-            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+            <div className="px-2 py-1 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-lg text-[9px] font-medium text-ink dark:text-cream-soft">
               Mitochondria
             </div>
           </div>
           <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-current" viewBox="0 0 200 120">
-            <path d="M 80 40 C 120 40, 110 80, 140 80" stroke="#34D399" strokeWidth="1.5" fill="none" />
-            <path d="M 80 75 C 110 75, 110 38, 140 38" stroke="#60A5FA" strokeWidth="1.5" fill="none" />
+            <path d="M 80 40 C 120 40, 110 80, 140 80" stroke="currentColor" className="text-teal-dark dark:text-accent-lime" strokeWidth="1.5" fill="none" />
+            <path d="M 80 75 C 110 75, 110 38, 140 38" stroke="currentColor" className="text-teal-dark dark:text-accent-lime" strokeWidth="1.5" fill="none" />
           </svg>
           <div className="space-y-2 z-10 text-right">
-            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+            <div className="px-2 py-1 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-lg text-[9px] font-medium text-ink dark:text-cream-soft">
               ATP energy production
             </div>
-            <div className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-medium text-slate-700">
+            <div className="px-2 py-1 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-lg text-[9px] font-medium text-ink dark:text-cream-soft">
               Light into glucose
             </div>
           </div>
@@ -1648,25 +1667,25 @@ export function ComponentsView() {
       title: "6. Ordering",
       category: "Core Learning",
       desc: "Arrange events, execution steps or multi-stage algorithms into the correct sequence.",
-      badgeBg: "bg-indigo-100/80 text-indigo-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-2.5 shadow-2xs space-y-1 flex flex-col justify-center">
-          <div className="flex items-center gap-2 px-2.5 py-1 bg-indigo-50/80 border border-indigo-200 rounded-lg">
-            <span className="size-3.5 rounded-full bg-indigo-600 text-white font-bold text-[8px] flex items-center justify-center">1</span>
-            <span className="text-[9px] font-semibold text-indigo-900">Compile Source Code</span>
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-2.5 shadow-2xs space-y-1 flex flex-col justify-center">
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded-lg">
+            <span className="size-3.5 rounded-full bg-teal-dark dark:bg-accent-lime text-white font-bold text-[8px] flex items-center justify-center">1</span>
+            <span className="text-[9px] font-semibold text-ink dark:text-cream-soft">Compile Source Code</span>
           </div>
-          <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg">
-            <span className="size-3.5 rounded-full bg-slate-200 text-slate-600 font-bold text-[8px] flex items-center justify-center">2</span>
-            <span className="text-[9px] font-medium text-slate-700">Generate Bytecode</span>
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-lg">
+            <span className="size-3.5 rounded-full bg-cream-light dark:bg-[#232D2D] text-grey-green dark:text-[#8FA29B] font-bold text-[8px] flex items-center justify-center">2</span>
+            <span className="text-[9px] font-medium text-ink dark:text-cream-soft">Generate Bytecode</span>
           </div>
-          <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg">
-            <span className="size-3.5 rounded-full bg-slate-200 text-slate-600 font-bold text-[8px] flex items-center justify-center">3</span>
-            <span className="text-[9px] font-medium text-slate-700">Load via JVM ClassLoader</span>
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-lg">
+            <span className="size-3.5 rounded-full bg-cream-light dark:bg-[#232D2D] text-grey-green dark:text-[#8FA29B] font-bold text-[8px] flex items-center justify-center">3</span>
+            <span className="text-[9px] font-medium text-ink dark:text-cream-soft">Load via JVM ClassLoader</span>
           </div>
         </div>
       ),
@@ -1676,23 +1695,23 @@ export function ComponentsView() {
       title: "7. Categorization",
       category: "Core Learning",
       desc: "Drag or sort concepts into appropriate categories or taxonomy buckets.",
-      badgeBg: "bg-cyan-100/80 text-cyan-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-2.5 shadow-2xs grid grid-cols-2 gap-2">
-          <div className="bg-cyan-50/60 border border-cyan-200 rounded-lg p-2 space-y-1">
-            <span className="text-[9px] font-bold text-cyan-700 block">Linear Data</span>
-            <div className="bg-white border border-cyan-200 rounded px-1.5 py-0.5 text-[8px] font-medium text-slate-700">Arrays</div>
-            <div className="bg-white border border-cyan-200 rounded px-1.5 py-0.5 text-[8px] font-medium text-slate-700">Linked Lists</div>
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-2.5 shadow-2xs grid grid-cols-2 gap-2">
+          <div className="bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded-lg p-2 space-y-1">
+            <span className="text-[9px] font-bold text-ink dark:text-cream-soft block">Linear Data</span>
+            <div className="bg-white dark:bg-[#1C2323] border border-teal-dark/30 dark:border-accent-lime/30 rounded px-1.5 py-0.5 text-[8px] font-medium text-ink dark:text-cream-soft">Arrays</div>
+            <div className="bg-white dark:bg-[#1C2323] border border-teal-dark/30 dark:border-accent-lime/30 rounded px-1.5 py-0.5 text-[8px] font-medium text-ink dark:text-cream-soft">Linked Lists</div>
           </div>
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 space-y-1">
-            <span className="text-[9px] font-bold text-slate-600 block">Non-Linear</span>
-            <div className="bg-white border border-slate-200 rounded px-1.5 py-0.5 text-[8px] font-medium text-slate-700">Trees</div>
-            <div className="bg-white border border-slate-200 rounded px-1.5 py-0.5 text-[8px] font-medium text-slate-700">Graphs</div>
+          <div className="bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-lg p-2 space-y-1">
+            <span className="text-[9px] font-bold text-grey-green dark:text-[#8FA29B] block">Non-Linear</span>
+            <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded px-1.5 py-0.5 text-[8px] font-medium text-ink dark:text-cream-soft">Trees</div>
+            <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded px-1.5 py-0.5 text-[8px] font-medium text-ink dark:text-cream-soft">Graphs</div>
           </div>
         </div>
       ),
@@ -1702,21 +1721,21 @@ export function ComponentsView() {
       title: "8. Teach-Back",
       category: "Core Learning",
       desc: "'Explain this like you're teaching someone.' Forces Feynman-style active articulation.",
-      badgeBg: "bg-teal-100/80 text-teal-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center gap-1.5 text-teal-700 font-bold text-[10px]">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-teal-dark dark:text-accent-lime font-bold text-[10px]">
             <span>🎓 Feynman Method</span>
           </div>
-          <p className="text-[10px] text-slate-700 font-medium leading-tight">
+          <p className="text-[10px] text-ink dark:text-cream-soft font-medium leading-tight">
             How would you explain recursion to a 10-year-old without using technical jargon?
           </p>
-          <div className="w-full h-8 bg-teal-50/50 border border-teal-200 rounded-lg p-1.5 text-[9px] text-teal-800 italic">
+          <div className="w-full h-8 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded-lg p-1.5 text-[9px] text-ink dark:text-cream-soft italic">
             "It's like a Russian nesting doll..."
           </div>
         </div>
@@ -1727,15 +1746,15 @@ export function ComponentsView() {
       title: "9. Confidence Check",
       category: "Core Learning",
       desc: "Rate how confident you feel (1–5) and pair it directly with actual test performance.",
-      badgeBg: "bg-emerald-100/80 text-emerald-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
-          <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <p className="text-[11px] font-semibold text-ink dark:text-cream-soft leading-tight">
             How confident do you feel about Big-O time complexity analysis?
           </p>
           <div className="flex items-center justify-between gap-1 py-1">
@@ -1744,15 +1763,15 @@ export function ComponentsView() {
                 key={level}
                 className={`size-7 rounded-lg font-bold text-xs flex items-center justify-center ${
                   level === 4
-                    ? "bg-emerald-500 text-white shadow-xs"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-teal-dark/10 dark:bg-accent-lime text-white shadow-xs"
+                    : "bg-cream-light dark:bg-[#232D2D] text-grey-green dark:text-[#8FA29B] hover:bg-mist-green/50 dark:hover:bg-[#2A3838]"
                 }`}
               >
                 {level}
               </button>
             ))}
           </div>
-          <div className="text-[9px] text-slate-400 text-center font-medium">1 = Unsure · 5 = Mastered</div>
+          <div className="text-[9px] text-grey-green dark:text-[#8FA29B] text-center font-medium">1 = Unsure · 5 = Mastered</div>
         </div>
       ),
     },
@@ -1761,24 +1780,24 @@ export function ComponentsView() {
       title: "10. Scenario / Case Study",
       category: "Core Learning",
       desc: "Give a realistic engineering/academic situation for the student to apply knowledge.",
-      badgeBg: "bg-sky-100/80 text-sky-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h5m0 0v-5a2 2 0 012-2h2a2 2 0 012 2v5" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex gap-2 items-center">
-          <div className="w-16 h-20 bg-sky-50 border border-sky-200 rounded-lg p-1.5 flex flex-col justify-between shrink-0">
-            <span className="text-[8px] font-bold text-sky-700 uppercase">CASE #104</span>
-            <div className="size-4 rounded bg-sky-500 text-white font-bold text-[8px] flex items-center justify-center">⚙</div>
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex gap-2 items-center">
+          <div className="w-16 h-20 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded-lg p-1.5 flex flex-col justify-between shrink-0">
+            <span className="text-[8px] font-bold text-teal-dark dark:text-accent-lime uppercase">CASE #104</span>
+            <div className="size-4 rounded bg-teal-dark/10 dark:bg-accent-lime/100 text-white font-bold text-[8px] flex items-center justify-center">⚙</div>
           </div>
           <div className="flex-1 space-y-1.5">
-            <p className="text-[10px] text-slate-700 font-medium leading-snug">
+            <p className="text-[10px] text-ink dark:text-cream-soft font-medium leading-snug">
               A high-traffic web server drops requests during peak hours. Which caching pattern resolves this?
             </p>
             <div className="flex justify-end">
-              <button className="px-2 py-0.5 rounded bg-sky-500 text-white text-[9px] font-bold">Solve</button>
+              <button className="px-2 py-0.5 rounded bg-teal-dark/10 dark:bg-accent-lime/100 text-white text-[9px] font-bold">Solve</button>
             </div>
           </div>
         </div>
@@ -1791,22 +1810,22 @@ export function ComponentsView() {
       title: "11. Explanation Card",
       category: "Teaching Components",
       desc: "Structured, high-clarity explanation with progressive disclosure of key insights.",
-      badgeBg: "bg-blue-100/80 text-blue-700",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
           <div className="space-y-1">
-            <span className="text-[9px] font-bold text-blue-600 uppercase">Core Principle</span>
-            <h4 className="text-[11px] font-bold text-slate-800">Dynamic Method Dispatch</h4>
+            <span className="text-[9px] font-bold text-teal-dark dark:text-accent-lime uppercase">Core Principle</span>
+            <h4 className="text-[11px] font-bold text-ink dark:text-cream-soft">Dynamic Method Dispatch</h4>
           </div>
-          <p className="text-[10px] text-slate-600 leading-snug">
-            At runtime, Java checks the actual object type (e.g. <code className="text-blue-600 font-mono">Dog</code>) rather than reference variable type.
+          <p className="text-[10px] text-grey-green dark:text-[#8FA29B] leading-snug">
+            At runtime, Java checks the actual object type (e.g. <code className="text-teal-dark dark:text-accent-lime font-mono">Dog</code>) rather than reference variable type.
           </p>
-          <div className="text-[9px] text-blue-600 font-semibold cursor-pointer">▶ Tap to expand deep-dive</div>
+          <div className="text-[9px] text-teal-dark dark:text-accent-lime font-semibold cursor-pointer">▶ Tap to expand deep-dive</div>
         </div>
       ),
     },
@@ -1815,20 +1834,20 @@ export function ComponentsView() {
       title: "12. Worked Example",
       category: "Teaching Components",
       desc: "Problem → step-by-step breakdown → explicit reasoning → verified final answer.",
-      badgeBg: "bg-slate-100 text-slate-800",
+      badgeBg: "bg-cream-light dark:bg-[#232D2D] text-ink dark:text-cream-soft",
       icon: (
-        <svg className="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-ink dark:text-cream-soft" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-2.5 shadow-2xs space-y-1.5 flex flex-col justify-center">
-          <div className="text-[10px] font-bold text-slate-800">Problem: Integrate ∫ 2x dx</div>
-          <div className="pl-2 border-l-2 border-blue-500 text-[9px] text-slate-600 space-y-0.5">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-2.5 shadow-2xs space-y-1.5 flex flex-col justify-center">
+          <div className="text-[10px] font-bold text-ink dark:text-cream-soft">Problem: Integrate ∫ 2x dx</div>
+          <div className="pl-2 border-l-2 border-teal-dark dark:border-accent-lime text-[9px] text-grey-green dark:text-[#8FA29B] space-y-0.5">
             <div>Step 1: Apply power rule ∫ x^n dx = x^(n+1)/(n+1)</div>
             <div>Step 2: 2 * (x^2 / 2) = x^2</div>
           </div>
-          <div className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-mono text-[9px] font-bold rounded">
+          <div className="px-2 py-0.5 bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime font-mono text-[9px] font-bold rounded">
             Result: x² + C
           </div>
         </div>
@@ -1839,20 +1858,20 @@ export function ComponentsView() {
       title: "13. Hint Ladder",
       category: "Teaching Components",
       desc: "Progressive hints (Hint 1 → Hint 2 → Guided Clue) without immediately giving away the answer.",
-      badgeBg: "bg-amber-100/80 text-amber-700",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
-          <div className="text-[10px] font-bold text-slate-800">Stuck on recursion base case?</div>
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[10px] font-bold text-ink dark:text-cream-soft">Stuck on recursion base case?</div>
           <div className="space-y-1">
-            <div className="px-2 py-1 bg-amber-50 border border-amber-200 text-amber-900 text-[9px] rounded font-medium">
+            <div className="px-2 py-1 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 text-ink dark:text-cream-soft text-[9px] rounded font-medium">
               💡 Hint 1: What condition causes n to stop decrementing?
             </div>
-            <div className="px-2 py-1 bg-slate-50 border border-slate-200 text-slate-400 text-[9px] rounded opacity-60">
+            <div className="px-2 py-1 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] text-grey-green dark:text-[#8FA29B] text-[9px] rounded opacity-60">
               🔒 Hint 2 (Locked)
             </div>
           </div>
@@ -1864,20 +1883,20 @@ export function ComponentsView() {
       title: "14. Concept Breakdown",
       category: "Teaching Components",
       desc: "Deconstructs complex subjects into digestable, modular sub-concepts.",
-      badgeBg: "bg-orange-100/80 text-orange-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-2.5 shadow-2xs space-y-1.5 flex flex-col justify-center">
-          <div className="text-[10px] font-bold text-slate-800">Database Indexing</div>
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-2.5 shadow-2xs space-y-1.5 flex flex-col justify-center">
+          <div className="text-[10px] font-bold text-ink dark:text-cream-soft">Database Indexing</div>
           <div className="grid grid-cols-2 gap-1 text-[9px]">
-            <div className="p-1.5 bg-orange-50 border border-orange-200 rounded text-orange-900 font-medium">B-Trees</div>
-            <div className="p-1.5 bg-orange-50 border border-orange-200 rounded text-orange-900 font-medium">Hash Tables</div>
-            <div className="p-1.5 bg-orange-50 border border-orange-200 rounded text-orange-900 font-medium">Scan Overhead</div>
-            <div className="p-1.5 bg-orange-50 border border-orange-200 rounded text-orange-900 font-medium">Write Cost</div>
+            <div className="p-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded text-ink dark:text-cream-soft font-medium">B-Trees</div>
+            <div className="p-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded text-ink dark:text-cream-soft font-medium">Hash Tables</div>
+            <div className="p-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded text-ink dark:text-cream-soft font-medium">Scan Overhead</div>
+            <div className="p-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded text-ink dark:text-cream-soft font-medium">Write Cost</div>
           </div>
         </div>
       ),
@@ -1887,19 +1906,19 @@ export function ComponentsView() {
       title: "15. Compare & Contrast",
       category: "Teaching Components",
       desc: "Side-by-side distinction matrix highlight key differences between A vs B.",
-      badgeBg: "bg-indigo-100/80 text-indigo-700",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-2 shadow-2xs flex flex-col justify-center">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-2 shadow-2xs flex flex-col justify-center">
           <div className="grid grid-cols-2 gap-1 text-center text-[9px] font-bold pb-1 border-b">
-            <span className="text-blue-600">Process</span>
-            <span className="text-purple-600">Thread</span>
+            <span className="text-teal-dark dark:text-accent-lime">Process</span>
+            <span className="text-teal-dark dark:text-accent-lime">Thread</span>
           </div>
-          <div className="grid grid-cols-2 gap-1 text-[8px] pt-1 text-slate-600">
+          <div className="grid grid-cols-2 gap-1 text-[8px] pt-1 text-grey-green dark:text-[#8FA29B]">
             <div>Isolated memory space</div>
             <div>Shared process memory</div>
             <div>Heavy creation cost</div>
@@ -1913,19 +1932,19 @@ export function ComponentsView() {
       title: "16. Analogy Card",
       category: "Teaching Components",
       desc: "Explains abstract technical ideas using relatable real-world mental models.",
-      badgeBg: "bg-rose-100/80 text-rose-600",
+      badgeBg: "bg-destructive/10 dark:bg-[#be747e]/10 text-destructive dark:text-[#be747e]",
       icon: (
-        <svg className="w-5 h-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-destructive dark:text-[#be747e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
-          <span className="text-[9px] font-bold text-rose-600 uppercase">Analogy</span>
-          <p className="text-[10px] text-slate-700 leading-tight">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <span className="text-[9px] font-bold text-destructive dark:text-[#be747e] uppercase">Analogy</span>
+          <p className="text-[10px] text-ink dark:text-cream-soft leading-tight">
             <strong>RAM vs Hard Drive:</strong> Like your office desk space vs a filing cabinet in the basement.
           </p>
-          <div className="text-[9px] text-slate-400 italic">Quick memory access vs permanent storage</div>
+          <div className="text-[9px] text-grey-green dark:text-[#8FA29B] italic">Quick memory access vs permanent storage</div>
         </div>
       ),
     },
@@ -1934,21 +1953,21 @@ export function ComponentsView() {
       title: "17. Common Mistake Card",
       category: "Teaching Components",
       desc: "Highlights frequent cognitive traps and provides explicit corrections.",
-      badgeBg: "bg-red-100/80 text-red-600",
+      badgeBg: "bg-destructive/10 dark:bg-[#be747e]/10 text-destructive dark:text-[#be747e]",
       icon: (
-        <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-destructive dark:text-[#be747e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-2.5 shadow-2xs space-y-1.5 flex flex-col justify-center">
-          <div className="text-[9px] font-bold text-red-600 flex items-center gap-1">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-2.5 shadow-2xs space-y-1.5 flex flex-col justify-center">
+          <div className="text-[9px] font-bold text-destructive dark:text-[#be747e] flex items-center gap-1">
             <span>⚠️ Common Misconception</span>
           </div>
-          <p className="text-[9px] text-red-900 bg-red-50 p-1.5 rounded border border-red-200 line-through">
+          <p className="text-[9px] text-ink dark:text-cream-soft bg-destructive/10 dark:bg-[#be747e]/10 p-1.5 rounded border border-destructive/30 dark:border-[#be747e]/30 line-through">
             "Overloading happens at runtime."
           </p>
-          <p className="text-[9px] text-emerald-900 bg-emerald-50 p-1.5 rounded border border-emerald-200">
+          <p className="text-[9px] text-emerald-900 bg-teal-dark/10 dark:bg-accent-lime/10 p-1.5 rounded border border-teal-dark/30 dark:border-accent-lime/30">
             ✓ Correction: Overloading is resolved at <strong>compile-time</strong>.
           </p>
         </div>
@@ -1959,19 +1978,19 @@ export function ComponentsView() {
       title: "18. Why It Works",
       category: "Teaching Components",
       desc: "Focuses on first-principles underlying mechanics rather than shallow rote memorization.",
-      badgeBg: "bg-violet-100/80 text-violet-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
-          <span className="text-[9px] font-bold text-violet-600 uppercase">First Principles</span>
-          <p className="text-[10px] text-slate-800 font-semibold leading-tight">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <span className="text-[9px] font-bold text-teal-dark dark:text-accent-lime uppercase">First Principles</span>
+          <p className="text-[10px] text-ink dark:text-cream-soft font-semibold leading-tight">
             Why Binary Search is O(log n)
           </p>
-          <p className="text-[9px] text-slate-500 leading-tight">
+          <p className="text-[9px] text-grey-green dark:text-[#8FA29B] leading-tight">
             Each step cuts the remaining dataset in half (n/2, n/4, n/8...), making division logarithmic.
           </p>
         </div>
@@ -1984,20 +2003,20 @@ export function ComponentsView() {
       title: "19. Recall Prompt",
       category: "Active-Recall / Retention",
       desc: "'Without looking, explain...' Active memory retrieval prompt before showing hints.",
-      badgeBg: "bg-emerald-100/80 text-emerald-700",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
-          <div className="text-[9px] font-bold text-emerald-700 uppercase">Closed-Book Recall</div>
-          <p className="text-[10px] text-slate-800 font-medium leading-tight">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-teal-dark dark:text-accent-lime uppercase">Closed-Book Recall</div>
+          <p className="text-[10px] text-ink dark:text-cream-soft font-medium leading-tight">
             Without looking at your notes, state the 3 ACID properties in database transactions.
           </p>
-          <button className="py-1 bg-emerald-500 text-white text-[9px] font-bold rounded-lg shadow-xs">Reveal Answer</button>
+          <button className="py-1 bg-teal-dark/10 dark:bg-accent-lime text-white text-[9px] font-bold rounded-lg shadow-xs">Reveal Answer</button>
         </div>
       ),
     },
@@ -2006,24 +2025,24 @@ export function ComponentsView() {
       title: "20. Spaced Review Card",
       category: "Active-Recall / Retention",
       desc: "Resurfaces previously learned concepts at optimal decay intervals (SM-2 decay algorithm).",
-      badgeBg: "bg-sky-100/80 text-sky-700",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-sky-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-[9px]">
-            <span className="font-bold text-sky-600">DUE FOR REVIEW</span>
-            <span className="text-slate-400 font-mono">Decay: 3 days</span>
+            <span className="font-bold text-teal-dark dark:text-accent-lime">DUE FOR REVIEW</span>
+            <span className="text-grey-green dark:text-[#8FA29B] font-mono">Decay: 3 days</span>
           </div>
-          <p className="text-[10px] text-slate-800 font-semibold">
+          <p className="text-[10px] text-ink dark:text-cream-soft font-semibold">
             SQL Group By vs Having clauses
           </p>
           <div className="flex items-center justify-between pt-1">
-            <span className="text-[9px] text-slate-400">Interval: 6 days</span>
-            <span className="px-2 py-0.5 bg-sky-50 text-sky-700 font-bold text-[9px] rounded">Review</span>
+            <span className="text-[9px] text-grey-green dark:text-[#8FA29B]">Interval: 6 days</span>
+            <span className="px-2 py-0.5 bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime font-bold text-[9px] rounded">Review</span>
           </div>
         </div>
       ),
@@ -2033,24 +2052,24 @@ export function ComponentsView() {
       title: "21. Rapid Recall",
       category: "Active-Recall / Retention",
       desc: "Sequence of short, timed questions to build instant recognition speed.",
-      badgeBg: "bg-amber-100/80 text-amber-700",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-2.5 shadow-2xs flex flex-col justify-between">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-2.5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-amber-600">⚡ SPEED ROUND</span>
-            <span className="text-[9px] font-mono font-bold text-amber-700">0:14s</span>
+            <span className="text-[9px] font-bold text-teal-dark dark:text-accent-lime">⚡ SPEED ROUND</span>
+            <span className="text-[9px] font-mono font-bold text-teal-dark dark:text-accent-lime">0:14s</span>
           </div>
-          <p className="text-[10px] text-slate-800 font-semibold">
+          <p className="text-[10px] text-ink dark:text-cream-soft font-semibold">
             What is the default value of a boolean in Java?
           </p>
           <div className="grid grid-cols-2 gap-1">
-            <div className="p-1 bg-amber-50 text-amber-800 text-[9px] font-bold rounded text-center">false</div>
-            <div className="p-1 bg-slate-50 text-slate-500 text-[9px] font-bold rounded text-center">true</div>
+            <div className="p-1 bg-teal-dark/10 dark:bg-accent-lime/10 text-ink dark:text-cream-soft text-[9px] font-bold rounded text-center">false</div>
+            <div className="p-1 bg-cream-light dark:bg-[#232D2D] text-grey-green dark:text-[#8FA29B] text-[9px] font-bold rounded text-center">true</div>
           </div>
         </div>
       ),
@@ -2060,20 +2079,20 @@ export function ComponentsView() {
       title: "22. Retrieval Grid",
       category: "Active-Recall / Retention",
       desc: "Multi-concept matrix prompting recall across connected course topics.",
-      badgeBg: "bg-fuchsia-100/80 text-fuchsia-700",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-fuchsia-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-2 shadow-2xs space-y-1">
-          <span className="text-[9px] font-bold text-fuchsia-600 block">Matrix Memory Check</span>
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-2 shadow-2xs space-y-1">
+          <span className="text-[9px] font-bold text-teal-dark dark:text-accent-lime block">Matrix Memory Check</span>
           <div className="grid grid-cols-2 gap-1 text-[8px]">
-            <div className="p-1.5 bg-fuchsia-50 border border-fuchsia-200 rounded font-medium text-fuchsia-900">Encapsulation</div>
-            <div className="p-1.5 bg-fuchsia-50 border border-fuchsia-200 rounded font-medium text-fuchsia-900">Inheritance</div>
-            <div className="p-1.5 bg-fuchsia-50 border border-fuchsia-200 rounded font-medium text-fuchsia-900">Polymorphism</div>
-            <div className="p-1.5 bg-fuchsia-50 border border-fuchsia-200 rounded font-medium text-fuchsia-900">Abstraction</div>
+            <div className="p-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded font-medium text-ink dark:text-cream-soft">Encapsulation</div>
+            <div className="p-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded font-medium text-ink dark:text-cream-soft">Inheritance</div>
+            <div className="p-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded font-medium text-ink dark:text-cream-soft">Polymorphism</div>
+            <div className="p-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded font-medium text-ink dark:text-cream-soft">Abstraction</div>
           </div>
         </div>
       ),
@@ -2083,21 +2102,21 @@ export function ComponentsView() {
       title: "23. Memory Check",
       category: "Active-Recall / Retention",
       desc: "'What do you remember from yesterday?' Daily recap to solidify long-term retention.",
-      badgeBg: "bg-blue-100/80 text-blue-700",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center gap-1 text-[9px] font-bold text-blue-600 uppercase">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center gap-1 text-[9px] font-bold text-teal-dark dark:text-accent-lime uppercase">
             <span>📅 YESTERDAY'S RECAP</span>
           </div>
-          <p className="text-[10px] text-slate-800 font-semibold leading-tight">
+          <p className="text-[10px] text-ink dark:text-cream-soft font-semibold leading-tight">
             Summarize 2 takeaways from yesterday's lesson on Object-Oriented Design.
           </p>
-          <div className="w-full py-1 bg-blue-50 border border-blue-200 rounded text-center text-[9px] font-bold text-blue-700">
+          <div className="w-full py-1 bg-teal-dark/10 dark:bg-accent-lime/10 border border-teal-dark/30 dark:border-accent-lime/30 rounded text-center text-[9px] font-bold text-teal-dark dark:text-accent-lime">
             Start Recap
           </div>
         </div>
@@ -2109,20 +2128,20 @@ export function ComponentsView() {
       title: "Flashcard Stack",
       category: "Interactive Cards",
       desc: "Quick, focused cards to help you recall and remember key concepts with spaced repetition.",
-      badgeBg: "bg-purple-100/70 text-purple-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <rect x="5" y="4" width="14" height="16" rx="2" />
           <path strokeLinecap="round" d="M9 9h6M9 13h4" />
         </svg>
       ),
       preview: (
-        <div className="relative w-full h-[140px] flex items-center justify-center p-2">
-          <div className="absolute w-[82%] h-[90px] bg-gradient-to-r from-purple-200/50 to-indigo-200/50 rounded-2xl border border-purple-200/40 translate-y-3 blur-[0.5px]" />
-          <div className="absolute w-[87%] h-[95px] bg-purple-100/60 rounded-2xl border border-purple-200/60 translate-y-1.5" />
-          <div className="relative z-10 w-[92%] h-[100px] bg-white rounded-2xl border border-slate-200/90 shadow-sm flex flex-col items-center justify-center p-4 text-center">
-            <p className="text-xs font-semibold text-slate-800 tracking-tight">What is photosynthesis?</p>
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600 transition cursor-pointer">
+        <div className="relative w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl flex items-center justify-center p-2">
+          <div className="absolute w-[82%] h-[90px] bg-gradient-to-r from-teal-dark/10 to-accent-lime/10 rounded-2xl border border-teal-dark/30 dark:border-accent-lime/30 translate-y-3 blur-[0.5px]" />
+          <div className="absolute w-[87%] h-[95px] bg-teal-dark/10 dark:bg-accent-lime/10 rounded-2xl border border-teal-dark/30 dark:border-accent-lime/30 translate-y-1.5" />
+          <div className="relative z-10 w-[92%] h-[100px] bg-white dark:bg-[#1C2323] rounded-2xl border border-mist-green dark:border-[#2A3838]/90 shadow-sm flex flex-col items-center justify-center p-4 text-center">
+            <p className="text-xs font-semibold text-ink dark:text-cream-soft tracking-tight">What is photosynthesis?</p>
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-grey-green dark:text-[#8FA29B] hover:text-grey-green dark:text-[#8FA29B] transition cursor-pointer">
               <span>Flip</span>
             </div>
           </div>
@@ -2134,32 +2153,663 @@ export function ComponentsView() {
       title: "Stats & Mastery Card",
       category: "Analytics & Progress",
       desc: "Track your progress, see your strengths and weaknesses, and stay motivated.",
-      badgeBg: "bg-emerald-100/80 text-emerald-600",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
       icon: (
-        <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       ),
       preview: (
-        <div className="w-full h-[140px] bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs flex items-center justify-around">
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex items-center justify-around">
           <div className="relative size-16 flex items-center justify-center">
             <svg className="size-full transform -rotate-90" viewBox="0 0 36 36">
-              <path className="text-slate-100 stroke-current" strokeWidth="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              <path className="text-emerald-500 stroke-current" strokeDasharray="72, 100" strokeWidth="4" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path className="text-mist-green dark:text-[#2A3838] stroke-current" strokeWidth="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path className="text-teal-dark dark:text-accent-lime stroke-current" strokeDasharray="72, 100" strokeWidth="4" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
             </svg>
             <div className="absolute flex flex-col items-center leading-none">
-              <span className="text-xs font-bold text-slate-800">72%</span>
+              <span className="text-xs font-bold text-ink dark:text-cream-soft">72%</span>
             </div>
           </div>
           <div className="space-y-1 text-[9px]">
             <div className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-emerald-500" />
-              <span className="font-semibold text-slate-700">Strong (4)</span>
+              <span className="size-2 rounded-full bg-teal-dark dark:bg-accent-lime" />
+              <span className="font-semibold text-ink dark:text-cream-soft">Strong (4)</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-blue-500" />
-              <span className="font-semibold text-slate-700">Developing (3)</span>
+              <span className="size-2 rounded-full bg-mist-green dark:bg-[#2A3838]" />
+              <span className="font-semibold text-ink dark:text-cream-soft">Developing (3)</span>
             </div>
+          </div>
+        </div>
+      ),
+    },
+
+    // --- PROGRESS / GUIDANCE ---
+    {
+      id: "learning_path",
+      title: "24. Learning Path",
+      category: "Progress / Guidance",
+      desc: "Visual topic progression showing completed, current, and upcoming concepts.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-center">
+          <div className="text-[9px] font-bold text-teal-dark dark:text-accent-lime uppercase mb-2">Data Structures</div>
+          <div className="space-y-1.5 pl-3 border-l-2 border-teal-dark/30 dark:border-accent-lime/30">
+            <div className="flex items-center gap-2">
+              <div className="size-2.5 rounded-full bg-teal-dark dark:bg-accent-lime -ml-[11px] border-2 border-white dark:border-[#1C2323]" />
+              <span className="text-[9px] text-grey-green dark:text-[#8FA29B] line-through">Arrays ✓</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="size-2.5 rounded-full bg-teal-dark dark:bg-accent-lime -ml-[11px] border-2 border-white dark:border-[#1C2323]" />
+              <span className="text-[9px] text-grey-green dark:text-[#8FA29B] line-through">Linked Lists ✓</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="size-2.5 rounded-full bg-teal-dark dark:bg-accent-lime -ml-[11px] border-2 border-white dark:border-[#1C2323] ring-2 ring-teal-dark/30 dark:ring-accent-lime/30" />
+              <span className="text-[9px] font-bold text-ink dark:text-cream-soft">Binary Trees ←</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="size-2.5 rounded-full bg-cream-light dark:bg-[#232D2D] -ml-[11px] border-2 border-white dark:border-[#1C2323]" />
+              <span className="text-[9px] text-grey-green dark:text-[#8FA29B] opacity-50">Graphs</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "milestone_card",
+      title: "25. Milestone Card",
+      category: "Progress / Guidance",
+      desc: "Meaningful achievement based on demonstrated evidence, not points or streaks.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-center space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="size-8 rounded-full bg-teal-dark/10 dark:bg-accent-lime/10 flex items-center justify-center text-teal-dark dark:text-accent-lime text-sm">🏆</div>
+            <div>
+              <div className="text-[10px] font-bold text-ink dark:text-cream-soft">Mastery Achieved</div>
+              <div className="text-[8px] text-grey-green dark:text-[#8FA29B]">Binary Search Trees</div>
+            </div>
+          </div>
+          <div className="text-[9px] text-grey-green dark:text-[#8FA29B] leading-snug">
+            Scored 92% across 3 quizzes with consistent recall after 7-day interval.
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="px-1.5 py-0.5 bg-teal-dark/10 dark:bg-accent-lime/10 rounded text-[7px] font-bold text-teal-dark dark:text-accent-lime">Evidence-based</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "mastery_card",
+      title: "26. Mastery Card",
+      category: "Progress / Guidance",
+      desc: "Shows concept strength with concrete evidence and decay timeline.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-bold text-ink dark:text-cream-soft">Polymorphism</span>
+            <span className="text-[9px] font-bold text-teal-dark dark:text-accent-lime">88%</span>
+          </div>
+          <div className="w-full h-1.5 bg-cream-light dark:bg-[#232D2D] rounded-full overflow-hidden">
+            <div className="h-full bg-teal-dark dark:bg-accent-lime rounded-full" style={{ width: "88%" }} />
+          </div>
+          <div className="flex items-center justify-between text-[8px] text-grey-green dark:text-[#8FA29B]">
+            <span>3 quizzes passed</span>
+            <span>Decay in 5 days</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "readiness_card",
+      title: "27. Readiness Card",
+      category: "Progress / Guidance",
+      desc: "Shows exam or topic readiness percentage based on coverage and mastery.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-center space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-bold text-ink dark:text-cream-soft">CSC 201 Final Exam</span>
+            <span className="text-[9px] font-mono font-bold text-teal-dark dark:text-accent-lime">74%</span>
+          </div>
+          <div className="w-full h-2 bg-cream-light dark:bg-[#232D2D] rounded-full overflow-hidden">
+            <div className="h-full bg-teal-dark dark:bg-accent-lime rounded-full" style={{ width: "74%" }} />
+          </div>
+          <div className="grid grid-cols-3 gap-1 text-[8px]">
+            <div className="text-center"><span className="font-bold text-teal-dark dark:text-accent-lime">18</span><br/><span className="text-grey-green dark:text-[#8FA29B]">Covered</span></div>
+            <div className="text-center"><span className="font-bold text-ink dark:text-cream-soft">4</span><br/><span className="text-grey-green dark:text-[#8FA29B]">Partial</span></div>
+            <div className="text-center"><span className="font-bold text-destructive dark:text-[#be747e]">2</span><br/><span className="text-grey-green dark:text-[#8FA29B]">Missing</span></div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "weak_area",
+      title: "28. Weak Area Card",
+      category: "Progress / Guidance",
+      desc: "Surfaces concepts that need focused attention based on performance data.",
+      badgeBg: "bg-destructive/10 dark:bg-[#be747e]/10 text-destructive dark:text-[#be747e]",
+      icon: (
+        <svg className="w-5 h-5 text-destructive dark:text-[#be747e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-destructive dark:text-[#be747e] uppercase">Needs Attention</div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between px-2 py-1 bg-destructive/10 dark:bg-[#be747e]/10 rounded-lg">
+              <span className="text-[9px] font-medium text-ink dark:text-cream-soft">Graph Traversal</span>
+              <span className="text-[8px] font-bold text-destructive dark:text-[#be747e]">38%</span>
+            </div>
+            <div className="flex items-center justify-between px-2 py-1 bg-destructive/10 dark:bg-[#be747e]/10 rounded-lg">
+              <span className="text-[9px] font-medium text-ink dark:text-cream-soft">Hash Collisions</span>
+              <span className="text-[8px] font-bold text-destructive dark:text-[#be747e]">42%</span>
+            </div>
+            <div className="flex items-center justify-between px-2 py-1 bg-destructive/10 dark:bg-[#be747e]/10 rounded-lg">
+              <span className="text-[9px] font-medium text-ink dark:text-cream-soft">B-Tree Insertion</span>
+              <span className="text-[8px] font-bold text-destructive dark:text-[#be747e]">45%</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "next_action",
+      title: "29. Next Action Card",
+      category: "Progress / Guidance",
+      desc: "Recommends the single best next step based on current learning state.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-teal-dark dark:text-accent-lime uppercase">Best Next Step</div>
+          <div>
+            <p className="text-[10px] font-semibold text-ink dark:text-cream-soft leading-snug">
+              Practice applying Kirchhoff's laws to solve a 3-loop circuit problem.
+            </p>
+            <p className="text-[8px] text-grey-green dark:text-[#8FA29B] mt-1">Based on: Weak in circuit analysis (52% mastery)</p>
+          </div>
+          <button className="w-full py-1.5 bg-teal-dark dark:bg-accent-lime text-white dark:text-ink text-[9px] font-bold rounded-lg">Start Practice</button>
+        </div>
+      ),
+    },
+
+    // --- SESSION COMPONENTS ---
+    {
+      id: "session_plan",
+      title: "30. Session Plan",
+      category: "Session Components",
+      desc: "Structured session outline showing review, learning, practice, and assessment.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-teal-dark dark:text-accent-lime uppercase">Today's Session</div>
+          <div className="space-y-1 font-mono text-[8px]">
+            <div className="flex items-center gap-1.5 text-ink dark:text-cream-soft">
+              <span className="text-grey-green dark:text-[#8FA29B]">├──</span>
+              <span className="text-teal-dark dark:text-accent-lime">✓</span> Review: Linked Lists, Stacks
+            </div>
+            <div className="flex items-center gap-1.5 text-ink dark:text-cream-soft">
+              <span className="text-grey-green dark:text-[#8FA29B]">├──</span>
+              <span className="text-teal-dark dark:text-accent-lime">→</span> Learn: Binary Trees
+            </div>
+            <div className="flex items-center gap-1.5 text-ink dark:text-cream-soft">
+              <span className="text-grey-green dark:text-[#8FA29B]">├──</span>
+              <span className="text-grey-green dark:text-[#8FA29B]">○</span> Practice: 5 problems
+            </div>
+            <div className="flex items-center gap-1.5 text-ink dark:text-cream-soft">
+              <span className="text-grey-green dark:text-[#8FA29B]">└──</span>
+              <span className="text-grey-green dark:text-[#8FA29B]">○</span> 5-question check
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "session_progress",
+      title: "31. Session Progress",
+      category: "Session Components",
+      desc: "Tracks actual learning progress during a session — not gamified points.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Session: 32 min</div>
+          <div className="space-y-2">
+            <div>
+              <div className="flex items-center justify-between text-[8px] mb-0.5">
+                <span className="text-grey-green dark:text-[#8FA29B]">Concepts Covered</span>
+                <span className="font-bold text-ink dark:text-cream-soft">3 / 4</span>
+              </div>
+              <div className="w-full h-1 bg-cream-light dark:bg-[#232D2D] rounded-full overflow-hidden">
+                <div className="h-full bg-teal-dark dark:bg-accent-lime rounded-full" style={{ width: "75%" }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between text-[8px] mb-0.5">
+                <span className="text-grey-green dark:text-[#8FA29B]">Quiz Accuracy</span>
+                <span className="font-bold text-teal-dark dark:text-accent-lime">80%</span>
+              </div>
+              <div className="w-full h-1 bg-cream-light dark:bg-[#232D2D] rounded-full overflow-hidden">
+                <div className="h-full bg-teal-dark dark:bg-accent-lime rounded-full" style={{ width: "80%" }} />
+              </div>
+            </div>
+          </div>
+          <div className="text-[8px] text-grey-green dark:text-[#8FA29B]">2 concepts need review before next session</div>
+        </div>
+      ),
+    },
+    {
+      id: "session_summary",
+      title: "32. Session Summary",
+      category: "Session Components",
+      desc: "What was learned, what remains weak, and what happens next.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Session Summary</div>
+          <div className="space-y-1">
+            <div className="text-[8px]"><span className="font-bold text-teal-dark dark:text-accent-lime">Learned:</span> <span className="text-grey-green dark:text-[#8FA29B]">Binary Tree traversal (inorder, preorder)</span></div>
+            <div className="text-[8px]"><span className="font-bold text-destructive dark:text-[#be747e]">Weak:</span> <span className="text-grey-green dark:text-[#8FA29B]">Postorder recursion still shaky</span></div>
+            <div className="text-[8px]"><span className="font-bold text-ink dark:text-cream-soft">Next:</span> <span className="text-grey-green dark:text-[#8FA29B]">Practice 3 postorder problems</span></div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "resume_learning",
+      title: "33. Resume Learning",
+      category: "Session Components",
+      desc: "Continue where you stopped — picks up at the exact concept and step.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Resume Where You Stopped</div>
+          <div className="p-2 bg-cream-light dark:bg-[#232D2D] rounded-lg space-y-1">
+            <div className="text-[9px] font-semibold text-ink dark:text-cream-soft">Binary Trees — Postorder Traversal</div>
+            <div className="text-[8px] text-grey-green dark:text-[#8FA29B]">Step 2 of 4: Writing recursive case</div>
+            <div className="w-full h-1 bg-mist-green dark:bg-[#2A3838] rounded-full overflow-hidden">
+              <div className="h-full bg-teal-dark dark:bg-accent-lime rounded-full" style={{ width: "50%" }} />
+            </div>
+          </div>
+          <button className="w-full py-1.5 bg-teal-dark dark:bg-accent-lime text-white dark:text-ink text-[9px] font-bold rounded-lg">Continue</button>
+        </div>
+      ),
+    },
+
+    // --- EXAM COMPONENTS ---
+    {
+      id: "exam_countdown",
+      title: "34. Exam Countdown",
+      category: "Exam Components",
+      desc: "Shows days remaining with readiness status and recommended focus areas.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">CSC 201 Final</div>
+          <div className="text-center">
+            <div className="text-2xl font-extrabold text-teal-dark dark:text-accent-lime font-mono">12</div>
+            <div className="text-[8px] text-grey-green dark:text-[#8FA29B]">days remaining</div>
+          </div>
+          <div className="text-[8px] text-grey-green dark:text-[#8FA29B] text-center">Focus: Graph algorithms (38% mastery)</div>
+        </div>
+      ),
+    },
+    {
+      id: "exam_readiness",
+      title: "35. Exam Readiness",
+      category: "Exam Components",
+      desc: "Overall readiness percentage with topic breakdown and risk areas.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-bold text-ink dark:text-cream-soft">Exam Readiness</span>
+            <span className="text-lg font-extrabold text-teal-dark dark:text-accent-lime font-mono">68%</span>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-[8px]">
+              <span className="size-1.5 rounded-full bg-teal-dark dark:bg-accent-lime" />
+              <span className="text-grey-green dark:text-[#8FA29B]">Strong: OOP, Memory Mgmt</span>
+            </div>
+            <div className="flex items-center gap-2 text-[8px]">
+              <span className="size-1.5 rounded-full bg-mist-green dark:bg-[#2A3838]" />
+              <span className="text-grey-green dark:text-[#8FA29B]">Partial: Graphs, Trees</span>
+            </div>
+            <div className="flex items-center gap-2 text-[8px]">
+              <span className="size-1.5 rounded-full bg-destructive dark:bg-[#be747e]" />
+              <span className="text-grey-green dark:text-[#8FA29B]">Weak: B-Trees, Hashing</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "topic_coverage",
+      title: "36. Topic Coverage",
+      category: "Exam Components",
+      desc: "Shows which syllabus topics are covered, partially covered, or missing.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs space-y-1.5">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Syllabus Coverage</div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-cream-light dark:bg-[#232D2D] rounded-full overflow-hidden">
+                <div className="h-full bg-teal-dark dark:bg-accent-lime rounded-full" style={{ width: "85%" }} />
+              </div>
+              <span className="text-[8px] font-bold text-teal-dark dark:text-accent-lime w-8 text-right">85%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-cream-light dark:bg-[#232D2D] rounded-full overflow-hidden">
+                <div className="h-full bg-mist-green dark:bg-[#2A3838] rounded-full" style={{ width: "60%" }} />
+              </div>
+              <span className="text-[8px] font-bold text-grey-green dark:text-[#8FA29B] w-8 text-right">60%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-cream-light dark:bg-[#232D2D] rounded-full overflow-hidden">
+                <div className="h-full bg-destructive dark:bg-[#be747e] rounded-full" style={{ width: "25%" }} />
+              </div>
+              <span className="text-[8px] font-bold text-destructive dark:text-[#be747e] w-8 text-right">25%</span>
+            </div>
+          </div>
+          <div className="text-[7px] text-grey-green dark:text-[#8FA29B]">18 covered · 4 partial · 2 missing</div>
+        </div>
+      ),
+    },
+    {
+      id: "past_question",
+      title: "37. Past Question Analysis",
+      category: "Exam Components",
+      desc: "Analyzes past exam patterns to identify frequently tested topics.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Past Questions (5 years)</div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[8px]">
+              <span className="text-grey-green dark:text-[#8FA29B]">Trees & Graphs</span>
+              <span className="font-bold text-ink dark:text-cream-soft">Every year</span>
+            </div>
+            <div className="flex items-center justify-between text-[8px]">
+              <span className="text-grey-green dark:text-[#8FA29B]">Memory Management</span>
+              <span className="font-bold text-ink dark:text-cream-soft">4/5 years</span>
+            </div>
+            <div className="flex items-center justify-between text-[8px]">
+              <span className="text-grey-green dark:text-[#8FA29B]">B-Trees</span>
+              <span className="font-bold text-ink dark:text-cream-soft">3/5 years</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "predicted_practice",
+      title: "38. Predicted Practice",
+      category: "Exam Components",
+      desc: "Generated practice questions based on patterns — clearly labeled as AI-generated.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-bold text-ink dark:text-cream-soft">Predicted Questions</span>
+            <span className="px-1.5 py-0.5 bg-teal-dark/10 dark:bg-accent-lime/10 rounded text-[7px] font-bold text-teal-dark dark:text-accent-lime">AI-Generated</span>
+          </div>
+          <div className="space-y-1">
+            <div className="px-2 py-1 bg-cream-light dark:bg-[#232D2D] rounded text-[8px] text-ink dark:text-cream-soft">
+              Explain BFS vs DFS with a real-world use case.
+            </div>
+            <div className="px-2 py-1 bg-cream-light dark:bg-[#232D2D] rounded text-[8px] text-ink dark:text-cream-soft">
+              Write pseudocode for inserting into a BST.
+            </div>
+          </div>
+          <div className="text-[7px] text-grey-green dark:text-[#8FA29B] italic">Based on 5-year exam pattern analysis</div>
+        </div>
+      ),
+    },
+    {
+      id: "exam_simulation",
+      title: "39. Exam Simulation",
+      category: "Exam Components",
+      desc: "Timed realistic practice exam with conditions matching the actual test.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-bold text-ink dark:text-cream-soft">Exam Simulation</span>
+            <span className="text-[9px] font-mono font-bold text-teal-dark dark:text-accent-lime">1:45:00</span>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[8px]">
+              <span className="text-grey-green dark:text-[#8FA29B]">Questions</span>
+              <span className="font-bold text-ink dark:text-cream-soft">30 of 40</span>
+            </div>
+            <div className="w-full h-1 bg-cream-light dark:bg-[#232D2D] rounded-full overflow-hidden">
+              <div className="h-full bg-teal-dark dark:bg-accent-lime rounded-full" style={{ width: "75%" }} />
+            </div>
+          </div>
+          <div className="text-[8px] text-grey-green dark:text-[#8FA29B]">No hints · No lookup · Timed</div>
+        </div>
+      ),
+    },
+    {
+      id: "post_exam_reflection",
+      title: "40. Post-Exam Reflection",
+      category: "Exam Components",
+      desc: "Guided reflection on what felt difficult and where gaps remain.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Post-Exam Reflection</div>
+          <div className="space-y-1.5">
+            <div className="px-2 py-1.5 bg-cream-light dark:bg-[#232D2D] rounded-lg text-[8px] text-grey-green dark:text-[#8FA29B] italic">
+              "Graph traversal questions felt unclear..."
+            </div>
+            <div className="px-2 py-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 rounded-lg text-[8px] text-ink dark:text-cream-soft font-medium">
+              → Focus area: BFS/DFS implementation
+            </div>
+          </div>
+        </div>
+      ),
+    },
+
+    // --- RESOURCE COMPONENTS ---
+    {
+      id: "resource_card",
+      title: "41. Resource Card",
+      category: "Resource Components",
+      desc: "Relevant learning material surfaced during teaching — textbook, video, or article.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex gap-2.5">
+          <div className="w-10 h-14 bg-teal-dark/10 dark:bg-accent-lime/10 rounded-lg flex items-center justify-center text-teal-dark dark:text-accent-lime text-lg shrink-0">📘</div>
+          <div className="flex-1 space-y-1">
+            <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Introduction to Algorithms</div>
+            <div className="text-[8px] text-grey-green dark:text-[#8FA29B]">CLRS · Chapter 12: BSTs</div>
+            <div className="text-[7px] text-teal-dark dark:text-accent-lime font-semibold">Relevant to: Binary Trees</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "source_card",
+      title: "42. Source / Provenance Card",
+      category: "Resource Components",
+      desc: "Shows where Summa's teaching content originates — uploaded material or web source.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Source</div>
+          <div className="p-2 bg-cream-light dark:bg-[#232D2D] rounded-lg space-y-1">
+            <div className="text-[8px] font-semibold text-ink dark:text-cream-soft">CSC 201 Lecture Notes — Week 8</div>
+            <div className="text-[7px] text-grey-green dark:text-[#8FA29B]">Uploaded by: Prof. Adebayo</div>
+            <div className="text-[7px] text-teal-dark dark:text-accent-lime">Page 14-16 · Binary Tree Properties</div>
+          </div>
+          <div className="text-[7px] text-grey-green dark:text-[#8FA29B] italic">Verified from uploaded material</div>
+        </div>
+      ),
+    },
+    {
+      id: "recommended_resource",
+      title: "43. Recommended Resource",
+      category: "Resource Components",
+      desc: "Suggested external resource based on current topic and learning gaps.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] font-bold text-teal-dark dark:text-accent-lime">★ Recommended</span>
+          </div>
+          <div className="space-y-1">
+            <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Visualgo — BST Operations</div>
+            <div className="text-[8px] text-grey-green dark:text-[#8FA29B]">Interactive visualization of tree algorithms</div>
+          </div>
+          <div className="text-[7px] text-teal-dark dark:text-accent-lime font-semibold">Why: You scored 45% on BST insertion</div>
+        </div>
+      ),
+    },
+    {
+      id: "resource_section",
+      title: "44. Resource Section",
+      category: "Resource Components",
+      desc: "Grouped collection of relevant materials surfaced during a topic or session.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Resources for Binary Trees</div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-cream-light dark:bg-[#232D2D] rounded text-[8px] text-ink dark:text-cream-soft">
+              <span>📘</span> CLRS Ch. 12
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-cream-light dark:bg-[#232D2D] rounded text-[8px] text-ink dark:text-cream-soft">
+              <span>🎥</span> MIT OCW Lecture 5
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-cream-light dark:bg-[#232D2D] rounded text-[8px] text-ink dark:text-cream-soft">
+              <span>📝</span> Your lecture notes (p.14-16)
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "citation_drawer",
+      title: "45. Citation / Source Drawer",
+      category: "Resource Components",
+      desc: "Expandable drawer showing exact sources when Summa teaches from uploaded materials.",
+      badgeBg: "bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime",
+      icon: (
+        <svg className="w-5 h-5 text-teal-dark dark:text-accent-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      preview: (
+        <div className="w-full h-[140px] bg-white dark:bg-[#1C2323] rounded-xl border border-mist-green dark:border-[#2A3838]/80 p-3 shadow-2xs flex flex-col justify-between">
+          <div className="text-[9px] font-bold text-ink dark:text-cream-soft">Citation Source</div>
+          <div className="p-2 bg-cream-light dark:bg-[#232D2D] rounded-lg space-y-1">
+            <div className="text-[8px] font-semibold text-ink dark:text-cream-soft">"A BST is a binary tree where..."</div>
+            <div className="text-[7px] text-grey-green dark:text-[#8FA29B]">— CSC 201 Notes, p.14, Prof. Adebayo</div>
+            <div className="text-[7px] text-teal-dark dark:text-accent-lime">View full source →</div>
           </div>
         </div>
       ),
@@ -2174,6 +2824,10 @@ export function ComponentsView() {
     "Core Learning",
     "Teaching Components",
     "Active-Recall / Retention",
+    "Progress / Guidance",
+    "Session Components",
+    "Exam Components",
+    "Resource Components",
     "Interactive Cards",
     "Analytics & Progress",
   ];
@@ -2190,18 +2844,18 @@ export function ComponentsView() {
   return (
     <div className="space-y-8">
       {/* Title Header & Search Bar */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-mist-green dark:border-[#2A3838] pb-6">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-mono text-[10px] font-bold tracking-wider uppercase">
+            <span className="px-2.5 py-0.5 rounded-full bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime  font-mono text-[10px] font-bold tracking-wider uppercase">
               Summa AI Visual System
             </span>
-            <span className="text-xs text-slate-400">• {components.length} Instruments</span>
+            <span className="text-xs text-grey-green dark:text-[#8FA29B]">• {components.length} Instruments</span>
           </div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-3xl font-extrabold text-ink dark:text-cream-soft tracking-tight">
             Learning Component Library
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+          <p className="text-sm text-grey-green dark:text-[#8FA29B] max-w-2xl leading-relaxed">
             Cohesive, soft-premium pedagogical instruments deployed dynamically by Summa's Learning Orchestrator.
           </p>
         </div>
@@ -2213,9 +2867,9 @@ export function ComponentsView() {
             placeholder="Search learning components..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs transition-all"
+            className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl text-xs text-ink dark:text-cream-soft placeholder:text-grey-green dark:text-[#8FA29B] focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime shadow-2xs transition-all"
           />
-          <svg className="absolute left-3 top-3 size-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="absolute left-3 top-3 size-4 text-grey-green dark:text-[#8FA29B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
@@ -2229,8 +2883,8 @@ export function ComponentsView() {
             onClick={() => setActiveCategory(cat)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
               activeCategory === cat
-                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
-                : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
+                ? "bg-ink dark:bg-accent-lime text-cream-soft dark:text-ink shadow-xs"
+                : "bg-cream-light text-grey-green dark:text-[#8FA29B] hover:bg-mist-green/50 dark:hover:bg-[#2A3838]"
             }`}
           >
             {cat}
@@ -2244,7 +2898,7 @@ export function ComponentsView() {
           <div
             key={item.id}
             onClick={() => setSelectedComponent(item)}
-            className="group relative bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between space-y-4 cursor-pointer overflow-hidden"
+            className="group relative bg-white dark:bg-[#1C2323] rounded-3xl border border-mist-green dark:border-[#2A3838] p-5 shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between space-y-4 cursor-pointer overflow-hidden"
           >
             <div className="space-y-3.5 relative z-10">
               {/* Header: Badge Icon & Category */}
@@ -2252,17 +2906,17 @@ export function ComponentsView() {
                 <div className={`size-11 rounded-2xl ${item.badgeBg} flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105`}>
                   {item.icon}
                 </div>
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
+                <span className="text-[10px] font-semibold text-grey-green dark:text-[#8FA29B] uppercase tracking-wider font-mono">
                   {item.category}
                 </span>
               </div>
 
               {/* Title & Description */}
               <div className="space-y-1">
-                <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                <h3 className="font-bold text-base text-ink dark:text-cream-soft group-hover:text-teal-dark group-hover:dark:text-accent-lime  transition-colors flex items-center gap-1.5">
                   <span>{item.title}</span>
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                <p className="text-[11px] text-grey-green dark:text-[#8FA29B] leading-relaxed line-clamp-2">
                   {item.desc}
                 </p>
               </div>
@@ -2274,9 +2928,9 @@ export function ComponentsView() {
             </div>
 
             {/* Footer Action */}
-            <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors relative z-10">
+            <div className="pt-2 border-t border-mist-green dark:border-[#2A3838]/50 dark:border-[#2A3838] flex items-center justify-between text-xs font-semibold text-grey-green dark:text-[#8FA29B] group-hover:text-teal-dark group-hover:dark:text-accent-lime transition-colors relative z-10">
               <span>View Playground</span>
-              <div className="size-7 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shadow-2xs">
+              <div className="size-7 rounded-full bg-cream-light dark:bg-[#232D2D] dark:bg-[#2A3838] group-hover:bg-teal-dark group-hover:bg-teal-dark group-hover:dark:bg-accent-lime group-hover:text-white flex items-center justify-center transition-all shadow-2xs">
                 <ArrowRight size={13} />
               </div>
             </div>
@@ -2286,29 +2940,29 @@ export function ComponentsView() {
 
       {/* Component Detail Playground Modal */}
       {selectedComponent && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 space-y-6 p-6 md:p-8">
+        <div className="fixed inset-0 z-50 bg-ink/60 dark:bg-[#121616]/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 space-y-6 p-6 md:p-8">
             {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-5">
+            <div className="flex items-start justify-between border-b border-mist-green dark:border-[#2A3838] pb-5">
               <div className="flex items-center gap-4">
                 <div className={`size-14 rounded-2xl ${selectedComponent.badgeBg} flex items-center justify-center shadow-xs`}>
                   {selectedComponent.icon}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-semibold text-slate-400 uppercase">
+                    <span className="text-xs font-mono font-semibold text-grey-green dark:text-[#8FA29B] uppercase">
                       {selectedComponent.category}
                     </span>
-                    <span className="text-xs text-slate-300">• Instrument Spec</span>
+                    <span className="text-xs text-grey-green dark:text-[#8FA29B]">• Instrument Spec</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-2xl font-bold text-ink dark:text-cream-soft">
                     {selectedComponent.title}
                   </h3>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedComponent(null)}
-                className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="p-2 rounded-full text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft hover:bg-mist-green/50 dark:hover:bg-[#2A3838] transition cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -2316,27 +2970,27 @@ export function ComponentsView() {
 
             {/* Description & Overview */}
             <div className="space-y-2">
-              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">Overview</div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">Overview</div>
+              <p className="text-xs text-grey-green dark:text-[#8FA29B] leading-relaxed">
                 {selectedComponent.desc}
               </p>
             </div>
 
             {/* Interactive Component Live Preview */}
             <div className="space-y-3">
-              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
+              <div className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">
                 Interactive Preview & Playground
               </div>
-              <div className="p-4 bg-slate-100/70 dark:bg-slate-950/80 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+              <div className="p-4 bg-cream-light dark:bg-[#232D2D] rounded-2xl border border-mist-green dark:border-[#2A3838]">
                 {selectedComponent.preview}
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+            <div className="pt-4 border-t border-mist-green dark:border-[#2A3838] flex justify-end gap-3">
               <button
                 onClick={() => setSelectedComponent(null)}
-                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="px-5 py-2.5 rounded-xl border border-mist-green dark:border-[#2A3838] font-semibold text-xs text-ink dark:text-cream-soft hover:bg-cream-light dark:hover:bg-[#232D2D] transition cursor-pointer"
               >
                 Close Spec
               </button>
@@ -2345,7 +2999,7 @@ export function ComponentsView() {
                   toast.success(`Instrument ${selectedComponent.title} deployed to session preview`);
                   setSelectedComponent(null);
                 }}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-500 transition shadow-xs cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition shadow-xs cursor-pointer"
               >
                 Simulate Deployment
               </button>
@@ -2375,10 +3029,10 @@ export function AuditLogsView() {
         <MetricCard title="Failed Actions" value="4" change="0" strokeColor="#3B82F6" />
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 space-y-4 shadow-2xs">
-        <h3 className="font-bold text-sm text-slate-900">System Activity & Audit Log Trail</h3>
+      <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-6 space-y-4 shadow-2xs">
+        <h3 className="font-bold text-sm text-ink dark:text-cream-soft">System Activity & Audit Log Trail</h3>
         <table className="w-full text-left text-xs">
-          <thead className="bg-[#F8FAFC] text-slate-400 border-b border-[#E2E8F0] uppercase text-[10px] font-semibold">
+          <thead className="bg-cream-light dark:bg-[#121616] text-grey-green dark:text-[#8FA29B] border-b border-mist-green dark:border-[#2A3838] uppercase text-[10px] font-semibold">
             <tr>
               <th className="p-4">TIMESTAMP</th>
               <th className="p-4">ACTOR</th>
@@ -2390,12 +3044,12 @@ export function AuditLogsView() {
           </thead>
           <tbody className="divide-y divide-[#E2E8F0] font-mono">
             {logs.map((l, idx) => (
-              <tr key={idx} className="hover:bg-slate-50 transition">
-                <td className="p-4 text-slate-500 text-[11px]">{l.time}</td>
-                <td className="p-4 font-bold text-slate-900">{l.actor}</td>
-                <td className="p-4 font-bold text-[#6366F1]">{l.action}</td>
-                <td className="p-4 text-slate-700">{l.target}</td>
-                <td className="p-4 font-sans text-slate-600">{l.details}</td>
+              <tr key={idx} className="hover:bg-cream-light dark:bg-[#232D2D] transition">
+                <td className="p-4 text-grey-green dark:text-[#8FA29B] text-[11px]">{l.time}</td>
+                <td className="p-4 font-bold text-ink dark:text-cream-soft">{l.actor}</td>
+                <td className="p-4 font-bold text-teal-dark dark:text-accent-lime">{l.action}</td>
+                <td className="p-4 text-ink dark:text-cream-soft">{l.target}</td>
+                <td className="p-4 font-sans text-grey-green dark:text-[#8FA29B]">{l.details}</td>
                 <td className="p-4 font-sans"><StatusBadge status={l.status} /></td>
               </tr>
             ))}
@@ -2418,34 +3072,34 @@ export function NotificationsDrawer({ isOpen, onClose }: { isOpen: boolean; onCl
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-2xs flex justify-end">
+    <div className="fixed inset-0 z-50 bg-ink dark:bg-[#121616]/80 backdrop-blur-sm flex justify-end">
       <div className="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200">
         <div>
-          <div className="p-5 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
-            <div className="flex items-center gap-2 font-bold text-sm text-slate-900">
-              <Bell size={16} className="text-[#6366F1]" />
+          <div className="p-5 border-b border-mist-green dark:border-[#2A3838] flex items-center justify-between bg-cream-light dark:bg-[#121616]">
+            <div className="flex items-center gap-2 font-bold text-sm text-ink dark:text-cream-soft">
+              <Bell size={16} className="text-teal-dark dark:text-accent-lime" />
               <span>Admin Notifications</span>
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700">
+            <button onClick={onClose} className="p-1.5 rounded-lg text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft">
               <X size={18} />
             </button>
           </div>
 
           <div className="p-4 space-y-3">
             {notifications.map((n, idx) => (
-              <div key={idx} className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-xl space-y-1 text-xs">
+              <div key={idx} className="p-3 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl space-y-1 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-900">{n.title}</span>
-                  <span className="text-[10px] text-slate-400 font-mono">{n.time}</span>
+                  <span className="font-bold text-ink dark:text-cream-soft">{n.title}</span>
+                  <span className="text-[10px] text-grey-green dark:text-[#8FA29B] font-mono">{n.time}</span>
                 </div>
-                <p className="text-slate-600 text-[11px] leading-relaxed">{n.desc}</p>
+                <p className="text-grey-green dark:text-[#8FA29B] text-[11px] leading-relaxed">{n.desc}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="p-4 border-t border-[#E2E8F0] bg-[#F8FAFC]">
-          <button onClick={() => { toast.success("Marked all as read"); onClose(); }} className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+        <div className="p-4 border-t border-mist-green dark:border-[#2A3838] bg-cream-light dark:bg-[#121616]">
+          <button onClick={() => { toast.success("Marked all as read"); onClose(); }} className="w-full py-2 rounded-xl bg-cream-light dark:bg-[#232D2D] hover:bg-mist-green/50 dark:hover:bg-[#2A3838] text-ink dark:text-cream-soft font-semibold text-xs transition">
             Mark All as Read
           </button>
         </div>
