@@ -4,6 +4,7 @@ using Google AI REST/SDK endpoint with fallback and multi-turn context support.
 
 import json
 import logging
+import re
 from typing import Any, AsyncGenerator, Dict, List, Optional
 import httpx
 from app.config import settings
