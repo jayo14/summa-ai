@@ -61,13 +61,13 @@ import {
   MessagesView,
   FeedbackView,
   IntegrationsView,
-  ComponentsView,
   AdminSettingsView,
   AuditLogsView,
-  NotificationsDrawer,
-  StatusBadge,
-  MetricCard,
-} from "@/components/AdminViews";
+} from "@/pages/admin";
+import { ComponentsView } from "@/pages/admin/components/ComponentsView";
+import { NotificationsDrawer } from "@/components/admin/NotificationsDrawer";
+import { StatusBadge } from "@/components/admin/StatusBadge";
+import { MetricCard } from "@/components/admin/MetricCard";
 
 interface AdminUser {
   id: string;

@@ -246,7 +246,7 @@ function ComponentDetail({ component }: { component: ComponentMeta }) {
                       <div className="size-6 rounded-full bg-teal-dark dark:bg-accent-lime text-white dark:text-ink text-[10px] font-bold flex items-center justify-center shrink-0">
                         {i + 1}
                       </div>
-                      {i < component.whatHappensAfter.length - 1 && (
+                      {component.whatHappensAfter && i < component.whatHappensAfter.length - 1 && (
                         <div className="w-px h-6 bg-teal-dark/30 dark:bg-accent-lime/30" />
                       )}
                     </div>
