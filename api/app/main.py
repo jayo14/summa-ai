@@ -92,6 +92,8 @@ async def lifespan(app: FastAPI):
     await load_jwks_at_startup()
     logger.info("🚀 Summa AI API Started")
     yield
+    from app.services.supabase_auth import SupabaseAuthService
+    await SupabaseAuthService().close()
     logger.info("👋 Summa AI API Shutting Down")
 
 
@@ -174,7 +176,7 @@ PUBLIC_PATHS = {
     f"{settings.API_V1_STR}/auth/login",
     f"{settings.API_V1_STR}/auth/signup",
     f"{settings.API_V1_STR}/auth/verify-otp",
-    f"{settings.API_V1_STR}/auth/callback",
+    f"{settings.API_V1_STR}/auth/verify-token",
     f"{settings.API_V1_STR}/auth/resend-otp",
     f"{settings.API_V1_STR}/auth/forgot-password",
     f"{settings.API_V1_STR}/auth/reset-password",
