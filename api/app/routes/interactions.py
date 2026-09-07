@@ -69,5 +69,40 @@ async def record_quiz_result(data: QuizResultCreate):
             exc_info=True,
         )
 
+    try:
+        from app.services.misconception_engine import MisconceptionEngine
+        misconception_engine = MisconceptionEngine()
+        if (data.score or 0) < 70.0:
+            await misconception_engine.record_misconception(
+                user_id=user_id,
+                concept_id=data.topic,
+                description=f"Struggling with concept '{data.topic}' (score: {data.score}%)",
+                evidence=f"Quiz artifact {data.artifact_id} score {data.score}%",
+            )
+    except Exception:
+        logger.warning(
+            "Failed to record misconception: user=%s topic=%s",
+            user_id,
+            data.topic,
+            exc_info=True,
+        )
+
+    try:
+        from app.services.spaced_repetition import SpacedRepetitionEngine
+        sr_engine = SpacedRepetitionEngine()
+        rating = 5 if (data.score or 0) >= 90 else (3 if (data.score or 0) >= 70 else 1)
+        await sr_engine.record_review(
+            user_id=user_id,
+            concept_id=data.topic,
+            quality_rating=rating,
+        )
+    except Exception:
+        logger.warning(
+            "Failed to record spaced repetition review: user=%s topic=%s",
+            user_id,
+            data.topic,
+            exc_info=True,
+        )
+
     res = await _store.create_quiz_result(user_id, data.model_dump())
     return res
