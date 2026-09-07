@@ -286,7 +286,7 @@ export default function AdminDashboard() {
       <aside
         className={`${
           isCollapsed ? "w-[72px]" : "w-[250px]"
-        } transition-all duration-300 ease-in-out h-screen sticky top-0 bg-white border-r border-[#E2E8F0] flex flex-col justify-between shrink-0 select-none py-4 px-3 z-30`}
+        } transition-all duration-300 ease-in-out h-screen fixed left-0 top-0 bg-white border-r border-[#E2E8F0] flex flex-col justify-between shrink-0 select-none py-4 px-3 z-30`}
       >
         <div className="flex flex-col min-h-0">
           {/* Logo & Collapse Header */}
@@ -362,8 +362,8 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {/* RIGHT MAIN CANVAS */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto">
+      {/* RIGHT MAIN CANVAS - Fixed sidebar offset & smooth scroll area */}
+      <main className={`flex-1 flex flex-col min-w-0 bg-[#F8FAFC] min-h-screen ${isCollapsed ? "ml-[72px]" : "ml-[250px]"} transition-all duration-300 ease-in-out`}>
         {/* TOP NAVBAR */}
         <header className="h-16 bg-white border-b border-[#E2E8F0] px-8 flex items-center justify-between shrink-0 sticky top-0 z-20">
           <div>
