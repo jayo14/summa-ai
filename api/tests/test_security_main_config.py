@@ -113,3 +113,37 @@ class TestConfig:
                 ENVIRONMENT="production",
             )
             assert "https://app.example.com" in s.get_cors_origins()
+
+
+# ---------------------------------------------------------------------------
+# Security invariants — must never regress
+# ---------------------------------------------------------------------------
+
+class TestSecurityInvariants:
+    def test_create_access_token_must_not_exist(self):
+        """create_access_token was removed during refactor — must never be re-added."""
+        from app.core import security
+        assert not hasattr(security, "create_access_token"), (
+            "create_access_token must not exist in security module — "
+            "Supabase Auth is the sole token source"
+        )
+
+    def test_hash_password_must_not_exist(self):
+        """hash_password was removed during refactor — must never be re-added."""
+        from app.core import security
+        assert not hasattr(security, "hash_password"), (
+            "hash_password must not exist in security module"
+        )
+
+    def test_verify_password_must_not_exist(self):
+        """verify_password was removed during refactor — must never be re-added."""
+        from app.core import security
+        assert not hasattr(security, "verify_password"), (
+            "verify_password must not exist in security module"
+        )
+
+    def test_jwks_max_staleness_constant(self):
+        """JWKS cache must have a max staleness limit."""
+        from app.core import jwks
+        assert hasattr(jwks, "JWKS_MAX_STALENESS_SECONDS")
+        assert jwks.JWKS_MAX_STALENESS_SECONDS == 86400.0  # 24 hours

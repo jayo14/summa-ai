@@ -31,7 +31,6 @@ artifacts_router = activities_router
 )
 @activities_router.get("/artifacts", include_in_schema=False)
 async def get_activities(
-    user_id: str = Query(default="demo"),
     type: Optional[str] = None,
     pinned: Optional[bool] = None,
     archived: bool = False,
@@ -49,7 +48,7 @@ async def get_activities(
     description="Create a new activity for a user",
 )
 @activities_router.post("/artifacts", status_code=201, include_in_schema=False)
-async def create_activity(data: ActivityCreate, user_id: str = Query(default="demo")):
+async def create_activity(data: ActivityCreate):
     user_id = resolve_user_id()
     return await _store.create_activity(user_id, data.model_dump(by_alias=True))
 
@@ -143,7 +142,7 @@ conv_router = APIRouter()
     summary="List conversations",
     description="Get all non-archived conversations for a user",
 )
-async def get_conversations(user_id: str = Query(default="demo")):
+async def get_conversations():
     user_id = resolve_user_id()
     return await _store.list_conversations(user_id)
 
@@ -155,7 +154,7 @@ async def get_conversations(user_id: str = Query(default="demo")):
     description="Create a new conversation for a user",
 )
 async def create_conversation(
-    data: ConversationCreate, user_id: str = Query(default="demo")
+    data: ConversationCreate,
 ):
     user_id = resolve_user_id()
     return await _store.create_conversation(
@@ -248,9 +247,7 @@ timeline_router = APIRouter()
     summary="Get timeline",
     description="Get timeline events for a user, up to a limit of 200",
 )
-async def get_timeline(
-    user_id: str = Query(default="demo"), limit: int = Query(default=50, le=200)
-):
+async def get_timeline(limit: int = Query(default=50, le=200)):
     user_id = resolve_user_id()
     return await _store.list_timeline_events(user_id, limit=limit)
 
@@ -262,7 +259,7 @@ async def get_timeline(
     description="Create a new timeline event for a user",
 )
 async def create_timeline_event(
-    data: TimelineEventCreate, user_id: str = Query(default="demo")
+    data: TimelineEventCreate,
 ):
     user_id = resolve_user_id()
     return await _store.create_timeline_event(
@@ -319,8 +316,11 @@ async def get_user():
 )
 async def update_user(data: dict):
     user_id = resolve_user_id()
-    updated = await _user_store.update_user(user_id, data)
-    return _user_store.serialize_user(updated)
+    user_service = UserService()
+    updated = await user_service.update_application_fields(user_id, data)
+    if not updated:
+        raise HTTPException(404, "User not found or no valid fields to update")
+    return updated
 
 
 @user_router.post(

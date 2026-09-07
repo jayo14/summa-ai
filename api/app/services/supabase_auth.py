@@ -10,6 +10,7 @@ Design invariants:
 - No sensitive data in logs (no tokens, passwords, or full response bodies)
 """
 
+import asyncio
 import logging
 from typing import Any, Dict, Optional
 
@@ -78,7 +79,7 @@ class SupabaseAuthService:
         """Return a reusable async HTTP client. Creates one if needed."""
         if SupabaseAuthService._client is None or SupabaseAuthService._client.is_closed:
             SupabaseAuthService._client = httpx.AsyncClient(
-                timeout=httpx.Timeout(10.0, connect=5.0),
+                timeout=httpx.Timeout(15.0, connect=8.0),
                 limits=httpx.Limits(max_connections=20, max_keepalive_connections=5),
             )
         return SupabaseAuthService._client
@@ -144,8 +145,11 @@ class SupabaseAuthService:
         *,
         json_data: Optional[Dict] = None,
         access_token: Optional[str] = None,
+        _retries: int = 1,
     ) -> Dict[str, Any]:
         """Make a request to Supabase Auth and return a structured result.
+
+        Retries once on timeout before giving up (transient network issues).
 
         Returns:
             {"status_code": int, "data": dict|None, "error_code": str, "error": str|None}
@@ -161,6 +165,12 @@ class SupabaseAuthService:
         try:
             response = await client.request(method, url, headers=headers, json=json_data)
         except httpx.TimeoutException:
+            if _retries > 0:
+                logger.warning("Supabase Auth timeout: %s %s — retrying once", method, path)
+                await asyncio.sleep(1.0)
+                return await self._request(
+                    method, path, json_data=json_data, access_token=access_token, _retries=_retries - 1,
+                )
             logger.error("Supabase Auth timeout: %s %s", method, path)
             raise SupabaseAuthError(504, "timeout", "Authentication service timed out")
         except httpx.ConnectError:

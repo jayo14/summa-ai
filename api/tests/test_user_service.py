@@ -120,8 +120,12 @@ class TestFieldOwnership:
         assert "provider" in AUTH_OWNED_FIELDS
 
     def test_application_owned_fields_complete(self):
-        for field in ["name", "avatar", "bio", "role", "status", "onboarded", "onboarding_data"]:
+        for field in ["name", "avatar", "bio", "status", "onboarded", "onboarding_data"]:
             assert field in APPLICATION_OWNED_FIELDS
+
+    def test_role_not_in_application_fields(self):
+        """Role must NOT be in APPLICATION_OWNED_FIELDS — role changes go through admin only."""
+        assert "role" not in APPLICATION_OWNED_FIELDS
 
     def test_auth_fields_not_in_application_fields(self):
         assert AUTH_OWNED_FIELDS.isdisjoint(APPLICATION_OWNED_FIELDS)
@@ -144,3 +148,80 @@ class TestRoleSecurity:
                 with patch.object(service.user_store, "serialize_user", return_value={"id": "u1", "role": "user"}):
                     result = await service.sync_user_profile(supabase_user)
                     assert result["role"] == "user"
+
+
+# ---------------------------------------------------------------------------
+# Regression: email_verified defaults
+# ---------------------------------------------------------------------------
+
+class TestEmailVerifiedDefaults:
+    def test_userstore_save_user_defaults_email_verified_to_false(self):
+        """UserStore.save_user must default email_verified to False, not True."""
+        from app.services.user_store import UserStore
+        store = UserStore.__new__(UserStore)
+        store._pool = None
+        store._local_users = {}
+        store._audit_logs = []
+
+        import asyncio
+        result = asyncio.run(store.save_user("u1", {"email": "a@b.com"}))
+        assert result.get("email_verified") is False
+
+    def test_userstore_serialize_defaults_email_verified_to_false(self):
+        """UserStore.serialize_user must default email_verified to False, not True."""
+        from app.services.user_store import UserStore
+        store = UserStore.__new__(UserStore)
+
+        result = store.serialize_user({"id": "u1", "email": "a@b.com"})
+        assert result.get("email_verified") is False
+
+
+# ---------------------------------------------------------------------------
+# Regression: update_application_fields filters auth-owned fields
+# ---------------------------------------------------------------------------
+
+class TestUpdateApplicationFields:
+    @pytest.mark.asyncio
+    async def test_filters_out_role(self):
+        """Client cannot set role via update_application_fields."""
+        service = UserService()
+        with patch.object(service.user_store, "update_user", new_callable=AsyncMock) as mock_update, \
+             patch.object(service.user_store, "get_user_by_id", new_callable=AsyncMock, return_value={"id": "u1", "name": "Old"}), \
+             patch.object(service.user_store, "serialize_user", return_value={"id": "u1", "name": "Test"}):
+            mock_update.return_value = {"id": "u1", "name": "Test"}
+            await service.update_application_fields("u1", {"role": "admin", "name": "Test"})
+            mock_update.assert_called_once()
+            call_args = mock_update.call_args[0][1]
+            assert "role" not in call_args
+            assert "name" in call_args
+
+    @pytest.mark.asyncio
+    async def test_filters_out_email_verified(self):
+        """Client cannot set email_verified via update_application_fields."""
+        service = UserService()
+        with patch.object(service.user_store, "update_user", new_callable=AsyncMock) as mock_update, \
+             patch.object(service.user_store, "get_user_by_id", new_callable=AsyncMock, return_value={"id": "u1", "name": "Old"}), \
+             patch.object(service.user_store, "serialize_user", return_value={"id": "u1", "name": "Test"}):
+            mock_update.return_value = {"id": "u1", "name": "Test"}
+            await service.update_application_fields("u1", {"email_verified": True, "name": "Test"})
+            call_args = mock_update.call_args[0][1]
+            assert "email_verified" not in call_args
+
+    @pytest.mark.asyncio
+    async def test_filters_out_provider(self):
+        """Client cannot set provider via update_application_fields."""
+        service = UserService()
+        with patch.object(service.user_store, "update_user", new_callable=AsyncMock) as mock_update, \
+             patch.object(service.user_store, "get_user_by_id", new_callable=AsyncMock, return_value={"id": "u1", "name": "Old"}), \
+             patch.object(service.user_store, "serialize_user", return_value={"id": "u1", "name": "Test"}):
+            mock_update.return_value = {"id": "u1", "name": "Test"}
+            await service.update_application_fields("u1", {"provider": "google", "name": "Test"})
+            call_args = mock_update.call_args[0][1]
+            assert "provider" not in call_args
+
+    @pytest.mark.asyncio
+    async def test_returns_none_when_no_valid_fields(self):
+        """Returns None when all fields are auth-owned (filtered out)."""
+        service = UserService()
+        result = await service.update_application_fields("u1", {"role": "admin", "email_verified": True})
+        assert result is None

@@ -65,7 +65,7 @@ class UserStore:
             "role": data.get("role", "user"),
             "status": data.get("status", "active"),
             "provider": data.get("provider", "credentials"),
-            "email_verified": bool(data.get("email_verified", True)),
+            "email_verified": bool(data.get("email_verified", False)),
             "onboarded": bool(data.get("onboarded", False)),
             "onboarding_data": data.get("onboarding_data", {}),
         }
@@ -210,7 +210,7 @@ class UserStore:
             "avatar": user.get("avatar"),
             "bio": user.get("bio"),
             "provider": user.get("provider"),
-            "email_verified": bool(user.get("email_verified", True)),
+            "email_verified": bool(user.get("email_verified", False)),
             "onboarded": bool(user.get("onboarded")),
             "onboarding_data": onboarding_data,
             "created_at": (

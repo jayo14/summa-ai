@@ -4,7 +4,7 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Dict
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -21,6 +21,7 @@ from app.core.security import (
 )
 from app.services.cognee_service import CogneeService
 from app.core.logging_system import setup_system_logging
+from app.core.rbac import require_admin
 from app.routes import auth, chat, memory, logs, admin
 from app.routes.data_routes import (
     activities_router,
@@ -115,8 +116,10 @@ async def cors_error_middleware(request: Request, call_next):
     except Exception as exc:
         logger.exception("Unhandled exception processing %s %s", request.method, request.url.path)
         response = JSONResponse({"detail": f"Internal Server Error"}, status_code=500)
+    # Only reflect origins from the configured allowlist — never reflect arbitrary origins
     origin = request.headers.get("origin")
-    if origin:
+    allowed_origins = settings.get_cors_origins()
+    if origin and origin in allowed_origins:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
@@ -124,12 +127,11 @@ async def cors_error_middleware(request: Request, call_next):
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    if not settings.is_production:
-        return await call_next(request)
-
     client_ip = request.client.host if request.client else "unknown"
     now = time.time()
     window_start = int(now // 60) * 60
+    # Higher threshold for non-production to avoid blocking during development
+    limit = 200 if not settings.is_production else 100
 
     hit_count = 0
     try:
@@ -151,13 +153,13 @@ async def rate_limit_middleware(request: Request, call_next):
     except Exception as exc:
         logger.debug("Database rate limiter fallback: %s", exc)
 
-    if hit_count > 100:
+    if hit_count > limit:
         return JSONResponse({"detail": "Rate limit exceeded"}, status_code=429)
 
     if hit_count == 0:
         requests = _rate_limit_store.get(client_ip, [])
         requests = [ts for ts in requests if now - ts < 60]
-        if len(requests) >= 100:
+        if len(requests) >= limit:
             return JSONResponse({"detail": "Rate limit exceeded"}, status_code=429)
         requests.append(now)
         _rate_limit_store[client_ip] = requests
@@ -375,9 +377,17 @@ async def check_connections():
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     token = websocket.query_params.get("token")
-    if not token or not verify_supabase_jwt(token):
+    if not token:
         await websocket.close(code=1008)
         return
+
+    jwt_user_id = verify_supabase_jwt(token)
+    if not jwt_user_id:
+        await websocket.close(code=1008)
+        return
+
+    # Use user_id from JWT, not from URL — prevents impersonation
+    user_id = jwt_user_id
 
     await manager.connect(websocket, user_id)
     try:
@@ -396,7 +406,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
     summary="Broadcast message",
     description="Send a message to all connected WebSocket clients",
 )
-async def broadcast_message(message: dict):
+async def broadcast_message(message: dict, _admin: dict = Depends(require_admin)):
     if not settings.WEBSOCKET_ENABLED:
         raise HTTPException(status_code=503, detail="WebSocket disabled")
     await manager.broadcast(message)

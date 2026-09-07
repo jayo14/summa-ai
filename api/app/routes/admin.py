@@ -80,7 +80,7 @@ async def create_admin_user(
         logger.error("Supabase signup failed for admin-created user %s: %s", payload.email, exc)
         raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
-    user_data = result.get("user") or {}
+    user_data = (result.get("data") or {}).get("user") or {}
     user_id = user_data.get("id")
     if not user_id:
         logger.error("Supabase returned no user ID for admin-created user %s", payload.email)
@@ -95,7 +95,7 @@ async def create_admin_user(
         "name": payload.name,
         "role": "user",
         "status": "active",
-        "email_verified": True,
+        "email_verified": False,
         "onboarded": False,
         "onboarding_data": {"institution": payload.institution or "General"},
     }

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 AUTH_OWNED_FIELDS = frozenset({"id", "email", "email_verified", "provider"})
 
 APPLICATION_OWNED_FIELDS = frozenset({
-    "name", "avatar", "bio", "role", "status",
+    "name", "avatar", "bio", "status",
     "onboarded", "onboarding_data", "preferences", "subscription",
 })
 

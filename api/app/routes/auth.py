@@ -21,7 +21,6 @@ from app.core.rbac import derive_initial_role
 from app.models.user import (
     AuthSignupRequest,
     CredentialsLoginRequest,
-    OAuthCallbackRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
     VerifyOtpRequest,
@@ -404,8 +403,13 @@ async def reset_password(
         )
 
     if result.get("error"):
+        status_code = result.get("status_code", 500)
+        error_code = result.get("error_code", "")
+        # weak_password is a client error, not a server error
+        if error_code == "weak_password":
+            raise HTTPException(status_code=400, detail=f"{result['error']} — password was not changed")
         raise HTTPException(
-            status_code=result["status_code"] if result["status_code"] < 500 else 502,
+            status_code=status_code if status_code < 500 else 502,
             detail=f"{result['error']} — password was not changed",
         )
 

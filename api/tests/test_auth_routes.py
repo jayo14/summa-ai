@@ -473,3 +473,101 @@ class TestGetCurrentUser:
             with pytest.raises(HTTPException) as exc:
                 await get_current_user(authorization="Bearer expired-token")
             assert exc.value.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# 10. Supabase infrastructure failure → 502 (THE INVARIANT)
+# ---------------------------------------------------------------------------
+
+class TestSupabaseFailureInvariant:
+    """THE CRITICAL INVARIANT: Supabase Auth failure NEVER results in
+    successful login via UserStore or any other local fallback."""
+
+    @pytest.mark.asyncio
+    async def test_supabase_500_returns_502_not_local_auth(self):
+        """Supabase 500 → 502. No local auth fallback."""
+        result = _err(500, "Internal Server Error")
+        with patch("app.routes.auth.SupabaseAuthService") as MockAuth:
+            MockAuth.return_value.login = AsyncMock(return_value=result)
+            with pytest.raises(HTTPException) as exc:
+                await login(CredentialsLoginRequest(email="a@b.com", password="pass123"))
+            assert exc.value.status_code == 502
+            assert "unavailable" in exc.value.detail.lower()
+
+    @pytest.mark.asyncio
+    async def test_supabase_timeout_returns_502(self):
+        """Supabase timeout → 502. No local auth fallback."""
+        with patch("app.routes.auth.SupabaseAuthService") as MockAuth:
+            MockAuth.return_value.login = AsyncMock(
+                side_effect=SupabaseAuthError(504, "timeout", "Authentication service timed out")
+            )
+            with pytest.raises(HTTPException) as exc:
+                await login(CredentialsLoginRequest(email="a@b.com", password="pass123"))
+            assert exc.value.status_code == 502
+
+    @pytest.mark.asyncio
+    async def test_supabase_connection_error_returns_502(self):
+        """Supabase connection refused → 502. No local auth fallback."""
+        with patch("app.routes.auth.SupabaseAuthService") as MockAuth:
+            MockAuth.return_value.login = AsyncMock(
+                side_effect=SupabaseAuthError(502, "connection_error", "Authentication service unavailable")
+            )
+            with pytest.raises(HTTPException) as exc:
+                await login(CredentialsLoginRequest(email="a@b.com", password="pass123"))
+            assert exc.value.status_code == 502
+
+
+# ---------------------------------------------------------------------------
+# 11. Timeout retry — SupabaseAuthService retries once on timeout
+# ---------------------------------------------------------------------------
+
+class TestTimeoutRetry:
+    def test_request_retries_once_on_timeout(self):
+        """_request should retry once on TimeoutException before giving up."""
+        from app.services.supabase_auth import SupabaseAuthService
+        import httpx
+
+        service = SupabaseAuthService.__new__(SupabaseAuthService)
+        service.base_url = "http://test"
+        service.headers = {}
+
+        call_count = 0
+
+        async def mock_request(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise httpx.TimeoutException("timeout")
+            # Second call succeeds
+            resp = httpx.Response(200, json={"access_token": "tok"})
+            return resp
+
+        with patch.object(SupabaseAuthService, "_get_client") as mock_get:
+            mock_client = AsyncMock()
+            mock_client.request = mock_request
+            mock_get.return_value = mock_client
+            import asyncio
+            result = asyncio.run(service._request("POST", "/token", json_data={"email": "a@b.com", "password": "pass"}))
+            assert call_count == 2
+            assert result["data"]["access_token"] == "tok"
+
+    def test_request_fails_after_second_timeout(self):
+        """_request raises SupabaseAuthError after two consecutive timeouts."""
+        from app.services.supabase_auth import SupabaseAuthService
+        import httpx
+
+        service = SupabaseAuthService.__new__(SupabaseAuthService)
+        service.base_url = "http://test"
+        service.headers = {}
+
+        async def mock_request(*args, **kwargs):
+            raise httpx.TimeoutException("timeout")
+
+        with patch.object(SupabaseAuthService, "_get_client") as mock_get:
+            mock_client = AsyncMock()
+            mock_client.request = mock_request
+            mock_get.return_value = mock_client
+            import asyncio
+            with pytest.raises(SupabaseAuthError) as exc:
+                asyncio.run(service._request("POST", "/token", json_data={"email": "a@b.com", "password": "pass"}))
+            assert exc.value.status_code == 504
