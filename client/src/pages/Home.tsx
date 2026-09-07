@@ -350,11 +350,11 @@ export default function Home() {
 
     setMessages((prev) => [...prev, { id: summaMsgId, role: "summa" as const, content: "" }]);
 
-    const token = localStorage.getItem("summa_access_token");
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (token && token !== "undefined" && token !== "null" && token.trim() !== "") {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+    getValidAccessToken().then((token) => {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token && token !== "undefined" && token !== "null" && token.trim() !== "") {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
 
     let fullAiResponse = "";
 
@@ -463,9 +463,8 @@ export default function Home() {
       .finally(() => {
         setIsResponding(false);
         registerEvent("practice", "New learning intent captured");
-        // NOTE: do NOT POST the assistant message here — chat_stream() already
-        // persists it via ds.add_message() once the stream completes.
       });
+    });
   }
   const [location, setLocation] = useLocation();
 

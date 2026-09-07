@@ -1,3 +1,5 @@
+import { createClient } from "@/lib/supabaseClient";
+
 /**
  * API client helper for communication with the FastAPI backend.
  * Automatically attaches Authorization header when token is present in localStorage.
@@ -19,11 +21,31 @@ export function getApiBaseUrl(): string {
   return trimmed.endsWith("/api/v1") ? trimmed : `${trimmed}/api/v1`;
 }
 
+/**
+ * Ensures access token is automatically refreshed via Supabase client if expired or nearing expiry.
+ */
+export async function getValidAccessToken(): Promise<string | null> {
+  const currentToken = localStorage.getItem("summa_access_token");
+  try {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      if (session.access_token !== currentToken) {
+        localStorage.setItem("summa_access_token", session.access_token);
+      }
+      return session.access_token;
+    }
+  } catch (err) {
+    console.warn("Automatic token refresh failed:", err);
+  }
+  return currentToken;
+}
+
 export async function fetchApi<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = localStorage.getItem("summa_access_token");
+  const token = await getValidAccessToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
