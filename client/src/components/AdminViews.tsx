@@ -3317,68 +3317,173 @@ export function ComponentsView() {
       {/* Component Detail Playground Modal */}
       {selectedComponent && (
         <div className="fixed inset-0 z-50 bg-ink/60 dark:bg-[#121616]/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 space-y-6 p-6 md:p-8">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-mist-green dark:border-[#2A3838] pb-5">
-              <div className="flex items-center gap-4">
-                <div className={`size-14 rounded-2xl ${selectedComponent.badgeBg} flex items-center justify-center shadow-xs`}>
-                  {selectedComponent.icon}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-semibold text-grey-green dark:text-[#8FA29B] uppercase">
-                      {selectedComponent.category}
-                    </span>
-                    <span className="text-xs text-grey-green dark:text-[#8FA29B]">• Instrument Spec</span>
+          <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 md:p-8 space-y-8 max-h-[85vh] overflow-y-auto">
+
+              {/* 1. HEADER */}
+              <div className="flex items-start justify-between border-b border-mist-green dark:border-[#2A3838] pb-5">
+                <div className="flex items-center gap-4">
+                  <div className={`size-14 rounded-2xl ${selectedComponent.badgeBg} flex items-center justify-center shadow-xs`}>
+                    {selectedComponent.icon}
                   </div>
-                  <h3 className="text-2xl font-bold text-ink dark:text-cream-soft">
-                    {selectedComponent.title}
-                  </h3>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-semibold text-grey-green dark:text-[#8FA29B] uppercase">
+                        {selectedComponent.category}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-ink dark:text-cream-soft">
+                      {selectedComponent.title}
+                    </h3>
+                    <p className="text-xs text-grey-green dark:text-[#8FA29B] mt-1">{selectedComponent.desc}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedComponent(null)}
+                  className="p-2 rounded-full text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft hover:bg-mist-green/50 dark:hover:bg-[#2A3838] transition cursor-pointer shrink-0"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* 2. WHAT IS IT? */}
+              {selectedComponent.whatIsIt && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">What is it?</h4>
+                  <p className="text-sm text-grey-green dark:text-[#8FA29B] leading-relaxed">{selectedComponent.whatIsIt}</p>
+                </div>
+              )}
+
+              {/* 3. WHY SUMMA USES IT */}
+              {selectedComponent.whySummaUsesIt && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">Why Summa uses it</h4>
+                  <p className="text-sm text-grey-green dark:text-[#8FA29B] leading-relaxed">{selectedComponent.whySummaUsesIt}</p>
+                </div>
+              )}
+
+              {/* 4. LEARNING TECHNIQUES */}
+              {selectedComponent.techniques && selectedComponent.techniques.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">Learning techniques</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedComponent.techniques.map((t: string, i: number) => (
+                      <span key={i} className="px-3 py-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime text-xs font-semibold rounded-full border border-teal-dark/20 dark:border-accent-lime/20">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 5. WHEN SUMMA USES IT */}
+              {selectedComponent.whenSummaUsesIt && selectedComponent.whenSummaUsesIt.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">When Summa might choose this</h4>
+                  <div className="p-4 bg-cream-light dark:bg-[#232D2D] rounded-xl border border-mist-green dark:border-[#2A3838]">
+                    <ul className="space-y-2">
+                      {selectedComponent.whenSummaUsesIt.map((item: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-grey-green dark:text-[#8FA29B]">
+                          <span className="text-teal-dark dark:text-accent-lime mt-0.5 shrink-0">&#x2022;</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. INTERACTIVE PLAYGROUND */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">Try the component</h4>
+                <div className="p-4 bg-cream-light dark:bg-[#232D2D] rounded-2xl border border-mist-green dark:border-[#2A3838]">
+                  {selectedComponent.preview}
                 </div>
               </div>
-              <button
-                onClick={() => setSelectedComponent(null)}
-                className="p-2 rounded-full text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft hover:bg-mist-green/50 dark:hover:bg-[#2A3838] transition cursor-pointer"
-              >
-                <X size={20} />
-              </button>
-            </div>
 
-            {/* Description & Overview */}
-            <div className="space-y-2">
-              <div className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">Overview</div>
-              <p className="text-xs text-grey-green dark:text-[#8FA29B] leading-relaxed">
-                {selectedComponent.desc}
-              </p>
-            </div>
+              {/* 7. EXAMPLE IN SUMMA */}
+              {selectedComponent.example && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">Example in Summa</h4>
+                  <div className="p-4 bg-cream-light dark:bg-[#232D2D] rounded-xl border border-mist-green dark:border-[#2A3838]">
+                    <p className="text-sm text-grey-green dark:text-[#8FA29B] leading-relaxed italic">{selectedComponent.example}</p>
+                  </div>
+                </div>
+              )}
 
-            {/* Interactive Component Live Preview */}
-            <div className="space-y-3">
-              <div className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">
-                Interactive Preview & Playground
+              {/* 8. WHAT HAPPENS AFTER */}
+              {selectedComponent.whatHappensAfter && selectedComponent.whatHappensAfter.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">What happens after</h4>
+                  <div className="space-y-0">
+                    {selectedComponent.whatHappensAfter.map((item: { step: string; detail: string }, i: number) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="size-6 rounded-full bg-teal-dark dark:bg-accent-lime text-white dark:text-ink text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {i + 1}
+                          </div>
+                          {i < selectedComponent.whatHappensAfter.length - 1 && (
+                            <div className="w-px h-6 bg-teal-dark/30 dark:bg-accent-lime/30" />
+                          )}
+                        </div>
+                        <div className="pb-4">
+                          <div className="text-sm font-semibold text-ink dark:text-cream-soft">{item.step}</div>
+                          <div className="text-xs text-grey-green dark:text-[#8FA29B]">{item.detail}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 9. USED WITH + DECISION SIGNALS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {selectedComponent.usedWith && selectedComponent.usedWith.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">Often combined with</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedComponent.usedWith.map((item: string, i: number) => (
+                        <span key={i} className="px-3 py-1.5 bg-cream-light dark:bg-[#232D2D] text-ink dark:text-cream-soft text-xs font-medium rounded-full border border-mist-green dark:border-[#2A3838]">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedComponent.decisionSignals && selectedComponent.decisionSignals.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-ink dark:text-cream-soft uppercase tracking-wider font-mono">How Summa decides to use this</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedComponent.decisionSignals.map((item: string, i: number) => (
+                        <span key={i} className="px-3 py-1.5 bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime text-xs font-semibold rounded-full border border-teal-dark/20 dark:border-accent-lime/20">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="p-4 bg-cream-light dark:bg-[#232D2D] rounded-2xl border border-mist-green dark:border-[#2A3838]">
-                {selectedComponent.preview}
-              </div>
-            </div>
 
-            {/* Modal Footer */}
-            <div className="pt-4 border-t border-mist-green dark:border-[#2A3838] flex justify-end gap-3">
-              <button
-                onClick={() => setSelectedComponent(null)}
-                className="px-5 py-2.5 rounded-xl border border-mist-green dark:border-[#2A3838] font-semibold text-xs text-ink dark:text-cream-soft hover:bg-cream-light dark:hover:bg-[#232D2D] transition cursor-pointer"
-              >
-                Close Spec
-              </button>
-              <button
-                onClick={() => {
-                  toast.success(`Instrument ${selectedComponent.title} deployed to session preview`);
-                  setSelectedComponent(null);
-                }}
-                className="px-5 py-2.5 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition shadow-xs cursor-pointer"
-              >
-                Simulate Deployment
-              </button>
+              {/* FOOTER */}
+              <div className="pt-4 border-t border-mist-green dark:border-[#2A3838] flex justify-end gap-3">
+                <button
+                  onClick={() => setSelectedComponent(null)}
+                  className="px-5 py-2.5 rounded-xl border border-mist-green dark:border-[#2A3838] font-semibold text-xs text-ink dark:text-cream-soft hover:bg-cream-light dark:hover:bg-[#232D2D] transition cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    toast.success(`${selectedComponent.title} deployed to session preview`);
+                    setSelectedComponent(null);
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-teal-dark dark:bg-accent-lime text-white font-semibold text-xs hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition shadow-xs cursor-pointer"
+                >
+                  Deploy to Session
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
