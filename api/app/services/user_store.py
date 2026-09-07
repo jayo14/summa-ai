@@ -29,11 +29,6 @@ class UserStore:
             cls._instance = super().__new__(cls)
             cls._instance._pool: Optional[asyncpg.Pool] = None
             cls._instance._audit_logs: list[dict[str, Any]] = []
-            # Intentionally empty: no hardcoded seed users.
-            # get_user_by_id() returns None when the DB has no row — it never
-            # returns a fake "Student User" identity for a real signed-up account.
-            # save_user() may write here as a short-lived per-process cache after a
-            # successful DB upsert, but the authoritative source is always the DB.
             cls._instance._local_users: Dict[str, Dict[str, Any]] = {}
         return cls._instance
 
@@ -59,25 +54,6 @@ class UserStore:
         # identity.  If the DB is unreachable AND the user has not been seen in
         # this process yet, callers receive None and must handle it explicitly.
         return self._local_users.get(user_id)  # returns None when not cached
-
-    async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
-        email_clean = email.lower().strip()
-        try:
-            pool = await self._get_pool()
-            async with pool.acquire() as conn:
-                row = await conn.fetchrow(
-                    "SELECT * FROM summa_ai.user_profiles WHERE LOWER(email) = $1",
-                    email_clean,
-                )
-            if row:
-                return dict(row)
-        except Exception:
-            pass
-
-        for u in self._local_users.values():
-            if u.get("email", "").lower().strip() == email_clean:
-                return u
-        return None
 
     async def save_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         user_obj = {
