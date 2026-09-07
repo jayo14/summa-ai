@@ -937,11 +937,6 @@ function WorkspaceView(props: WorkspaceProps) {
               }
             />
           ))}
-          {props.isResponding && (
-            <div className="my-3 space-y-2">
-              <ThinkingBar label="Summa is retrieving concept hierarchy & analyzing code..." />
-            </div>
-          )}
           <div ref={bottomRef} aria-hidden="true" />
         </div>
       </div>
