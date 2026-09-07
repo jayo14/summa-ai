@@ -31,8 +31,13 @@ class TestGenerateComponentPayloadRoundTrip:
                 {
                     "id": "q1",
                     "question": "What stops recursion?",
-                    "options": ["A base case", "A loop", "A pointer", "A stack overflow"],
-                    "correctIndex": 0,
+                    "options": [
+                        {"id": "opt1", "text": "A base case"},
+                        {"id": "opt2", "text": "A loop"},
+                        {"id": "opt3", "text": "A pointer"},
+                        {"id": "opt4", "text": "A stack overflow"},
+                    ],
+                    "correct_answer": "A base case",
                     "explanation": "The base case halts further recursive calls.",
                 }
             ],
@@ -54,6 +59,7 @@ class TestGenerateComponentPayloadRoundTrip:
         # SSE serialization shape — this is what actually streams to the frontend.
         serialized = payload.data.model_dump(by_alias=True, mode="json")
         assert serialized["questions"][0]["id"] == "q1"
+        assert serialized["questions"][0]["options"] == ["A base case", "A loop", "A pointer", "A stack overflow"]
         assert serialized["questions"][0]["correctIndex"] == 0
         assert mock_gemini.call_count == 2
 

@@ -29,12 +29,57 @@ class HexagonComponent(BaseComponent):
     dimensions: List[HexagonDimension] = Field(min_length=1)
 
 
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+
 class QuizQuestion(BaseModel):
     id: str
     question: str
     options: List[str] = Field(min_length=2)
-    correctIndex: int = Field(ge=0)
+    correctIndex: int = Field(default=0, ge=0)
     explanation: Optional[str] = None
+
+    @field_validator("options", mode="before")
+    @classmethod
+    def _coerce_options(cls, v):
+        if isinstance(v, list):
+            coerced = []
+            for item in v:
+                if isinstance(item, dict):
+                    coerced.append(str(item.get("text") or item.get("label") or item.get("value") or list(item.values())[0]))
+                else:
+                    coerced.append(str(item))
+            return coerced
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_correct_index(cls, values):
+        if isinstance(values, dict):
+            if "correctIndex" not in values:
+                for alt in ("correct_index", "correctAnswer", "correct_answer", "answerIndex", "answer_index"):
+                    if alt in values:
+                        val = values[alt]
+                        if isinstance(val, int):
+                            values["correctIndex"] = val
+                            break
+                        elif isinstance(val, str):
+                            # Check if value matches option string or index
+                            opts = values.get("options") or []
+                            if val.isdigit():
+                                values["correctIndex"] = int(val)
+                                break
+                            # Match option text or dict
+                            found = False
+                            for i, opt in enumerate(opts):
+                                opt_text = opt.get("text") if isinstance(opt, dict) else str(opt)
+                                if opt_text.strip().lower() == val.strip().lower():
+                                    values["correctIndex"] = i
+                                    found = True
+                                    break
+                            if found:
+                                break
+        return values
 
 
 class QuizComponent(BaseComponent):
