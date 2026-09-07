@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
   Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, MoreVertical, Paperclip, PanelRight,
-  Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus, Edit2, FolderMinus, X,
+  Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus, Edit2, FolderMinus, X, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SummaLogo } from "@/components/SummaLogo";
