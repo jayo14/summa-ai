@@ -695,7 +695,7 @@ async def get_analytics():
     cognee = CogneeService()
     hexagon_raw = await cognee.get_hexagon_dimensions(user_id)
     hexagon_dimensions = [
-        {"dimension": label, "score": round(hexagon_raw.get(key, 0.0) * 100)}
+        {"dimension": label, "score": round((hexagon_raw.get(key) or 0.0) * 100)}
         for key, label in [
             ("depth", "Depth"),
             ("problem_solving", "Problem-Solving"),

@@ -198,7 +198,7 @@ async def test_delete_material():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.execute.return_value = "DELETE 1"
-    assert await store.delete_material("mat1") is True
+    assert await store.delete_material("mat1", "user-1") is True
 
 
 @pytest.mark.asyncio
@@ -224,7 +224,7 @@ async def test_delete_concept():
     store = DataStore()
     pool, conn = _mock_pool(store)
     conn.execute.return_value = "DELETE 1"
-    assert await store.delete_concept("con1") is True
+    assert await store.delete_concept("con1", "user-1") is True
 
 
 @pytest.mark.asyncio
