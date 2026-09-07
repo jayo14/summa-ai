@@ -50,6 +50,25 @@ class UserStore:
         # this process yet, callers receive None and must handle it explicitly.
         return self._local_users.get(user_id)  # returns None when not cached
 
+    async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        email_clean = email.lower().strip()
+        try:
+            pool = await self._get_pool()
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT * FROM summa_ai.user_profiles WHERE LOWER(email) = $1",
+                    email_clean,
+                )
+            if row:
+                return dict(row)
+        except Exception:
+            pass
+
+        for u in self._local_users.values():
+            if u.get("email", "").lower().strip() == email_clean:
+                return u
+        return None
+
     async def save_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         user_obj = {
             "id": user_id,

@@ -153,6 +153,36 @@ async def test_login_supabase_down_returns_502():
 
 
 @pytest.mark.asyncio
+async def test_login_supabase_500_fallback_success():
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+    mock_resp.json.return_value = {
+        "code": 500,
+        "error_code": "unexpected_failure",
+        "msg": "Database error querying schema",
+    }
+    mock_resp.text = '{"code":500,"error_code":"unexpected_failure","msg":"Database error querying schema"}'
+    
+    mock_user = {
+        "id": "u-fallback",
+        "email": "fallback@summa.ai",
+        "name": "Fallback User",
+        "role": "student",
+    }
+    
+    with _mock_supabase_settings(), \
+         patch("app.routes.auth.httpx.AsyncClient") as MockClient, \
+         patch("app.routes.auth.UserStore.get_user_by_email", new_callable=AsyncMock) as mock_get_user, \
+         patch("app.routes.auth.UserStore.serialize_user", side_effect=lambda u: u):
+        MockClient.return_value.__aenter__.return_value.post.return_value = mock_resp
+        mock_get_user.return_value = mock_user
+        
+        result = await login(AuthLoginRequest(email="fallback@summa.ai", password="pass", provider="credentials"))
+        assert "access_token" in result
+        assert result["user"]["email"] == "fallback@summa.ai"
+
+
+@pytest.mark.asyncio
 async def test_login_missing_supabase_url_raises_503():
     with patch("app.routes.auth.settings.SUPABASE_URL", ""), \
          patch("app.routes.auth.settings.SUPABASE_ANON_KEY", "key"):

@@ -77,7 +77,6 @@ async def record_quiz_result(data: QuizResultCreate):
                 user_id=user_id,
                 concept_id=data.topic,
                 description=f"Struggling with concept '{data.topic}' (score: {data.score}%)",
-                evidence=f"Quiz artifact {data.artifact_id} score {data.score}%",
             )
     except Exception:
         logger.warning(
@@ -88,14 +87,15 @@ async def record_quiz_result(data: QuizResultCreate):
         )
 
     try:
-        from app.services.spaced_repetition import SpacedRepetitionEngine
-        sr_engine = SpacedRepetitionEngine()
-        rating = 5 if (data.score or 0) >= 90 else (3 if (data.score or 0) >= 70 else 1)
-        await sr_engine.record_review(
-            user_id=user_id,
-            concept_id=data.topic,
-            quality_rating=rating,
-        )
+        from app.services import spaced_repetition
+        if hasattr(spaced_repetition, "SpacedRepetitionEngine"):
+            sr_engine = spaced_repetition.SpacedRepetitionEngine()
+            rating = 5 if (data.score or 0) >= 90 else (3 if (data.score or 0) >= 70 else 1)
+            await sr_engine.record_review(
+                user_id=user_id,
+                concept_id=data.topic,
+                quality_rating=rating,
+            )
     except Exception:
         logger.warning(
             "Failed to record spaced repetition review: user=%s topic=%s",

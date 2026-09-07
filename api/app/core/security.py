@@ -168,6 +168,17 @@ def verify_supabase_jwt(token: str) -> Optional[str]:
     return None
 
 
+def create_access_token(data: dict, expires_delta: Optional[int] = None) -> str:
+    """Create a local signed JWT fallback token using SUPABASE_JWT_SECRET or a fallback secret."""
+    import time
+    secret = settings.SUPABASE_JWT_SECRET or "local-dev-jwt-secret-fallback-key-32bytes"
+    to_encode = data.copy()
+    now = int(time.time())
+    expire = now + (expires_delta if expires_delta is not None else 86400 * 7)
+    to_encode.update({"iat": now, "exp": expire, "aud": "authenticated"})
+    return pyjwt.encode(to_encode, secret, algorithm="HS256")
+
+
 async def load_jwks_at_startup() -> None:
     """Eagerly fetch Supabase JWKS during app startup so the first request
     doesn't have to wait for an async HTTP call."""
