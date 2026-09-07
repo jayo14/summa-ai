@@ -168,12 +168,38 @@ async def record_flashcard_review(fid: str, payload: dict):
     from app.services.mastery_engine import MasteryEngine
     engine = MasteryEngine()
     correct = rating in ("good", "easy")
+    concept_name = card.get("concept_id") or card.get("front") or "flashcard"
     await engine.record_attempt(
         user_id=user_id,
         activity_id=fid,
-        concept_ids=[card.get("concept_id") or card.get("front") or "flashcard"],
+        concept_ids=[concept_name],
         correct=correct,
     )
+
+    if rating in ("again", "hard"):
+        try:
+            from app.services.misconception_engine import MisconceptionEngine
+            misconceptions = MisconceptionEngine()
+            await misconceptions.record_misconception(
+                user_id=user_id,
+                concept_id=concept_name,
+                description=f"Struggling with flashcard '{concept_name}' (rating: {rating})",
+                evidence=f"Flashcard {fid} review rating '{rating}'",
+            )
+        except Exception:
+            pass
+
+    try:
+        from app.routes.chat import cognee
+        await cognee.remember_learning_progress(
+            user_id,
+            concept_name,
+            100.0 if correct else 40.0,
+            "flashcard",
+            {"card_id": fid, "rating": rating},
+        )
+    except Exception:
+        pass
 
     return updated
 
