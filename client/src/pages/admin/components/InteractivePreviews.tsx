@@ -1083,13 +1083,19 @@ export function ExamCountdownPreview() {
   const [time, setTime] = React.useState(12 * 86400);
   React.useEffect(() => { const t = setInterval(() => setTime(p => p > 0 ? p - 86400 : 0), 3000); return () => clearInterval(t); }, []);
   const days = Math.floor(time / 86400);
+  const isExamDay = days === 0;
   return (
     <div className="w-full max-w-[360px] mx-auto p-6 rounded-2xl bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] shadow-lg text-center space-y-3">
       <Badge color="amber">Exam Countdown</Badge>
       <h4 className="text-xs font-semibold text-grey-green dark:text-[#8FA29B]">CSC 201 Final Exam</h4>
-      <div className="text-4xl font-bold text-teal-dark dark:text-accent-lime font-mono">{days}</div>
-      <div className="text-[10px] text-grey-green dark:text-[#8FA29B] uppercase tracking-wider">days remaining</div>
-      <p className="text-[11px] text-amber-600 dark:text-amber-400">Focus: Graph algorithms (38% mastery)</p>
+      <div className={`text-4xl font-bold font-mono ${isExamDay ? "text-emerald-500 dark:text-emerald-400" : "text-teal-dark dark:text-accent-lime"}`}>
+        {isExamDay ? "D-Day" : days}
+      </div>
+      <div className="text-[10px] text-grey-green dark:text-[#8FA29B] uppercase tracking-wider">
+        {isExamDay ? "Good Luck!" : "days remaining"}
+      </div>
+      {!isExamDay && <p className="text-[11px] text-amber-600 dark:text-amber-400">Focus: Graph algorithms (38% mastery)</p>}
+      {isExamDay && <p className="text-[11px] text-emerald-600 dark:text-emerald-400">You've got this!</p>}
     </div>
   );
 }
