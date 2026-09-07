@@ -36,10 +36,10 @@ class UpdateStatusRequest(BaseModel):
 
 
 class CreateUserRequest(BaseModel):
+    """Admin-created user — role is ALWAYS server-controlled."""
     name: str
     email: str
     password: str
-    role: str = "user"
     institution: Optional[str] = None
 
 
@@ -67,16 +67,14 @@ async def create_admin_user(
     """Creates a new user via Supabase Auth and syncs their application profile.
 
     User creation MUST go through Supabase Auth — no synthetic IDs are manufactured.
+    Role is always server-derived — admins cannot assign privileged roles via signup.
     """
     auth_service = SupabaseAuthService()
     try:
         result = await auth_service.signup(
             email=payload.email,
             password=payload.password,
-            data={
-                "name": payload.name,
-                "role": UserRole.ADMIN.value if payload.role.lower() == "admin" else UserRole.USER.value,
-            },
+            data={"name": payload.name},
         )
     except Exception as exc:
         logger.error("Supabase signup failed for admin-created user %s: %s", payload.email, exc)
@@ -89,12 +87,13 @@ async def create_admin_user(
         raise HTTPException(status_code=502, detail="Authentication service returned invalid response")
 
     user_store = UserStore()
-    normalized_role = UserRole.ADMIN.value if payload.role.lower() == "admin" else UserRole.USER.value
+    # Role is server-derived — admin-created users get 'user' role by default.
+    # Role changes must go through the separate PATCH /admin/users/{id}/role endpoint.
     new_user = {
         "id": user_id,
         "email": payload.email.lower().strip(),
         "name": payload.name,
-        "role": normalized_role,
+        "role": "user",
         "status": "active",
         "email_verified": True,
         "onboarded": False,
@@ -125,7 +124,7 @@ async def update_user_role(
 ):
     """Updates target user's RBAC role (admin vs user) and records audit trail."""
     new_role = payload.role.lower().strip()
-    if new_role not in (UserRole.ADMIN.value, UserRole.USER.value, "student", "instructor"):
+    if new_role not in (UserRole.ADMIN.value, UserRole.USER.value):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid role. Must be 'admin' or 'user'.",
