@@ -26,6 +26,14 @@ export function getApiBaseUrl(): string {
  */
 export async function getValidAccessToken(): Promise<string | null> {
   const currentToken = localStorage.getItem("summa_access_token");
+  const hasSupabaseEnv =
+    (typeof process !== "undefined" && (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL)) ||
+    (typeof import.meta !== "undefined" && import.meta.env && (import.meta.env.NEXT_PUBLIC_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL));
+
+  if (!hasSupabaseEnv) {
+    return currentToken;
+  }
+
   try {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
