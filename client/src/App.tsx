@@ -123,6 +123,12 @@ function Router() {
         {() => <ProtectedRoute component={Home} />}
       </Route>
       
+      <Route path="/admin/components/:id">
+        {() => <AdminRoute component={AdminDashboard} />}
+      </Route>
+      <Route path="/admin/components">
+        {() => <AdminRoute component={AdminDashboard} />}
+      </Route>
       <Route path="/admin">
         {() => <AdminRoute component={AdminDashboard} />}
       </Route>

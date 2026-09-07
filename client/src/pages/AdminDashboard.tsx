@@ -75,8 +75,12 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const [, params] = useRoute("/admin/:tab");
   const [, componentParams] = useRoute("/admin/components/:id");
-  const currentTabFromUrl = (params?.tab as AdminTab) || "overview";
+
+  // Determine tab: /admin/components/:id still maps to "components" tab
   const componentId = componentParams?.id;
+  const currentTabFromUrl: AdminTab = componentId
+    ? "components"
+    : ((params?.tab as AdminTab) || "overview");
 
   const [activeTab, setActiveTab] = useState<AdminTab>(currentTabFromUrl);
   const [users, setUsers] = useState<AdminUser[]>([]);
