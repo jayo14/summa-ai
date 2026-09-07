@@ -172,56 +172,6 @@ async def login(payload: AuthLoginRequest):
                 status_code=403,
                 detail="Email not verified. Please check your inbox for the verification code.",
             )
-        if resp.status_code >= 500 and payload.provider == "credentials":
-            logger.warning("Supabase Auth service 5xx error (%d); attempting direct database fallback login for %s", resp.status_code, email_clean)
-            try:
-                import bcrypt
-                import time
-                import jwt
-                user_store = UserStore()
-                pool = await user_store._get_pool()
-                async with pool.acquire() as conn:
-                    db_user = await conn.fetchrow("SELECT id, email, encrypted_password FROM auth.users WHERE lower(email) = $1", email_clean)
-                
-                if db_user and db_user["encrypted_password"]:
-                    is_valid = bcrypt.checkpw(payload.password.encode("utf-8"), db_user["encrypted_password"].encode("utf-8"))
-                    if is_valid:
-                        user_id_str = str(db_user["id"])
-                        now = int(time.time())
-                        jwt_payload = {
-                            "sub": user_id_str,
-                            "email": db_user["email"],
-                            "aud": "authenticated",
-                            "role": "authenticated",
-                            "iat": now,
-                            "exp": now + 86400 * 7,
-                        }
-                        token = jwt.encode(jwt_payload, settings.SUPABASE_JWT_SECRET, algorithm="HS256")
-                        existing = await user_store.get_user_by_id(user_id_str)
-                        role = (existing.get("role") if existing and existing.get("role") else None) or get_user_role({"email": email_clean})
-                        name = (existing.get("name") if existing and existing.get("name") else None) or email_clean.split("@")[0].capitalize()
-                        user_obj = {
-                            "id": user_id_str,
-                            "email": db_user["email"],
-                            "name": name,
-                            "avatar": existing.get("avatar") if existing else None,
-                            "bio": existing.get("bio", "") if existing else "",
-                            "role": role,
-                            "status": existing.get("status", "active") if existing else "active",
-                            "provider": payload.provider,
-                            "email_verified": True,
-                            "onboarded": existing.get("onboarded", False) if existing else False,
-                            "onboarding_data": existing.get("onboarding_data", {}) if existing else {},
-                        }
-                        saved = await user_store.save_user(user_id_str, user_obj)
-                        fresh = await user_store.get_user_by_id(user_id_str) or saved
-                        return {
-                            "access_token": token,
-                            "token_type": "bearer",
-                            "user": user_store.serialize_user(fresh),
-                        }
-            except Exception as fallback_exc:
-                logger.error("Database fallback login failed for %s: %s", email_clean, fallback_exc)
 
         status_code = resp.status_code if 400 <= resp.status_code < 500 else 502
         raise HTTPException(
