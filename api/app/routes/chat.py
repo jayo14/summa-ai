@@ -21,11 +21,21 @@ router = APIRouter()
 cognee = CogneeService()
 
 INTENT_PATTERNS = {
-    "quiz": [re.compile(r"\bquiz me\b", re.I), re.compile(r"\btest me\b", re.I)],
-    "flashcards": [re.compile(r"\bflash ?cards?\b", re.I)],
+    "quiz": [
+        re.compile(r"\bquiz(zes)?\b", re.I),
+        re.compile(r"\btest(s|ing)? me\b", re.I),
+        re.compile(r"\bmultiple choice\b", re.I),
+        re.compile(r"\bmcq(s)?\b", re.I),
+        re.compile(r"\bquestion(s)?\b", re.I),
+    ],
+    "flashcards": [
+        re.compile(r"\bflash ?card(s)?\b", re.I),
+        re.compile(r"\bcard(s)?\b", re.I),
+    ],
     "study-plan": [
         re.compile(r"\bstudy plan\b", re.I),
         re.compile(r"\bexam prep\b", re.I),
+        re.compile(r"\brevision plan\b", re.I),
     ],
     "hexagon": [re.compile(r"\b(progress|hexagon|proficien)\b", re.I)],
     "graph": [re.compile(r"\b(knowledge )?graph\b", re.I)],

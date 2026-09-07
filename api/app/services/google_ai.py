@@ -222,7 +222,11 @@ async def generate_gemini_json(
             parts = candidates[0].get("content", {}).get("parts", [])
             if not parts:
                 return None
-            text = parts[0].get("text", "")
+            text = parts[0].get("text", "").strip()
+            if text.startswith("```"):
+                text = re.sub(r"^```(?:json)?\n?", "", text, flags=re.I)
+                text = re.sub(r"\n?```$", "", text)
+                text = text.strip()
             return json.loads(text)
     except Exception as exc:
         logger.warning("Gemini structured JSON generation failed: %s", exc)
