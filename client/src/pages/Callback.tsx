@@ -88,14 +88,18 @@ export default function Callback() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F5F3EC] flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl border border-red-200 p-8 max-w-md w-full text-center space-y-4 shadow-sm">
-          <div className="text-2xl">&#9888;&#65039;</div>
-          <h2 className="text-lg font-bold text-[#102B2B]">Verification failed</h2>
+      <div className="min-h-screen bg-[#F5F3EC] flex items-center justify-center p-6" role="main">
+        <div
+          className="bg-white rounded-2xl border border-red-200 p-8 max-w-md w-full text-center space-y-4 shadow-sm"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="text-2xl" aria-hidden="true">&#9888;&#65039;</div>
+          <h1 className="text-lg font-bold text-[#102B2B]">Verification failed</h1>
           <p className="text-sm text-[#6D7E78]">{error}</p>
           <a
             href="/sign-in"
-            className="inline-block mt-2 px-5 py-2.5 bg-[#B8FF4D] text-[#003F3F] font-bold text-sm rounded-xl border border-[#005A57] hover:bg-[#c7ff62] transition-colors"
+            className="inline-block mt-2 px-5 py-2.5 bg-[#B8FF4D] text-[#003F3F] font-bold text-sm rounded-xl border border-[#005A57] hover:bg-[#c7ff62] transition-colors focus:outline-none focus:ring-2 focus:ring-[#005A57] focus:ring-offset-2"
           >
             Back to Sign In
           </a>

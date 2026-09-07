@@ -76,7 +76,14 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#FBFAF6] text-[#102B2B] font-sans selection:bg-[#B8FF4D] selection:text-[#003F3F] relative antialiased overflow-x-clip">
-      
+      {/* Skip to main content */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-[#B8FF4D] focus:text-[#003F3F] focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8FF4D]"
+      >
+        Skip to main content
+      </a>
+
       {/* 1. PERSISTENT SCROLL-REACTIVE NAVIGATION HEADER */}
       <div className="fixed top-0 left-0 right-0 z-50 w-full pointer-events-none flex justify-center px-4 md:px-0">
         <header
@@ -93,11 +100,11 @@ export default function LandingPage() {
               <SummaLogo inverse />
             </div>
 
-            <nav className="hidden md:flex items-center gap-8 text-xs font-medium tracking-wide text-[#DDE8DF]">
-              <a href="#features" className="hover:text-[#B8FF4D] transition-colors">Features</a>
-              <a href="#how-it-works" className="hover:text-[#B8FF4D] transition-colors">How it works</a>
-              <a href="#pricing" className="hover:text-[#B8FF4D] transition-colors">Pricing</a>
-              <a href="#faq" className="hover:text-[#B8FF4D] transition-colors">FAQ</a>
+            <nav className="hidden md:flex items-center gap-8 text-xs font-medium tracking-wide text-[#DDE8DF]" aria-label="Main navigation">
+              <a href="#features" className="hover:text-[#B8FF4D] transition-colors focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] rounded px-1">Features</a>
+              <a href="#how-it-works" className="hover:text-[#B8FF4D] transition-colors focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] rounded px-1">How it works</a>
+              <a href="#pricing" className="hover:text-[#B8FF4D] transition-colors focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] rounded px-1">Pricing</a>
+              <a href="#faq" className="hover:text-[#B8FF4D] transition-colors focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] rounded px-1">FAQ</a>
             </nav>
 
             <div className="hidden sm:flex items-center gap-4">
@@ -186,7 +193,7 @@ export default function LandingPage() {
       </div>
 
       {/* MAIN CONTENT AREA */}
-      <main>
+      <main id="main-content" tabIndex={-1}>
 
         {/* 2. HERO SECTION */}
         <section id="hero" className="relative bg-[#003F3F] text-[#F5F3EC] pt-24 pb-24 md:pt-36 md:pb-32 px-6 text-center bg-grain-dark border-b border-[#005A57]">
@@ -194,9 +201,9 @@ export default function LandingPage() {
             
             {/* Beta Signal Tagline Badge */}
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#005A57]/60 border border-[#6D7E78]/30 text-[#DDE8DF] text-xs font-medium mt-4 mb-8 backdrop-blur-md">
-              <span className="size-2 rounded-full bg-[#B8FF4D] animate-pulse" />
+              <span className="size-2 rounded-full bg-[#B8FF4D] animate-pulse" aria-hidden="true" />
               <span className="text-white font-semibold">Now in public beta</span>
-              <ArrowRight className="size-3 text-[#B8FF4D]" />
+              <ArrowRight className="size-3 text-[#B8FF4D]" aria-hidden="true" />
             </div>
 
             {/* Display Headline */}
@@ -212,16 +219,16 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-4">
               <Link
                 href="/sign-up"
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-sm font-bold shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 group"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-sm font-bold shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] focus:ring-offset-2"
               >
                 <span>Start learning free</span>
-                <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
               </Link>
               <a
                 href="#demo"
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#005A57]/60 hover:bg-[#005A57] border border-[#6D7E78]/40 text-sm font-medium text-[#F5F3EC] transition-all flex items-center justify-center gap-2.5 group"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#005A57]/60 hover:bg-[#005A57] border border-[#6D7E78]/40 text-sm font-medium text-[#F5F3EC] transition-all flex items-center justify-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] focus:ring-offset-2"
               >
-                <Play className="size-4 text-[#B8FF4D] fill-[#B8FF4D] group-hover:scale-110 transition-transform" />
+                <Play className="size-4 text-[#B8FF4D] fill-[#B8FF4D] group-hover:scale-110 transition-transform" aria-hidden="true" />
                 <span>Watch demo</span>
               </a>
             </div>
@@ -231,11 +238,11 @@ export default function LandingPage() {
             </p>
 
             {/* Hero Interactive Demo / Product Showcase Panel */}
-            <div id="demo" className="relative rounded-3xl bg-[#005A57]/30 border border-[#6D7E78]/30 p-4 sm:p-7 shadow-2xl backdrop-blur-xl max-w-4xl mx-auto text-left group transition-all hover:border-[#6D7E78]/50">
+            <div id="demo" className="relative rounded-3xl bg-[#005A57]/30 border border-[#6D7E78]/30 p-4 sm:p-7 shadow-2xl backdrop-blur-xl max-w-4xl mx-auto text-left group transition-all hover:border-[#6D7E78]/50" aria-label="Interactive product demo">
               
               {/* Decorative Glass Glows */}
-              <div className="absolute -top-20 -right-20 size-64 rounded-full bg-[#B8FF4D]/10 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-20 -left-20 size-64 rounded-full bg-[#005A57]/30 blur-3xl pointer-events-none" />
+              <div className="absolute -top-20 -right-20 size-64 rounded-full bg-[#B8FF4D]/10 blur-3xl pointer-events-none" aria-hidden="true" />
+              <div className="absolute -bottom-20 -left-20 size-64 rounded-full bg-[#005A57]/30 blur-3xl pointer-events-none" aria-hidden="true" />
 
               {/* Product Chrome Top Bar */}
               <div className="relative z-10 flex items-center justify-between px-5 py-3 border border-[#005A57] mb-6 bg-[#003F3F]/90 rounded-2xl shadow-inner backdrop-blur-md">
@@ -300,7 +307,7 @@ export default function LandingPage() {
         </section>
 
         {/* 3. TRUSTED BY LEARNERS STRIP */}
-        <section className="py-10 bg-[#F5F3EC] border-b border-[#E7EFE7]">
+        <section className="py-10 bg-[#F5F3EC] border-b border-[#E7EFE7]" aria-label="Trusted by learners">
           <div className="max-w-7xl mx-auto px-6 text-center">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-[#6D7E78] mb-6 font-mono">
               TRUSTED BY LEARNERS WHO DEMAND MORE
@@ -348,14 +355,14 @@ export default function LandingPage() {
         </section>
 
         {/* 5. FEATURES SECTION */}
-        <section id="features" className="py-28 px-6 bg-[#FBFAF6] text-[#102B2B]">
+        <section id="features" className="py-28 px-6 bg-[#FBFAF6] text-[#102B2B]" aria-labelledby="features-heading">
           <div className="max-w-7xl mx-auto">
             
             <div className="max-w-3xl mb-16 text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DDE8DF] text-[#003F3F] text-[11px] font-mono font-semibold mb-4">
                 FEATURES
               </div>
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-normal text-[#102B2B] tracking-tight leading-[1.12]">
+              <h2 id="features-heading" className="text-3xl sm:text-5xl lg:text-6xl font-serif font-normal text-[#102B2B] tracking-tight leading-[1.12]">
                 Everything scattered. <br />
                 <span className="italic text-[#005A57]">One place to learn.</span>
               </h2>
@@ -467,12 +474,12 @@ export default function LandingPage() {
         </section>
 
         {/* 6. HOW IT WORKS SECTION */}
-        <section id="how-it-works" className="py-28 px-6 bg-[#DDE8DF]/40 border-y border-[#DDE8DF]">
+        <section id="how-it-works" className="py-28 px-6 bg-[#DDE8DF]/40 border-y border-[#DDE8DF]" aria-labelledby="how-heading">
           <div className="max-w-7xl mx-auto text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#003F3F] text-[#B8FF4D] text-[11px] font-mono font-semibold mb-4">
               HOW IT WORKS
             </div>
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-normal text-[#102B2B] tracking-tight leading-[1.1]">
+            <h2 id="how-heading" className="text-3xl sm:text-5xl lg:text-6xl font-serif font-normal text-[#102B2B] tracking-tight leading-[1.1]">
               Learn once. <span className="italic text-[#005A57]">Remember forever.</span>
             </h2>
             <p className="text-[#6D7E78] text-sm sm:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
@@ -539,12 +546,12 @@ export default function LandingPage() {
         </section>
 
         {/* 7. TESTIMONIALS SECTION */}
-        <section id="testimonial" className="py-28 px-6 bg-[#F5F3EC] border-t border-[#DDE8DF]">
+        <section id="testimonial" className="py-28 px-6 bg-[#F5F3EC] border-t border-[#DDE8DF]" aria-labelledby="testimonial-heading">
           <div className="max-w-7xl mx-auto text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#003F3F] text-[#B8FF4D] text-[11px] font-mono font-semibold mb-4">
               TESTIMONIALS
             </div>
-            <h2 className="text-3xl sm:text-5xl font-serif font-normal text-[#102B2B] tracking-tight">
+            <h2 id="testimonial-heading" className="text-3xl sm:text-5xl font-serif font-normal text-[#102B2B] tracking-tight">
               Students who stopped searching and <span className="italic text-[#005A57]">started learning</span>
             </h2>
             <p className="text-[#6D7E78] text-sm sm:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
@@ -627,12 +634,12 @@ export default function LandingPage() {
         </section>
 
         {/* 8. PRICING SECTION */}
-        <section id="pricing" className="py-28 px-6 max-w-7xl mx-auto text-[#102B2B]">
+        <section id="pricing" className="py-28 px-6 max-w-7xl mx-auto text-[#102B2B]" aria-labelledby="pricing-heading">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DDE8DF] text-[#003F3F] text-[11px] font-mono font-semibold mb-4">
               PRICING
             </div>
-            <h2 className="text-3xl sm:text-5xl font-serif font-normal text-[#102B2B] tracking-tight mb-4">
+            <h2 id="pricing-heading" className="text-3xl sm:text-5xl font-serif font-normal text-[#102B2B] tracking-tight mb-4">
               Pricing that scales <span className="italic text-[#005A57]">with your learning</span>
             </h2>
             <p className="text-[#6D7E78] text-sm sm:text-base mb-8">
@@ -802,12 +809,12 @@ export default function LandingPage() {
         </section>
 
         {/* 9. FAQ SECTION */}
-        <section id="faq" className="py-28 px-6 bg-[#F5F3EC] border-t border-[#DDE8DF]">
+        <section id="faq" className="py-28 px-6 bg-[#F5F3EC] border-t border-[#DDE8DF]" aria-labelledby="faq-heading">
           <div className="max-w-4xl mx-auto text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#003F3F] text-[#B8FF4D] text-[11px] font-mono font-semibold mb-4">
               FAQ
             </div>
-            <h2 className="text-3xl sm:text-5xl font-serif font-normal text-[#102B2B] tracking-tight">
+            <h2 id="faq-heading" className="text-3xl sm:text-5xl font-serif font-normal text-[#102B2B] tracking-tight">
               Frequently asked questions
             </h2>
             <p className="text-[#6D7E78] text-sm sm:text-base mt-4 max-w-xl mx-auto leading-relaxed">
@@ -818,6 +825,7 @@ export default function LandingPage() {
           <div className="max-w-3xl mx-auto space-y-4">
             {faqs.map((faq, idx) => {
               const isOpen = openFaq === idx;
+              const answerId = `faq-answer-${idx}`;
               return (
                 <div
                   key={idx}
@@ -826,17 +834,20 @@ export default function LandingPage() {
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="w-full p-6 text-left flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-[#102B2B] hover:text-[#005A57] transition-colors"
+                    aria-expanded={isOpen}
+                    aria-controls={answerId}
+                    className="w-full p-6 text-left flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-[#102B2B] hover:text-[#005A57] transition-colors focus:outline-none focus:ring-2 focus:ring-[#005A57] focus:ring-inset rounded"
                   >
                     <span>{faq.question}</span>
                     <ChevronDown
                       className={`size-5 text-[#005A57] flex-shrink-0 transition-transform duration-200 ${
                         isOpen ? "rotate-180" : ""
                       }`}
+                      aria-hidden="true"
                     />
                   </button>
                   {isOpen && (
-                    <div className="px-6 pb-6 pt-0 text-xs sm:text-sm text-[#6D7E78] leading-relaxed border-t border-[#DDE8DF]/50">
+                    <div id={answerId} className="px-6 pb-6 pt-0 text-xs sm:text-sm text-[#6D7E78] leading-relaxed border-t border-[#DDE8DF]/50">
                       <p className="mt-4">{faq.answer}</p>
                     </div>
                   )}
@@ -859,13 +870,13 @@ export default function LandingPage() {
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
               <Link
                 href="/sign-up"
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold shadow-xl transition-all hover:scale-[1.02]"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-xs font-bold shadow-xl transition-all hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] focus:ring-offset-2"
               >
                 Try Summa AI free
               </Link>
               <a
                 href="#demo"
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#005A57]/60 hover:bg-[#005A57] border border-[#6D7E78]/40 text-xs font-bold text-[#F5F3EC] transition-all"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#005A57]/60 hover:bg-[#005A57] border border-[#6D7E78]/40 text-xs font-bold text-[#F5F3EC] transition-all focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] focus:ring-offset-2"
               >
                 Book a demo
               </a>
@@ -874,7 +885,7 @@ export default function LandingPage() {
         </section>
 
         {/* 11. FOOTER */}
-        <footer className="pt-20 pb-12 px-6 bg-[#003F3F] text-[#F5F3EC] border-t border-[#005A57] bg-grain-dark relative overflow-hidden">
+        <footer className="pt-20 pb-12 px-6 bg-[#003F3F] text-[#F5F3EC] border-t border-[#005A57] bg-grain-dark relative overflow-hidden" role="contentinfo">
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12 text-left mb-16">
               
@@ -933,9 +944,9 @@ export default function LandingPage() {
             <div className="pt-8 border-t border-[#005A57] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#6D7E78] font-mono">
               <div>© 2026 Summa AI. All rights reserved.</div>
               <div className="flex items-center gap-4">
-                <a href="#" className="hover:text-[#DDE8DF] transition-colors">Terms</a>
-                <span>·</span>
-                <a href="#" className="hover:text-[#DDE8DF] transition-colors">Privacy</a>
+                <a href="#" className="hover:text-[#DDE8DF] transition-colors focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] rounded px-1">Terms</a>
+                <span aria-hidden="true">·</span>
+                <a href="#" className="hover:text-[#DDE8DF] transition-colors focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] rounded px-1">Privacy</a>
               </div>
             </div>
           </div>
