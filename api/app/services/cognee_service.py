@@ -109,6 +109,12 @@ class CogneeService:
                         model = f"openai/{model}"
                     cognee.config.set("llm_model", model)
 
+                if settings.OPENAI_EMBEDDING_MODEL or settings.EMBEDDING_MODEL:
+                    emb_model = settings.OPENAI_EMBEDDING_MODEL or settings.EMBEDDING_MODEL
+                    if not emb_model.startswith("openai/"):
+                        emb_model = f"openai/{emb_model}"
+                    cognee.config.set("embedding_model", emb_model)
+
                 qdrant_endpoint = (
                     settings.QDRANT_CLUSTER_ENDPOINT or settings.VECTOR_DB_URL
                 )
