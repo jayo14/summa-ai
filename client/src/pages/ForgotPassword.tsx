@@ -9,12 +9,14 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { forgotPassword } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     if (!email) {
-      toast.error("Please enter your email address");
+      setError("Please enter your email address");
       return;
     }
 
@@ -24,7 +26,7 @@ export default function ForgotPassword() {
       setIsSent(true);
       toast.success(msg || "Reset link sent!");
     } catch (err: any) {
-      toast.error(err.message || "Failed to process request");
+      setError(err.message || "Failed to process request");
     } finally {
       setIsSubmitting(false);
     }
@@ -52,33 +54,46 @@ export default function ForgotPassword() {
 
       {isSent ? (
         <div className="space-y-6">
-          <div className="p-4 bg-[#DDE8DF]/80 border border-[#DDE8DF] rounded-2xl text-xs text-[#003F3F] leading-relaxed">
+          <div className="p-4 bg-[#DDE8DF]/80 border border-[#DDE8DF] rounded-2xl text-xs text-[#003F3F] leading-relaxed" role="status">
             Password reset instructions have been sent to <strong>{email}</strong>.
           </div>
 
           <Link
             href="/sign-in"
-            className="w-full py-3 px-4 bg-[#003F3F] hover:bg-[#005A57] text-[#F5F3EC] text-sm font-bold rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+            className="w-full py-3 px-4 bg-[#003F3F] hover:bg-[#005A57] text-[#F5F3EC] text-sm font-bold rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] focus:ring-offset-2"
           >
-            <ArrowLeft className="size-4 text-[#F5F3EC]" />
+            <ArrowLeft className="size-4 text-[#F5F3EC]" aria-hidden="true" />
             Back to Sign In
           </Link>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {error && (
+            <div
+              className="p-3 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-700"
+              role="alert"
+              aria-live="assertive"
+            >
+              {error}
+            </div>
+          )}
+
           <div>
-            <label className="block text-xs font-semibold text-[#102B2B] mb-1.5">
+            <label htmlFor="forgot-email" className="block text-xs font-semibold text-[#102B2B] mb-1.5">
               Email address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6D7E78] size-4" />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6D7E78] size-4" aria-hidden="true" />
               <input
+                id="forgot-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 className="w-full pl-10 pr-4 py-2.5 bg-[#FBFAF6] border border-[#DDE8DF] rounded-2xl text-sm text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57] transition-all shadow-xs"
                 required
+                aria-describedby={error ? "forgot-error" : undefined}
+                aria-invalid={error ? "true" : undefined}
               />
             </div>
           </div>
@@ -86,14 +101,14 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 px-4 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-sm font-bold rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            className="w-full py-3 px-4 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-sm font-bold rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#005A57] focus:ring-offset-2"
           >
             {isSubmitting ? (
-              <Sparkles className="size-4 animate-spin text-[#003F3F]" />
+              <Sparkles className="size-4 animate-spin text-[#003F3F]" aria-hidden="true" />
             ) : (
               <>
                 Send Reset Link
-                <Send className="size-4 text-[#003F3F]" />
+                <Send className="size-4 text-[#003F3F]" aria-hidden="true" />
               </>
             )}
           </button>
@@ -101,9 +116,9 @@ export default function ForgotPassword() {
           <div className="pt-2 text-center">
             <Link
               href="/sign-in"
-              className="inline-flex items-center gap-1.5 text-xs text-[#6D7E78] font-bold hover:text-[#102B2B] transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-[#6D7E78] font-bold hover:text-[#102B2B] transition-colors focus:outline-none focus:ring-2 focus:ring-[#005A57] rounded"
             >
-              <ArrowLeft className="size-3.5" />
+              <ArrowLeft className="size-3.5" aria-hidden="true" />
               Back to Sign In
             </Link>
           </div>

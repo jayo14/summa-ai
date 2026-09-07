@@ -21,9 +21,17 @@ export function AuthLayout({
 }: AuthLayoutProps) {
   return (
     <div className="min-h-screen w-full bg-[#003F3F] text-[#F5F3EC] flex flex-col justify-between p-4 sm:p-6 md:p-10 font-sans relative overflow-hidden bg-grain-dark">
+      {/* Skip to main content */}
+      <a
+        href="#auth-form"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-[#B8FF4D] focus:text-[#003F3F] focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8FF4D]"
+      >
+        Skip to sign in form
+      </a>
+
       {/* Background Radial Glow */}
-      <div className="absolute top-[-100px] left-[-80px] w-96 h-96 rounded-full bg-[#005A57]/40 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-120px] right-[-100px] w-[30rem] h-[30rem] rounded-full bg-[#005A57]/30 blur-3xl pointer-events-none" />
+      <div className="absolute top-[-100px] left-[-80px] w-96 h-96 rounded-full bg-[#005A57]/40 blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute bottom-[-120px] right-[-100px] w-[30rem] h-[30rem] rounded-full bg-[#005A57]/30 blur-3xl pointer-events-none" aria-hidden="true" />
 
       {/* Navigation Header */}
       <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between py-2 px-1">
@@ -35,7 +43,7 @@ export function AuthLayout({
           </span>
           <Link
             href={topRightLink.href}
-            className="px-4 py-2 rounded-full bg-[#005A57] border border-[#6D7E78]/40 hover:bg-[#003F3F] text-xs font-bold text-[#F5F3EC] transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="px-4 py-2 rounded-full bg-[#005A57] border border-[#6D7E78]/40 hover:bg-[#003F3F] text-xs font-bold text-[#F5F3EC] transition-all hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#B8FF4D] focus:ring-offset-2 focus:ring-offset-[#003F3F]"
           >
             {topRightLink.label}
           </Link>
@@ -43,15 +51,19 @@ export function AuthLayout({
       </header>
 
       {/* Main Grid Shell */}
-      <main className="relative z-10 w-full max-w-6xl mx-auto my-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      <main
+        id="auth-form"
+        className="relative z-10 w-full max-w-6xl mx-auto my-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center"
+        tabIndex={-1}
+      >
         {/* Left Side Hero Panel */}
-        <div className="lg:col-span-6 flex flex-col justify-center space-y-6">
+        <section className="lg:col-span-6 flex flex-col justify-center space-y-6" aria-labelledby="auth-hero-heading">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#005A57]/60 border border-[#6D7E78]/30 text-[#B8FF4D] text-xs font-semibold w-fit backdrop-blur-sm">
-            <Sparkles className="size-3.5 text-[#B8FF4D]" />
+            <Sparkles className="size-3.5 text-[#B8FF4D]" aria-hidden="true" />
             <span className="tracking-wide uppercase text-[10px] font-mono">Summa AI Workspace</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-normal text-[#FBFAF6] tracking-tight leading-[1.15]">
+          <h1 id="auth-hero-heading" className="text-3xl sm:text-4xl lg:text-5xl font-serif font-normal text-[#FBFAF6] tracking-tight leading-[1.15]">
             {heroHeadline}
           </h1>
 
@@ -59,9 +71,9 @@ export function AuthLayout({
             {heroDescription}
           </p>
 
-          <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
-            <div className="p-3.5 rounded-2xl bg-[#005A57]/40 border border-[#6D7E78]/30 backdrop-blur-md shadow-xs flex items-start gap-3">
-              <div className="size-8 rounded-xl bg-[#005A57] text-[#B8FF4D] flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs font-mono">
+          <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg" role="list" aria-label="Key features">
+            <div className="p-3.5 rounded-2xl bg-[#005A57]/40 border border-[#6D7E78]/30 backdrop-blur-md shadow-xs flex items-start gap-3" role="listitem">
+              <div className="size-8 rounded-xl bg-[#005A57] text-[#B8FF4D] flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs font-mono" aria-hidden="true">
                 AI
               </div>
               <div>
@@ -70,8 +82,8 @@ export function AuthLayout({
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#005A57]/40 border border-[#6D7E78]/30 backdrop-blur-md shadow-xs flex items-start gap-3">
-              <div className="size-8 rounded-xl bg-[#005A57] text-[#B8FF4D] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="p-3.5 rounded-2xl bg-[#005A57]/40 border border-[#6D7E78]/30 backdrop-blur-md shadow-xs flex items-start gap-3" role="listitem">
+              <div className="size-8 rounded-xl bg-[#005A57] text-[#B8FF4D] flex items-center justify-center flex-shrink-0 mt-0.5" aria-hidden="true">
                 <ShieldCheck className="size-4" />
               </div>
               <div>
@@ -80,7 +92,7 @@ export function AuthLayout({
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Right Side - Soft Cream Card Form Shell */}
         <div className="lg:col-span-6 w-full max-w-md mx-auto">
@@ -91,10 +103,9 @@ export function AuthLayout({
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto py-3 text-center text-xs text-[#6D7E78] font-mono">
+      <footer className="relative z-10 w-full max-w-7xl mx-auto py-3 text-center text-xs text-[#6D7E78] font-mono" role="contentinfo">
         © 2026 Summa AI · Intelligent Learning &amp; Study Workspace
       </footer>
     </div>
   );
 }
-

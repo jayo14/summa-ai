@@ -11,6 +11,7 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [keepSigned, setKeepSigned] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { login, user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -22,8 +23,9 @@ export default function SignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     if (!email || !password) {
-      toast.error("Please fill in all fields");
+      setError("Please fill in all fields");
       return;
     }
 
@@ -39,7 +41,7 @@ export default function SignIn() {
         localStorage.setItem("summa_pending_email", email);
         setLocation(`/verify-email?email=${encodeURIComponent(email)}`);
       } else {
-        toast.error(errMsg || "Failed to sign in");
+        setError(errMsg || "Failed to sign in");
       }
       setIsSubmitting(false);
     }
@@ -59,42 +61,58 @@ export default function SignIn() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {error && (
+          <div
+            className="p-3 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-700"
+            role="alert"
+            aria-live="assertive"
+          >
+            {error}
+          </div>
+        )}
+
         <div>
-          <label className="block text-xs font-semibold text-[#102B2B] mb-1.5">
+          <label htmlFor="signin-email" className="block text-xs font-semibold text-[#102B2B] mb-1.5">
             Email address
           </label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6D7E78] size-4" />
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6D7E78] size-4" aria-hidden="true" />
             <input
+              id="signin-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               className="w-full pl-10 pr-4 py-2.5 bg-[#FBFAF6] border border-[#DDE8DF] rounded-2xl text-sm text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57] transition-all shadow-xs"
               required
+              aria-describedby={error ? "signin-error" : undefined}
+              aria-invalid={error ? "true" : undefined}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-[#102B2B] mb-1.5">
+          <label htmlFor="signin-password" className="block text-xs font-semibold text-[#102B2B] mb-1.5">
             Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6D7E78] size-4" />
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6D7E78] size-4" aria-hidden="true" />
             <input
+              id="signin-password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               className="w-full pl-10 pr-10 py-2.5 bg-[#FBFAF6] border border-[#DDE8DF] rounded-2xl text-sm text-[#102B2B] placeholder:text-[#6D7E78] focus:outline-none focus:ring-2 focus:ring-[#005A57] transition-all shadow-xs"
               required
+              aria-describedby={error ? "signin-error" : undefined}
+              aria-invalid={error ? "true" : undefined}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6D7E78] hover:text-[#102B2B] transition-colors p-1"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6D7E78] hover:text-[#102B2B] transition-colors p-1 focus:outline-none focus:ring-2 focus:ring-[#005A57] rounded"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -115,7 +133,7 @@ export default function SignIn() {
 
           <Link
             href="/forgot-password"
-            className="text-xs text-[#005A57] font-bold hover:underline"
+            className="text-xs text-[#005A57] font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-[#005A57] rounded"
           >
             Forgot password?
           </Link>
@@ -124,9 +142,9 @@ export default function SignIn() {
         <button
           type="button"
           onClick={() => toast.info("Google Sign-In integration initialized.")}
-          className="w-full py-2.5 px-4 bg-[#FBFAF6] border border-[#DDE8DF] hover:bg-[#E7EFE7] text-[#102B2B] text-sm font-semibold rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xs cursor-pointer mb-3"
+          className="w-full py-2.5 px-4 bg-[#FBFAF6] border border-[#DDE8DF] hover:bg-[#E7EFE7] text-[#102B2B] text-sm font-semibold rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xs cursor-pointer mb-3 focus:outline-none focus:ring-2 focus:ring-[#005A57] focus:ring-offset-2"
         >
-          <svg className="size-4" viewBox="0 0 24 24">
+          <svg className="size-4" viewBox="0 0 24 24" aria-hidden="true">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -147,7 +165,7 @@ export default function SignIn() {
           <span>Sign in with Google</span>
         </button>
 
-        <div className="relative flex items-center justify-center my-4">
+        <div className="relative flex items-center justify-center my-4" role="separator">
           <div className="border-t border-[#DDE8DF] w-full" />
           <span className="bg-[#F5F3EC] px-3 text-[10px] font-semibold text-[#6D7E78] uppercase tracking-widest relative z-10 whitespace-nowrap rounded-full border border-[#DDE8DF]">
             or email
@@ -157,24 +175,24 @@ export default function SignIn() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 px-4 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-sm font-bold rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+          className="w-full py-3 px-4 bg-[#B8FF4D] hover:bg-[#c7ff62] text-[#003F3F] text-sm font-bold rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#005A57] focus:ring-offset-2"
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="size-4 animate-spin text-[#003F3F]" />
+              <Loader2 className="size-4 animate-spin text-[#003F3F]" aria-hidden="true" />
               <span>Signing in...</span>
             </>
           ) : (
             <>
               Sign in
-              <ArrowRight className="size-4 text-[#003F3F]" />
+              <ArrowRight className="size-4 text-[#003F3F]" aria-hidden="true" />
             </>
           )}
         </button>
 
         {/* Student-centric benefit callout box */}
         <div className="bg-[#DDE8DF]/60 border border-[#DDE8DF] rounded-2xl p-3.5 flex gap-3 items-start text-xs text-[#003F3F] mt-5 leading-relaxed">
-          <Sparkles className="size-4 text-[#005A57] flex-shrink-0 mt-0.5" />
+          <Sparkles className="size-4 text-[#005A57] flex-shrink-0 mt-0.5" aria-hidden="true" />
           <p>
             Welcome back! Your study notes, interactive quizzes, and AI flashcards are right where you left them.
           </p>
