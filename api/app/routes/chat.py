@@ -15,6 +15,8 @@ from app.services.user_store import UserStore
 from app.services.data_store import DataStore
 from app.services import zai_client, google_ai
 from app.services.component_generation import generate_component_payload
+from app.services.intent_extraction import extract_intent, UserIntent
+from app.utils.timing import Timer
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -290,18 +292,40 @@ async def _stream_ai_response(
 
 @router.post("/chat/stream", summary="Chat (streaming)")
 async def chat_stream(request: ChatRequest):
+    timer = Timer("CHAT")
     user_id = resolve_user_id()
     last_query = request.messages[-1].content if request.messages else ""
     messages = [{"role": m.role, "content": m.content} for m in request.messages]
-    
+
+    timer.mark("request_received")
+
+    # Structured intent extraction — subject/topic from ChatRequest or query
+    user_intent = extract_intent(
+        last_query,
+        request_subject=request.subject,
+        request_proficiency=request.proficiency_level,
+    )
+    timer.mark("intent_detection")
+
     from app.services.orchestrator import LearningOrchestrator
     orchestrator = LearningOrchestrator()
     decision = await orchestrator.decide_next_action(user_id, last_query, messages)
-    
-    intent = detect_intent(last_query)
+    timer.mark("learning_decision")
+
+    intent = user_intent.activity_request or user_intent.intent or detect_intent(last_query)
     orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages, request=request, decision=decision)
+    timer.mark("learner_context")
 
     async def generate():
+        timer.mark("stream_start")
+
+        # Emit structured intent event (new — frontend can use this)
+        intent_event = {
+            "type": "intent",
+            "intent": user_intent.model_dump(),
+        }
+        yield f"data: {json.dumps(intent_event)}\n\n"
+
         # Emit orchestrator next_action event
         next_action_event = {
             "type": "next_action",
@@ -312,35 +336,34 @@ async def chat_stream(request: ChatRequest):
         }
         yield f"data: {json.dumps(next_action_event)}\n\n"
 
+        # Determine component type: explicit user intent takes priority over
+        # orchestrator decision mapping
         from app.models.components import ACTION_TO_COMPONENT
         component_type_to_deploy = intent or ACTION_TO_COMPONENT.get(decision.action)
 
+        # Emit "preparing_activity" state so the frontend shows a subtle
+        # "Preparing a quick challenge..." indicator instead of a generic
+        # "Thinking..." spinner.
         if component_type_to_deploy:
-            payload = await generate_component_payload(component_type_to_deploy, last_query, orch_prompt)
-            if payload is not None:
-                artifact_event = {
-                    "id": payload.id,
-                    "title": payload.title,
-                    "type": payload.type,
-                    "data": payload.data.model_dump(by_alias=True, mode="json"),
-                    "purpose": decision.action,
-                    "difficulty": decision.suggested_difficulty,
-                }
-            else:
-                logger.info(
-                    "Component generation unavailable for type=%s; emitting "
-                    "skeleton artifact event with no data (frontend renders "
-                    "plain text only).",
-                    component_type_to_deploy,
-                )
-                artifact_event = {
-                    "id": f"pending-{component_type_to_deploy}",
-                    "title": component_type_to_deploy.replace("-", " ").title(),
-                    "type": component_type_to_deploy,
-                }
-            yield f"data: {json.dumps({'type': 'artifact', 'artifact': artifact_event})}\n\n"
+            yield f'data: {json.dumps({"type": "preparing_activity"})}\n\n'
+            timer.mark("component_selection")
 
-        # P0-8: Persist user message to DataStore
+        # Start component generation as a NON-BLOCKING background task.
+        # The AI response stream begins immediately — the user does NOT wait
+        # for component generation to finish before seeing text.
+        component_task: Optional[asyncio.Task] = None
+        if component_type_to_deploy:
+            component_task = asyncio.create_task(
+                generate_component_payload(
+                    component_type_to_deploy,
+                    last_query,
+                    orch_prompt,
+                    intent=user_intent,
+                )
+            )
+            timer.mark("component_generation")
+
+        # P0-8: Persist user message to DataStore (non-blocking best-effort)
         if request.conversation_id and last_query:
             try:
                 ds = DataStore()
@@ -348,11 +371,22 @@ async def chat_stream(request: ChatRequest):
             except Exception:
                 logger.warning("Failed to persist user message", exc_info=True)
 
+        # Stream the AI response — this starts immediately, concurrently
+        # with the background component generation task.
         full_response = ""
         accumulated_reasoning = ""
+        first_token = True
         async for event in _stream_ai_response(
             messages, request.enable_thinking, context=orch_prompt
         ):
+            if first_token and event.startswith("data: {"):
+                try:
+                    data = json.loads(event[6:])
+                    if data.get("type") == "content" and data.get("delta"):
+                        first_token = False
+                        timer.mark("first_token")
+                except Exception:
+                    pass
             yield event
             if event.startswith("data: {"):
                 try:
@@ -364,7 +398,41 @@ async def chat_stream(request: ChatRequest):
                 except Exception:
                     pass
 
+        # After AI stream ends, wait for the component to finish (bounded).
+        if component_task is not None and not component_task.done():
+            try:
+                payload = await asyncio.wait_for(component_task, timeout=10.0)
+            except asyncio.TimeoutError:
+                payload = None
+                logger.warning(
+                    "Component generation did not finish within 10s after stream; "
+                    "cancelling. type=%s", component_type_to_deploy
+                )
+                component_task.cancel()
+        elif component_task is not None and component_task.done():
+            payload = component_task.result()
+        else:
+            payload = None
+
+        if component_task is not None and payload is not None:
+            timer.mark("component_event")
+            artifact_event = {
+                "id": payload.id,
+                "title": payload.title,
+                "type": payload.type,
+                "data": payload.data.model_dump(by_alias=True, mode="json"),
+                "purpose": decision.action,
+                "difficulty": decision.suggested_difficulty,
+            }
+            yield f"data: {json.dumps({'type': 'artifact', 'artifact': artifact_event})}\n\n"
+        elif component_task is not None and payload is None:
+            logger.info(
+                "Component generation unavailable for type=%s; local fallback "
+                "or None returned.", component_type_to_deploy
+            )
+
         if full_response:
+            timer.mark("response_complete")
             # P0-8: Persist assistant message to DataStore
             if request.conversation_id:
                 try:
@@ -379,33 +447,36 @@ async def chat_stream(request: ChatRequest):
                 except Exception:
                     logger.warning("Failed to persist assistant message", exc_info=True)
 
-            await cognee.remember_conversation(
-                user_id, last_query, full_response, session_id=request.conversation_id
-            )
-
-            try:
-                ds = DataStore()
-                await ds.create_timeline_event(
-                    user_id,
-                    "chat",
-                    f"Chat: {last_query[:60]}",
-                    f"Assistant replied with {len(full_response)} chars",
-                    {"conversation_id": request.conversation_id},
-                )
-            except Exception:
-                logger.warning("Failed to create chat timeline event", exc_info=True)
-
-            if settings.HYBRID_MEMORY_ENABLED:
-                asyncio.ensure_future(
-                    summastudy_memory.extract_and_store_memories(user_id, last_query)
+                await cognee.remember_conversation(
+                    user_id, last_query, full_response, session_id=request.conversation_id
                 )
 
-        if len(messages) % PROACTIVE_GAP_CHECK_INTERVAL == 0 and len(messages) > 0:
-            gaps = await detect_knowledge_gaps(user_id)
-            if gaps:
-                yield (
-                    f"data: {json.dumps({'type': 'artifact', 'artifact': {'id': 'gap-analysis', 'title': gaps['title'], 'type': 'gap-analysis', 'data': gaps['gaps']}})}\n\n"
-                )
+                try:
+                    ds = DataStore()
+                    await ds.create_timeline_event(
+                        user_id,
+                        "chat",
+                        f"Chat: {last_query[:60]}",
+                        f"Assistant replied with {len(full_response)} chars",
+                        {"conversation_id": request.conversation_id},
+                    )
+                except Exception:
+                    logger.warning("Failed to create chat timeline event", exc_info=True)
+
+                if settings.HYBRID_MEMORY_ENABLED:
+                    asyncio.ensure_future(
+                        summastudy_memory.extract_and_store_memories(user_id, last_query)
+                    )
+
+            if len(messages) % PROACTIVE_GAP_CHECK_INTERVAL == 0 and len(messages) > 0:
+                gaps = await detect_knowledge_gaps(user_id)
+                if gaps:
+                    yield (
+                        f"data: {json.dumps({'type': 'artifact', 'artifact': {'id': 'gap-analysis', 'title': gaps['title'], 'type': 'gap-analysis', 'data': gaps['gaps']}})}\n\n"
+                    )
+
+        timer.mark("response_complete")
+        timer.log(logger, "CHAT")
 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
