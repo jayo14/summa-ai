@@ -1,8 +1,8 @@
-"""Tests for SupabaseAuthService — verifies all Supabase Auth operations go through the service."""
+"""Tests for SupabaseAuthService — verifies centralized error handling, client reuse, status code mapping."""
 
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from app.services.supabase_auth import SupabaseAuthService, SupabaseAuthError
+from app.services.supabase_auth import SupabaseAuthService, SupabaseAuthError, _SUPABASE_ERROR_MAP
 
 
 def _mock_settings():
@@ -11,22 +11,6 @@ def _mock_settings():
         SUPABASE_URL="https://test.supabase.co",
         SUPABASE_ANON_KEY="test-anon-key",
     )
-
-
-def _ok_response(status=200, body=None):
-    """Create a mock httpx.Response for success."""
-    resp = MagicMock()
-    resp.status_code = status
-    resp.json.return_value = body or {}
-    return resp
-
-
-def _err_response(status, body):
-    """Create a mock httpx.Response for error."""
-    resp = MagicMock()
-    resp.status_code = status
-    resp.json.return_value = body
-    return resp
 
 
 class TestSupabaseAuthServiceInit:
@@ -41,108 +25,85 @@ class TestSupabaseAuthServiceInit:
                 SupabaseAuthService()
 
 
-class TestSupabaseAuthServiceSignup:
-    @pytest.mark.asyncio
-    async def test_signup_success(self):
-        result = {"status_code": 200, "data": {"user": {"id": "u1"}}, "error": None}
-        with _mock_settings():
-            service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result):
-                resp = await service.signup("a@b.com", "pass123")
-                assert resp["error"] is None
-                assert resp["data"]["user"]["id"] == "u1"
+class TestSafeJsonParsing:
+    def test_valid_json(self):
+        resp = MagicMock()
+        resp.json.return_value = {"key": "value"}
+        assert SupabaseAuthService._safe_json(resp) == {"key": "value"}
 
-    @pytest.mark.asyncio
-    async def test_signup_with_data(self):
-        result = {"status_code": 200, "data": {"user": {"id": "u1"}}, "error": None}
-        with _mock_settings():
-            service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result) as mock_req:
-                await service.signup("a@b.com", "pass123", data={"name": "Test"})
-                call_args = mock_req.call_args
-                assert call_args[1]["json_data"]["data"] == {"name": "Test"}
+    def test_invalid_json_returns_empty(self):
+        resp = MagicMock()
+        resp.json.side_effect = ValueError("Invalid JSON")
+        assert SupabaseAuthService._safe_json(resp) == {}
+
+    def test_empty_body_returns_empty(self):
+        resp = MagicMock()
+        resp.json.return_value = {}
+        assert SupabaseAuthService._safe_json(resp) == {}
 
 
-class TestSupabaseAuthServiceLogin:
-    @pytest.mark.asyncio
-    async def test_login_success(self):
-        result = {"status_code": 200, "data": {"access_token": "tok"}, "error": None}
-        with _mock_settings():
-            service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result):
-                resp = await service.login("a@b.com", "pass123")
-                assert resp["error"] is None
-                assert resp["data"]["access_token"] == "tok"
+class TestErrorExtraction:
+    def test_known_error_code(self):
+        body = {"error_code": "invalid_credentials", "msg": "Bad"}
+        assert SupabaseAuthService._extract_error(body, 401) == "Invalid email or password"
 
-    @pytest.mark.asyncio
-    async def test_login_invalid_credentials(self):
-        result = {"status_code": 401, "data": None, "error": "Invalid login credentials"}
-        with _mock_settings():
-            service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result):
-                resp = await service.login("a@b.com", "wrong")
-                assert resp["status_code"] == 401
-                assert "Invalid" in resp["error"]
+    def test_unknown_error_400(self):
+        body = {"msg": "Something wrong"}
+        assert SupabaseAuthService._extract_error(body, 400) == "Something wrong"
 
+    def test_unknown_error_401(self):
+        body = {}
+        assert SupabaseAuthService._extract_error(body, 401) == "Invalid email or password"
 
-class TestSupabaseAuthServiceVerifyOtp:
-    @pytest.mark.asyncio
-    async def test_verify_otp_success(self):
-        result = {"status_code": 200, "data": {"access_token": "otp-tok"}, "error": None}
-        with _mock_settings():
-            service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result):
-                resp = await service.verify_otp("a@b.com", "123456")
-                assert resp["error"] is None
+    def test_unknown_error_429(self):
+        body = {}
+        assert SupabaseAuthService._extract_error(body, 429) == "Too many requests. Please try again later."
 
+    def test_500_hides_infrastructure(self):
+        body = {"msg": "Database connection pool exhausted"}
+        error = SupabaseAuthService._extract_error(body, 500)
+        assert "Database" not in error
+        assert "unavailable" in error.lower()
 
-class TestSupabaseAuthServiceResendOtp:
-    @pytest.mark.asyncio
-    async def test_resend_otp_success(self):
-        result = {"status_code": 200, "data": {}, "error": None}
-        with _mock_settings():
-            service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result):
-                resp = await service.resend_otp("a@b.com")
-                assert resp["error"] is None
+    def test_weak_password_code(self):
+        body = {"error_code": "weak_password", "msg": "Too short"}
+        assert SupabaseAuthService._extract_error(body, 422) == "Password does not meet strength requirements"
 
-
-class TestSupabaseAuthServiceRecover:
-    @pytest.mark.asyncio
-    async def test_recover_success(self):
-        result = {"status_code": 200, "data": {}, "error": None}
-        with _mock_settings():
-            service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result):
-                resp = await service.recover("a@b.com")
-                assert resp["error"] is None
+    def test_rate_limit_code(self):
+        body = {"error_code": "over_request_rate_limit"}
+        assert SupabaseAuthService._extract_error(body, 429) == "Too many requests. Please try again later."
 
 
 class TestSupabaseAuthErrorMapping:
     @pytest.mark.asyncio
-    async def test_400_maps_to_error(self):
-        result = {"status_code": 400, "data": None, "error": "Bad request"}
+    async def test_timeout_raises_error(self):
+        import httpx
         with _mock_settings():
             service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result):
-                resp = await service.login("a@b.com", "pass")
-                assert resp["status_code"] == 400
+            mock_client = AsyncMock()
+            mock_client.request.side_effect = httpx.TimeoutException("timeout")
+            mock_client.is_closed = False
+            with patch.object(service, "_get_client", return_value=mock_client):
+                with pytest.raises(SupabaseAuthError) as exc:
+                    await service.login("a@b.com", "pass")
+                assert exc.value.status_code == 504
 
     @pytest.mark.asyncio
-    async def test_429_maps_to_rate_limit(self):
-        result = {"status_code": 429, "data": None, "error": "Rate limit exceeded"}
+    async def test_connection_error_raises_error(self):
+        import httpx
         with _mock_settings():
             service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result):
-                resp = await service.signup("a@b.com", "pass")
-                assert resp["status_code"] == 429
+            mock_client = AsyncMock()
+            mock_client.request.side_effect = httpx.ConnectError("refused")
+            mock_client.is_closed = False
+            with patch.object(service, "_get_client", return_value=mock_client):
+                with pytest.raises(SupabaseAuthError) as exc:
+                    await service.login("a@b.com", "pass")
+                assert exc.value.status_code == 502
 
-    @pytest.mark.asyncio
-    async def test_500_maps_to_service_unavailable(self):
-        result = {"status_code": 500, "data": None, "error": "Database error"}
-        with _mock_settings():
-            service = SupabaseAuthService()
-            with patch.object(service, "_request", new_callable=AsyncMock, return_value=result):
-                resp = await service.login("a@b.com", "pass")
-                assert resp["status_code"] == 500
-                # The router maps this to 502, but the service returns the raw status
+
+class TestSupabaseAuthErrorMap:
+    def test_all_known_codes_have_messages(self):
+        for code in _SUPABASE_ERROR_MAP:
+            assert isinstance(_SUPABASE_ERROR_MAP[code], str)
+            assert len(_SUPABASE_ERROR_MAP[code]) > 0
