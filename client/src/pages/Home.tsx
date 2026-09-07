@@ -5,11 +5,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
   Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, MoreVertical, Paperclip, PanelRight,
-  Plus, Search, Send, Settings2, Sparkles, X, Mic, ImagePlus, ListChecks, Lightbulb, Sun, Moon, ArrowDownUp, Filter, Share2, Download, Trophy, CheckCircle2, LoaderCircle, Bookmark, BookmarkCheck, LogOut, Terminal, Shield,
   Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus, Edit2, FolderMinus,
 } from "lucide-react";
 import { toast } from "sonner";
-import { FlashcardReview, GuidedPractice, ProgressMoment, RecallQuiz } from "@/components/LearningInteractives";
 import { SummaLogo } from "@/components/SummaLogo";
 import { SettingsView } from "@/components/SettingsView";
 import { useAuth } from "@/contexts/AuthContext";
