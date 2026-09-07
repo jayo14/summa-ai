@@ -3,7 +3,7 @@
 import asyncio
 import json, logging, re
 from datetime import datetime
-from typing import AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from app.config import settings
