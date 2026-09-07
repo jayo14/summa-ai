@@ -115,3 +115,24 @@ async def test_study_plan_flashcard_exam_ownership_isolation():
 
     assert await store.update_exam("exam-1", user_b, {"name": "X"}) is None
     assert await store.delete_exam("exam-1", user_b) is False
+
+
+@pytest.mark.asyncio
+async def test_material_and_concept_ownership_isolation():
+    store = DataStore()
+    user_a = "user-a"
+    user_b = "user-b"
+
+    mat = await store.create_material(user_a, {"title": "doc.pdf", "type": "pdf"})
+    mid = mat["id"]
+    concept = await store.create_concept(user_a, {"name": "Recursion", "category": "CS"})
+    cid = concept["id"]
+
+    # User B cannot delete User A's material or concept
+    assert await store.delete_material(mid, user_b) is False
+    assert await store.delete_concept(cid, user_b) is False
+
+    # User A can delete
+    assert await store.delete_material(mid, user_a) is True
+    assert await store.delete_concept(cid, user_a) is True
+

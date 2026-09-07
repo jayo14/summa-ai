@@ -663,20 +663,24 @@ class DataStore:
         self._local_materials.insert(0, item)
         return item
 
-    async def delete_material(self, mid: str) -> bool:
+    async def delete_material(self, mid: str, user_id: str) -> bool:
         try:
             pool = await self._get_pool()
             if pool is not None:
                 async with pool.acquire() as conn:
                     result = await conn.execute(
-                        "DELETE FROM summa_ai.materials WHERE id = $1", mid
+                        "DELETE FROM summa_ai.materials WHERE id = $1 AND user_id = $2", mid, user_id
                     )
                 return "DELETE 1" in result
         except Exception:
             pass
 
-        self._local_materials = [m for m in self._local_materials if m.get("id") != mid]
-        return True
+        orig_len = len(self._local_materials)
+        self._local_materials = [
+            m for m in self._local_materials
+            if not (m.get("id") == mid and m.get("user_id") == user_id)
+        ]
+        return len(self._local_materials) < orig_len
 
     # ── Concepts ───────────────────────────────────────────────────
 
@@ -744,13 +748,24 @@ class DataStore:
         self._local_concepts.insert(0, item)
         return item
 
-    async def delete_concept(self, cid: str) -> bool:
-        pool = await self._get_pool()
-        async with pool.acquire() as conn:
-            result = await conn.execute(
-                "DELETE FROM summa_ai.concepts WHERE id = $1", cid
-            )
-        return "DELETE 1" in result
+    async def delete_concept(self, cid: str, user_id: str) -> bool:
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    result = await conn.execute(
+                        "DELETE FROM summa_ai.concepts WHERE id = $1 AND user_id = $2", cid, user_id
+                    )
+                return "DELETE 1" in result
+        except Exception:
+            pass
+
+        orig_len = len(self._local_concepts)
+        self._local_concepts = [
+            c for c in self._local_concepts
+            if not (c.get("id") == cid and c.get("user_id") == user_id)
+        ]
+        return len(self._local_concepts) < orig_len
 
     # ── Study Plans ─────────────────────────────────────────────────
 

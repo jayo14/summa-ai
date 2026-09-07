@@ -478,8 +478,8 @@ async def create_material(data: MaterialCreate):
     description="Permanently delete a learning material by ID",
 )
 async def delete_material(mid: str):
-    resolve_user_id()
-    if not await _store.delete_material(mid):
+    user_id = resolve_user_id()
+    if not await _store.delete_material(mid, user_id):
         raise HTTPException(404, "Not found")
     return {"status": "success"}
 
@@ -515,8 +515,8 @@ async def create_concept(data: ConceptCreate):
     description="Permanently delete a learning concept by ID",
 )
 async def delete_concept(cid: str):
-    resolve_user_id()
-    if not await _store.delete_concept(cid):
+    user_id = resolve_user_id()
+    if not await _store.delete_concept(cid, user_id):
         raise HTTPException(404, "Not found")
     return {"status": "success"}
 
