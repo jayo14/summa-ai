@@ -1,6 +1,23 @@
 import React, { useEffect } from "react";
 import { Link, useRoute } from "wouter";
 import { components } from "./component-data";
+import {
+  FlashcardPreview,
+  MultipleChoicePreview,
+  TrueFalsePreview,
+  ProgressCardPreview,
+  RecallPromptPreview,
+  ShortAnswerPreview,
+  FillBlankPreview,
+  ConfidenceCheckPreview,
+  MatchingPreview,
+  OrderingPreview,
+  CategorizationPreview,
+  ScenarioPreview,
+  ConceptBreakdownPreview,
+  ExamCountdownPreview,
+  LearningPathPreview,
+} from "./InteractivePreviews";
 
 export function ComponentDetailPage() {
   const [, params] = useRoute("/admin/components/:id");
@@ -9,6 +26,25 @@ export function ComponentDetailPage() {
   const component = componentId
     ? components.find((c) => c.id === componentId) || null
     : null;
+
+  // Map component IDs to interactive previews
+  const interactivePreviews: Record<string, React.ReactNode> = {
+    flashcard_card: <FlashcardPreview />,
+    multiple_choice: <MultipleChoicePreview />,
+    true_false: <TrueFalsePreview />,
+    progress_card: <ProgressCardPreview />,
+    recall_prompt: <RecallPromptPreview />,
+    short_answer: <ShortAnswerPreview />,
+    fill_blank: <FillBlankPreview />,
+    confidence_check: <ConfidenceCheckPreview />,
+    matching: <MatchingPreview />,
+    ordering: <OrderingPreview />,
+    categorization: <CategorizationPreview />,
+    scenario: <ScenarioPreview />,
+    concept_breakdown: <ConceptBreakdownPreview />,
+    exam_countdown: <ExamCountdownPreview />,
+    learning_path: <LearningPathPreview />,
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -162,8 +198,24 @@ export function ComponentDetailPage() {
             >
               Try the component
             </h3>
-            <div className="p-4 bg-cream-light dark:bg-[#232D2D] rounded-2xl border border-mist-green dark:border-[#2A3838]">
-              {component.preview}
+            <div
+              className="relative bg-cream-light dark:bg-[#232D2D] rounded-2xl border border-mist-green dark:border-[#2A3838] overflow-hidden"
+              style={{ minHeight: "320px" }}
+            >
+              {/* Corner label */}
+              <div className="absolute top-3 left-3 z-10">
+                <span className="px-2 py-1 rounded-lg bg-teal-dark/10 dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime text-[10px] font-bold uppercase tracking-wider">
+                  Live Playground
+                </span>
+              </div>
+              {/* Interactive preview or static fallback */}
+              <div className="w-full flex items-center justify-center p-4 pt-10">
+                {interactivePreviews[component.id] ?? (
+                  <div className="w-full max-w-[400px]">
+                    {component.preview}
+                  </div>
+                )}
+              </div>
             </div>
           </section>
 
