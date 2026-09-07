@@ -2166,24 +2166,76 @@ export function ComponentsView() {
     },
   ];
 
-  const filteredComponents = components.filter((c) =>
-    c.title.toLowerCase().includes(search.toLowerCase()) ||
-    c.desc.toLowerCase().includes(search.toLowerCase())
-  );
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [selectedComponent, setSelectedComponent] = useState<any>(null);
+
+  const categories = [
+    "All",
+    "Core Learning",
+    "Teaching Components",
+    "Active-Recall / Retention",
+    "Interactive Cards",
+    "Analytics & Progress",
+  ];
+
+  const filteredComponents = components.filter((c) => {
+    const matchesSearch =
+      c.title.toLowerCase().includes(search.toLowerCase()) ||
+      c.desc.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory =
+      activeCategory === "All" || c.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Title Header */}
-      <div className="space-y-1">
-        <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-400 uppercase">
-          COMPONENTS
-        </span>
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-          Learning Components Library
-        </h2>
-        <p className="text-sm text-slate-500 max-w-2xl leading-relaxed">
-          Beautiful, focused learning experiences designed to help you understand, practice and master your goals.
-        </p>
+    <div className="space-y-8">
+      {/* Title Header & Search Bar */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-6">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-mono text-[10px] font-bold tracking-wider uppercase">
+              Summa AI Visual System
+            </span>
+            <span className="text-xs text-slate-400">• {components.length} Instruments</span>
+          </div>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Learning Component Library
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+            Cohesive, soft-premium pedagogical instruments deployed dynamically by Summa's Learning Orchestrator.
+          </p>
+        </div>
+
+        {/* Search Input */}
+        <div className="relative w-full md:w-72">
+          <input
+            type="text"
+            placeholder="Search learning components..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs transition-all"
+          />
+          <svg className="absolute left-3 top-3 size-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Category Pills Filter Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              activeCategory === cat
+                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
+                : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
       {/* Responsive Grid of Cards (Max 4 per row on desktop) */}
@@ -2191,42 +2243,116 @@ export function ComponentsView() {
         {filteredComponents.map((item) => (
           <div
             key={item.id}
-            className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-4 group"
+            onClick={() => setSelectedComponent(item)}
+            className="group relative bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between space-y-4 cursor-pointer overflow-hidden"
           >
-            <div className="space-y-3">
-              {/* Badge Icon */}
-              <div className={`size-10 rounded-2xl ${item.badgeBg} flex items-center justify-center shadow-2xs`}>
-                {item.icon}
+            <div className="space-y-3.5 relative z-10">
+              {/* Header: Badge Icon & Category */}
+              <div className="flex items-center justify-between">
+                <div className={`size-11 rounded-2xl ${item.badgeBg} flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105`}>
+                  {item.icon}
+                </div>
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
+                  {item.category}
+                </span>
               </div>
 
               {/* Title & Description */}
-              <div className="space-y-1.5">
-                <h3 className="font-bold text-base text-slate-900 group-hover:text-blue-600 transition">
-                  {item.title}
+              <div className="space-y-1">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                  <span>{item.title}</span>
                 </h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-3">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
                   {item.desc}
                 </p>
               </div>
 
               {/* Interactive Component Preview */}
-              <div className="pt-2">
+              <div className="pt-1">
                 {item.preview}
               </div>
             </div>
 
-            {/* Bottom Arrow Button */}
-            <div className="pt-1 flex justify-start">
-              <button
-                onClick={() => toast.info(`Component ${item.title} selected`)}
-                className="size-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-800 transition cursor-pointer shadow-2xs"
-              >
-                <ArrowRight size={14} />
-              </button>
+            {/* Footer Action */}
+            <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors relative z-10">
+              <span>View Playground</span>
+              <div className="size-7 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shadow-2xs">
+                <ArrowRight size={13} />
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Component Detail Playground Modal */}
+      {selectedComponent && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 space-y-6 p-6 md:p-8">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-5">
+              <div className="flex items-center gap-4">
+                <div className={`size-14 rounded-2xl ${selectedComponent.badgeBg} flex items-center justify-center shadow-xs`}>
+                  {selectedComponent.icon}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-semibold text-slate-400 uppercase">
+                      {selectedComponent.category}
+                    </span>
+                    <span className="text-xs text-slate-300">• Instrument Spec</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {selectedComponent.title}
+                  </h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedComponent(null)}
+                className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Description & Overview */}
+            <div className="space-y-2">
+              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">Overview</div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                {selectedComponent.desc}
+              </p>
+            </div>
+
+            {/* Interactive Component Live Preview */}
+            <div className="space-y-3">
+              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
+                Interactive Preview & Playground
+              </div>
+              <div className="p-4 bg-slate-100/70 dark:bg-slate-950/80 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+                {selectedComponent.preview}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+              <button
+                onClick={() => setSelectedComponent(null)}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                Close Spec
+              </button>
+              <button
+                onClick={() => {
+                  toast.success(`Instrument ${selectedComponent.title} deployed to session preview`);
+                  setSelectedComponent(null);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-500 transition shadow-xs cursor-pointer"
+              >
+                Simulate Deployment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
