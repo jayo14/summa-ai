@@ -75,6 +75,13 @@ async def lifespan(app: FastAPI):
             + ", ".join(missing)
             + ". Set these environment variables before deploying."
         )
+    if not settings.is_production:
+        if not settings.SUPABASE_URL:
+            logger.warning("SUPABASE_URL not set — authentication will fail")
+        if not settings.SUPABASE_ANON_KEY:
+            logger.warning("SUPABASE_ANON_KEY not set — authentication will fail")
+        if not settings.SUPABASE_JWT_SECRET:
+            logger.warning("SUPABASE_JWT_SECRET not set — JWT verification will fail")
     if not (settings.GEMINI_API_KEY or settings.OPENAI_API_KEY or settings.ZAI_API_KEY or settings.LLM_API_KEY):
         logger.warning("⚠️  No LLM provider key configured! (GEMINI_API_KEY, ZAI_API_KEY, OPENAI_API_KEY, or LLM_API_KEY). Chat completions will fail or return errors.")
     else:
