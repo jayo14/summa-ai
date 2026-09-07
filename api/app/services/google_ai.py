@@ -60,7 +60,7 @@ async def _generate_fallback_stream(
     query = last_user_msg.lower()
 
     # Extract subject or context from system prompt if present
-    subject_label = "Object-Oriented Programming"
+    subject_label = "your learning topic"
     if "Active Course / Subject:" in system_prompt:
         for line in system_prompt.split("\n"):
             if "Active Course / Subject:" in line:
@@ -68,8 +68,8 @@ async def _generate_fallback_stream(
                 break
 
     clean_q = last_user_msg.strip() if last_user_msg else "your learning topic"
-    
-    if "plato" in query:
+
+    if "plato" in query and "philosophy" in subject_label.lower():
         text = (
             "**Plato** (c. 428–348 BCE) was one of the foundational figures of Western philosophy, a student of Socrates, and the teacher of Aristotle. He established the **Academy in Athens**, widely considered the first institution of higher learning in the Western world.\n\n"
             "### 1. Theory of Forms (Ideas)\n"
@@ -80,45 +80,31 @@ async def _generate_fallback_stream(
             "Plato argued that human soul has three parts: **Reason**, **Spirit/Courage**, and **Appetite**. In an ideal society (*Kallipolis*), philosophers governed by Reason should rule as **Philosopher Kings**, while guardians protect and producers sustain the state.\n\n"
             "Would you like to dive deeper into the **Theory of Forms**, the **Allegory of the Cave**, or his **Socratic Dialogues**?"
         )
-    elif "polymorphism" in query or "dispatch" in query:
-        text = (
-            f"**Polymorphism in {subject_label}**\n\n"
-            "Polymorphism allows objects of different classes to be treated as instances of a shared superclass or interface.\n\n"
-            "### Key Mechanisms:\n"
-            "1. **Interface / Parent Reference**: Declaring a variable using a general superclass or interface type.\n"
-            "2. **Dynamic Method Dispatch**: At runtime, the execution engine looks up the actual instantiated object's method override rather than relying solely on reference type.\n"
-            "3. **Method Overriding**: Derived classes provide custom implementations of base methods.\n\n"
-            "```java\n"
-            "Shape s = new Circle(); // Reference: Shape | Object: Circle\n"
-            "s.draw();               // Invokes Circle.draw() at runtime\n"
-            "```\n\n"
-            "Would you like to trace an example or solve a quick active recall check?"
-        )
     elif "quiz" in query:
         text = (
             f"**Active Recall Check — {subject_label}**\n\n"
-            "Here is a quick concept evaluation:\n\n"
-            "1. **Question 1**: What is the primary difference between *compile-time overloading* and *runtime overriding*?\n"
-            "2. **Question 2**: Does dynamic method dispatch evaluate the declared reference type or the instantiated runtime object type?\n\n"
-            "Reply with your answers and we'll evaluate your reasoning step by step!"
+            f"Here is a quick diagnostic question on **{subject_label}** to test your understanding:\n\n"
+            f"Consider the core concepts within {subject_label}. Without reaching for notes, "
+            f"reflect on what you already know and be ready to share your reasoning.\n\n"
+            "Take a moment to think, then reply with your answer and we'll evaluate your reasoning step by step!"
         )
     elif "plan" in query or "study" in query:
         text = (
             f"**Targeted Study Breakdown — {subject_label}**\n\n"
-            "Here is a recommended 3-step mastery plan:\n\n"
+            f"Here is a recommended 3-step mastery plan for **{subject_label}**:\n\n"
             "1. **Core Concept Review (10 mins)**: Clarify fundamental definitions and relationships.\n"
-            "2. **Practical Examples (15 mins)**: Work through real-world applications and code/logic tracing.\n"
+            "2. **Practical Examples (15 mins)**: Work through real-world applications and problem scenarios.\n"
             "3. **Active Recall (5 mins)**: Test yourself with targeted questions to lock in retention.\n\n"
             "Shall we start with step 1 or jump into practical practice?"
         )
     else:
         text = (
             f"Here is a breakdown of **{clean_q}**:\n\n"
-            f"When studying **{clean_q}**, we focus on three core dimensions:\n\n"
+            f"When studying **{subject_label}** — specifically **{clean_q}**, we focus on three core dimensions:\n\n"
             "1. **Definition & Context**: Understanding what the concept is and why it was developed.\n"
             "2. **Core Mechanics & Rules**: Examining the key principles, formulas, or logical structures that govern it.\n"
             "3. **Application & Real Examples**: Seeing how it functions in practice and evaluating edge cases.\n\n"
-            f"Which specific angle or topic within **{clean_q}** would you like to explore first?"
+            f"Which specific angle or topic within **{subject_label}** would you like to explore first?"
         )
 
     # Stream text in small chunks simulating natural token generation
