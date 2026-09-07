@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     )
     SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
 
+    # RBAC Initial Admin Bootstrap
+    INITIAL_ADMIN_EMAIL: str = os.getenv("INITIAL_ADMIN_EMAIL", "")
+
     # CORS - Driven strictly by BACKEND_CORS_ORIGINS envvar; no hardcoded defaults
     BACKEND_CORS_ORIGINS: List[str] = []
 

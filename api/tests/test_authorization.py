@@ -136,3 +136,23 @@ async def test_material_and_concept_ownership_isolation():
     assert await store.delete_material(mid, user_a) is True
     assert await store.delete_concept(cid, user_a) is True
 
+
+def test_rbac_admin_role_security():
+    from app.core.rbac import get_user_role, UserRole
+
+    # Substring in email must NOT grant admin
+    user_with_admin_substring = {"email": "notadmin@gmail.com", "role": "user"}
+    assert get_user_role(user_with_admin_substring) == UserRole.USER.value
+
+    user_with_administrator = {"email": "administrator@x.com"}
+    assert get_user_role(user_with_administrator) == UserRole.USER.value
+
+    # Removed hardcoded emails without role="admin" must NOT get admin
+    user_hardcoded_email = {"email": "codegallantx@gmail.com", "role": "user"}
+    assert get_user_role(user_hardcoded_email) == UserRole.USER.value
+
+    # Explicit admin role in profile must return admin
+    user_real_admin = {"email": "user@domain.com", "role": "admin"}
+    assert get_user_role(user_real_admin) == UserRole.ADMIN.value
+
+

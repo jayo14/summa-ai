@@ -22,8 +22,10 @@ class UserStatus(str, Enum):
     SUSPENDED = "suspended"
 
 
+import os
+
 def get_user_role(user: dict) -> str:
-    """Extracts or infers role for a user dict."""
+    """Extracts role for a user dict based strictly on stored role or INITIAL_ADMIN_EMAIL env var."""
     if not user:
         return UserRole.USER.value
 
@@ -34,9 +36,10 @@ def get_user_role(user: dict) -> str:
     if explicit_role in (UserRole.USER.value, "student", "instructor"):
         return UserRole.USER.value
 
-    # Default admin emails or fallback
-    email = (user.get("email") or "").lower()
-    if "admin" in email or email in ("alex@summa.ai", "admin@summa.ai", "codegallantx@gmail.com"):
+    # Optional initial admin bootstrap via environment variable
+    email = (user.get("email") or "").lower().strip()
+    initial_admin = (os.getenv("INITIAL_ADMIN_EMAIL") or "").lower().strip()
+    if initial_admin and email and email == initial_admin:
         return UserRole.ADMIN.value
 
     return UserRole.USER.value
