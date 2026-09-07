@@ -9,8 +9,9 @@ from app.models.activity import ActivityCreate, ActivityUpdate, ActivityVersionR
 from app.models.chat import ConversationCreate, MessageCreate
 from app.models.timeline import TimelineEventCreate, MaterialCreate, ConceptCreate
 from app.config import settings
-from app.core.security import resolve_user_id, current_user_claims
+from app.core.security import resolve_user_id
 from app.services.user_store import UserStore
+from app.services.user_service import UserService
 from app.services.data_store import DataStore
 from app.services.cognee_service import CogneeService
 
@@ -283,21 +284,16 @@ async def get_user():
     user_id = resolve_user_id()
     current = await _user_store.get_user_by_id(user_id)
     if current is None:
-        # Create user profile entry on-the-fly for verified JWT users
+        # Profile doesn't exist — sync from Supabase Auth claims via UserService.
+        # Never fabricate profiles from raw JWT claims in the router.
+        from app.core.security import current_user_claims
         claims = current_user_claims.get() or {}
-        user_metadata = claims.get("user_metadata") or {}
-        email = claims.get("email") or ""
-        name = user_metadata.get("name") or user_metadata.get("full_name") or claims.get("name") or (email.split("@")[0] if email else f"User {user_id[:6]}")
-        current = await _user_store.save_user(user_id, {
-            "id": user_id,
-            "email": email,
-            "name": name,
-            "role": "student",
-            "status": "active",
-            "email_verified": True,
-            "onboarded": False,
-            "onboarding_data": {},
-        })
+        user_service = UserService()
+        try:
+            current = await user_service.sync_user_profile(claims)
+        except Exception as exc:
+            logger.error("Failed to sync user profile for %s: %s", user_id, exc)
+            raise HTTPException(status_code=502, detail="Could not resolve user profile")
     return _user_store.serialize_user(current)
 
 
