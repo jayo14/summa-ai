@@ -1,12 +1,15 @@
-"""Authentication routes — Supabase Auth REST API proxy."""
+"""Authentication routes — thin orchestration layer over SupabaseAuthService.
+
+All raw Supabase HTTP calls live in app.services.supabase_auth.
+These routes validate input, call the service, and map results to HTTP responses.
+"""
 
 import logging
-import uuid
-import httpx
-from fastapi import APIRouter, HTTPException, Header
 from typing import Optional
 
-from app.config import settings
+from fastapi import APIRouter, HTTPException, Header
+
+from app.core.rbac import get_user_role
 from app.models.user import (
     AuthLoginRequest,
     AuthLoginResponse,
@@ -15,30 +18,58 @@ from app.models.user import (
     VerifyOtpRequest,
     ResendOtpRequest,
 )
-from app.core.rbac import get_user_role
-from app.services.user_store import UserStore
+from app.services.supabase_auth import SupabaseAuthService, SupabaseAuthError
+from app.services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-def _supabase_auth_url() -> str:
-    if not settings.SUPABASE_URL:
-        raise HTTPException(
-            status_code=503,
-            detail="Authentication service is not configured. Set SUPABASE_URL.",
-        )
-    return f"{settings.SUPABASE_URL}/auth/v1"
+def _map_supabase_error(status_code: int, detail: str) -> HTTPException:
+    """Map Supabase Auth status codes to appropriate HTTP responses."""
+    if status_code == 400:
+        return HTTPException(status_code=400, detail=detail)
+    if status_code == 401:
+        return HTTPException(status_code=401, detail=detail)
+    if status_code == 403:
+        return HTTPException(status_code=403, detail=detail)
+    if status_code == 404:
+        return HTTPException(status_code=400, detail=detail)
+    if status_code == 422:
+        return HTTPException(status_code=400, detail="An account with this email already exists")
+    if status_code == 429:
+        return HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+    # 5xx from Supabase — never fall back to local auth
+    if status_code >= 500:
+        logger.error("Supabase Auth returned %d: %s", status_code, detail)
+        return HTTPException(status_code=502, detail="Authentication service unavailable")
+    return HTTPException(status_code=400, detail=detail)
 
 
-def _supabase_headers() -> dict:
-    if not settings.SUPABASE_ANON_KEY:
-        raise HTTPException(
-            status_code=503,
-            detail="Authentication service is not configured. Set SUPABASE_ANON_KEY.",
-        )
-    return {"apikey": settings.SUPABASE_ANON_KEY}
+def _extract_user_data(result: dict) -> dict:
+    """Extract user data from a Supabase Auth result, raising on failure."""
+    if result.get("error"):
+        raise _map_supabase_error(result["status_code"], result["error"])
+    data = result.get("data") or {}
+    user_data = data.get("user") or {}
+    if not user_data.get("id"):
+        logger.error("Supabase Auth returned no user ID: %s", result)
+        raise HTTPException(status_code=502, detail="Authentication service returned invalid response")
+    return user_data
 
+
+def _extract_token(result: dict) -> str:
+    """Extract access token from a Supabase Auth result."""
+    data = result.get("data") or {}
+    return data.get("access_token", "")
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 
 @router.post(
     "/auth/signup",
@@ -50,11 +81,11 @@ async def signup(payload: AuthLoginRequest):
     if not payload.email or not payload.password:
         raise HTTPException(status_code=400, detail="Email and password are required")
 
-    supabase_auth_service = SupabaseAuthService()
+    auth_service = SupabaseAuthService()
     user_service = UserService()
 
     try:
-        response = await supabase_auth_service.signup(
+        result = await auth_service.signup(
             email=payload.email,
             password=payload.password,
             data={
@@ -63,36 +94,14 @@ async def signup(payload: AuthLoginRequest):
                 "role": get_user_role({"email": payload.email}),
             },
         )
-    except httpx.TimeoutException:
-        logger.error("Supabase signup timed out for %s", payload.email)
-        raise HTTPException(status_code=504, detail="Authentication service timed out")
     except Exception as exc:
-        logger.error("Supabase signup connection error: %s", exc)
+        logger.error("Supabase signup connection error for %s", payload.email)
         raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
-    if resp.status_code != 200:
-        body = resp.json()
-        detail = (
-            body.get("error_description")
-            or body.get("msg")
-            or body.get("error")
-            or "Signup failed"
-        )
-        if resp.status_code == 422:
-            detail = "An account with this email already exists"
-        raise HTTPException(status_code=400, detail=detail)
-
-    body = resp.json()
-    user_data = body.get("user") or {}
-    access_token = body.get("access_token", "")
-
-    # Sync profile with Supabase user data
+    user_data = _extract_user_data(result)
+    access_token = _extract_token(result)
     user = await user_service.sync_user_profile(user_data)
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user,
-    }
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
 @router.post(
@@ -107,49 +116,22 @@ async def login(payload: AuthLoginRequest):
     if payload.provider == "credentials" and not payload.password:
         raise HTTPException(status_code=400, detail="Password is required")
 
-    supabase_auth_service = SupabaseAuthService()
+    auth_service = SupabaseAuthService()
     user_service = UserService()
 
     try:
-        if payload.provider == "credentials":
-            response = await supabase_auth_service.login(
-                email=payload.email,
-                password=payload.password,
-            )
-        else:
-            # For non-credentials providers (Google, GitHub, etc.), we expect an ID token from frontend
-            # In this case, we should verify the ID token with Supabase
-            # However, the current frontend flow sends the ID token as password field
-            # Let's treat this as needing to get user info using the ID token
-            # For now, we'll use the login endpoint with the ID token as password
-            # This is a temporary approach - ideally we'd have a separate endpoint for social login
-            response = await supabase_auth_service.login(
-                email=payload.email,
-                password=payload.password or "",  # password field contains ID token for social login
-            )
-    except httpx.TimeoutException:
-        logger.error("Supabase login timed out for %s", payload.email.lower().strip())
-        raise HTTPException(status_code=504, detail="Authentication service timed out")
+        result = await auth_service.login(
+            email=payload.email,
+            password=payload.password or "",
+        )
     except Exception as exc:
-        logger.error("Supabase login connection error: %s", exc)
+        logger.error("Supabase login connection error for %s", payload.email.lower().strip())
         raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
-    # Check for email verification requirement
-    # Note: Supabase may return 200 but require email confirmation in some flows
-    # However, the standard login endpoint should return 200 only when email is confirmed
-    # If we get a 400/403, we handle it below
-
-    body = response.json()
-    user_data = body.get("user") or {}
-    access_token = body.get("access_token", "")
-
-    # Sync profile with Supabase user data
+    user_data = _extract_user_data(result)
+    access_token = _extract_token(result)
     user = await user_service.sync_user_profile(user_data)
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user,
-    }
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
 @router.post(
@@ -162,38 +144,23 @@ async def verify_otp(payload: VerifyOtpRequest):
     if not payload.email or not payload.token:
         raise HTTPException(status_code=400, detail="Email and OTP code are required")
 
-    supabase_auth_service = SupabaseAuthService()
+    auth_service = SupabaseAuthService()
     user_service = UserService()
 
     try:
-        response = await supabase_auth_service.verify_otp(
+        result = await auth_service.verify_otp(
             email=payload.email,
             token=payload.token,
             type=payload.type or "signup",
         )
-    except httpx.TimeoutException:
-        logger.error("Supabase verify-otp timed out for %s", payload.email.lower().strip())
-        raise HTTPException(status_code=504, detail="Authentication service timed out")
     except Exception as exc:
-        logger.error("Supabase verify-otp connection error: %s", exc)
+        logger.error("Supabase verify-otp connection error for %s", payload.email)
         raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
-    if response.status_code != 200:
-        err = response.json()
-        detail = err.get("error_description") or err.get("msg") or "Invalid or expired verification code"
-        raise HTTPException(status_code=400, detail=detail)
-
-    body = response.json()
-    user_data = body.get("user") or {}
-    access_token = body.get("access_token", "")
-
-    # Sync profile with Supabase user data
+    user_data = _extract_user_data(result)
+    access_token = _extract_token(result)
     user = await user_service.sync_user_profile(user_data)
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user,
-    }
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
 @router.post(
@@ -205,30 +172,19 @@ async def resend_otp(payload: ResendOtpRequest):
     if not payload.email:
         raise HTTPException(status_code=400, detail="Email is required")
 
-    auth_url = _supabase_auth_url()
-    headers = _supabase_headers()
-    email_clean = payload.email.lower().strip()
+    auth_service = SupabaseAuthService()
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(
-                f"{auth_url}/resend",
-                headers=headers,
-                json={"type": payload.type or "signup", "email": email_clean},
-            )
-        if resp.status_code not in (200, 204):
-            err = resp.json()
-            detail = err.get("error_description") or err.get("msg") or "Failed to resend code"
-            logger.error("Supabase resend-otp failed (%d): %s", resp.status_code, detail)
-            raise HTTPException(status_code=400, detail=detail)
-    except HTTPException:
-        raise
-    except httpx.TimeoutException:
-        logger.error("Supabase resend-otp timed out for %s", email_clean)
-        raise HTTPException(status_code=504, detail="Authentication service timed out")
+        result = await auth_service.resend_otp(
+            email=payload.email.lower().strip(),
+            type=payload.type or "signup",
+        )
     except Exception as exc:
-        logger.error("Supabase resend-otp unreachable: %s", exc)
+        logger.error("Supabase resend-otp connection error for %s", payload.email)
         raise HTTPException(status_code=502, detail="Authentication service unavailable")
+
+    if result.get("error"):
+        raise _map_supabase_error(result["status_code"], result["error"])
 
     return {"message": "Verification code sent to your email."}
 
@@ -242,67 +198,51 @@ async def forgot_password(payload: ForgotPasswordRequest):
     if not payload.email:
         raise HTTPException(status_code=400, detail="Email is required")
 
-    auth_url = _supabase_auth_url()
-    headers = _supabase_headers()
+    auth_service = SupabaseAuthService()
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            await client.post(
-                f"{auth_url}/recover",
-                headers=headers,
-                json={"email": payload.email},
-            )
-    except httpx.TimeoutException:
-        logger.error("Supabase forgot-password timed out for %s", payload.email)
+        result = await auth_service.recover(email=payload.email)
     except Exception as exc:
-        logger.error("Supabase forgot-password unreachable: %s", exc)
+        logger.error("Supabase forgot-password connection error for %s", payload.email)
+        # Always return the same message — never reveal whether the email exists.
+        return {"message": "If an account exists for this email address, password reset instructions have been sent."}
 
     # Always the same message — never reveal whether the email exists.
-    return {
-        "message": "If an account exists for this email address, password reset instructions have been sent."
-    }
+    return {"message": "If an account exists for this email address, password reset instructions have been sent."}
 
 
 @router.post(
     "/auth/callback",
     response_model=AuthLoginResponse,
     summary="Auth callback",
-    description="Exchange a Supabase callback token (from email confirmation link or OAuth redirect) for a session. Accepts access_token directly or resolves via token+type.",
+    description="Exchange a Supabase callback token for a session",
 )
 async def auth_callback(data: dict):
-    """
-    Called from the frontend /callback page. Supabase email confirmation links
-    redirect to /callback?access_token=...&refresh_token=...&type=signup
-    (or type=recovery for password reset). This endpoint:
-    1. Accepts the access_token from the query params
-    2. Fetches the user from Supabase using the token
-    3. Upserts the profile row
-    4. Returns the same AuthLoginResponse shape as login
-    """
+    """Called from the frontend /callback page. Supabase email confirmation links
+    redirect to /callback?access_token=...&refresh_token=...&type=signup"""
     access_token = data.get("access_token", "").strip()
     if not access_token:
         raise HTTPException(status_code=400, detail="access_token is required")
 
-    supabase_auth_service = SupabaseAuthService()
+    auth_service = SupabaseAuthService()
     user_service = UserService()
 
-    # Fetch the user object from Supabase using the token
     try:
-        user_data = await supabase_auth_service.get_user(access_token)
-    except httpx.TimeoutException:
-        logger.error("Supabase callback user fetch timed out")
-        raise HTTPException(status_code=504, detail="Authentication service timed out")
+        result = await auth_service.get_user(access_token)
     except Exception as exc:
-        logger.error("Supabase callback user fetch error: %s", exc)
+        logger.error("Supabase callback user fetch error")
         raise HTTPException(status_code=502, detail="Authentication service unavailable")
 
-    # Sync profile with Supabase user data
+    if result.get("error"):
+        raise _map_supabase_error(result["status_code"], result["error"])
+
+    user_data = result.get("data", {}).get("user") or {}
+    if not user_data.get("id"):
+        logger.error("Supabase callback returned no user ID")
+        raise HTTPException(status_code=502, detail="Authentication service returned invalid response")
+
     user = await user_service.sync_user_profile(user_data)
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user,
-    }
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
 @router.post(
@@ -318,21 +258,51 @@ async def reset_password(
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization token required to reset password")
 
-    supabase_auth_service = SupabaseAuthService()
+    auth_service = SupabaseAuthService()
     token = authorization.split(" ", 1)[1] if " " in authorization else authorization
 
     try:
-        response = await supabase_auth_service.update_password(
+        result = await auth_service.update_password(
             access_token=token,
             new_password=payload.password,
         )
-    except httpx.TimeoutException:
-        logger.error("Supabase reset-password timed out")
-        raise HTTPException(status_code=504, detail="Authentication service timed out — password was not changed")
     except Exception as exc:
-        logger.error("Supabase reset-password connection error: %s", exc)
+        logger.error("Supabase reset-password connection error")
         raise HTTPException(status_code=502, detail="Authentication service unavailable — password was not changed")
 
-    # Note: Supabase update_password endpoint returns 200 on success
-    # If we get here without exception, the password was updated successfully
+    if result.get("error"):
+        raise _map_supabase_error(result["status_code"], result["error"])
+
     return {"message": "Password updated successfully. You can now sign in with your new password."}
+
+
+@router.get(
+    "/auth/me",
+    summary="Get current user",
+    description="Validate Supabase bearer token and return authenticated user profile",
+)
+async def get_current_user(authorization: Optional[str] = Header(None)):
+    """Single canonical endpoint for session validation / current user resolution."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="Authorization token required")
+
+    token = authorization.split(" ", 1)[1].strip()
+    auth_service = SupabaseAuthService()
+    user_service = UserService()
+
+    try:
+        result = await auth_service.get_user(token)
+    except Exception as exc:
+        logger.error("Supabase get-user connection error")
+        raise HTTPException(status_code=502, detail="Authentication service unavailable")
+
+    if result.get("error"):
+        raise _map_supabase_error(result["status_code"], result["error"])
+
+    user_data = result.get("data", {}).get("user") or {}
+    if not user_data.get("id"):
+        logger.error("Supabase /user returned no user ID")
+        raise HTTPException(status_code=502, detail="Authentication service returned invalid response")
+
+    user = await user_service.sync_user_profile(user_data)
+    return {"user": user}
