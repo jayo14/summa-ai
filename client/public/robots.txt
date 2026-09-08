@@ -1,0 +1,35 @@
+# Summa AI - Robots.txt
+# https://summa-ai.app
+
+User-agent: *
+Allow: /
+Allow: /features
+Allow: /use-cases
+Allow: /compare
+Allow: /blog
+Allow: /faq
+Allow: /about
+Allow: /sign-in
+Allow: /sign-up
+
+# Block private/authenticated areas
+Disallow: /admin
+Disallow: /c/
+Disallow: /learning
+Disallow: /activities
+Disallow: /progress
+Disallow: /sources
+Disallow: /settings
+Disallow: /workspace
+Disallow: /dashboard
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /callback
+
+# Block dev/internal
+Disallow: /api/
+Disallow: /__manus__/
+
+# Sitemap
+Sitemap: https://summa-ai.app/sitemap.xml
