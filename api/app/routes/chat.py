@@ -411,7 +411,9 @@ async def chat_stream(request: ChatRequest):
         if request.conversation_id and last_query:
             try:
                 ds = DataStore()
-                await ds.add_message(request.conversation_id, user_id, "user", last_query)
+                logger.info("CHAT STREAM: Persisting user message cid=%s user_id=%s content_len=%d", request.conversation_id, user_id, len(last_query))
+                result = await ds.add_message(request.conversation_id, user_id, "user", last_query)
+                logger.info("CHAT STREAM: User message persist result=%s", result)
             except Exception:
                 logger.warning("Failed to persist user message", exc_info=True)
 
@@ -519,7 +521,8 @@ async def chat_stream(request: ChatRequest):
             if request.conversation_id:
                 try:
                     ds = DataStore()
-                    await ds.add_message(
+                    logger.info("CHAT STREAM: Persisting assistant message cid=%s user_id=%s response_len=%d", request.conversation_id, user_id, len(full_response))
+                    result = await ds.add_message(
                         request.conversation_id,
                         user_id,
                         "assistant",
@@ -527,6 +530,7 @@ async def chat_stream(request: ChatRequest):
                         reasoning=accumulated_reasoning or None,
                         components=component_data_to_save,
                     )
+                    logger.info("CHAT STREAM: Assistant message persist result=%s", result)
                 except Exception:
                     logger.warning("Failed to persist assistant message", exc_info=True)
 

@@ -441,6 +441,7 @@ class DataStore:
         return len(self._local_conversations) < orig_len
 
     async def list_messages(self, cid: str, user_id: str) -> List[Dict[str, Any]]:
+        logger.info("list_messages START cid=%s user_id=%s", cid, user_id)
         try:
             pool = await self._get_pool()
             if pool is not None:
@@ -453,15 +454,19 @@ class DataStore:
                         cid,
                         user_id,
                     )
+                logger.info("list_messages DB returned %d rows for cid=%s", len(rows) if rows else 0, cid)
                 if rows is not None:
                     return [dict(r) for r in rows]
         except Exception as exc:
-            logger.warning("list_messages DB error for cid=%s: %s", cid, exc)
+            logger.warning("list_messages DB error for cid=%s: %s", cid, exc, exc_info=True)
 
         conv = next((c for c in self._local_conversations if c.get("id") == cid and c.get("user_id") == user_id), None)
         if not conv:
+            logger.info("list_messages no local conv for cid=%s", cid)
             return []
-        return self._local_messages.get(cid, [])
+        local_msgs = self._local_messages.get(cid, [])
+        logger.info("list_messages returning %d local messages for cid=%s", len(local_msgs), cid)
+        return local_msgs
 
     async def add_message(
         self,
@@ -473,23 +478,29 @@ class DataStore:
         components: Optional[Any] = None,
     ) -> Optional[Dict[str, Any]]:
         mid = str(uuid.uuid4())
+        logger.info("add_message START cid=%s role=%s user_id=%s content_len=%d", cid, role, user_id, len(content or ""))
         try:
             pool = await self._get_pool()
             if pool is not None:
+                logger.info("add_message pool OK, acquiring connection")
                 async with pool.acquire() as conn:
                     owner = await conn.fetchval(
                         "SELECT user_id FROM summa_ai.conversations WHERE id = $1", cid
                     )
+                    logger.info("add_message owner=%s for cid=%s", owner, cid)
                     if owner and owner != user_id:
+                        logger.warning("add_message OWNER MISMATCH owner=%s user_id=%s cid=%s", owner, user_id, cid)
                         return None
                     if not owner:
                         # Auto-create conversation if missing in DB
+                        logger.info("add_message auto-creating conversation cid=%s user_id=%s", cid, user_id)
                         await conn.execute(
                             "INSERT INTO summa_ai.conversations (id, user_id, title) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING",
                             cid,
                             user_id,
                             "New Chat",
                         )
+                    logger.info("add_message inserting message mid=%s cid=%s role=%s", mid, cid, role)
                     await conn.execute(
                         "INSERT INTO summa_ai.messages (id, conversation_id, role, content, reasoning, components) VALUES ($1,$2,$3,$4,$5,$6)",
                         mid,
@@ -499,6 +510,7 @@ class DataStore:
                         reasoning,
                         json.dumps(components) if components else None,
                     )
+                    logger.info("add_message updating conversation updated_at for cid=%s", cid)
                     await conn.execute(
                         "UPDATE summa_ai.conversations SET updated_at = NOW() WHERE id = $1", cid
                     )
@@ -506,9 +518,12 @@ class DataStore:
                         "SELECT * FROM summa_ai.messages WHERE id = $1", mid
                     )
                 if row:
+                    logger.info("add_message SUCCESS mid=%s cid=%s role=%s", mid, cid, role)
                     return dict(row)
+                else:
+                    logger.warning("add_message row NOT FOUND after insert mid=%s", mid)
         except Exception as exc:
-            logger.warning("add_message DB error for cid=%s role=%s: %s", cid, role, exc)
+            logger.warning("add_message DB error for cid=%s role=%s: %s", cid, role, exc, exc_info=True)
 
         conv = next((c for c in self._local_conversations if c.get("id") == cid), None)
         if conv and conv.get("user_id") != user_id:
