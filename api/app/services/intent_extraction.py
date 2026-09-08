@@ -40,12 +40,15 @@ ACTIVITY_MAP = {
 
 DIFFICULTY_MAP = {
     "easy": "easy",
+    "easier": "easy",
     "simple": "easy",
     "beginner": "easy",
     "medium": "medium",
     "intermediate": "medium",
     "hard": "hard",
+    "harder": "hard",
     "difficult": "hard",
+    "difficultier": "hard",
     "advanced": "hard",
 }
 
@@ -133,7 +136,7 @@ def extract_intent(
     subject = request_subject
     detected_from_query = _extract_subject_from_query(query)
     if not subject and detected_from_query:
-        subject = detected_from_query
+        subject = detected_from_query.title()
 
     # Determine activity request / intent
     activity = None
