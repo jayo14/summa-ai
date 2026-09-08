@@ -307,7 +307,7 @@ export function AIModelsPage() {
                     {healthStatus.label}
                   </span>
                   <button
-                    onClick={() => handleToggleEnabled(p.is_enabled, p.is_enabled)}
+                    onClick={() => handleToggleEnabled(p.id, p.is_enabled)}
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition ${
                       p.is_enabled
                         ? "bg-teal-dark dark:bg-accent-lime"

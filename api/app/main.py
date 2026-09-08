@@ -92,6 +92,19 @@ async def lifespan(app: FastAPI):
 
     await CogneeService.initialize()
     await load_jwks_at_startup()
+
+    # Auto-run migrations on startup
+    try:
+        from alembic.config import Config
+        from alembic import command as alembic_command
+        import pathlib
+        alembic_cfg = Config(str(pathlib.Path(__file__).parent.parent / "alembic.ini"))
+        alembic_cfg.set_main_option("script_location", str(pathlib.Path(__file__).parent.parent / "alembic"))
+        alembic_command.upgrade(alembic_cfg, "head")
+        logger.info("✅ Database migrations applied")
+    except Exception as e:
+        logger.warning("⚠️  Auto-migration skipped: %s", e)
+
     logger.info("🚀 Summa AI API Started")
     yield
     from app.services.supabase_auth import SupabaseAuthService
