@@ -129,8 +129,7 @@ async def _generate_content(
 async def _try_generate(
     component_type: str, hint: UserIntent,
 ) -> Optional[ArtifactPayload]:
-    """Single attempt at the two-step generation (brief is now intent-derived,
-    so this is really a single LLM call). Returns None on failure."""
+    """Single attempt at LLM-based generation. Returns None on failure."""
     brief = _build_brief_from_intent(hint)
 
     try:
@@ -140,6 +139,18 @@ async def _try_generate(
             "Component generation failed: type=%s error=%s", component_type, exc
         )
         return None
+
+    # Validate content relevance before returning — reject cross-domain contamination
+    try:
+        from app.services.content_validator import validate_and_log
+        if not validate_and_log(component_type, data, hint):
+            logger.warning(
+                "Component content failed relevance validation: type=%s subject=%s",
+                component_type, hint.subject,
+            )
+            return None
+    except Exception as exc:
+        logger.debug("Content validation skipped: %s", exc)
 
     title = data.title or brief.topic.title()
     return ArtifactPayload(
@@ -209,8 +220,9 @@ async def generate_component_payload(
     # All attempts exhausted — try deterministic local fallback
     try:
         from app.services.local_component_builder import build_local_component
+        from app.services.content_validator import validate_and_log
         local_payload = build_local_component(component_type, intent)
-        if local_payload:
+        if local_payload and validate_and_log(component_type, local_payload.data, intent):
             logger.info("Local component fallback succeeded for type=%s", component_type)
             return local_payload
     except Exception as exc:
