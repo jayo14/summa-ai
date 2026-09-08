@@ -44,6 +44,7 @@ type ConversationMessage = {
   thinking?: string;
   error?: boolean;
   activity?: LearningActivityEnvelope;
+  streamingState?: "thinking" | "responding" | "preparing_activity" | "activity_ready" | "evaluating" | "complete";
 };
 
 const navItems: Array<{ id: ViewName; label: string; icon: typeof LayoutPanelTop }> = [
@@ -405,33 +406,44 @@ export default function Home() {
             try {
               const parsed = JSON.parse(dataStr);
               if (parsed.type === "content" && parsed.delta) {
-                fullAiResponse += parsed.delta;
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === summaMsgId
-                      ? { ...msg, content: msg.content + parsed.delta }
+                      ? { ...msg, content: msg.content + parsed.delta, streamingState: "responding" }
                       : msg
                   )
                 );
+                fullAiResponse += parsed.delta;
               } else if (parsed.type === "thinking" && parsed.delta) {
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === summaMsgId
-                      ? { ...msg, thinking: (msg.thinking || "") + parsed.delta }
+                      ? { ...msg, thinking: (msg.thinking || "") + parsed.delta, streamingState: "thinking" }
                       : msg
                   )
                 );
-              } else if (parsed.type === "artifact") {
-                const act = parsed.artifact || parsed;
+              } else if (parsed.type === "preparing_activity") {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === summaMsgId ? { ...msg, streamingState: "preparing_activity" } : msg
+                  )
+                );
+              } else if (parsed.type === "intent") {
+                // Structured intent — frontend can use for context (e.g. subject display)
+                // No visual change needed; just store if needed
+              } else if (parsed.type === "artifact" || parsed.type === "component") {
+                const act = parsed.artifact || parsed.component || parsed;
                 if (act && (act.data || act.type)) {
                   setMessages((prev) =>
                     prev.map((msg) =>
                       msg.id === summaMsgId
-                        ? { ...msg, activity: { id: act.id, title: act.title, type: act.type, data: act.data } }
+                        ? { ...msg, activity: { id: act.id, title: act.title, type: act.type, data: act.data }, streamingState: "activity_ready" }
                         : msg
                     )
                   );
                 }
+              } else if (parsed.type === "next_action") {
+                // Orchestrator decision event — no visual change needed
               } else if (parsed.type === "error") {
                 toast.error(parsed.message || "AI response error");
                 setMessages((prev) =>
@@ -462,6 +474,12 @@ export default function Home() {
       })
       .finally(() => {
         setIsResponding(false);
+        // Clear streaming state on all Summa messages
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.role === "summa" ? { ...msg, streamingState: "complete" } : msg
+          )
+        );
         registerEvent("practice", "New learning intent captured");
       });
     });
@@ -1158,7 +1176,13 @@ function ConversationTurn({ message, onRetry }: { message: ConversationMessage; 
         ) : (
           <div className="flex items-center gap-2 text-xs text-[#6D7E78] dark:text-[#8FA29B] italic py-1">
             <span className="inline-block size-2 rounded-full bg-[#005A57] dark:bg-[#B8FF4D] animate-ping" />
-            <span>Thinking and rendering explanation...</span>
+            <span>{
+              message.streamingState === "preparing_activity"
+                ? "Preparing a quick challenge..."
+                : message.streamingState === "thinking"
+                ? "Thinking..."
+                : "Responding..."
+            }</span>
           </div>
         )}
         {message.error && (
