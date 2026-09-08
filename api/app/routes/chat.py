@@ -514,7 +514,7 @@ async def chat_stream(request: ChatRequest):
                 "difficulty": decision.suggested_difficulty,
             }
             component_data_to_save = artifact_event
-            yield f"data: {json.dumps({'type': 'artifact', 'artifact': artifact_event})}\n\n"
+            yield f"data: {json.dumps({'type': 'activity', 'activity': artifact_event})}\n\n"
         elif component_task is not None and payload is None:
             logger.info(
                 "Component generation unavailable for type=%s; local fallback "
@@ -565,7 +565,7 @@ async def chat_stream(request: ChatRequest):
                 gaps = await detect_knowledge_gaps(user_id)
                 if gaps:
                     yield (
-                        f"data: {json.dumps({'type': 'artifact', 'artifact': {'id': 'gap-analysis', 'title': gaps['title'], 'type': 'gap-analysis', 'data': gaps['gaps']}})}\n\n"
+                        f"data: {json.dumps({'type': 'activity', 'activity': {'id': 'gap-analysis', 'title': gaps['title'], 'type': 'gap-analysis', 'data': gaps['gaps']}})}\n\n"
                     )
 
         timer.mark("response_complete")

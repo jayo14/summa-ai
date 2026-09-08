@@ -32,7 +32,7 @@ export default function AIStudyAssistantPage() {
         },
         {
           step: "Get grounded, cited answers",
-          detail: "Every answer comes with source artifacts from your knowledge graph. You can verify claims against your own study materials.",
+          detail: "Every answer comes with source activities from your knowledge graph. You can verify claims against your own study materials.",
         },
         {
           step: "Everything persists",

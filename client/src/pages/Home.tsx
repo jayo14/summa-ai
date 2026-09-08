@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive, ArrowUp, Bell, BookOpen, Brain, Check, ChevronDown, ChevronRight, CircleHelp,
-  Clock3, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, MoreVertical, Paperclip, PanelRight,
+  Clock3, Copy, FileText, FolderOpen, LayoutPanelTop, Menu, MoreHorizontal, MoreVertical, Paperclip, PanelRight,
   Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus, Edit2, FolderMinus, X, Plus,
   Settings2, Filter, ArrowDownUp, Send, ShieldAlert, Sparkles, SlidersHorizontal, RefreshCw, Layers, CheckCircle2,
   Sliders, CircleSlash, ListChecks, Lightbulb, Share2, Download, BookmarkCheck, Bookmark, Trophy, LoaderCircle,
@@ -45,7 +45,8 @@ type ConversationMessage = {
   error?: boolean;
   activity?: LearningActivityEnvelope;
   componentError?: { type: string; message: string };
-  streamingState?: "thinking" | "responding" | "preparing_activity" | "activity_ready" | "evaluating" | "complete";
+  pendingActivity?: boolean;
+  streamingState?: "thinking" | "responding" | "preparing_activity" | "generating_activity" | "activity_ready" | "evaluating" | "complete";
 };
 
 const navItems: Array<{ id: ViewName; label: string; icon: typeof LayoutPanelTop }> = [
@@ -426,14 +427,14 @@ export default function Home() {
               } else if (parsed.type === "preparing_activity") {
                 setMessages((prev) =>
                   prev.map((msg) =>
-                    msg.id === summaMsgId ? { ...msg, streamingState: "preparing_activity" } : msg
+                    msg.id === summaMsgId ? { ...msg, streamingState: "preparing_activity", pendingActivity: true } : msg
                   )
                 );
               } else if (parsed.type === "intent") {
                 // Structured intent — frontend can use for context (e.g. subject display)
                 // No visual change needed; just store if needed
-              } else if (parsed.type === "artifact" || parsed.type === "component") {
-                const act = parsed.artifact || parsed.component || parsed;
+              } else if (parsed.type === "activity" || parsed.type === "component") {
+                const act = parsed.activity || parsed.component || parsed;
                 if (act && (act.data || act.type)) {
                   setMessages((prev) =>
                     prev.map((msg) =>
@@ -484,10 +485,12 @@ export default function Home() {
       })
       .finally(() => {
         setIsResponding(false);
-        // Clear streaming state on all Summa messages
+        // Update streaming state: if waiting for activity, show generating_activity
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.role === "summa" ? { ...msg, streamingState: "complete" } : msg
+            msg.role === "summa"
+              ? { ...msg, streamingState: msg.pendingActivity ? "generating_activity" : "complete" }
+              : msg
           )
         );
         registerEvent("practice", "New learning intent captured");
@@ -1175,8 +1178,10 @@ function ConversationTurn({ message, onRetry }: { message: ConversationMessage; 
     }
   }
 
+  const showActivityLoading = message.streamingState === "preparing_activity" || message.streamingState === "generating_activity";
+
   return (
-    <div className={`message-block ${isStudent ? "student-message" : "summa-message dynamic-message"}`}>
+    <div className={`message-block group ${isStudent ? "student-message" : "summa-message dynamic-message"}`}>
       {isStudent && (
         <div className="student-message-avatar bg-gradient-to-tr from-[#005A57] to-[#003F3F] text-[#B8FF4D] font-bold text-xs flex items-center justify-center rounded-xl size-7 shadow-sm overflow-hidden shrink-0">
           {user?.avatar ? (
@@ -1191,7 +1196,32 @@ function ConversationTurn({ message, onRetry }: { message: ConversationMessage; 
           <ChainOfThought reasoningText={reasoningText} defaultExpanded={true} />
         )}
         {isStudent ? (
-          <p>{cleanContent}</p>
+          <div>
+            <p>{cleanContent}</p>
+            <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(message.content);
+                  toast.success("Copied to clipboard");
+                }}
+                className="p-1.5 rounded-lg text-[#6D7E78] dark:text-[#8FA29B] hover:bg-[#DDE8DF]/50 dark:hover:bg-[#2A3838]/50 transition-colors"
+                aria-label="Copy message"
+              >
+                <Copy className="size-3.5" />
+              </button>
+              {onRetry && (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  className="p-1.5 rounded-lg text-[#6D7E78] dark:text-[#8FA29B] hover:bg-[#DDE8DF]/50 dark:hover:bg-[#2A3838]/50 transition-colors"
+                  aria-label="Retry message"
+                >
+                  <RotateCcw className="size-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
         ) : cleanContent ? (
           <MarkdownRenderer content={cleanContent} />
         ) : (
@@ -1223,6 +1253,12 @@ function ConversationTurn({ message, onRetry }: { message: ConversationMessage; 
         {message.activity && (
           <div className="mt-3">
             <ChatComponentRenderer activity={message.activity} />
+          </div>
+        )}
+        {showActivityLoading && !message.activity && !message.componentError && cleanContent && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-[#6D7E78] dark:text-[#8FA29B] italic py-1">
+            <LoaderCircle className="size-3.5 animate-spin" />
+            <span>Generating your learning activity...</span>
           </div>
         )}
         {message.componentError && !message.activity && (

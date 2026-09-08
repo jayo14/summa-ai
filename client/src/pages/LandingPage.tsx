@@ -313,9 +313,9 @@ export default function LandingPage() {
                       <span className="px-2.5 py-1 rounded-md bg-[#E7EFE7] text-[#003F3F] font-semibold border border-[#DDE8DF]">
                         Knowledge Graph · Transformers
                       </span>
-                      <span className="px-2.5 py-1 rounded-md bg-[#E7EFE7] text-[#003F3F] font-semibold border border-[#DDE8DF]">
-                        Artifact · Flashcard Set
-                      </span>
+                       <span className="px-2.5 py-1 rounded-md bg-[#E7EFE7] text-[#003F3F] font-semibold border border-[#DDE8DF]">
+                         Activity · Flashcard Set
+                       </span>
                     </div>
                     <span className="text-[#005A57] font-semibold">
                       Answered in 1.2s
@@ -360,7 +360,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="p-8 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] text-center shadow-sm">
                 <div className="text-5xl sm:text-6xl font-serif font-normal text-[#003F3F] mb-2">7+</div>
-                <div className="text-xs font-mono font-bold uppercase tracking-wider text-[#6D7E78]">Artifact types</div>
+                <div className="text-xs font-mono font-bold uppercase tracking-wider text-[#6D7E78]">Activity types</div>
               </div>
 
               <div className="p-8 rounded-3xl bg-[#F5F3EC] border border-[#DDE8DF] text-center shadow-sm">
@@ -551,7 +551,7 @@ export default function LandingPage() {
                   “Backpropagation uses the chain rule to compute gradients layer by layer.”
                 </blockquote>
                 <div className="pt-2 text-[11px] font-mono text-[#005A57] bg-[#E7EFE7] px-3 py-1 rounded-md inline-block font-semibold">
-                  Artifact · Flashcard Set · ML Basics
+                  Activity · Flashcard Set · ML Basics
                 </div>
               </div>
 
@@ -559,7 +559,7 @@ export default function LandingPage() {
                 <span className="text-xs font-mono font-semibold text-[#005A57] uppercase tracking-wider">02 / GROUNDED CITATIONS</span>
                 <h3 className="text-2xl sm:text-3xl font-serif font-normal text-[#102B2B]">Knowledge you can trust</h3>
                 <p className="text-xs sm:text-sm text-[#6D7E78] leading-relaxed">
-                  Every answer is grounded in your knowledge graph, with source artifacts you can review — so you never have to take the AI's word for it.
+                  Every answer is grounded in your knowledge graph, with source activities you can review — so you never have to take the AI's word for it.
                 </p>
               </div>
             </div>
@@ -704,7 +704,7 @@ export default function LandingPage() {
                 <ul className="space-y-3 text-xs text-[#6D7E78] mb-8">
                   <li className="flex items-center gap-2.5">
                     <Check className="size-4 text-[#005A57] flex-shrink-0" />
-                    <span>7 artifact types</span>
+                    <span>7 activity types</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="size-4 text-[#005A57] flex-shrink-0" />
