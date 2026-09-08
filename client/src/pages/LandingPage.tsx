@@ -32,6 +32,9 @@ import {
   X
 } from "lucide-react";
 
+import { SEO, WebSiteJsonLd, OrganizationJsonLd, SoftwareApplicationJsonLd, FAQJsonLd } from "@/components/seo";
+import { PAGES } from "@/data/seo/site";
+
 export default function LandingPage() {
   const { user, isAuthenticated } = useAuth();
   const isLoggedIn = Boolean(user || isAuthenticated);
@@ -49,7 +52,6 @@ export default function LandingPage() {
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
 
   const faqs = [
     {
@@ -76,6 +78,26 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#FBFAF6] text-[#102B2B] font-sans selection:bg-[#B8FF4D] selection:text-[#003F3F] relative antialiased overflow-x-clip">
+      <SEO
+        title={PAGES.home.title}
+        description={PAGES.home.description}
+        canonical={PAGES.home.path}
+        keywords={[
+          "AI study assistant",
+          "AI tutor",
+          "personalized learning AI",
+          "AI study tool",
+          "AI flashcards",
+          "AI quiz generator",
+          "knowledge gap analysis",
+          "spaced repetition AI",
+          "exam prep AI",
+        ]}
+      />
+      <WebSiteJsonLd />
+      <OrganizationJsonLd />
+      <SoftwareApplicationJsonLd />
+      <FAQJsonLd items={faqs} />
       {/* Skip to main content */}
       <a
         href="#main-content"
