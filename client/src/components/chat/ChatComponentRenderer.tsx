@@ -2,8 +2,18 @@
  * ChatComponentRenderer — renders structured LearningActivity payloads dynamically inside conversation turns.
  */
 
-import { useState } from "react";
-import { Check, Sparkles, HelpCircle } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  HelpCircle,
+  RotateCcw,
+  Sparkles,
+  Trophy,
+  X,
+} from "lucide-react";
 import { fetchApi } from "@/lib/api";
 
 export type ComponentData = {
@@ -220,20 +230,89 @@ function QuizRenderer({
 }) {
   const questions = data.questions || [];
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [selectedOpt, setSelectedOpt] = useState<number | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [answers, setAnswers] = useState<(number | null)[]>(() => Array(questions.length).fill(null));
+  const [submitted, setSubmitted] = useState<(boolean)[]>(() => Array(questions.length).fill(false));
   const [score, setScore] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const [questionElapsed, setQuestionElapsed] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const questionTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const q = questions[currentIdx];
+  const allSubmitted = submitted.every(Boolean);
+  const isLastQuestion = currentIdx === questions.length - 1;
+  const isFirstQuestion = currentIdx === 0;
+
+  // Overall timer
+  useEffect(() => {
+    timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
+  // Per-question timer — resets on question change
+  useEffect(() => {
+    setQuestionElapsed(0);
+    questionTimerRef.current = setInterval(() => setQuestionElapsed((t) => t + 1), 1000);
+    return () => { if (questionTimerRef.current) clearInterval(questionTimerRef.current); };
+  }, [currentIdx]);
+
+  // Stop timers when all questions are answered
+  useEffect(() => {
+    if (allSubmitted) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (questionTimerRef.current) clearInterval(questionTimerRef.current);
+    }
+  }, [allSubmitted]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (allSubmitted && !isLastQuestion) {
+        if (e.key === "ArrowRight" || e.key === "Enter") {
+          e.preventDefault();
+          goNext();
+        }
+        return;
+      }
+      if (submitted[currentIdx]) return;
+      // 1-4 keys for options
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= (q?.options?.length || 0)) {
+        handleOptionSelect(num - 1);
+      }
+      // Arrow keys for navigation (when not selecting)
+      if (e.key === "ArrowLeft" && !isFirstQuestion) {
+        e.preventDefault();
+        goPrev();
+      }
+      if (e.key === "ArrowRight" && submitted[currentIdx] && !isLastQuestion) {
+        e.preventDefault();
+        goNext();
+      }
+    }
+    containerRef.current?.addEventListener("keydown", handleKeyDown);
+    return () => containerRef.current?.removeEventListener("keydown", handleKeyDown);
+  }, [currentIdx, submitted, q, allSubmitted, isFirstQuestion, isLastQuestion]);
+
+  function formatTime(seconds: number) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }
 
   async function handleOptionSelect(idx: number) {
-    if (submitted) return;
-    setSelectedOpt(idx);
-    setSubmitted(true);
+    if (submitted[currentIdx]) return;
+    const newAnswers = [...answers];
+    newAnswers[currentIdx] = idx;
+    setAnswers(newAnswers);
+
+    const newSubmitted = [...submitted];
+    newSubmitted[currentIdx] = true;
+    setSubmitted(newSubmitted);
 
     const isCorrect = idx === q.correctIndex;
-    const nextScore = isCorrect ? score + 1 : score;
-    setScore(nextScore);
+    if (isCorrect) setScore((s) => s + 1);
 
     try {
       await fetchApi("/interactions/quiz-result", {
@@ -242,7 +321,7 @@ function QuizRenderer({
           artifact_id: activityId || "quiz-component",
           topic: q.question,
           score: isCorrect ? 100 : 0,
-          answers: { selected: idx, correct: q.correctIndex },
+          answers: { selected: idx, correct: q.correctIndex, time_ms: questionElapsed * 1000 },
         }),
       });
     } catch (e) {
@@ -252,53 +331,221 @@ function QuizRenderer({
     if (onComplete) onComplete();
   }
 
+  function goNext() {
+    if (isLastQuestion) return;
+    setCurrentIdx((i) => Math.min(i + 1, questions.length - 1));
+  }
+
+  function goPrev() {
+    if (isFirstQuestion) return;
+    setCurrentIdx((i) => Math.max(i - 1, 0));
+  }
+
+  function resetQuiz() {
+    setCurrentIdx(0);
+    setAnswers(Array(questions.length).fill(null));
+    setSubmitted(Array(questions.length).fill(false));
+    setScore(0);
+    setElapsed(0);
+    setQuestionElapsed(0);
+    timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
+  }
+
+  // Score summary when all questions are answered
+  if (allSubmitted) {
+    const pct = Math.round((score / questions.length) * 100);
+    return (
+      <div className="my-3 rounded-2xl border border-indigo-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
+        <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Trophy className="h-3.5 w-3.5" />
+            Quiz Complete
+          </span>
+          <span className="font-mono">{formatTime(elapsed)}</span>
+        </div>
+
+        {/* Score display */}
+        <div className="flex items-center justify-center py-4">
+          <div className="relative w-24 h-24">
+            <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="8" className="text-secondary/30" />
+              <circle
+                cx="50" cy="50" r="42" fill="none" strokeWidth="8" strokeLinecap="round"
+                strokeDasharray={264}
+                strokeDashoffset={264 - (264 * pct) / 100}
+                className={pct >= 70 ? "text-emerald-500" : pct >= 40 ? "text-amber-500" : "text-rose-500"}
+                stroke="currentColor"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-2xl font-bold text-foreground">{pct}%</span>
+              <span className="text-[10px] text-muted-foreground">{score}/{questions.length}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Per-question breakdown */}
+        <div className="space-y-1.5 mb-3">
+          {questions.map((question: any, idx: number) => {
+            const wasCorrect = answers[idx] === question.correctIndex;
+            const chosenOption = question.options?.[answers[idx] ?? -1];
+            return (
+              <div
+                key={idx}
+                className={`flex items-center gap-2 rounded-lg border p-2 text-xs ${
+                  wasCorrect
+                    ? "border-emerald-500/30 bg-emerald-950/20 text-emerald-300"
+                    : "border-rose-500/30 bg-rose-950/20 text-rose-300"
+                }`}
+              >
+                {wasCorrect ? (
+                  <Check className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <X className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span className="truncate flex-1">{question.question}</span>
+                {!wasCorrect && chosenOption && (
+                  <span className="text-[10px] opacity-70 shrink-0 hidden sm:inline">Your: {chosenOption}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={resetQuiz}
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-950/20 py-2 text-xs font-medium text-indigo-300 hover:bg-indigo-900/30 transition-colors"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   if (!q) return null;
 
+  const selectedOpt = answers[currentIdx];
+  const isSubmitted = submitted[currentIdx];
+  const isCorrect = selectedOpt === q.correctIndex;
+
   return (
-    <div className="my-3 rounded-2xl border border-indigo-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
-      <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+    <div ref={containerRef} tabIndex={0} className="my-3 rounded-2xl border border-indigo-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md outline-none">
+      {/* Header: progress + timer */}
+      <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
         <span className="font-semibold uppercase tracking-wider text-indigo-400">
           Quiz ({currentIdx + 1}/{questions.length})
         </span>
-        {submitted && (
-          <span className={selectedOpt === q.correctIndex ? "text-emerald-400" : "text-rose-400"}>
-            {selectedOpt === q.correctIndex ? "Correct!" : "Incorrect"}
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1 font-mono text-[11px] text-muted-foreground/70">
+            <Clock className="h-3 w-3" />
+            {formatTime(elapsed)}
           </span>
-        )}
+          {isSubmitted && (
+            <span className={isCorrect ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>
+              {isCorrect ? "Correct!" : "Incorrect"}
+            </span>
+          )}
+        </div>
       </div>
 
+      {/* Progress bar */}
+      <div className="mb-3 h-1 w-full rounded-full bg-secondary/30 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-indigo-500 transition-all duration-300"
+          style={{ width: `${((currentIdx + 1) / questions.length) * 100}%` }}
+        />
+      </div>
+
+      {/* Question */}
       <p className="mb-3 font-medium text-foreground text-sm">{q.question}</p>
 
+      {/* Options */}
       <div className="space-y-2">
         {q.options?.map((opt: string, idx: number) => {
-          let stateClass = "border-border/40 hover:border-indigo-500/50 bg-secondary/30";
-          if (submitted) {
+          const optionKey = String.fromCharCode(65 + idx); // A, B, C, D
+          let stateClass = "border-border/40 hover:border-indigo-500/50 hover:bg-indigo-950/20 bg-secondary/20";
+          if (isSubmitted) {
             if (idx === q.correctIndex) {
               stateClass = "border-emerald-500/60 bg-emerald-950/30 text-emerald-300";
             } else if (idx === selectedOpt) {
               stateClass = "border-rose-500/60 bg-rose-950/30 text-rose-300";
+            } else {
+              stateClass = "border-border/20 bg-secondary/10 opacity-50";
             }
           }
 
           return (
             <button
               key={idx}
-              disabled={submitted}
+              disabled={isSubmitted}
               onClick={() => handleOptionSelect(idx)}
-              className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${stateClass}`}
+              className={`w-full flex items-center gap-3 text-left text-xs p-2.5 rounded-lg border transition-all ${stateClass}`}
             >
-              {opt}
+              <span className="shrink-0 w-6 h-6 rounded-md border border-current/30 flex items-center justify-center text-[10px] font-bold opacity-70">
+                {optionKey}
+              </span>
+              <span className="flex-1">{opt}</span>
+              {isSubmitted && idx === q.correctIndex && (
+                <Check className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+              )}
             </button>
           );
         })}
       </div>
 
-      {submitted && q.explanation && (
+      {/* Explanation */}
+      {isSubmitted && q.explanation && (
         <div className="mt-3 rounded-lg bg-indigo-950/30 p-2.5 text-xs text-indigo-200 border border-indigo-500/20">
           <HelpCircle className="inline h-3.5 w-3.5 mr-1" />
           {q.explanation}
         </div>
       )}
+
+      {/* Navigation: prev / next */}
+      <div className="mt-3 flex items-center justify-between">
+        <button
+          onClick={goPrev}
+          disabled={isFirstQuestion}
+          className="flex items-center gap-1 rounded-lg border border-border/40 bg-secondary/20 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Prev
+        </button>
+
+        <div className="flex items-center gap-1">
+          {questions.map((_: any, idx: number) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIdx(idx)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                idx === currentIdx
+                  ? "bg-indigo-500 w-4"
+                  : submitted[idx]
+                    ? answers[idx] === questions[idx].correctIndex
+                      ? "bg-emerald-500"
+                      : "bg-rose-500"
+                    : "bg-secondary/50"
+              }`}
+              aria-label={`Go to question ${idx + 1}`}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={goNext}
+          disabled={isLastQuestion}
+          className="flex items-center gap-1 rounded-lg border border-indigo-500/30 bg-indigo-950/20 px-3 py-1.5 text-xs text-indigo-300 hover:bg-indigo-900/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          Next
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Keyboard hint */}
+      <div className="mt-2 text-center text-[10px] text-muted-foreground/50">
+        Press <kbd className="px-1 py-0.5 rounded border border-border/30 bg-secondary/20 text-[9px]">1</kbd>-<kbd className="px-1 py-0.5 rounded border border-border/30 bg-secondary/20 text-[9px]">4</kbd> to select · <kbd className="px-1 py-0.5 rounded border border-border/30 bg-secondary/20 text-[9px]">←</kbd> <kbd className="px-1 py-0.5 rounded border border-border/30 bg-secondary/20 text-[9px]">→</kbd> to navigate
+      </div>
     </div>
   );
 }
