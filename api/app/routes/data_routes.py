@@ -532,6 +532,164 @@ async def delete_concept(cid: str):
     return {"status": "success"}
 
 
+# ========== LEARNING DASHBOARD ==========
+
+
+@activities_router.get(
+    "/learning/dashboard",
+    summary="Get learning dashboard data",
+    description="Aggregated stats, next action, and insights for the My Learning page",
+)
+async def get_learning_dashboard():
+    user_id = resolve_user_id()
+    pool = await _store._get_pool()
+    now = datetime.now(timezone.utc)
+
+    stats = {
+        "mastery_pct": 0,
+        "mastery_change": 0,
+        "streak_days": 0,
+        "conversations_count": 0,
+        "concepts_count": 0,
+        "concepts_change": 0,
+    }
+    next_action: Dict[str, Any] = {
+        "topic": "Start a conversation",
+        "subject": "Your first subject",
+        "progress_pct": 0,
+    }
+    insights = {
+        "flashcards_reviewed": 0,
+        "questions_answered": 0,
+        "quiz_accuracy": 0,
+        "time_learned": "0h 0m",
+    }
+
+    if pool is None:
+        return JSONResponse(content={"stats": stats, "next_action": next_action, "insights": insights})
+
+    try:
+        async with pool.acquire() as conn:
+            # --- Stats ---
+            concepts_row = await conn.fetchrow(
+                "SELECT count(*) as total, count(*) FILTER (WHERE mastery = 'mastered') as mastered "
+                "FROM summa_ai.concepts WHERE user_id = $1",
+                user_id,
+            )
+            total_concepts = concepts_row["total"] if concepts_row else 0
+            mastered_concepts = concepts_row["mastered"] if concepts_row else 0
+            stats["concepts_count"] = total_concepts
+            stats["mastery_pct"] = round((mastered_concepts / total_concepts * 100)) if total_concepts > 0 else 0
+
+            # Concepts added this week
+            week_ago = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            week_ago = week_ago.replace(day=week_ago.day - 7) if week_ago.day > 7 else week_ago.replace(month=week_ago.month - 1, day=week_ago.day + 23)
+            week_count = await conn.fetchval(
+                "SELECT count(*) FROM summa_ai.concepts WHERE user_id = $1 AND created_at >= $2",
+                user_id, week_ago,
+            )
+            stats["concepts_change"] = week_count or 0
+
+            # Mastery change (concepts that became 'mastered' this week)
+            mastery_change_row = await conn.fetchval(
+                "SELECT count(*) FROM summa_ai.concepts WHERE user_id = $1 AND mastery = 'mastered' AND updated_at >= $2",
+                user_id, week_ago,
+            )
+            stats["mastery_change"] = mastery_change_row or 0
+
+            # Conversation count
+            conv_count = await conn.fetchval(
+                "SELECT count(*) FROM summa_ai.conversations WHERE user_id = $1",
+                user_id,
+            )
+            stats["conversations_count"] = conv_count or 0
+
+            # Streak: consecutive days with at least one timeline event
+            event_dates = await conn.fetch(
+                "SELECT DISTINCT date_trunc('day', created_at)::date as day "
+                "FROM summa_ai.timeline_events WHERE user_id = $1 "
+                "ORDER BY day DESC LIMIT 60",
+                user_id,
+            )
+            streak = 0
+            if event_dates:
+                from datetime import timedelta
+                check_date = now.date()
+                for row in event_dates:
+                    event_day = row["day"]
+                    if event_day == check_date or event_day == check_date - timedelta(days=streak):
+                        streak += 1
+                        check_date = event_day
+                    else:
+                        break
+            stats["streak_days"] = streak
+
+            # --- Next Action ---
+            # Use latest conversation's last topic as "where you left off"
+            last_conv = await conn.fetchrow(
+                "SELECT id, title, snippet, updated_at FROM summa_ai.conversations "
+                "WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1",
+                user_id,
+            )
+            if last_conv:
+                next_action["topic"] = last_conv["title"] or last_conv["snippet"] or "Continue learning"
+                next_action["subject"] = last_conv["snippet"] or "Your last topic"
+
+            # Get mastery for the last topic from concepts
+            if last_conv:
+                last_topic_concept = await conn.fetchrow(
+                    "SELECT name, mastery FROM summa_ai.concepts WHERE user_id = $1 "
+                    "ORDER BY updated_at DESC LIMIT 1",
+                    user_id,
+                )
+                if last_topic_concept:
+                    mastery_map = {"mastered": 90, "practicing": 60, "learning": 30}
+                    next_action["progress_pct"] = mastery_map.get(last_topic_concept["mastery"], 0)
+                    next_action["subject"] = last_topic_concept["name"]
+
+            # --- Insights ---
+            # Flashcards reviewed this week
+            fc_count = await conn.fetchval(
+                "SELECT count(*) FROM summa_ai.flashcards WHERE user_id = $1 "
+                "AND repetitions > 0",
+                user_id,
+            )
+            insights["flashcards_reviewed"] = fc_count or 0
+
+            # Quiz questions answered
+            quiz_events = await conn.fetchval(
+                "SELECT count(*) FROM summa_ai.timeline_events "
+                "WHERE user_id = $1 AND type = 'quiz-completed'",
+                user_id,
+            )
+            insights["questions_answered"] = quiz_events or 0
+
+            # Quiz accuracy from quiz_results
+            quiz_stats = await conn.fetchrow(
+                "SELECT count(*) as total, count(*) FILTER (WHERE score >= 70) as passed "
+                "FROM summa_ai.quiz_results WHERE user_id = $1",
+                user_id,
+            )
+            if quiz_stats and quiz_stats["total"] > 0:
+                insights["quiz_accuracy"] = round((quiz_stats["passed"] / quiz_stats["total"]) * 100)
+
+            # Time learned (sum of estimated_minutes from timeline_events this week)
+            time_row = await conn.fetchval(
+                "SELECT COALESCE(sum(estimated_minutes), 0) FROM summa_ai.timeline_events "
+                "WHERE user_id = $1 AND created_at >= $2",
+                user_id, week_ago,
+            )
+            total_minutes = time_row or 0
+            hours = total_minutes // 60
+            mins = total_minutes % 60
+            insights["time_learned"] = f"{hours}h {mins:02d}m"
+
+    except Exception as exc:
+        logger.warning("learning/dashboard query error: %s", exc)
+
+    return JSONResponse(content={"stats": stats, "next_action": next_action, "insights": insights})
+
+
 # ========== ANALYTICS ==========
 analytics_router = APIRouter()
 

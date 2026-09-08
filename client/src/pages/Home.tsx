@@ -1393,82 +1393,36 @@ function LearningLibrary({
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [dbFolders, setDbFolders] = useState<Array<any>>([]);
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [dashLoading, setDashLoading] = useState(true);
 
   useEffect(() => {
     fetchApi<Array<any>>("/activities")
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setDbFolders(
-            data.map((item, idx) => ({
+            data.map((item: any, idx: number) => ({
               id: item.id || `folder-${idx}`,
               title: item.title || "Study Module",
-              chatsCount: item.chats_count || item.estimated_minutes || (128 - idx * 25),
-              createdDate: item.created_at ? new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Jan 10, 2026",
-              mastery: item.mastery || Math.max(0, 68 - idx * 15),
-              lastActivity: item.purpose || item.topic || "Discussed concepts · 2h ago",
-              status: idx === 0 || idx === 1 || idx === 2 ? "active" : idx === 3 ? "onhold" : "completed",
+              chatsCount: item.chats_count || item.estimated_minutes || 0,
+              createdDate: item.created_at ? new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+              mastery: item.mastery || 0,
+              lastActivity: item.purpose || item.topic || "",
+              status: item.archived ? "completed" : "active",
               iconType: idx % 5 === 0 ? "code" : idx % 5 === 1 ? "math" : idx % 5 === 2 ? "physics" : idx % 5 === 3 ? "writing" : "book",
             }))
           );
         }
       })
       .catch(() => {});
+
+    fetchApi<any>("/learning/dashboard")
+      .then(setDashboard)
+      .catch(() => {})
+      .finally(() => setDashLoading(false));
   }, []);
 
-  const defaultFolders = [
-    {
-      id: "f1",
-      title: "Object-Oriented Programming",
-      chatsCount: 128,
-      createdDate: "Jan 10, 2026",
-      mastery: 68,
-      lastActivity: "Discussed polymorphism · 2h ago",
-      status: "active",
-      iconType: "code",
-    },
-    {
-      id: "f2",
-      title: "Linear Algebra",
-      chatsCount: 86,
-      createdDate: "Jan 6, 2026",
-      mastery: 54,
-      lastActivity: "Matrix operations · Yesterday",
-      status: "active",
-      iconType: "math",
-    },
-    {
-      id: "f3",
-      title: "Physics – Mechanics",
-      chatsCount: 74,
-      createdDate: "Jan 2, 2026",
-      mastery: 33,
-      lastActivity: "Newton's laws · 2 days ago",
-      status: "active",
-      iconType: "physics",
-    },
-    {
-      id: "f4",
-      title: "Technical Writing",
-      chatsCount: 41,
-      createdDate: "Dec 28, 2025",
-      mastery: 18,
-      lastActivity: "Essay structure · 4 days ago",
-      status: "onhold",
-      iconType: "writing",
-    },
-    {
-      id: "f5",
-      title: "Discrete Mathematics",
-      chatsCount: 0,
-      createdDate: "Dec 12, 2025",
-      mastery: 0,
-      lastActivity: "Start learning",
-      status: "completed",
-      iconType: "book",
-    },
-  ];
-
-  const customFoldersMapped = (customFolders || []).map((name, idx) => ({
+  const customFoldersMapped = (customFolders || []).map((name: string, idx: number) => ({
     id: `custom-folder-${idx}`,
     title: name,
     chatsCount: 0,
@@ -1479,7 +1433,7 @@ function LearningLibrary({
     iconType: idx % 5 === 0 ? "code" : idx % 5 === 1 ? "math" : idx % 5 === 2 ? "physics" : idx % 5 === 3 ? "writing" : "book",
   }));
 
-  const foldersList = [...customFoldersMapped, ...(dbFolders.length > 0 ? dbFolders : defaultFolders)];
+  const foldersList = [...customFoldersMapped, ...dbFolders];
 
   const filteredFolders = foldersList
     .filter((f) => filterState === "all" || f.status === filterState)
@@ -1570,12 +1524,12 @@ function LearningLibrary({
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">72%</div>
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "--" : `${dashboard?.stats?.mastery_pct ?? 0}%`}</div>
                 <div className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">Overall mastery</div>
               </div>
               <div className="mt-3">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#005A57]/10 dark:bg-[#232D2D] text-[#005A57] dark:text-[#B8FF4D] text-xs font-semibold border border-[#005A57]/20 dark:border-[#2A3838]">
-                  ↑ 8% this week
+                  {dashLoading ? "—" : `↑ ${dashboard?.stats?.mastery_change ?? 0}% this week`}
                 </span>
               </div>
               <div className="absolute right-0 bottom-0 pointer-events-none opacity-20 dark:opacity-10">
@@ -1596,12 +1550,12 @@ function LearningLibrary({
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">14</div>
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "--" : dashboard?.stats?.streak_days ?? 0}</div>
                 <div className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">Days in a row</div>
               </div>
               <div className="mt-3">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200/60 dark:border-amber-900/40">
-                  Keep it up! 🔥
+                  {(dashboard?.stats?.streak_days ?? 0) > 0 ? "Keep it up!" : "Start learning today!"}
                 </span>
               </div>
             </div>
@@ -1617,12 +1571,12 @@ function LearningLibrary({
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">284</div>
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "--" : dashboard?.stats?.conversations_count ?? 0}</div>
                 <div className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">Conversations</div>
               </div>
               <div className="mt-3">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200/60 dark:border-emerald-900/40">
-                  ↑ 18% this week
+                  {(dashboard?.stats?.conversations_count ?? 0) > 0 ? "Active learner" : "Start chatting"}
                 </span>
               </div>
             </div>
@@ -1638,12 +1592,12 @@ function LearningLibrary({
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">126</div>
+                <div className="text-3xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "--" : dashboard?.stats?.concepts_count ?? 0}</div>
                 <div className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">New concepts</div>
               </div>
               <div className="mt-3">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#DDE8DF]/70 dark:bg-[#232D2D] text-[#003F3F] dark:text-[#B8FF4D] text-xs font-semibold border border-[#DDE8DF] dark:border-[#2A3838]">
-                  ↑ 21% this week
+                  {dashLoading ? "—" : `↑ ${dashboard?.stats?.concepts_change ?? 0} this week`}
                 </span>
               </div>
             </div>
@@ -1717,6 +1671,20 @@ function LearningLibrary({
 
           {/* Folder Rows List */}
           <div className="bg-[#FBFAF6] dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] rounded-2xl divide-y divide-[#DDE8DF] dark:divide-[#2A3838] overflow-hidden shadow-2xs">
+            {filteredFolders.length === 0 && (
+              <div className="p-8 text-center">
+                <BookOpen className="size-10 mx-auto text-[#6D7E78] dark:text-[#8FA29B] opacity-40 mb-3" />
+                <p className="text-sm font-bold text-[#102B2B] dark:text-[#FBFAF6]">No activities yet</p>
+                <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-1">Start a conversation to create your first learning activity.</p>
+                <button
+                  type="button"
+                  onClick={onResume}
+                  className="mt-4 px-4 py-2 bg-[#005A57] dark:bg-[#B8FF4D] text-white dark:text-[#003F3F] text-xs font-bold rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  Start learning
+                </button>
+              </div>
+            )}
             {filteredFolders.map((folder) => (
               <div
                 key={folder.id || folder.title}
@@ -1799,8 +1767,8 @@ function LearningLibrary({
             </div>
 
             <div>
-              <h4 className="text-base font-bold text-[#102B2B] dark:text-[#FBFAF6]">BSc. Computer Science</h4>
-              <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B]">2nd Year · Semester 2</p>
+              <h4 className="text-base font-bold text-[#102B2B] dark:text-[#FBFAF6]">Overall Progress</h4>
+              <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B]">Based on mastered concepts</p>
             </div>
 
             {/* Arc Progress Ring */}
@@ -1821,7 +1789,7 @@ function LearningLibrary({
                   strokeWidth="12"
                   strokeLinecap="round"
                   strokeDasharray="204"
-                  strokeDashoffset={204 * (1 - 0.32)}
+                  strokeDashoffset={204 * (1 - (dashboard?.stats?.mastery_pct ?? 0) / 100)}
                 />
                 <defs>
                   <linearGradient id="arc-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1831,14 +1799,14 @@ function LearningLibrary({
                 </defs>
               </svg>
               <div className="absolute bottom-1 text-center">
-                <div className="text-2xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">32%</div>
+                <div className="text-2xl font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "--" : `${dashboard?.stats?.mastery_pct ?? 0}%`}</div>
                 <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B]">Program progress</div>
               </div>
             </div>
 
             <div className="pt-2 border-t border-[#DDE8DF] dark:border-[#2A3838] flex items-center justify-between text-xs text-[#6D7E78] dark:text-[#8FA29B]">
-              <span>Target: May 2026</span>
-              <span className="font-semibold text-[#102B2B] dark:text-[#DDE8DF]">78 days remaining</span>
+              <span>{dashboard?.stats?.concepts_count ?? 0} concepts total</span>
+              <span className="font-semibold text-[#102B2B] dark:text-[#DDE8DF]">{dashboard?.stats?.mastery_pct ?? 0}% mastered</span>
             </div>
           </div>
 
@@ -1856,17 +1824,17 @@ function LearningLibrary({
 
             <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] rounded-xl p-4 space-y-3">
               <div>
-                <h4 className="text-sm font-bold text-[#102B2B] dark:text-[#FBFAF6]">Polymorphism foundations</h4>
-                <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">Object-Oriented Programming</p>
+                <h4 className="text-sm font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "Loading..." : dashboard?.next_action?.topic || "Start a conversation"}</h4>
+                <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-0.5">{dashLoading ? "" : dashboard?.next_action?.subject || ""}</p>
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-[#DDE8DF]">
                   <span>Progress</span>
-                  <span>63%</span>
+                  <span>{dashLoading ? "--" : `${dashboard?.next_action?.progress_pct ?? 0}%`}</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-[#005A57] dark:bg-[#B8FF4D] h-full rounded-full w-[63%]" />
+                  <div className="bg-[#005A57] dark:bg-[#B8FF4D] h-full rounded-full transition-all" style={{ width: `${dashboard?.next_action?.progress_pct ?? 0}%` }} />
                 </div>
               </div>
 
@@ -1895,7 +1863,7 @@ function LearningLibrary({
               <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] p-3 rounded-xl">
                 <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B] truncate">Flashcards reviewed</div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">128</span>
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "--" : dashboard?.insights?.flashcards_reviewed ?? 0}</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
                     <path d="M0 12 Q 10 4, 20 8 T 40 2" fill="none" stroke="#10B981" strokeWidth="2" />
                   </svg>
@@ -1905,7 +1873,7 @@ function LearningLibrary({
               <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] p-3 rounded-xl">
                 <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B] truncate">Questions answered</div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">96</span>
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "--" : dashboard?.insights?.questions_answered ?? 0}</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
                     <path d="M0 14 Q 10 2, 20 10 T 40 4" fill="none" stroke="#005A57" strokeWidth="2" />
                   </svg>
@@ -1915,7 +1883,7 @@ function LearningLibrary({
               <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] p-3 rounded-xl">
                 <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B] truncate">Quiz accuracy</div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">78%</span>
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "--" : `${dashboard?.insights?.quiz_accuracy ?? 0}%`}</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
                     <path d="M0 10 Q 10 14, 20 4 T 40 8" fill="none" stroke="#00A896" strokeWidth="2" />
                   </svg>
@@ -1925,7 +1893,7 @@ function LearningLibrary({
               <div className="bg-white dark:bg-[#181E1E] border border-[#DDE8DF] dark:border-[#2A3838] p-3 rounded-xl">
                 <div className="text-[11px] font-medium text-[#6D7E78] dark:text-[#8FA29B] truncate">Time learned</div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">8h 24m</span>
+                  <span className="text-lg font-bold text-[#102B2B] dark:text-[#FBFAF6]">{dashLoading ? "--" : dashboard?.insights?.time_learned ?? "0h 0m"}</span>
                   <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
                     <path d="M0 14 Q 10 8, 20 12 T 40 2" fill="none" stroke="#F59E0B" strokeWidth="2" />
                   </svg>
