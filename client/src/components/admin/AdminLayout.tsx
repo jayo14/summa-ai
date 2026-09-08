@@ -3,6 +3,7 @@ import {
   Activity,
   BarChart2,
   Bell,
+  Brain,
   Building,
   CheckCircle,
   ChevronDown,
@@ -48,6 +49,7 @@ type AdminTab =
   | "feedback"
   | "integrations"
   | "components"
+  | "ai-models"
   | "settings"
   | "audit";
 
@@ -66,6 +68,7 @@ const sidebarNav: { key: AdminTab; label: string; icon: React.ReactNode }[] = [
   { key: "feedback", label: "Feedback", icon: <MessageSquare size={18} aria-hidden="true" /> },
   { key: "integrations", label: "Integrations", icon: <Layers size={18} aria-hidden="true" /> },
   { key: "components", label: "Components", icon: <LayoutDashboard size={18} aria-hidden="true" /> },
+  { key: "ai-models", label: "AI Models", icon: <Brain size={18} aria-hidden="true" /> },
   { key: "settings", label: "Settings", icon: <Settings size={18} aria-hidden="true" /> },
   { key: "audit", label: "Audit Logs", icon: <FileText size={18} aria-hidden="true" /> },
 ];
@@ -85,6 +88,7 @@ const navMeta: Record<AdminTab, { title: string; desc: string }> = {
   feedback: { title: "Feedback", desc: "Centralize user bug reports, feature requests, and satisfaction ratings." },
   integrations: { title: "Integrations", desc: "External API services, payment gateways, and AI provider health." },
   components: { title: "Components", desc: "Beautiful, focused learning experiences designed to help you understand, practice and master your goals." },
+  "ai-models": { title: "AI Models", desc: "Configure AI providers, manage API keys, and monitor failover health." },
   settings: { title: "Platform Settings", desc: "Configure global Summa AI admin behavior and environment flags." },
   audit: { title: "Audit Logs", desc: "Immutable administrative activity trail and security telemetry." },
 };

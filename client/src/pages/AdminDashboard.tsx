@@ -24,6 +24,7 @@ import { ComponentsPage } from "@/pages/admin/ComponentsPage";
 import { ComponentDetailPage } from "@/pages/admin/components/ComponentDetailPage";
 import { SettingsPage } from "@/pages/admin/SettingsPage";
 import { AuditPage } from "@/pages/admin/AuditPage";
+import { AIModelsPage } from "@/pages/admin/AIModelsPage";
 
 interface AdminUser {
   id: string;
@@ -68,6 +69,7 @@ type AdminTab =
   | "feedback"
   | "integrations"
   | "components"
+  | "ai-models"
   | "settings"
   | "audit";
 
@@ -195,6 +197,8 @@ export default function AdminDashboard() {
         return <IntegrationsPage />;
       case "components":
         return <ComponentsPage />;
+      case "ai-models":
+        return <AIModelsPage />;
       case "settings":
         return <SettingsPage />;
       case "audit":

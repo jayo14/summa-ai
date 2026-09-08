@@ -23,6 +23,7 @@ from app.services.cognee_service import CogneeService
 from app.core.logging_system import setup_system_logging
 from app.core.rbac import require_admin
 from app.routes import auth, chat, memory, logs, admin
+from app.routes.admin_models import router as admin_models_router
 from app.routes.data_routes import (
     activities_router,
     conv_router,
@@ -291,6 +292,7 @@ for r, tag in [
     (resource_router, "resources"),
     (logs.router, "system"),
     (admin.router, "admin"),
+    (admin_models_router, "admin-models"),
 ]:
     app.include_router(r, prefix=settings.API_V1_STR, tags=[tag])
 

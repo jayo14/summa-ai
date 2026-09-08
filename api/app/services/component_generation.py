@@ -105,23 +105,15 @@ async def _generate_content(
         {"role": "user", "content": user_content},
     ]
 
-    if google_ai.is_gemini_configured():
-        raw_json = await google_ai.generate_gemini_json(
-            messages=messages,
-            system_prompt=system_prompt,
-            json_schema=schema.model_json_schema(),
-        )
-        if raw_json:
-            return schema.model_validate(raw_json)
-
-    if zai_client._has_instructor:
-        client = zai_client.get_instructor_client()
-        return await client.chat.completions.create(
-            model=settings.ZAI_MODEL,
-            response_model=schema,
-            max_retries=MAX_VALIDATION_RETRIES,
-            messages=messages,
-        )
+    from app.services.model_router import model_router
+    raw_json = await model_router.generate_json(
+        messages=messages,
+        system_prompt=system_prompt,
+        json_schema=schema.model_json_schema(),
+        request_type="component",
+    )
+    if raw_json:
+        return schema.model_validate(raw_json)
 
     raise RuntimeError("No LLM service available for component generation")
 

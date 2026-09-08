@@ -57,4 +57,4 @@ server.log
 # Python
 __pycache__/
 *.pyc
-*.pyo
+*.pyoapi/.model_encryption_key

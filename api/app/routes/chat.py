@@ -307,27 +307,17 @@ async def build_orchestrator_prompt(
 async def _stream_ai_response(
     messages: list[dict], enable_thinking: bool = True, context: str = ""
 ) -> AsyncGenerator[str, None]:
-    """Streams completion chunks from Google AI (Gemini) if configured, or Z.ai (GLM)."""
-    if google_ai.is_gemini_configured():
-        logger.info("Using Google AI (Gemini %s) for chat stream", settings.GEMINI_MODEL)
-        async for chunk in google_ai.stream_gemini_completion(messages, context):
-            if chunk["type"] == "done":
-                yield "data: [DONE]\n\n"
-            elif chunk["type"] == "error":
-                yield f"data: {json.dumps({'type': 'error', 'message': chunk['message']})}\n\n"
-                yield "data: [DONE]\n\n"
-            else:
-                yield f"data: {json.dumps(chunk)}\n\n"
-    else:
-        logger.info("Using Z.ai (GLM) for chat stream")
-        async for chunk in zai_client.stream_completion(messages, context, enable_thinking):
-            if chunk["type"] == "done":
-                yield "data: [DONE]\n\n"
-            elif chunk["type"] == "error":
-                yield f"data: {json.dumps({'type': 'error', 'message': chunk['message']})}\n\n"
-                yield "data: [DONE]\n\n"
-            else:
-                yield f"data: {json.dumps(chunk)}\n\n"
+    """Streams completion chunks via model router with automatic failover."""
+    from app.services.model_router import model_router
+
+    async for chunk in model_router.stream_chat(messages, context, enable_thinking):
+        if chunk["type"] == "done":
+            yield "data: [DONE]\n\n"
+        elif chunk["type"] == "error":
+            yield f"data: {json.dumps({'type': 'error', 'message': chunk['message']})}\n\n"
+            yield "data: [DONE]\n\n"
+        else:
+            yield f"data: {json.dumps(chunk)}\n\n"
 
 
 @router.post("/chat/stream", summary="Chat (streaming)")
