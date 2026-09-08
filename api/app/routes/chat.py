@@ -94,6 +94,7 @@ async def build_orchestrator_prompt(
     messages: list[dict],
     request: Optional[ChatRequest] = None,
     decision: Optional[Any] = None,
+    intent: Optional[Any] = None,
 ) -> str:
     memory_context = await cognee.recall_context(user_id, query)
     exams_context = await cognee.recall_exams(user_id)
@@ -106,6 +107,26 @@ async def build_orchestrator_prompt(
         "tracking gaps, and tailoring explanations to their academic level and style. "
         "Keep explanations clear, engaging, concise, and formatted with Markdown. Use analogies and step-by-step logic."
     ]
+
+    if intent:
+        intent_parts = []
+        if intent.subject:
+            intent_parts.append(f"Subject: {intent.subject}")
+        if intent.topic:
+            intent_parts.append(f"Topic: {intent.topic}")
+        if intent.learning_goal:
+            intent_parts.append(f"Learning Goal: {intent.learning_goal}")
+        if intent.difficulty_preference:
+            intent_parts.append(f"Difficulty: {intent.difficulty_preference}")
+        if intent_parts:
+            parts.append(
+                _section(
+                    "\nSTRUCTURED USER INTENT:\n" + "\n".join(intent_parts) +
+                    f"\nRaw Query: {intent.raw_query}\n"
+                    "The subject above is AUTHORITATIVE. All content, questions, and examples "
+                    "MUST be about this subject. Never switch to a different domain."
+                )
+            )
 
     if decision:
         action_directives = {
@@ -309,11 +330,11 @@ async def chat_stream(request: ChatRequest):
 
     from app.services.orchestrator import LearningOrchestrator
     orchestrator = LearningOrchestrator()
-    decision = await orchestrator.decide_next_action(user_id, last_query, messages)
+    decision = await orchestrator.decide_next_action(user_id, last_query, messages, intent=user_intent)
     timer.mark("learning_decision")
 
     intent = user_intent.activity_request or user_intent.intent or detect_intent(last_query)
-    orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages, request=request, decision=decision)
+    orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages, request=request, decision=decision, intent=user_intent)
     timer.mark("learner_context")
 
     async def generate():
