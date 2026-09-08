@@ -96,15 +96,18 @@ export function AIModelsPage() {
 
   const fetchProviders = useCallback(async () => {
     try {
-      const data = await fetchApi<{ providers: Provider[]; routing_mode: string }>(
+      const data = await fetchApi<{ providers: Provider[]; routing_mode: string; error?: string }>(
         "/admin/models/providers"
       );
       if (data?.providers) {
         setProviders(data.providers);
         setRoutingMode(data.routing_mode || "auto");
+        if (data.error) {
+          toast.info(data.error);
+        }
       }
     } catch (err) {
-      toast.error("Failed to load provider data");
+      toast.error("Failed to load provider data — migration may still be running");
     }
   }, []);
 
@@ -184,10 +187,14 @@ export function AIModelsPage() {
   };
 
   const handleSetRoutingMode = async (mode: string, provider?: string) => {
+    if (mode === "manual" && !provider) {
+      toast.error("No providers available for manual mode");
+      return;
+    }
     try {
       await fetchApi("/admin/models/routing-mode", {
         method: "PUT",
-        body: JSON.stringify({ mode, provider }),
+        body: JSON.stringify({ mode, provider: provider || null }),
       });
       setRoutingMode(mode);
       toast.success(`Routing mode: ${mode}`);
@@ -271,6 +278,15 @@ export function AIModelsPage() {
       </div>
 
       {/* Provider Cards */}
+      {providers.length === 0 ? (
+        <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl p-8 text-center">
+          <Brain className="size-8 text-grey-green dark:text-[#8FA29B] mx-auto mb-3 opacity-50" />
+          <p className="text-sm font-semibold text-ink dark:text-cream-soft mb-1">No providers configured</p>
+          <p className="text-xs text-grey-green dark:text-[#8FA29B]">
+            The database migration may still be running. Provider cards will appear after migration 0013 completes.
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {providers.map((p) => {
           const Icon = PROVIDER_ICONS[p.provider] || Brain;
@@ -412,6 +428,7 @@ export function AIModelsPage() {
           );
         })}
       </div>
+      )}
 
       {/* Failover Log */}
       <div className="bg-white dark:bg-[#1C2323] border border-mist-green dark:border-[#2A3838] rounded-2xl overflow-hidden">

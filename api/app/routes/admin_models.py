@@ -42,15 +42,19 @@ async def list_providers(current_user: dict = Depends(require_admin)):
     """Returns all providers with config, health status, and usage stats."""
     from app.services.db_pool import get_pool
 
-    pool = await get_pool()
-    rows = await pool.fetch("""
-        SELECT id, provider, model_name, is_enabled, priority,
-               rate_limit_rpm, rate_limit_tpd, last_health_check, last_error,
-               created_at, updated_at,
-               CASE WHEN api_key_encrypted IS NOT NULL AND api_key_encrypted != '' THEN true ELSE false END as has_key
-        FROM summa_ai.model_providers
-        ORDER BY priority ASC
-    """)
+    try:
+        pool = await get_pool()
+        rows = await pool.fetch("""
+            SELECT id, provider, model_name, is_enabled, priority,
+                   rate_limit_rpm, rate_limit_tpd, last_health_check, last_error,
+                   created_at, updated_at,
+                   CASE WHEN api_key_encrypted IS NOT NULL AND api_key_encrypted != '' THEN true ELSE false END as has_key
+            FROM summa_ai.model_providers
+            ORDER BY priority ASC
+        """)
+    except Exception as e:
+        logger.warning("model_providers table not ready: %s", e)
+        return {"providers": [], "routing_mode": "auto", "error": "Providers table not yet available. Retry after migration."}
 
     health = model_router.get_health()
 
