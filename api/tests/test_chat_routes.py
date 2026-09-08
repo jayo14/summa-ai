@@ -192,6 +192,75 @@ class TestChatStreamEndpoint:
     @pytest.mark.asyncio
     @patch("app.routes.chat.generate_component_payload", new_callable=AsyncMock)
     @patch("app.routes.chat.cognee")
+    async def test_stream_emits_intent_event(self, mock_cognee, mock_generate):
+        """The intent event should contain the structured subject."""
+        mock_generate.return_value = None
+        mock_cognee.recall_context = AsyncMock(return_value={"results": []})
+        mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
+        mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
+        mock_cognee.detect_knowledge_gaps = AsyncMock(return_value=None)
+        mock_cognee.remember_conversation = AsyncMock()
+
+        async def fake_stream(*args, **kwargs):
+            yield 'data: {"type": "content", "delta": "Hello"}\n\n'
+            yield "data: [DONE]\n\n"
+
+        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
+            token = set_current_user_id("user-1")
+            try:
+                response = client.post(
+                    "/api/v1/chat/stream",
+                    headers=_auth_headers(),
+                    json={
+                        "user_id": "user-1",
+                        "messages": [{"role": "user", "content": "Quiz me on Philosophy"}],
+                    },
+                )
+                assert response.status_code == 200
+                body = b"".join(response.iter_bytes()).decode("utf-8")
+                intent_line = next(line for line in body.splitlines() if '"type": "intent"' in line)
+                event = json.loads(intent_line[len("data: "):])
+                assert event["intent"]["subject"] == "Philosophy"
+                assert event["intent"]["intent"] == "quiz"
+            finally:
+                reset_current_user_id(token)
+
+    @pytest.mark.asyncio
+    @patch("app.routes.chat.generate_component_payload", new_callable=AsyncMock)
+    @patch("app.routes.chat.cognee")
+    async def test_stream_emits_preparing_activity_state(self, mock_cognee, mock_generate):
+        mock_generate.return_value = None
+        mock_cognee.recall_context = AsyncMock(return_value={"results": []})
+        mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
+        mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
+        mock_cognee.detect_knowledge_gaps = AsyncMock(return_value=None)
+        mock_cognee.remember_conversation = AsyncMock()
+
+        async def fake_stream(*args, **kwargs):
+            yield 'data: {"type": "content", "delta": "Hello"}\n\n'
+            yield "data: [DONE]\n\n"
+
+        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
+            token = set_current_user_id("user-1")
+            try:
+                response = client.post(
+                    "/api/v1/chat/stream",
+                    headers=_auth_headers(),
+                    json={
+                        "user_id": "user-1",
+                        "messages": [{"role": "user", "content": "Quiz me on Philosophy"}],
+                    },
+                )
+                assert response.status_code == 200
+                body = b"".join(response.iter_bytes()).decode("utf-8")
+                assert '"type": "preparing_activity"' in body
+                assert '"type": "intent"' in body
+            finally:
+                reset_current_user_id(token)
+
+    @pytest.mark.asyncio
+    @patch("app.routes.chat.generate_component_payload", new_callable=AsyncMock)
+    @patch("app.routes.chat.cognee")
     async def test_stream_emits_artifact_on_intent(
         self, mock_cognee, mock_generate
     ):
