@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Search, User, Users, X } from "lucide-react";
+import { Plus, Search, Trash2, User, Users, X } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
 import { MetricCard } from "@/components/admin/MetricCard";
@@ -45,6 +45,9 @@ export function UsersView({
   const [addEmail, setAddEmail] = useState("");
   const [addRole, setAddRole] = useState("user");
   const [addInstitution, setAddInstitution] = useState("");
+  const [showDeleteTestModal, setShowDeleteTestModal] = useState(false);
+  const [deletePattern, setDeletePattern] = useState("test-%@example.com");
+  const [deleting, setDeleting] = useState(false);
 
   const totalUsersCount = users.length;
   const activeUsersCount = users.filter((u) => u.status?.toLowerCase() === "active").length;
@@ -95,6 +98,40 @@ export function UsersView({
     }
   };
 
+  const handleDeleteTestUsers = async () => {
+    if (!deletePattern.trim()) {
+      toast.error("Email pattern is required");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const result = await fetchApi<{ deleted: any[]; errors: any[] }>(
+        "/admin/users/delete-by-pattern",
+        {
+          method: "POST",
+          body: JSON.stringify({ email_pattern: deletePattern.trim() }),
+        }
+      );
+      const count = result?.deleted?.length || 0;
+      const errCount = result?.errors?.length || 0;
+      if (count > 0) {
+        toast.success(`Deleted ${count} test user${count > 1 ? "s" : ""}`);
+      }
+      if (errCount > 0) {
+        toast.error(`Failed to delete ${errCount} user${errCount > 1 ? "s" : ""}`);
+      }
+      if (count === 0 && errCount === 0) {
+        toast.info("No users matched the pattern");
+      }
+      setShowDeleteTestModal(false);
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete users");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Metrics Row */}
@@ -133,6 +170,12 @@ export function UsersView({
               <option value="admin">Admins</option>
             </select>
 
+            <button
+              onClick={() => setShowDeleteTestModal(true)}
+              className="px-4 py-2 rounded-xl text-xs font-semibold border border-destructive/30 dark:border-[#be747e]/30 text-destructive dark:text-[#be747e] hover:bg-destructive/10 dark:bg-[#be747e]/10 transition flex items-center gap-2 cursor-pointer"
+            >
+              <Trash2 size={14} /> Delete Test Users
+            </button>
             <button
               onClick={() => setShowAddModal(true)}
               className="px-4 py-2 rounded-xl text-xs font-semibold bg-teal-dark dark:bg-accent-lime text-white hover:bg-emerald-deep dark:hover:bg-[#c7ff62] transition flex items-center gap-2 shadow-2xs cursor-pointer"
@@ -255,6 +298,103 @@ export function UsersView({
           </ScrollArea>
         </div>
       </div>
+
+      {/* Delete Test Users Modal */}
+      {showDeleteTestModal && (
+        <div className="fixed inset-0 z-50 bg-ink dark:bg-[#121616]/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-mist-green dark:border-[#2A3838] animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-mist-green dark:border-[#2A3838] pb-3">
+              <h3 className="font-bold text-sm text-ink dark:text-cream-soft flex items-center gap-2">
+                <Trash2 size={16} className="text-destructive dark:text-[#be747e]" />
+                Delete Test Users
+              </h3>
+              <button onClick={() => setShowDeleteTestModal(false)} className="text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <p className="text-grey-green dark:text-[#8FA29B]">
+                Delete all users whose email matches the SQL LIKE pattern below. This removes both the auth record and profile.
+              </p>
+              <div>
+                <label className="block font-semibold text-ink dark:text-cream-soft mb-1">Email Pattern</label>
+                <input
+                  type="text"
+                  value={deletePattern}
+                  onChange={(e) => setDeletePattern(e.target.value)}
+                  placeholder="e.g. test-%@example.com"
+                  className="w-full p-2.5 bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838] rounded-xl text-ink dark:text-cream-soft font-mono focus:outline-none"
+                />
+                <p className="text-[10px] text-grey-green dark:text-[#8FA29B] mt-1">
+                  Use % as wildcard. Example: <code className="bg-cream-light dark:bg-[#232D2D] px-1 rounded">test-%@example.com</code> matches all test users.
+                </p>
+              </div>
+
+              {/* Preview matching users */}
+              {deletePattern && (
+                <div className="p-3 rounded-xl bg-cream-light dark:bg-[#232D2D] border border-mist-green dark:border-[#2A3838]">
+                  <div className="text-[10px] font-semibold text-grey-green dark:text-[#8FA29B] mb-1">Will delete:</div>
+                  <div className="space-y-1">
+                    {users
+                      .filter((u) => {
+                        const pattern = deletePattern.replace(/%/g, ".*").replace(/\?/g, ".");
+                        return new RegExp(`^${pattern}$`, "i").test(u.email);
+                      })
+                      .slice(0, 5)
+                      .map((u) => (
+                        <div key={u.id} className="text-[11px] font-mono text-ink dark:text-cream-soft flex items-center gap-2">
+                          <span className="size-1.5 rounded-full bg-destructive/60 dark:bg-[#be747e]/60" />
+                          {u.email}
+                        </div>
+                      ))}
+                    {users.filter((u) => {
+                      const pattern = deletePattern.replace(/%/g, ".*").replace(/\?/g, ".");
+                      return new RegExp(`^${pattern}$`, "i").test(u.email);
+                    }).length > 5 && (
+                      <div className="text-[10px] text-grey-green dark:text-[#8FA29B]">
+                        ...and {users.filter((u) => {
+                          const pattern = deletePattern.replace(/%/g, ".*").replace(/\?/g, ".");
+                          return new RegExp(`^${pattern}$`, "i").test(u.email);
+                        }).length - 5} more
+                      </div>
+                    )}
+                    {users.filter((u) => {
+                      const pattern = deletePattern.replace(/%/g, ".*").replace(/\?/g, ".");
+                      return new RegExp(`^${pattern}$`, "i").test(u.email);
+                    }).length === 0 && (
+                      <div className="text-[11px] text-grey-green dark:text-[#8FA29B]">No matching users</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowDeleteTestModal(false)} className="px-4 py-2 rounded-xl border border-mist-green dark:border-[#2A3838] text-ink dark:text-cream-soft font-semibold text-xs">
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteTestUsers}
+                disabled={deleting}
+                className="px-4 py-2 rounded-xl bg-destructive dark:bg-[#be747e] text-white font-semibold text-xs hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={12} />
+                    Delete All Matched
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add User Modal */}
       {showAddModal && (

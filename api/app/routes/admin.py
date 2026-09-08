@@ -303,3 +303,105 @@ async def update_platform_settings(
     logger.info("Platform settings updated by admin %s: %s", actor_id, updates)
     return {"success": True, "settings": _system_settings}
 
+
+class BulkDeleteRequest(BaseModel):
+    user_ids: List[str]
+
+
+class BulkDeletePatternRequest(BaseModel):
+    email_pattern: str
+
+
+@router.post("/users/bulk-delete", summary="Bulk delete users by IDs")
+async def bulk_delete_users(
+    payload: BulkDeleteRequest,
+    current_user: dict = Depends(require_admin),
+):
+    """Delete multiple users by their IDs from both Supabase Auth and user_profiles."""
+    from app.services.supabase_auth import SupabaseAuthService
+    from app.services.db_pool import get_pool
+
+    auth_service = SupabaseAuthService()
+    pool = await get_pool()
+    deleted = []
+    errors = []
+
+    for uid in payload.user_ids:
+        try:
+            # Delete from user_profiles first
+            await pool.execute("DELETE FROM summa_ai.user_profiles WHERE id = $1", uid)
+            # Delete from Supabase Auth
+            await auth_service.admin_delete_user(uid)
+            deleted.append(uid)
+        except Exception as exc:
+            errors.append({"id": uid, "error": str(exc)})
+            logger.warning("Failed to delete user %s: %s", uid, exc)
+
+    # Audit log
+    user_store = UserStore()
+    actor_id = current_user.get("sub", "admin")
+    actor_email = current_user.get("email", "admin@summa.ai")
+    user_store._audit_logs.append({
+        "id": f"audit-{len(user_store._audit_logs) + 1}",
+        "actor_id": actor_id,
+        "actor_email": actor_email,
+        "action": "BULK_USER_DELETE",
+        "target_user_id": "MULTIPLE",
+        "target_email": "",
+        "details": f"Deleted {len(deleted)} users: {deleted}",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
+    return {"success": True, "deleted": deleted, "errors": errors}
+
+
+@router.post("/users/delete-by-pattern", summary="Delete users matching email pattern")
+async def delete_users_by_pattern(
+    payload: BulkDeletePatternRequest,
+    current_user: dict = Depends(require_admin),
+):
+    """Delete all users whose email matches a SQL LIKE pattern (e.g. 'test-%@example.com')."""
+    from app.services.supabase_auth import SupabaseAuthService
+    from app.services.db_pool import get_pool
+
+    auth_service = SupabaseAuthService()
+    pool = await get_pool()
+
+    # Find matching users
+    rows = await pool.fetch(
+        "SELECT id, email FROM summa_ai.user_profiles WHERE email LIKE $1",
+        payload.email_pattern,
+    )
+
+    if not rows:
+        return {"success": True, "deleted": [], "message": "No users matched the pattern"}
+
+    deleted = []
+    errors = []
+    for row in rows:
+        uid = row["id"]
+        try:
+            await pool.execute("DELETE FROM summa_ai.user_profiles WHERE id = $1", uid)
+            await auth_service.admin_delete_user(uid)
+            deleted.append({"id": uid, "email": row["email"]})
+        except Exception as exc:
+            errors.append({"id": uid, "email": row["email"], "error": str(exc)})
+            logger.warning("Failed to delete user %s: %s", uid, exc)
+
+    # Audit log
+    user_store = UserStore()
+    actor_id = current_user.get("sub", "admin")
+    actor_email = current_user.get("email", "admin@summa.ai")
+    user_store._audit_logs.append({
+        "id": f"audit-{len(user_store._audit_logs) + 1}",
+        "actor_id": actor_id,
+        "actor_email": actor_email,
+        "action": "PATTERN_USER_DELETE",
+        "target_user_id": "MULTIPLE",
+        "target_email": "",
+        "details": f"Pattern '{payload.email_pattern}': deleted {len(deleted)} users",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
+    return {"success": True, "deleted": deleted, "errors": errors}
+
