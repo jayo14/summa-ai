@@ -34,6 +34,94 @@ logger = logging.getLogger(__name__)
 
 
 _SUBJECT_QUESTION_BANKS = {
+    "data structures": {
+        "questions": [
+            {
+                "question": "What is the worst-case time complexity of searching an unbalanced binary search tree?",
+                "options": ["O(1)", "O(log n)", "O(n)", "O(n\u00b2)"],
+                "correct_index": 2,
+                "explanation": "In the worst case, an unbalanced BST can degenerate into a linked list, making search O(n).",
+            },
+            {
+                "question": "Which data structure uses FIFO (First In, First Out) ordering?",
+                "options": ["Stack", "Queue", "Binary Heap", "Hash Table"],
+                "correct_index": 1,
+                "explanation": "A queue processes elements in the order they arrive — first in, first out.",
+            },
+            {
+                "question": "What is the average-case time complexity of inserting into a hash table?",
+                "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+                "correct_index": 0,
+                "explanation": "Hash tables provide O(1) average-case insertion via direct indexing from the hash function.",
+            },
+        ]
+    },
+    "algorithms": {
+        "questions": [
+            {
+                "question": "What is the time complexity of binary search on a sorted array?",
+                "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+                "correct_index": 1,
+                "explanation": "Binary search halves the search space each step, giving O(log n) time.",
+            },
+            {
+                "question": "Which sorting algorithm has the best worst-case time complexity?",
+                "options": ["Quick Sort", "Merge Sort", "Bubble Sort", "Selection Sort"],
+                "correct_index": 1,
+                "explanation": "Merge Sort guarantees O(n log n) in all cases, while Quick Sort degrades to O(n\u00b2) worst-case.",
+            },
+            {
+                "question": "What paradigm does dynamic programming use to solve problems?",
+                "options": ["Divide and conquer", "Optimal substructure + overlapping subproblems", "Greedy choice", "Backtracking"],
+                "correct_index": 1,
+                "explanation": "Dynamic programming requires both optimal substructure and overlapping subproblems to avoid redundant computation.",
+            },
+        ]
+    },
+    "data structures and algorithms": {
+        "questions": [
+            {
+                "question": "What is the worst-case time complexity of searching an unbalanced binary search tree?",
+                "options": ["O(1)", "O(log n)", "O(n)", "O(n\u00b2)"],
+                "correct_index": 2,
+                "explanation": "In the worst case, an unbalanced BST can degenerate into a linked list, making search O(n).",
+            },
+            {
+                "question": "Which sorting algorithm has O(n log n) worst-case time complexity?",
+                "options": ["Quick Sort", "Merge Sort", "Insertion Sort", "Bubble Sort"],
+                "correct_index": 1,
+                "explanation": "Merge Sort consistently runs in O(n log n) regardless of input order.",
+            },
+            {
+                "question": "What is the time complexity of inserting at the end of a dynamic array (amortized)?",
+                "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+                "correct_index": 0,
+                "explanation": "Amortized O(1) — most inserts are O(1), occasional O(n) resize is averaged out.",
+            },
+        ]
+    },
+    "computer science": {
+        "questions": [
+            {
+                "question": "What is the time complexity of binary search?",
+                "options": ["O(1)", "O(log n)", "O(n)", "O(n\u00b2)"],
+                "correct_index": 1,
+                "explanation": "Binary search halves the search space each step, giving O(log n).",
+            },
+            {
+                "question": "Which data structure is used to implement recursion?",
+                "options": ["Queue", "Stack", "Heap", "Graph"],
+                "correct_index": 1,
+                "explanation": "The call stack stores return addresses and local variables for each recursive call.",
+            },
+            {
+                "question": "What does Big O notation describe?",
+                "options": ["Exact execution time", "Worst-case growth rate", "Best-case performance", "Average memory usage"],
+                "correct_index": 1,
+                "explanation": "Big O describes the upper bound of an algorithm's growth rate as input size increases.",
+            },
+        ]
+    },
     "philosophy": {
         "questions": [
             {
@@ -189,8 +277,13 @@ def _get_question_bank(subject: str) -> List[dict]:
     if not subject:
         return _GENERIC_QUESTIONS
     subject_lower = subject.lower()
+    # Try exact match first
     for key, bank in _SUBJECT_QUESTION_BANKS.items():
         if key in subject_lower or subject_lower in key:
+            return bank["questions"]
+    # Try partial match (e.g., "data structures and algorithms" contains "data structures")
+    for key, bank in _SUBJECT_QUESTION_BANKS.items():
+        if any(word in subject_lower for word in key.split() if len(word) > 3):
             return bank["questions"]
     return _GENERIC_QUESTIONS
 

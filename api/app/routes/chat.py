@@ -282,6 +282,25 @@ async def build_orchestrator_prompt(
         "When you spot a prerequisite they might be missing, flag it gently. "
         "If they mention an exam, help them build a study schedule and recall key topics."
     )
+
+    # CRITICAL: When a component will be rendered, instruct the LLM to NOT
+    # generate Markdown UI for that component. The component event handles it.
+    if decision:
+        from app.models.components import ACTION_TO_COMPONENT
+        component_will_render = ACTION_TO_COMPONENT.get(decision.action)
+        if component_will_render:
+            parts.append(
+                f"\n\nCRITICAL ARCHITECTURAL RULE:\n"
+                f"A structured {component_will_render} component WILL be rendered by the frontend.\n"
+                f"You MUST NOT generate a Markdown quiz, Markdown flashcards, or any Markdown UI "
+                f"for this interaction. The frontend component owns the buttons, options, selection, "
+                f"submission, and feedback.\n"
+                f"Your role: produce ONLY a brief conversational intro (1-2 sentences max) "
+                f"like 'Let's test your understanding.' or 'Here's a quick check.'.\n"
+                f"DO NOT include questions, options (A/B/C/D), answer keys, or any interactive UI in your text.\n"
+                f"The component will handle all of that."
+            )
+
     return "\n".join(parts)
 
 
@@ -363,6 +382,19 @@ async def chat_stream(request: ChatRequest):
         from app.models.components import ACTION_TO_COMPONENT
         component_type_to_deploy = intent or ACTION_TO_COMPONENT.get(decision.action)
 
+        # COMPONENT SELECTION DECISION LOG
+        logger.info(
+            "[SUMMA ORCHESTRATOR] User intent=%s | Subject=%s | Topic=%s | "
+            "Decision=%s | Component=%s | Reason=%s",
+            intent, user_intent.subject, user_intent.topic,
+            decision.action, component_type_to_deploy, decision.reasoning,
+        )
+
+        # HARD RULE: When a component is selected, the LLM MUST NOT generate
+        # Markdown quiz UI. The system prompt must instruct the LLM to produce
+        # only a brief conversational intro — the component owns the interaction.
+        component_selected = component_type_to_deploy is not None
+
         # Emit "preparing_activity" state so the frontend shows a subtle
         # "Preparing a quick challenge..." indicator instead of a generic
         # "Thinking..." spinner.
@@ -435,6 +467,38 @@ async def chat_stream(request: ChatRequest):
             payload = component_task.result()
         else:
             payload = None
+
+        # HARD GUARD: If a component was selected but generation failed,
+        # detect if the LLM wrote Markdown quiz/flashcard UI anyway.
+        if component_selected and payload is None:
+            logger.warning(
+                "[ORCHESTRATOR ERROR] Selected interactive component '%s' but "
+                "no component event was emitted. LLM response may contain "
+                "Markdown quiz UI which is an orchestration failure.",
+                component_type_to_deploy,
+            )
+            # Strip Markdown quiz patterns from the response if present
+            if full_response:
+                # Detect Markdown quiz patterns: "A)", "A.", numbered options, etc.
+                quiz_patterns = [
+                    re.compile(r"(?m)^(?:###?\s*)?.*\b[A-D]\)\s*.+", re.I),
+                    re.compile(r"(?m)^[\s]*[-*]\s*\b[A-D]\)\s*.+", re.I),
+                    re.compile(r"(?m)^[\s]*\d+\.\s*.+", re.I),
+                ]
+                has_quiz_ui = any(p.search(full_response) for p in quiz_patterns)
+                if has_quiz_ui:
+                    logger.warning(
+                        "[ORCHESTRATOR GUARD] LLM generated Markdown quiz UI "
+                        "despite component selection. Truncating text response."
+                    )
+                    # Keep only the first sentence as a conversational intro
+                    sentences = re.split(r"[.!?\n]", full_response)
+                    first_sentence = next(
+                        (s.strip() for s in sentences if s.strip() and len(s.strip()) > 5),
+                        "",
+                    )
+                    if first_sentence:
+                        full_response = first_sentence + "."
 
         if component_task is not None and payload is not None:
             timer.mark("component_event")

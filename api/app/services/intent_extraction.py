@@ -24,18 +24,30 @@ KNOWN_SUBJECTS = [
     "german", "art", "music", "geography", "astronomy", "medicine",
     "law", "engineering", "data science", "calculus", "algebra",
     "stoicism", "kant", "plato", "ethics", "logic", "politics",
+    "data structures", "data structures and algorithms", "algorithms",
+    "discrete mathematics", "linear algebra", "operating systems",
+    "database systems", "computer networks", "artificial intelligence",
+    "machine learning", "software engineering", "compiler design",
+    "computer architecture", "digital logic", "automata theory",
+    "number theory", "combinatorics", "graph theory",
 ]
 
 ACTIVITY_MAP = {
+    "quiz me": "quiz",
     "quiz": "quiz",
+    "test me": "quiz",
     "test": "quiz",
     "exam": "quiz",
     "question": "quiz",
     "questions": "quiz",
+    "flashcard me": "flashcards",
+    "flashcards for": "flashcards",
     "flashcard": "flashcards",
     "flash card": "flashcards",
     "flashcards": "flashcards",
+    "give me flashcards": "flashcards",
     "card": "flashcards",
+    "cards": "flashcards",
 }
 
 DIFFICULTY_MAP = {
@@ -92,19 +104,28 @@ class UserIntent(BaseModel):
 
 
 _SUBJECT_PATTERNS = [
+    # Compound subjects first (longer matches take priority)
+    re.compile(r"\bdata structures?\s+and\s+algorithms?\b", re.I),
+    re.compile(r"\bdata structures?\b", re.I),
+    re.compile(r"\b(linear algebra|discrete mathematics|discrete math)\b", re.I),
+    re.compile(r"\b(operating systems?|computer networks?|database systems?)\b", re.I),
+    re.compile(r"\b(software engineering|compiler design|computer architecture)\b", re.I),
+    re.compile(r"\b(automata theory|formal languages|digital logic)\b", re.I),
+    # Individual subjects
     re.compile(r"\b(philosophy|philosophical)\b", re.I),
-    re.compile(r"\b(plato|kant|aristotle|necksche|stoicism|stoic|epicurus|socrates)\b", re.I),
+    re.compile(r"\b(plato|kant|aristotle|nietzsche|stoicism|stoic|epicurus|socrates)\b", re.I),
     re.compile(r"\b(microeconomics|macroeconomics|econometrics)\b", re.I),
-    re.compile(r"\b(calculus|derivative|integral|algebra|geometry|statistics)\b", re.I),
+    re.compile(r"\b(calculus|derivative|integral|algebra|geometry|statistics|probability)\b", re.I),
     re.compile(r"\b(physics|mechanics|thermodynamics|quantum|relativity)\b", re.I),
     re.compile(r"\b(chemistry|organic|stoichiometry|atom)\b", re.I),
-    re.compile(r"\b(biology|biology|genetics|anatomy|physiology)\b", re.I),
-    re.compile(r"\b(history|hist|world war|WWII|WWI|medieval)\b", re.I),
+    re.compile(r"\b(biology|genetics|anatomy|physiology|ecology)\b", re.I),
+    re.compile(r"\b(history|world war|WWII|WWI|medieval|renaissance)\b", re.I),
     re.compile(r"\b(literature|novel|shakespeare|poetry)\b", re.I),
     re.compile(r"\b(programming|coding|python|java|javascript|rust|go\b|c\+\+|c#)\b", re.I),
     re.compile(r"\b(psychology|psychological|cognitive)\b", re.I),
-    re.compile(r"\b(engineering|software|civil|mechanical|electrical)\b", re.I),
+    re.compile(r"\b(engineering|civil|mechanical|electrical)\b", re.I),
     re.compile(r"\b(data science|machine learning|ai\b|artificial intelligence)\b", re.I),
+    re.compile(r"\b(computer science)\b", re.I),
 ]
 
 
@@ -165,13 +186,27 @@ def extract_intent(
     topic = None
     if subject:
         # Look for "quiz/test me on <topic>" patterns
-        on_match = re.search(r"\b(?:quiz|test) me on (.+?)(?:\?|$|\.)", query_lower)
+        on_match = re.search(r"\b(?:quiz|test)\s+me\s+on\s+(.+?)(?:\?|$|\.)", query_lower)
         if on_match:
             potential_topic = on_match.group(1).strip()
             # If the topic IS the subject (e.g. "Quiz me on Philosophy"), topic is None
             # because the whole subject is the scope; topic is the narrower sub-area.
             if potential_topic.lower() != subject.lower():
                 topic = potential_topic
+            # If topic matches the subject exactly, keep topic as the full subject
+            # so downstream components know the explicit scope
+            elif potential_topic.lower() == subject.lower():
+                topic = subject  # Explicit scope — use full subject as topic
+
+        # Look for "give me flashcards for <topic>" patterns
+        if not topic:
+            flash_match = re.search(r"\b(?:flashcards?|cards?)\s+(?:for|on|about)\s+(.+?)(?:\?|$|\.)", query_lower)
+            if flash_match:
+                potential_topic = flash_match.group(1).strip()
+                if potential_topic.lower() != subject.lower():
+                    topic = potential_topic
+                else:
+                    topic = subject
 
         # Look for "forgetting <topic>" / "don't understand <topic>" patterns
         if not topic:
