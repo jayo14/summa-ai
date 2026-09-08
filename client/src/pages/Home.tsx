@@ -2138,7 +2138,8 @@ function SourcesView({ onUseSource }: { onUseSource: () => void }) {
       const formData = new FormData();
       formData.append("file", file);
       const token = await getValidAccessToken();
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/materials/upload`, {
+      const base = getApiBaseUrl();
+      const res = await fetch(`${base}/materials/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -2282,7 +2283,8 @@ function SourceTray({ onClose, onConfirm }: { onClose: () => void; onConfirm: ()
       const formData = new FormData();
       formData.append("file", file);
       const token = await getValidAccessToken();
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/materials/upload`, {
+      const base = getApiBaseUrl();
+      const res = await fetch(`${base}/materials/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
