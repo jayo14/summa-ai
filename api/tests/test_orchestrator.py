@@ -16,7 +16,7 @@ async def test_orchestrator_fallback_on_llm_failure():
 
     assert isinstance(decision, OrchestratorDecision)
     assert decision.action == "QUIZ"
-    assert "Keyword matching" in decision.reasoning
+    assert "Fallback" in decision.reasoning
 
 
 @pytest.mark.asyncio
@@ -45,3 +45,58 @@ async def test_orchestrator_decision_fixtures_differentiation():
     assert d1.suggested_difficulty == "exam-level"
     assert d2.action == "TEACH"
     assert d2.suggested_difficulty == "easy"
+
+
+class TestOrchestratorIntentAware:
+    @pytest.mark.asyncio
+    async def test_orchestrator_uses_intent_for_quiz(self):
+        """The orchestrator should accept a UserIntent and preserve the
+        subject/topic in its decision."""
+        orchestrator = LearningOrchestrator()
+        from app.services.intent_extraction import UserIntent
+
+        intent = UserIntent(
+            intent="quiz",
+            activity_request="quiz",
+            subject="Philosophy",
+            topic=None,
+            learning_goal="assessment",
+            raw_query="Quiz me on Philosophy",
+            detected_subject_from_query="philosophy",
+        )
+
+        with patch("app.services.mastery_engine.MasteryEngine", side_effect=Exception("skip LLM")):
+            decision = await orchestrator.decide_next_action(
+                user_id="user-orch-intent",
+                query="Quiz me on Philosophy",
+                intent=intent,
+            )
+
+        assert decision.action == "QUIZ"
+        assert "Philosophy" in decision.reasoning
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_intent_preserves_subject_no_java(self):
+        """Ensure the orchestrator decision references Philosophy, not Java."""
+        orchestrator = LearningOrchestrator()
+        from app.services.intent_extraction import UserIntent
+
+        intent = UserIntent(
+            intent="quiz",
+            activity_request="quiz",
+            subject="Philosophy",
+            raw_query="Quiz me on Philosophy",
+            detected_subject_from_query="philosophy",
+        )
+
+        with patch("app.services.mastery_engine.MasteryEngine", side_effect=Exception("skip LLM")):
+            decision = await orchestrator.decide_next_action(
+                user_id="user-orch-subject",
+                query="Quiz me on Philosophy",
+                intent=intent,
+            )
+
+        reasoning_lower = decision.reasoning.lower()
+        assert "philosophy" in reasoning_lower
+        assert "java" not in reasoning_lower
+        assert "polymorphism" not in reasoning_lower
