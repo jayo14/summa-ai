@@ -549,6 +549,61 @@ class DataStore:
         self._local_messages.setdefault(cid, []).append(item)
         return item
 
+    # ── Message Sources (RAG citations) ─────────────────────────
+
+    async def add_message_source(
+        self,
+        message_id: str,
+        user_id: str,
+        claim_snippet: str,
+        resource_id: str,
+        chunk_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Record which material chunk grounded a specific assistant message."""
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    row = await conn.fetchrow(
+                        """INSERT INTO summa_ai.message_sources
+                           (id, message_id, user_id, claim_snippet, resource_id, chunk_id)
+                           VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)
+                           RETURNING *""",
+                        message_id,
+                        user_id,
+                        claim_snippet,
+                        resource_id,
+                        chunk_id,
+                    )
+                    if row:
+                        return dict(row)
+        except Exception as exc:
+            logger.warning("add_message_source error: %s", exc)
+        return None
+
+    async def list_message_sources(
+        self, message_id: str, user_id: str
+    ) -> List[Dict[str, Any]]:
+        """Get all material sources attributed to a message."""
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        """SELECT ms.*, m.title AS material_title
+                           FROM summa_ai.message_sources ms
+                           LEFT JOIN summa_ai.materials m ON m.id::text = ms.resource_id
+                           WHERE ms.message_id = $1 AND ms.user_id = $2
+                           ORDER BY ms.created_at""",
+                        message_id,
+                        user_id,
+                    )
+                    if rows:
+                        return [dict(r) for r in rows]
+        except Exception as exc:
+            logger.warning("list_message_sources error: %s", exc)
+        return []
+
     # ── Timeline ───────────────────────────────────────────────────
 
     async def list_timeline_events(

@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { ChatComponentRenderer, LearningActivityEnvelope } from "@/components/chat/ChatComponentRenderer";
+import SourcesChips from "@/components/chat/SourcesChips";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 type ViewName = "workspace" | "learning" | "progress" | "sources" | "settings";
@@ -46,6 +47,7 @@ type ConversationMessage = {
   activity?: LearningActivityEnvelope;
   componentError?: { type: string; message: string };
   pendingActivity?: boolean;
+  sources?: Array<{ id: string; title: string; snippet: string; score: number }>;
   streamingState?: "thinking" | "responding" | "preparing_activity" | "generating_activity" | "activity_ready" | "evaluating" | "complete";
 };
 
@@ -446,6 +448,15 @@ export default function Home() {
                   prev.map((msg) =>
                     msg.id === summaMsgId
                       ? { ...msg, componentError: { type: parsed.component_type, message: parsed.message }, streamingState: "complete" }
+                      : msg
+                  )
+                );
+              } else if (parsed.type === "sources" && parsed.sources) {
+                // RAG source citations — attach to the assistant message
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === summaMsgId
+                      ? { ...msg, sources: parsed.sources }
                       : msg
                   )
                 );
@@ -1228,6 +1239,11 @@ function ConversationTurn({ message, onRetry }: { message: ConversationMessage; 
                 ? "Thinking..."
                 : "Responding..."
             }</span>
+          </div>
+        )}
+        {message.sources && message.sources.length > 0 && (
+          <div className="mt-2">
+            <SourcesChips sources={message.sources} />
           </div>
         )}
         {message.error && (

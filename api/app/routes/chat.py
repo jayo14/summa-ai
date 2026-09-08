@@ -95,11 +95,25 @@ async def build_orchestrator_prompt(
     request: Optional[ChatRequest] = None,
     decision: Optional[Any] = None,
     intent: Optional[Any] = None,
-) -> str:
+) -> tuple[str, list[dict]]:
+    """Build the system prompt for the LLM with retrieval context.
+
+    Returns (prompt, rag_chunks) where rag_chunks are the vector-searched
+    material chunks used for source-grounded responses.
+    """
     memory_context = await cognee.recall_context(user_id, query)
     exams_context = await cognee.recall_exams(user_id)
     progress_context = await cognee.recall_learning_progress(user_id)
     gaps = await detect_knowledge_gaps(user_id)
+
+    # RAG: Retrieve relevant material chunks via vector search
+    rag_chunks: list[dict] = []
+    try:
+        from app.services.vector_search import VectorSearchService
+        vs = VectorSearchService()
+        rag_chunks = await vs.search_for_chat(query, user_id, limit=5)
+    except Exception as exc:
+        logger.debug("RAG vector search skipped: %s", exc)
 
     parts = [
         "You are Summa AI, an expert, encouraging, and highly adaptive academic learning companion. "
@@ -273,8 +287,18 @@ async def build_orchestrator_prompt(
                         "These are persistent facts the student has told us — preferences, goals, struggles, or habits."
                     )
                 )
-        except Exception as exc:
-            logger.debug("Hybrid memory supplement skipped: %s", exc)
+    except Exception as exc:
+        logger.debug("Hybrid memory supplement skipped: %s", exc)
+
+    # RAG: Inject retrieved material chunks for source-grounded responses
+    if rag_chunks:
+        rag_section = "\nRELEVANT STUDENT MATERIAL (from uploaded documents):\n"
+        for i, chunk in enumerate(rag_chunks, 1):
+            score_pct = int(chunk.get("score", 0) * 100)
+            title = chunk.get("material_title") or chunk.get("resource_id", "Unknown")
+            rag_section += f"\n[Source {i}: {title} — {score_pct}% relevance]\n"
+            rag_section += f"{chunk['chunk_text']}\n"
+        parts.append(_section(rag_section))
 
     parts.append(
         "\nIf the user asks about a concept, first explain it clearly, "
@@ -301,7 +325,7 @@ async def build_orchestrator_prompt(
                 f"The component will handle all of that."
             )
 
-    return "\n".join(parts)
+    return "\n".join(parts), rag_chunks
 
 
 async def _stream_ai_response(
@@ -344,7 +368,7 @@ async def chat_stream(request: ChatRequest):
 
     intent = user_intent.activity_request or user_intent.intent or detect_intent(last_query)
     timer.mark("retrieval")
-    orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages, request=request, decision=decision, intent=user_intent)
+    orch_prompt, rag_chunks_used = await build_orchestrator_prompt(user_id, last_query, messages, request=request, decision=decision, intent=user_intent)
     timer.mark("learner_context")
 
     async def generate():
@@ -554,6 +578,19 @@ async def chat_stream(request: ChatRequest):
                     asyncio.ensure_future(
                         summastudy_memory.extract_and_store_memories(user_id, last_query)
                     )
+
+            # Emit source citations for RAG-grounded responses
+            if rag_chunks_used:
+                sources_data = [
+                    {
+                        "id": str(c.get("id", "")),
+                        "title": c.get("material_title") or c.get("resource_id", "Unknown"),
+                        "snippet": (c.get("chunk_text") or "")[:200],
+                        "score": round(c.get("score", 0), 3),
+                    }
+                    for c in rag_chunks_used[:3]
+                ]
+                yield f'data: {json.dumps({"type": "sources", "sources": sources_data})}\n\n'
 
             if len(messages) % PROACTIVE_GAP_CHECK_INTERVAL == 0 and len(messages) > 0:
                 gaps = await detect_knowledge_gaps(user_id)
