@@ -1,5 +1,6 @@
 /**
  * ChatComponentRenderer — renders structured LearningActivity payloads dynamically inside conversation turns.
+ * Uses the same design system as the admin component library (InteractivePreviews.tsx).
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -13,8 +14,39 @@ import {
   Sparkles,
   Trophy,
   X,
+  Brain,
+  Lightbulb,
 } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+
+/* ── Shared helpers (matching admin library) ── */
+
+function Badge({ children, color = "teal" }: { children: React.ReactNode; color?: string }) {
+  const colors: Record<string, string> = {
+    teal: "bg-[#005A57]/10 dark:bg-[#B8FF4D]/10 text-[#005A57] dark:text-[#B8FF4D]",
+    amber: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300",
+    red: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
+    green: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400",
+    blue: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
+    purple: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400",
+  };
+  return <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${colors[color]}`}>{children}</span>;
+}
+
+function ScoreBar({ value, max = 100, color = "teal" }: { value: number; max?: number; color?: string }) {
+  const [animated, setAnimated] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setAnimated(value), 80);
+    return () => clearTimeout(t);
+  }, [value]);
+  const pct = (animated / max) * 100;
+  const barColor = color === "teal" ? "bg-[#005A57] dark:bg-[#B8FF4D]" : color === "amber" ? "bg-amber-500" : color === "red" ? "bg-red-500" : "bg-emerald-500";
+  return (
+    <div className="w-full h-2 bg-[#DDE8DF]/50 dark:bg-[#2A3838] rounded-full overflow-hidden">
+      <div className={`h-full ${barColor} rounded-full transition-all duration-700 ease-out`} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
 
 export type ComponentData = {
   type:
@@ -79,33 +111,53 @@ export function ChatComponentRenderer({
   }
 
   return (
-    <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-4 text-sm text-foreground">
-      <div className="flex items-center gap-2 font-medium text-indigo-400 mb-1">
+    <div className="my-3 rounded-[17px] border border-[#DDE8DF] dark:border-[#2A3838] bg-white/60 dark:bg-[#1C2323]/60 p-4 shadow-[0_9px_20px_rgba(111,131,198,.06)] backdrop-blur-md">
+      <div className="flex items-center gap-2 font-medium text-[#005A57] dark:text-[#B8FF4D] mb-1">
         <Sparkles className="h-4 w-4" />
         <span>{activity.title || data.title || "Interactive Component"}</span>
       </div>
-      <pre className="mt-2 overflow-x-auto text-xs opacity-80">{JSON.stringify(data, null, 2)}</pre>
+      <pre className="mt-2 overflow-x-auto text-xs text-[#6D7E78] dark:text-[#8FA29B] opacity-80">{JSON.stringify(data, null, 2)}</pre>
     </div>
   );
 }
 
 function ComparisonRenderer({ data, activityId, onComplete }: { data: any; activityId?: string; onComplete?: () => void }) {
   return (
-    <div className="my-3 rounded-2xl border border-indigo-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
-        Compare & Contrast: {data.conceptA} vs {data.conceptB}
+    <div className="my-3 rounded-[17px] border border-[#DDE8DF] dark:border-[#2A3838] bg-white/60 dark:bg-[#1C2323]/60 p-4 md:p-5 shadow-[0_9px_20px_rgba(111,131,198,.06)] backdrop-blur-md">
+      <div className="mb-3">
+        <Badge color="teal">Compare & Contrast</Badge>
       </div>
-      <div className="space-y-2.5">
-        {data.distinctions?.map((d: any, idx: number) => (
-          <div key={idx} className="rounded-lg border border-border/40 bg-secondary/20 p-3 text-xs">
-            <div className="font-semibold text-indigo-300 mb-1">{d.aspect}</div>
-            <div className="grid grid-cols-2 gap-2 text-muted-foreground">
-              <div className="bg-background/50 p-2 rounded"><span className="font-medium text-foreground block">{data.conceptA}:</span> {d.conceptA}</div>
-              <div className="bg-background/50 p-2 rounded"><span className="font-medium text-foreground block">{data.conceptB}:</span> {d.conceptB}</div>
-            </div>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-3 rounded-xl bg-[#005A57]/5 dark:bg-[#B8FF4D]/5 border border-[#005A57]/20 dark:border-[#B8FF4D]/20 space-y-2">
+          <h4 className="text-xs font-bold text-[#005A57] dark:text-[#B8FF4D]">{data.conceptA}</h4>
+          <ul className="space-y-1.5 text-[11px] text-[#102B2B] dark:text-[#F5F3EC]">
+            {data.distinctions?.map((d: any, idx: number) => (
+              <li key={idx} className="flex items-start gap-1.5">
+                <Check size={10} className="text-emerald-500 mt-0.5 shrink-0" />
+                {d.conceptA}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/30 space-y-2">
+          <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400">{data.conceptB}</h4>
+          <ul className="space-y-1.5 text-[11px] text-[#102B2B] dark:text-[#F5F3EC]">
+            {data.distinctions?.map((d: any, idx: number) => (
+              <li key={idx} className="flex items-start gap-1.5">
+                <Check size={10} className="text-emerald-500 mt-0.5 shrink-0" />
+                {d.conceptB}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
+      {data.insight && (
+        <div className="mt-3 p-3 rounded-xl bg-[#FBFAF6] dark:bg-[#232D2D] border border-[#DDE8DF] dark:border-[#2A3838]">
+          <p className="text-[11px] text-[#102B2B] dark:text-[#F5F3EC]">
+            <strong className="text-[#005A57] dark:text-[#B8FF4D]">Key insight:</strong> {data.insight}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -113,27 +165,33 @@ function ComparisonRenderer({ data, activityId, onComplete }: { data: any; activ
 function HintLadderRenderer({ data, activityId, onComplete }: { data: any; activityId?: string; onComplete?: () => void }) {
   const [hintLevel, setHintLevel] = useState(0);
   return (
-    <div className="my-3 rounded-2xl border border-amber-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-400 flex justify-between items-center">
-        <span>Guided Problem Scaffolding</span>
-        <span className="font-mono text-[10px]">Hints ({hintLevel}/{data.hints?.length || 0})</span>
+    <div className="my-3 rounded-[17px] border border-[#DDE8DF] dark:border-[#2A3838] bg-white/60 dark:bg-[#1C2323]/60 p-4 md:p-5 shadow-[0_9px_20px_rgba(111,131,198,.06)] backdrop-blur-md">
+      <div className="mb-3 flex items-center justify-between">
+        <Badge color="amber">Hint Ladder</Badge>
+        <span className="font-mono text-[10px] text-[#6D7E78] dark:text-[#8FA29B]">Hints ({hintLevel}/{data.hints?.length || 0})</span>
       </div>
-      <p className="text-sm font-medium mb-3 text-foreground">{data.problem}</p>
+      <p className="text-sm font-semibold mb-3 text-[#102B2B] dark:text-[#F5F3EC]">{data.problem}</p>
       <div className="space-y-2">
         {data.hints?.slice(0, hintLevel).map((h: any, idx: number) => (
-          <div key={idx} className="rounded-lg border border-amber-500/20 bg-amber-950/20 p-2.5 text-xs text-amber-200">
-            <span className="font-bold mr-1">Hint {h.stepNumber || idx + 1}:</span> {h.hintText}
+          <div key={idx} className="rounded-xl border border-amber-200 dark:border-amber-800/30 bg-amber-50 dark:bg-amber-900/10 p-3 text-xs">
+            <div className="flex items-center gap-2 mb-1">
+              <Lightbulb size={12} className="text-amber-600 dark:text-amber-400" />
+              <span className="font-bold text-amber-700 dark:text-amber-300">Hint {h.stepNumber || idx + 1}</span>
+            </div>
+            <p className="text-amber-800 dark:text-amber-200">{h.hintText}</p>
           </div>
         ))}
       </div>
-      <div className="mt-3 flex gap-2">
-        {hintLevel < (data.hints?.length || 0) && (
+      <div className="mt-3">
+        {hintLevel < (data.hints?.length || 0) ? (
           <button
             onClick={() => setHintLevel((prev) => prev + 1)}
-            className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-medium border border-amber-500/30"
+            className="px-4 py-2 rounded-xl border border-[#005A57]/30 dark:border-[#B8FF4D]/30 bg-[#005A57]/10 dark:bg-[#B8FF4D]/10 text-[#005A57] dark:text-[#B8FF4D] text-xs font-semibold hover:bg-[#005A57]/20 dark:hover:bg-[#B8FF4D]/20 transition-colors"
           >
             Reveal Hint {hintLevel + 1}
           </button>
+        ) : (
+          <p className="text-[11px] text-[#6D7E78] dark:text-[#8FA29B] italic">All hints revealed</p>
         )}
       </div>
     </div>
@@ -142,22 +200,29 @@ function HintLadderRenderer({ data, activityId, onComplete }: { data: any; activ
 
 function WorkedExampleRenderer({ data, activityId, onComplete }: { data: any; activityId?: string; onComplete?: () => void }) {
   return (
-    <div className="my-3 rounded-2xl border border-emerald-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-400">
-        Worked Example
+    <div className="my-3 rounded-[17px] border border-[#DDE8DF] dark:border-[#2A3838] bg-white/60 dark:bg-[#1C2323]/60 p-4 md:p-5 shadow-[0_9px_20px_rgba(111,131,198,.06)] backdrop-blur-md">
+      <div className="mb-3">
+        <Badge color="green">Worked Example</Badge>
       </div>
-      <p className="text-sm font-semibold mb-3 text-foreground">{data.problem}</p>
+      <p className="text-sm font-semibold mb-3 text-[#102B2B] dark:text-[#F5F3EC]">{data.problem}</p>
       <div className="space-y-2">
         {data.steps?.map((s: any, idx: number) => (
-          <div key={idx} className="rounded-lg border border-emerald-500/20 bg-emerald-950/20 p-2.5 text-xs">
-            <div className="font-bold text-emerald-300 mb-0.5">Step {idx + 1}: {s.step}</div>
-            <div className="text-muted-foreground">{s.explanation}</div>
+          <div key={idx} className="rounded-xl border border-emerald-200 dark:border-emerald-800/30 bg-emerald-50 dark:bg-emerald-900/10 p-3 text-xs">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="size-5 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">{idx + 1}</span>
+              <span className="font-bold text-emerald-700 dark:text-emerald-300">{s.step}</span>
+            </div>
+            <p className="text-emerald-800 dark:text-emerald-200 ml-7">{s.explanation}</p>
           </div>
         ))}
       </div>
       {data.takeaway && (
-        <div className="mt-3 rounded-lg bg-emerald-950/40 border border-emerald-500/30 p-2.5 text-xs text-emerald-200 font-medium">
-          💡 Key Takeaway: {data.takeaway}
+        <div className="mt-3 p-3 rounded-xl bg-[#005A57]/10 dark:bg-[#B8FF4D]/10 border border-[#005A57]/20 dark:border-[#B8FF4D]/20">
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles size={12} className="text-[#005A57] dark:text-[#B8FF4D]" />
+            <span className="text-xs font-bold text-[#005A57] dark:text-[#B8FF4D]">Key Takeaway</span>
+          </div>
+          <p className="text-xs text-[#102B2B] dark:text-[#F5F3EC]">{data.takeaway}</p>
         </div>
       )}
     </div>
@@ -168,49 +233,64 @@ function ShortAnswerRenderer({ data, activityId, onComplete }: { data: any; acti
   const [ans, setAns] = useState("");
   const [submitted, setSubmitted] = useState(false);
   return (
-    <div className="my-3 rounded-2xl border border-indigo-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
-        {data.type === "recall-prompt" ? "Active Recall Check" : "Practice Question"}
+    <div className="my-3 rounded-[17px] border border-[#DDE8DF] dark:border-[#2A3838] bg-white/60 dark:bg-[#1C2323]/60 p-4 md:p-5 shadow-[0_9px_20px_rgba(111,131,198,.06)] backdrop-blur-md">
+      <div className="mb-3">
+        <Badge color={data.type === "recall-prompt" ? "purple" : "blue"}>
+          {data.type === "recall-prompt" ? "Active Recall" : "Short Answer"}
+        </Badge>
       </div>
-      <p className="text-sm font-medium mb-3 text-foreground">{data.question || data.prompt}</p>
+      <p className="text-sm font-semibold mb-3 text-[#102B2B] dark:text-[#F5F3EC]">{data.question || data.prompt}</p>
       {!submitted ? (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <textarea
             value={ans}
             onChange={(e) => setAns(e.target.value)}
-            placeholder="Type your reasoning here..."
-            className="w-full rounded-xl border border-border/50 bg-secondary/20 p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500 min-h-[70px]"
+            placeholder="Type your answer here..."
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl border border-[#DDE8DF] dark:border-[#2A3838] bg-white dark:bg-[#1C2323] text-sm text-[#102B2B] dark:text-[#F5F3EC] placeholder:text-[#6D7E78] dark:placeholder:text-[#8FA29B] focus:outline-none focus:ring-2 focus:ring-[#005A57] dark:focus:ring-[#B8FF4D] resize-none transition"
           />
-          <button
-            onClick={async () => {
-              if (!ans.trim()) return;
-              setSubmitted(true);
-              try {
-                await fetchApi("/interactions/quiz-result", {
-                  method: "POST",
-                  body: JSON.stringify({
-                    artifact_id: activityId || "short-answer",
-                    topic: data.question || data.prompt,
-                    score: 100,
-                    answers: { answer: ans },
-                  }),
-                });
-              } catch (e) {}
-              if (onComplete) onComplete();
-            }}
-            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
-          >
-            Submit Answer
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                if (!ans.trim()) return;
+                setSubmitted(true);
+                try {
+                  await fetchApi("/interactions/quiz-result", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      artifact_id: activityId || "short-answer",
+                      topic: data.question || data.prompt,
+                      score: 100,
+                      answers: { answer: ans },
+                    }),
+                  });
+                } catch (e) {}
+                if (onComplete) onComplete();
+              }}
+              disabled={!ans.trim()}
+              className="px-5 py-2 rounded-xl bg-[#005A57] dark:bg-[#B8FF4D] text-white dark:text-[#003F3F] text-xs font-bold disabled:opacity-40 cursor-pointer flex items-center gap-2 transition-opacity"
+            >
+              <Check size={14} /> Submit
+            </button>
+            <span className="text-[11px] text-[#6D7E78] dark:text-[#8FA29B]">{ans.length} characters</span>
+          </div>
         </div>
       ) : (
-        <div className="rounded-lg bg-indigo-950/30 border border-indigo-500/20 p-3 text-xs text-indigo-200">
-          <div className="font-semibold text-emerald-400 mb-1">Answer Submitted</div>
-          <div className="opacity-90 italic mb-2">"{ans}"</div>
+        <div className="space-y-3">
+          <div className="p-3 rounded-xl bg-[#005A57]/10 dark:bg-[#B8FF4D]/10 border border-[#005A57]/20 dark:border-[#B8FF4D]/20 text-xs">
+            <div className="flex items-center gap-2 mb-1">
+              <Check size={12} className="text-[#005A57] dark:text-[#B8FF4D]" />
+              <span className="font-semibold text-[#005A57] dark:text-[#B8FF4D]">Answer Submitted</span>
+            </div>
+            <p className="text-[#102B2B] dark:text-[#F5F3EC] italic">"{ans}"</p>
+          </div>
           {(data.sampleAnswer || data.answer) && (
-            <div className="mt-2 pt-2 border-t border-indigo-500/20 text-muted-foreground">
-              <span className="font-semibold text-foreground block">Model Answer:</span>
-              {data.sampleAnswer || data.answer}
+            <div className="p-3 rounded-xl bg-white dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838]">
+              <div className="flex items-center gap-2 mb-1">
+                <Brain size={12} className="text-[#005A57] dark:text-[#B8FF4D]" />
+                <span className="text-xs font-semibold text-[#102B2B] dark:text-[#F5F3EC]">Model Answer</span>
+              </div>
+              <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B]">{data.sampleAnswer || data.answer}</p>
             </div>
           )}
         </div>
@@ -566,6 +646,8 @@ function FlashcardsRenderer({
   const card = cards[cardIdx];
   if (!card) return null;
 
+  const progress = cards.length > 0 ? ((cardIdx + 1) / cards.length) * 100 : 0;
+
   async function handleRating(rating: "again" | "hard" | "good" | "easy") {
     try {
       await fetchApi("/interactions/quiz-result", {
@@ -589,29 +671,82 @@ function FlashcardsRenderer({
   }
 
   return (
-    <div className="my-3 rounded-2xl border border-indigo-500/30 bg-background/60 p-4 shadow-sm backdrop-blur-md">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
-        Flashcard ({cardIdx + 1}/{cards.length})
+    <div className="my-3 rounded-[17px] border border-[#DDE8DF] dark:border-[#2A3838] bg-white/60 dark:bg-[#1C2323]/60 p-4 md:p-5 shadow-[0_9px_20px_rgba(111,131,198,.06)] backdrop-blur-md">
+      {/* Header */}
+      <div className="mb-3 flex items-center justify-between">
+        <Badge color="teal">Flashcard</Badge>
+        <span className="font-mono text-[10px] text-[#6D7E78] dark:text-[#8FA29B]">{cardIdx + 1}/{cards.length}</span>
       </div>
 
+      {/* Progress bar */}
+      <div className="mb-4 h-1.5 rounded-full bg-[#DDE8DF]/30 dark:bg-[#2A3838]/30 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-[#005A57] to-[#B8FF4D] dark:from-[#B8FF4D] dark:to-[#005A57] transition-all duration-500"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      {/* 3D Flip Card (matching admin library FlashcardPreview) */}
       <div
+        className="w-full cursor-pointer"
+        style={{ perspective: "1000px" }}
         onClick={() => setFlipped(!flipped)}
-        className="min-h-[100px] cursor-pointer rounded-xl border border-border/50 bg-secondary/20 p-4 flex items-center justify-center text-center font-medium text-sm transition-all hover:border-indigo-500/40"
       >
-        {flipped ? card.back : card.front}
+        <div
+          className="relative w-full min-h-[180px] transition-transform duration-500"
+          style={{
+            transformStyle: "preserve-3d",
+            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+          }}
+        >
+          {/* Front */}
+          <div
+            className="absolute inset-0 rounded-2xl bg-white dark:bg-[#1C2323] border border-[#DDE8DF] dark:border-[#2A3838] shadow-lg flex flex-col items-center justify-center p-6"
+            style={{ backfaceVisibility: "hidden" }}
+          >
+            <Badge color="teal">Question</Badge>
+            <p className="text-base font-semibold text-[#102B2B] dark:text-[#F5F3EC] text-center leading-relaxed mt-3">
+              {card.front}
+            </p>
+            <div className="mt-4 flex items-center gap-1.5 text-[11px] text-[#6D7E78] dark:text-[#8FA29B]">
+              <RotateCcw size={12} /> Tap to flip
+            </div>
+          </div>
+          {/* Back */}
+          <div
+            className="absolute inset-0 rounded-2xl bg-[#005A57] dark:bg-[#B8FF4D]/20 border border-[#005A57]/30 dark:border-[#B8FF4D]/30 shadow-lg flex flex-col items-center justify-center p-6"
+            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+          >
+            <Badge color="green">Answer</Badge>
+            <p className="text-base font-semibold text-white dark:text-[#B8FF4D] text-center leading-relaxed mt-3">
+              {card.back}
+            </p>
+            <div className="mt-4 flex items-center gap-1.5 text-[11px] text-white/60 dark:text-[#B8FF4D]/60">
+              <RotateCcw size={12} /> Tap to flip back
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Rating buttons */}
       {flipped && (
-        <div className="mt-3 flex gap-2">
-          {(["again", "hard", "good", "easy"] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => handleRating(r)}
-              className="flex-1 rounded-lg border border-indigo-500/20 bg-indigo-950/20 py-1.5 text-xs capitalize text-indigo-300 hover:bg-indigo-900/40"
-            >
-              {r}
-            </button>
-          ))}
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          {(["again", "hard", "good", "easy"] as const).map((r) => {
+            const isPositive = r === "good" || r === "easy";
+            return (
+              <button
+                key={r}
+                onClick={(e) => { e.stopPropagation(); handleRating(r); }}
+                className={`rounded-[12px] border py-2 text-xs font-semibold capitalize transition-colors ${
+                  isPositive
+                    ? "border-[#005A57]/30 dark:border-[#B8FF4D]/30 bg-[#005A57]/10 dark:bg-[#B8FF4D]/10 text-[#005A57] dark:text-[#B8FF4D] hover:bg-[#005A57]/20 dark:hover:bg-[#B8FF4D]/20"
+                    : "border-[#DDE8DF] dark:border-[#2A3838] bg-white/40 dark:bg-[#232D2D]/40 text-[#6D7E78] dark:text-[#8FA29B] hover:bg-[#DDE8DF]/50 dark:hover:bg-[#2A3838]/50"
+                }`}
+              >
+                {r}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
