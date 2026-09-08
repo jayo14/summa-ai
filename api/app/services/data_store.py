@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import asyncpg
+
+logger = logging.getLogger(__name__)
 
 from app.services.db_pool import get_pool
 
@@ -47,7 +50,8 @@ class DataStore:
             return self._pool
         try:
             return await get_pool()
-        except Exception:
+        except Exception as exc:
+            logger.error("_get_pool failed: %s", exc)
             return None
 
     # ── Artifacts ──────────────────────────────────────────────────
@@ -325,8 +329,7 @@ class DataStore:
                 if rows is not None:
                     return [dict(r) for r in rows]
         except Exception as exc:
-            import logging
-            logging.getLogger(__name__).debug("list_conversations fallback: %s", exc)
+            logger.warning("list_conversations DB error for user=%s: %s", user_id, exc)
 
         return self._local_conversations
 
@@ -416,8 +419,8 @@ class DataStore:
                     )
                 if row:
                     return dict(row)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("get_conversation DB error for cid=%s: %s", cid, exc)
 
         return next((c for c in self._local_conversations if c.get("id") == cid and c.get("user_id") == user_id), None)
 
@@ -452,8 +455,8 @@ class DataStore:
                     )
                 if rows is not None:
                     return [dict(r) for r in rows]
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("list_messages DB error for cid=%s: %s", cid, exc)
 
         conv = next((c for c in self._local_conversations if c.get("id") == cid and c.get("user_id") == user_id), None)
         if not conv:
@@ -504,8 +507,8 @@ class DataStore:
                     )
                 if row:
                     return dict(row)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("add_message DB error for cid=%s role=%s: %s", cid, role, exc)
 
         conv = next((c for c in self._local_conversations if c.get("id") == cid), None)
         if conv and conv.get("user_id") != user_id:

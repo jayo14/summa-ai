@@ -22,22 +22,25 @@ _pool: Optional[asyncpg.Pool] = None
 
 async def get_pool() -> Optional[asyncpg.Pool]:
     global _pool
-    if _pool is None:
-        try:
-            kwargs = {}
-            if "supabase" in settings.DATABASE_URL:
-                kwargs["ssl"] = "require"
-            _pool = await asyncpg.create_pool(
-                settings.DATABASE_URL,
-                min_size=1,
-                max_size=10,
-                timeout=3.0,
-                **kwargs,
-            )
-            logger.info("Shared asyncpg pool created")
-        except Exception as exc:
-            logger.warning("Shared asyncpg pool connection skipped: %s", exc)
-            return None
+    if _pool is not None:
+        return _pool
+    try:
+        kwargs = {}
+        if "supabase" in settings.DATABASE_URL:
+            kwargs["ssl"] = "require"
+        _pool = await asyncpg.create_pool(
+            settings.DATABASE_URL,
+            min_size=1,
+            max_size=10,
+            timeout=10.0,
+            command_timeout=15.0,
+            **kwargs,
+        )
+        logger.info("Shared asyncpg pool created")
+    except Exception as exc:
+        logger.error("Shared asyncpg pool FAILED: %s", exc, exc_info=True)
+        _pool = None
+        return None
     return _pool
 
 
