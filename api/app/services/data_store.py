@@ -625,7 +625,7 @@ class DataStore:
             if pool is not None:
                 async with pool.acquire() as conn:
                     await conn.execute(
-                        "INSERT INTO summa_ai.materials (id, user_id, type, title, source, size, duration, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+                        "INSERT INTO summa_ai.materials (id, user_id, type, title, source, size, duration, status, topic) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
                         mid,
                         user_id,
                         data.get("type"),
@@ -634,6 +634,7 @@ class DataStore:
                         data.get("size"),
                         data.get("duration"),
                         "processing",
+                        data.get("topic"),
                     )
                     row = await conn.fetchrow(
                         "SELECT * FROM summa_ai.materials WHERE id = $1", mid
@@ -665,6 +666,35 @@ class DataStore:
         }
         self._local_materials.insert(0, item)
         return item
+
+    async def update_material(self, mid: str, user_id: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        try:
+            pool = await self._get_pool()
+            if pool is not None:
+                set_clauses = []
+                vals = []
+                idx = 1
+                for key in ("type", "title", "source", "size", "duration", "status", "topic", "concepts_extracted"):
+                    if key in data:
+                        set_clauses.append(f"{key} = ${idx}")
+                        vals.append(data[key])
+                        idx += 1
+                if not set_clauses:
+                    return None
+                vals.extend([mid, user_id])
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        f"UPDATE summa_ai.materials SET {', '.join(set_clauses)} WHERE id = ${idx} AND user_id = ${idx + 1}",
+                        *vals,
+                    )
+                    row = await conn.fetchrow(
+                        "SELECT * FROM summa_ai.materials WHERE id = $1 AND user_id = $2", mid, user_id
+                    )
+                if row:
+                    return dict(row)
+        except Exception as exc:
+            logger.warning("update_material DB error for mid=%s: %s", mid, exc)
+        return None
 
     async def delete_material(self, mid: str, user_id: str) -> bool:
         try:

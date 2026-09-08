@@ -63,12 +63,6 @@ const chatHistory = [
   { title: "Review database keys", time: "Mon", active: false },
 ];
 
-const sourceItems = [
-  { title: "CSC 201 · Lecture 06", detail: "Polymorphism & inheritance", type: "Lecture", selected: true },
-  { title: "Object-Oriented Programming Notes", detail: "Methods, dispatch, abstract classes", type: "Notes", selected: true },
-  { title: "2025 Past Questions", detail: "Section B · Q2", type: "Past paper", selected: true },
-];
-
 const suggestedPrompts = ["Quiz me on polymorphism", "Build a study plan", "Explain this with an example", "Find my weak areas"];
 
 type SortMode = "recent" | "oldest" | "topic";
@@ -2102,17 +2096,23 @@ function SourcesView({ onUseSource }: { onUseSource: () => void }) {
   const [sort, setSort] = useState<SortMode>("recent");
   const [isFiltering, setIsFiltering] = useState(true);
   const [sources, setSources] = useState<Array<any>>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  const loadSources = useCallback(() => {
     fetchApi<Array<any>>("/materials")
       .then((data) => {
         if (Array.isArray(data)) {
           setSources(data.map((m) => ({
+            id: m.id,
             title: m.title || "Learning Resource",
             detail: m.description || m.type || "Course material",
             type: m.type || "Material",
-            topic: m.topic || "CSC 201",
+            topic: m.topic || "General",
             date: m.created_at || new Date().toISOString(),
+            status: m.status || "ready",
+            size: m.size || 0,
+            concepts_extracted: m.concepts_extracted || 0,
             selected: true,
           })));
         }
@@ -2120,25 +2120,187 @@ function SourcesView({ onUseSource }: { onUseSource: () => void }) {
       .catch(() => setSources([]));
   }, []);
 
+  useEffect(() => { loadSources(); }, [loadSources]);
+
   useEffect(() => { const timer = window.setTimeout(() => setIsFiltering(false), 360); return () => window.clearTimeout(timer); }, [topic, sort]);
   const topics = ["All topics", ...Array.from(new Set(sources.map((item) => item.topic)))];
   const visible = sources.filter((item) => topic === "All topics" || item.topic === topic).sort((a, b) => sort === "topic" ? a.topic.localeCompare(b.topic) : sort === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
-  return <div className="secondary-page sources-page"><section className="secondary-intro plain-intro"><div><span className="eyebrow">SUMMASTUDY CONNECTION</span><h1>Your materials are learning context.</h1><p>Summa prioritizes selected academic resources, then clearly distinguishes a general explanation when your materials do not settle a question.</p></div><div className="connect-status"><span className="status-orb" /> Connected through SummaStudy</div></section><div className="discover-toolbar source-discover-toolbar"><div className="filter-label"><Filter size={14} /> <span>Filter sources</span></div><label><span className="sr-only">Topic</span><select value={topic} onChange={(event) => setTopic(event.target.value)}>{topics.map((item) => <option key={item}>{item}</option>)}</select></label><label><ArrowDownUp size={13} /><span className="sr-only">Sort sources</span><select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}><option value="recent">Newest first</option><option value="oldest">Oldest first</option><option value="topic">By topic</option></select></label><span className="result-count">{visible.length} sources</span></div>{isFiltering ? <FilterSkeletonGrid count={3} /> : <section className="source-catalog">{visible.map((source) => <article key={source.title}><div className="source-file-icon"><FileText size={20} /></div><div><span className="eyebrow">{source.type} · {source.topic}</span><h2>{source.title}</h2><p>{source.detail}</p></div><span className="source-in-use">{new Date(source.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span><button type="button" onClick={onUseSource}>Use to learn <ChevronRight size={14} /></button></article>)}</section>}<button type="button" className="add-source-button" onClick={() => { toast("SummaStudy picker opened — choose the materials to add."); onUseSource(); }}><Plus size={16} /> Add from SummaStudy</button></div>;
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large. Max 5MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const token = await getValidAccessToken();
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/materials/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      toast.success(`Uploaded "${file.name}"`);
+      loadSources();
+    } catch {
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [loadSources]);
+
+  const handleDelete = useCallback(async (id: string, title: string) => {
+    if (!confirm(`Delete "${title}"?`)) return;
+    try {
+      await fetchApi(`/materials/${id}`, { method: "DELETE" });
+      toast.success("Deleted");
+      loadSources();
+    } catch {
+      toast.error("Delete failed");
+    }
+  }, [loadSources]);
+
+  const formatSize = (bytes: number) => {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <div className="secondary-page sources-page">
+      <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.txt,.md,.docx,.doc,.csv" onChange={handleUpload} />
+      <section className="secondary-intro plain-intro">
+        <div>
+          <span className="eyebrow">SUMMASTUDY CONNECTION</span>
+          <h1>Your materials are learning context.</h1>
+          <p>Summa prioritizes selected academic resources, then clearly distinguishes a general explanation when your materials do not settle a question.</p>
+        </div>
+        <div className="connect-status"><span className="status-orb" /> Connected through SummaStudy</div>
+      </section>
+
+      <div className="discover-toolbar source-discover-toolbar">
+        <div className="filter-label"><Filter size={14} /> <span>Filter sources</span></div>
+        <label><span className="sr-only">Topic</span>
+          <select value={topic} onChange={(event) => setTopic(event.target.value)}>
+            {topics.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </label>
+        <label><ArrowDownUp size={13} /><span className="sr-only">Sort sources</span>
+          <select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}>
+            <option value="recent">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="topic">By topic</option>
+          </select>
+        </label>
+        <span className="result-count">{visible.length} sources</span>
+      </div>
+
+      {isFiltering ? <FilterSkeletonGrid count={3} /> : (
+        <section className="source-catalog">
+          {visible.length === 0 && (
+            <div className="col-span-full p-8 text-center">
+              <FileText className="size-10 mx-auto text-[#6D7E78] dark:text-[#8FA29B] opacity-40 mb-3" />
+              <p className="text-sm font-bold text-[#102B2B] dark:text-[#FBFAF6]">No materials yet</p>
+              <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mt-1">Upload a document to get started.</p>
+            </div>
+          )}
+          {visible.map((source) => (
+            <article key={source.id || source.title}>
+              <div className="source-file-icon"><FileText size={20} /></div>
+              <div className="flex-1 min-w-0">
+                <span className="eyebrow">
+                  {source.type} · {source.topic}
+                  {source.status === "processing" && <span className="ml-2 text-amber-600 dark:text-amber-400">● Processing</span>}
+                  {source.status === "ready" && <span className="ml-2 text-emerald-600 dark:text-emerald-400">● Ready</span>}
+                </span>
+                <h2 className="truncate">{source.title}</h2>
+                <p>{source.detail}</p>
+                <div className="flex items-center gap-3 mt-1 text-[11px] text-[#6D7E78] dark:text-[#8FA29B]">
+                  {source.size > 0 && <span>{formatSize(source.size)}</span>}
+                  {source.concepts_extracted > 0 && <span>{source.concepts_extracted} concepts</span>}
+                </div>
+              </div>
+              <span className="source-in-use">{new Date(source.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={onUseSource} className="text-xs font-bold text-[#005A57] dark:text-[#B8FF4D] hover:underline flex items-center gap-1">
+                  Use to learn <ChevronRight size={14} />
+                </button>
+                <button type="button" onClick={() => handleDelete(source.id, source.title)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-[#6D7E78] dark:text-[#8FA29B] hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Delete">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
+
+      <button type="button" className="add-source-button" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+        {uploading ? <><LoaderCircle size={16} className="animate-spin" /> Uploading...</> : <><Plus size={16} /> Upload material</>}
+      </button>
+    </div>
+  );
 }
 function SourceTray({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
   const [items, setItems] = useState<Array<any>>([]);
-  useEffect(() => {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadItems = useCallback(() => {
     fetchApi<Array<any>>("/materials")
       .then((res) => {
         if (Array.isArray(res)) {
-          setItems(res.map((m) => ({ title: m.title || "Resource", detail: m.description || "Course material", type: m.type || "Doc", selected: true })));
+          setItems(res.map((m) => ({
+            id: m.id,
+            title: m.title || "Resource",
+            detail: m.description || m.type || "Course material",
+            type: m.type || "Doc",
+            status: m.status || "ready",
+            selected: true,
+          })));
         }
       })
       .catch(() => setItems([]));
   }, []);
 
+  useEffect(() => { loadItems(); }, [loadItems]);
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large. Max 5MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const token = await getValidAccessToken();
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/materials/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      toast.success(`Uploaded "${file.name}"`);
+      loadItems();
+    } catch {
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [loadItems]);
+
   return (
     <div className="source-tray-overlay" role="dialog" aria-modal="true" aria-labelledby="source-tray-title">
+      <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.txt,.md,.docx,.doc,.csv" onChange={handleUpload} />
       <button className="source-tray-backdrop" onClick={onClose} aria-label="Close source selector" />
       <section className="source-tray">
         <header>
@@ -2152,12 +2314,18 @@ function SourceTray({ onClose, onConfirm }: { onClose: () => void; onConfirm: ()
         <div className="source-picker-list">
           {items.length > 0 ? (
             items.map((source) => (
-              <label key={source.title} className="source-picker-item">
+              <label key={source.id || source.title} className="source-picker-item">
                 <input type="checkbox" defaultChecked={source.selected} />
                 <span className="custom-check"><Check size={13} /></span>
                 <FileText size={17} />
-                <span><strong>{source.title}</strong><small>{source.detail}</small></span>
-                <em>{source.type}</em>
+                <span className="flex-1 min-w-0">
+                  <strong className="truncate block">{source.title}</strong>
+                  <small>{source.detail}</small>
+                </span>
+                <em className="shrink-0">
+                  {source.type}
+                  {source.status === "processing" && <span className="ml-1 text-amber-500">●</span>}
+                </em>
               </label>
             ))
           ) : (
@@ -2165,8 +2333,8 @@ function SourceTray({ onClose, onConfirm }: { onClose: () => void; onConfirm: ()
           )}
         </div>
         <footer>
-          <button type="button" className="secondary-action" onClick={() => toast("Upload control will be available after secure file storage is configured.")}>
-            <Paperclip size={14} /> Upload a resource
+          <button type="button" className="secondary-action" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+            {uploading ? <><LoaderCircle size={14} className="animate-spin" /> Uploading...</> : <><Paperclip size={14} /> Upload a resource</>}
           </button>
           <button type="button" className="interactive-primary" onClick={onConfirm}>
             Use selected sources <Send size={14} />

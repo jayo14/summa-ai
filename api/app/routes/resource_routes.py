@@ -37,6 +37,7 @@ async def upload_material(file: UploadFile = File(...)):
         "source": "Student Upload",
         "size": len(content),
         "status": "processing",
+        "topic": "General",
     }
     mat = await _store.create_material(user_id, mat_data)
 
@@ -60,6 +61,7 @@ async def upload_material(file: UploadFile = File(...)):
         pass
 
     await _store.update_material(mat["id"], user_id, {"status": "ready"})
+    mat["status"] = "ready"
     return mat
 
 
