@@ -136,6 +136,33 @@ function Router() {
         {() => <AdminRoute component={AdminDashboard} />}
       </Route>
 
+      {/* Public SEO routes */}
+      <Route path="/features" component={React.lazy(() => import("@/pages/seo/FeaturesPage"))} />
+      <Route path="/features/ai-study-assistant" component={React.lazy(() => import("@/pages/seo/features/AIStudyAssistantPage"))} />
+      <Route path="/features/ai-quiz-generator" component={React.lazy(() => import("@/pages/seo/features/AIQuizGeneratorPage"))} />
+      <Route path="/features/ai-flashcards" component={React.lazy(() => import("@/pages/seo/features/AIFlashcardsPage"))} />
+      <Route path="/features/study-planner" component={React.lazy(() => import("@/pages/seo/features/StudyPlannerPage"))} />
+      <Route path="/features/knowledge-graph" component={React.lazy(() => import("@/pages/seo/features/KnowledgeGraphPage"))} />
+      <Route path="/features/knowledge-gap-analysis" component={React.lazy(() => import("@/pages/seo/features/KnowledgeGapAnalysisPage"))} />
+      <Route path="/features/persistent-ai-memory" component={React.lazy(() => import("@/pages/seo/features/PersistentMemoryPage"))} />
+      <Route path="/features/exam-prep" component={React.lazy(() => import("@/pages/seo/features/ExamPrepPage"))} />
+
+      <Route path="/use-cases" component={React.lazy(() => import("@/pages/seo/UseCasesPage"))} />
+      <Route path="/use-cases/:slug">
+        {(params) => {
+          const UseCaseDetailPage = React.lazy(() => import("@/pages/seo/UseCasesPage"));
+          return <UseCaseDetailPage />;
+        }}
+      </Route>
+
+      <Route path="/compare" component={React.lazy(() => import("@/pages/seo/ComparePage"))} />
+      <Route path="/compare/:slug">
+        {(params) => {
+          const ComparePage = React.lazy(() => import("@/pages/seo/ComparePage"));
+          return <ComparePage />;
+        }}
+      </Route>
+
       <Route path="/" component={IndexRoute} />
 
       <Route path="/404" component={NotFound} />
@@ -152,7 +179,9 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <ServerWarmupBanner />
-            <Router />
+            <React.Suspense fallback={<SummaPreloader />}>
+              <Router />
+            </React.Suspense>
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
