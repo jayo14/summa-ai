@@ -334,6 +334,7 @@ async def chat_stream(request: ChatRequest):
     timer.mark("learning_decision")
 
     intent = user_intent.activity_request or user_intent.intent or detect_intent(last_query)
+    timer.mark("retrieval")
     orch_prompt = await build_orchestrator_prompt(user_id, last_query, messages, request=request, decision=decision, intent=user_intent)
     timer.mark("learner_context")
 
@@ -453,7 +454,6 @@ async def chat_stream(request: ChatRequest):
             )
 
         if full_response:
-            timer.mark("response_complete")
             # P0-8: Persist assistant message to DataStore
             if request.conversation_id:
                 try:
