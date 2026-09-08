@@ -8,7 +8,7 @@ import {
   Flame, MessageSquare, Code2, Calculator, Atom, PenTool, Book, Target, TrendingUp, BarChart3, Activity, Trash2, FolderPlus, Edit2, FolderMinus, X, Plus,
   Settings2, Filter, ArrowDownUp, Send, ShieldAlert, Sparkles, SlidersHorizontal, RefreshCw, Layers, CheckCircle2,
   Sliders, CircleSlash, ListChecks, Lightbulb, Share2, Download, BookmarkCheck, Bookmark, Trophy, LoaderCircle,
-  Shield, LogOut, Moon, Sun,
+  Shield, LogOut, Moon, Sun, RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SummaLogo } from "@/components/SummaLogo";
@@ -44,6 +44,7 @@ type ConversationMessage = {
   thinking?: string;
   error?: boolean;
   activity?: LearningActivityEnvelope;
+  componentError?: { type: string; message: string };
   streamingState?: "thinking" | "responding" | "preparing_activity" | "activity_ready" | "evaluating" | "complete";
 };
 
@@ -444,6 +445,15 @@ export default function Home() {
                 }
               } else if (parsed.type === "next_action") {
                 // Orchestrator decision event — no visual change needed
+              } else if (parsed.type === "component_error") {
+                // Component generation failed — store error state for retry
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === summaMsgId
+                      ? { ...msg, componentError: { type: parsed.component_type, message: parsed.message }, streamingState: "complete" }
+                      : msg
+                  )
+                );
               } else if (parsed.type === "error") {
                 toast.error(parsed.message || "AI response error");
                 setMessages((prev) =>
@@ -494,15 +504,26 @@ export default function Home() {
         activeConversationIdRef.current = urlCid;
         setActiveConversationId(urlCid);
         setSessionStarted(true);
-        fetchApi<{ messages: Array<{ id: string; role: string; content: string }> }>(`/conversations/${urlCid}`)
+        fetchApi<{ messages: Array<{ id: string; role: string; content: string; components?: any }> }>(`/conversations/${urlCid}`)
           .then((data) => {
             if (data && Array.isArray(data.messages) && data.messages.length > 0) {
               setMessages(
-                data.messages.map((m, idx) => ({
-                  id: Number(m.id) || Date.now() + idx,
-                  role: m.role === "user" || m.role === "student" ? "student" : "summa",
-                  content: m.content,
-                }))
+                data.messages.map((m, idx) => {
+                  // Parse components if it's a string (JSON)
+                  let activity = undefined;
+                  if (m.components) {
+                    const comps = typeof m.components === "string" ? JSON.parse(m.components) : m.components;
+                    if (comps && comps.data) {
+                      activity = { id: comps.id, title: comps.title, type: comps.type, data: comps.data };
+                    }
+                  }
+                  return {
+                    id: Number(m.id) || Date.now() + idx,
+                    role: m.role === "user" || m.role === "student" ? "student" : "summa",
+                    content: m.content,
+                    activity,
+                  };
+                })
               );
             }
           })
@@ -1202,6 +1223,27 @@ function ConversationTurn({ message, onRetry }: { message: ConversationMessage; 
         {message.activity && (
           <div className="mt-3">
             <ChatComponentRenderer activity={message.activity} />
+          </div>
+        )}
+        {message.componentError && !message.activity && (
+          <div className="mt-3 rounded-2xl border border-[#DDE8DF] dark:border-[#2A3838] bg-white/60 dark:bg-[#1C2323]/60 p-4 backdrop-blur-md shadow-sm">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#6D7E78] dark:text-[#8FA29B] mb-2">
+              <span className="size-2 rounded-full bg-[#E9B8A7] dark:bg-[#be747e]" />
+              {message.componentError.type === "quiz" ? "Quiz" : "Activity"} Generation Failed
+            </div>
+            <p className="text-xs text-[#6D7E78] dark:text-[#8FA29B] mb-3">
+              {message.componentError.message || "Something went wrong while generating the activity."}
+            </p>
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#005A57]/30 dark:border-[#B8FF4D]/30 bg-[#005A57]/10 dark:bg-[#B8FF4D]/10 text-[#005A57] dark:text-[#B8FF4D] text-xs font-semibold hover:bg-[#005A57]/20 dark:hover:bg-[#B8FF4D]/20 transition-colors"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Try Again
+              </button>
+            )}
           </div>
         )}
       </div>

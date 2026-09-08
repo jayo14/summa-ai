@@ -500,6 +500,9 @@ async def chat_stream(request: ChatRequest):
                     if first_sentence:
                         full_response = first_sentence + "."
 
+        # Track component data for persistence
+        component_data_to_save = None
+
         if component_task is not None and payload is not None:
             timer.mark("component_event")
             artifact_event = {
@@ -510,12 +513,16 @@ async def chat_stream(request: ChatRequest):
                 "purpose": decision.action,
                 "difficulty": decision.suggested_difficulty,
             }
+            component_data_to_save = artifact_event
             yield f"data: {json.dumps({'type': 'artifact', 'artifact': artifact_event})}\n\n"
         elif component_task is not None and payload is None:
             logger.info(
                 "Component generation unavailable for type=%s; local fallback "
                 "or None returned.", component_type_to_deploy
             )
+            # Emit error event so frontend can show retry option
+            if component_selected:
+                yield f'data: {json.dumps({"type": "component_error", "component_type": component_type_to_deploy, "message": "Quiz generation failed. Please try again."})}\n\n'
 
         if full_response:
             # P0-8: Persist assistant message to DataStore
@@ -528,6 +535,7 @@ async def chat_stream(request: ChatRequest):
                         "assistant",
                         full_response,
                         reasoning=accumulated_reasoning or None,
+                        components=component_data_to_save,
                     )
                 except Exception:
                     logger.warning("Failed to persist assistant message", exc_info=True)

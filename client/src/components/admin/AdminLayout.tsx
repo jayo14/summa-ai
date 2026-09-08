@@ -24,7 +24,14 @@ import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useIsMobile } from "@/hooks/useMobile";
 import { SummaLogo } from "@/components/SummaLogo";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 type AdminTab =
   | "overview"
@@ -91,7 +98,9 @@ export function AdminLayout({ children, activeTab }: AdminLayoutProps) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [, navigate] = useLocation();
+  const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const mainContentRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -104,7 +113,10 @@ export function AdminLayout({ children, activeTab }: AdminLayoutProps) {
 
   const handleTabChange = useCallback((tab: AdminTab) => {
     navigate(`/admin/${tab}`);
-  }, [navigate]);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [navigate, isMobile]);
 
   // Focus main content on route change
   useEffect(() => {
@@ -152,6 +164,85 @@ export function AdminLayout({ children, activeTab }: AdminLayoutProps) {
     [handleTabChange]
   );
 
+  const sidebarContent = (
+    <>
+      <div className="flex flex-col min-h-0">
+        {/* Logo & Collapse Header */}
+        <div className={`h-12 px-2 flex items-center ${isCollapsed && !isMobile ? "justify-center" : "justify-between"} mb-4 shrink-0`}>
+          {(!isCollapsed || isMobile) && (
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-ink dark:text-cream-soft overflow-hidden whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime focus:ring-offset-2 rounded"
+              aria-label="Summa AI Home"
+            >
+              <SummaLogo />
+            </Link>
+          )}
+          {!isMobile && (
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!isCollapsed}
+              className="p-1.5 rounded-lg text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft hover:bg-mist-green/50 dark:hover:bg-[#2A3838] transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime"
+            >
+              <Menu size={18} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+
+        {/* Navigation Items */}
+        <nav
+          ref={navRef}
+          role="menubar"
+          aria-label="Admin navigation"
+          className="space-y-0.5 text-[13px] font-medium text-grey-green dark:text-[#8FA29B] overflow-y-auto pr-1"
+        >
+          {sidebarNav.map((item, index) => {
+            const active = activeTab === item.key;
+            return (
+              <button
+                key={item.key}
+                role="menuitem"
+                tabIndex={active ? 0 : -1}
+                aria-current={active ? "page" : undefined}
+                onClick={() => handleTabChange(item.key)}
+                onKeyDown={(e) => handleNavKeyDown(e, index)}
+                title={isCollapsed && !isMobile ? item.label : undefined}
+                className={`w-full flex items-center ${
+                  isCollapsed && !isMobile ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"
+                } rounded-xl text-left transition focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime focus:ring-offset-2 ${
+                  active
+                    ? "bg-teal-dark dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime font-semibold"
+                    : "hover:bg-cream-light dark:bg-[#232D2D] text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft"
+                }`}
+              >
+                <span className={active ? "text-teal-dark dark:text-accent-lime" : "text-grey-green dark:text-[#8FA29B]"}>
+                  {item.icon}
+                </span>
+                {(!isCollapsed || isMobile) && <span className="truncate">{item.label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Sidebar Footer: Sign Out Button */}
+      <div className="shrink-0 space-y-3 pt-3">
+        <button
+          onClick={handleSignOut}
+          aria-label="Sign out of your account"
+          title={isCollapsed && !isMobile ? "Sign Out" : undefined}
+          className={`w-full flex items-center justify-center ${
+            isCollapsed && !isMobile ? "p-2.5" : "gap-2 px-3 py-2.5"
+          } rounded-xl text-xs font-semibold text-destructive dark:text-[#be747e] hover:text-destructive dark:text-[#be747e] bg-destructive/10 dark:bg-[#be747e]/10 hover:bg-destructive/20 dark:hover:bg-[#be747e]/20 transition cursor-pointer border border-destructive/30 dark:border-[#be747e]/30/60 shadow-2xs focus:outline-none focus:ring-2 focus:ring-destructive dark:focus:ring-[#be747e] focus:ring-offset-2`}
+        >
+          <LogOut size={16} aria-hidden="true" />
+          {(!isCollapsed || isMobile) && <span>Sign Out</span>}
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-cream-light dark:bg-[#121616] text-[#0F172A] flex font-sans antialiased selection:bg-purple-100">
       {/* Skip to main content link */}
@@ -162,102 +253,56 @@ export function AdminLayout({ children, activeTab }: AdminLayoutProps) {
         Skip to main content
       </a>
 
-      {/* LEFT SIDEBAR */}
-      <aside
-        role="navigation"
-        aria-label="Admin sidebar"
-        className={`${
-          isCollapsed ? "w-[72px]" : "w-[250px]"
-        } transition-all duration-300 ease-in-out h-screen fixed left-0 top-0 bg-white dark:bg-[#1C2323] border-r border-mist-green dark:border-[#2A3838] flex flex-col justify-between shrink-0 select-none py-4 px-3 z-30`}
-      >
-        <div className="flex flex-col min-h-0">
-          {/* Logo & Collapse Header */}
-          <div className={`h-12 px-2 flex items-center ${isCollapsed ? "justify-center" : "justify-between"} mb-4 shrink-0`}>
-            {!isCollapsed && (
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-ink dark:text-cream-soft overflow-hidden whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime focus:ring-offset-2 rounded"
-                aria-label="Summa AI Home"
-              >
-                <SummaLogo />
-              </Link>
-            )}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-expanded={!isCollapsed}
-              className="p-1.5 rounded-lg text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft hover:bg-mist-green/50 dark:hover:bg-[#2A3838] transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime"
-            >
-              <Menu size={18} aria-hidden="true" />
-            </button>
-          </div>
-
-          {/* Navigation Items */}
-          <nav
-            ref={navRef}
-            role="menubar"
-            aria-label="Admin navigation"
-            className="space-y-0.5 text-[13px] font-medium text-grey-green dark:text-[#8FA29B] overflow-y-auto pr-1"
-          >
-            {sidebarNav.map((item, index) => {
-              const active = activeTab === item.key;
-              return (
-                <button
-                  key={item.key}
-                  role="menuitem"
-                  tabIndex={active ? 0 : -1}
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => handleTabChange(item.key)}
-                  onKeyDown={(e) => handleNavKeyDown(e, index)}
-                  title={isCollapsed ? item.label : undefined}
-                  className={`w-full flex items-center ${
-                    isCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"
-                  } rounded-xl text-left transition focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime focus:ring-offset-2 ${
-                    active
-                      ? "bg-teal-dark dark:bg-accent-lime/10 text-teal-dark dark:text-accent-lime font-semibold"
-                      : "hover:bg-cream-light dark:bg-[#232D2D] text-grey-green dark:text-[#8FA29B] hover:text-ink dark:text-cream-soft"
-                  }`}
-                >
-                  <span className={active ? "text-teal-dark dark:text-accent-lime" : "text-grey-green dark:text-[#8FA29B]"}>
-                    {item.icon}
-                  </span>
-                  {!isCollapsed && <span className="truncate">{item.label}</span>}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Sidebar Footer: Sign Out Button */}
-        <div className="shrink-0 space-y-3 pt-3">
-          <button
-            onClick={handleSignOut}
-            aria-label="Sign out of your account"
-            title={isCollapsed ? "Sign Out" : undefined}
-            className={`w-full flex items-center justify-center ${
-              isCollapsed ? "p-2.5" : "gap-2 px-3 py-2.5"
-            } rounded-xl text-xs font-semibold text-destructive dark:text-[#be747e] hover:text-destructive dark:text-[#be747e] bg-destructive/10 dark:bg-[#be747e]/10 hover:bg-destructive/20 dark:hover:bg-[#be747e]/20 transition cursor-pointer border border-destructive/30 dark:border-[#be747e]/30/60 shadow-2xs focus:outline-none focus:ring-2 focus:ring-destructive dark:focus:ring-[#be747e] focus:ring-offset-2`}
-          >
-            <LogOut size={16} aria-hidden="true" />
-            {!isCollapsed && <span>Sign Out</span>}
-          </button>
-        </div>
-      </aside>
+      {/* LEFT SIDEBAR - Mobile: Sheet, Desktop: Fixed aside */}
+      {isMobile ? (
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="w-[250px] p-0 bg-white dark:bg-[#1C2323]">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Admin Navigation</SheetTitle>
+            </SheetHeader>
+            <div className="h-full flex flex-col justify-between py-4 px-3">
+              {sidebarContent}
+            </div>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <aside
+          role="navigation"
+          aria-label="Admin sidebar"
+          className={`${
+            isCollapsed ? "w-[72px]" : "w-[250px]"
+          } transition-all duration-300 ease-in-out h-screen fixed left-0 top-0 bg-white dark:bg-[#1C2323] border-r border-mist-green dark:border-[#2A3838] flex flex-col justify-between shrink-0 select-none py-4 px-3 z-30`}
+        >
+          {sidebarContent}
+        </aside>
+      )}
 
       {/* RIGHT MAIN CANVAS */}
-      <div className={`flex-1 flex flex-col min-w-0 bg-cream-light dark:bg-[#121616] min-h-screen ${isCollapsed ? "ml-[72px]" : "ml-[250px]"} transition-all duration-300 ease-in-out`}>
+      <div className={`flex-1 flex flex-col min-w-0 bg-cream-light dark:bg-[#121616] min-h-screen ${isMobile ? "ml-0" : isCollapsed ? "ml-[72px]" : "ml-[250px]"} transition-all duration-300 ease-in-out`}>
         {/* TOP NAVBAR */}
         <header
           role="banner"
-          className="h-16 bg-white dark:bg-[#1C2323] border-b border-mist-green dark:border-[#2A3838] px-8 flex items-center justify-between shrink-0 sticky top-0 z-20"
+          className="h-16 bg-white dark:bg-[#1C2323] border-b border-mist-green dark:border-[#2A3838] px-4 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-20"
         >
-          <div>
-            <h1 className="text-lg font-bold text-ink dark:text-cream-soft">
-              {navMeta[activeTab]?.title || "Overview"}
-            </h1>
-            <p className="text-xs text-grey-green dark:text-[#8FA29B] flex items-center gap-1">
-              {navMeta[activeTab]?.desc || "Welcome back, Admin"}
-            </p>
+          <div className="flex items-center gap-3">
+            {/* Mobile hamburger button */}
+            {isMobile && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open navigation"
+                className="p-2 rounded-lg text-grey-green dark:text-[#8FA29B] hover:text-ink dark:hover:text-cream-soft hover:bg-mist-green/50 dark:hover:bg-[#2A3838] transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-dark dark:focus:ring-accent-lime"
+              >
+                <Menu size={20} aria-hidden="true" />
+              </button>
+            )}
+            <div>
+              <h1 className="text-lg font-bold text-ink dark:text-cream-soft">
+                {navMeta[activeTab]?.title || "Overview"}
+              </h1>
+              <p className="text-xs text-grey-green dark:text-[#8FA29B] flex items-center gap-1">
+                {navMeta[activeTab]?.desc || "Welcome back, Admin"}
+              </p>
+            </div>
           </div>
 
           {/* Top Controls */}
@@ -333,7 +378,7 @@ export function AdminLayout({ children, activeTab }: AdminLayoutProps) {
           ref={mainContentRef}
           role="main"
           tabIndex={-1}
-          className="p-8 space-y-6 max-w-[1400px] w-full mx-auto focus:outline-none"
+          className="p-4 md:p-8 space-y-6 max-w-[1400px] w-full mx-auto focus:outline-none"
           aria-label={navMeta[activeTab]?.title || "Admin content"}
         >
           {children}
