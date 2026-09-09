@@ -287,8 +287,8 @@ async def build_orchestrator_prompt(
                         "These are persistent facts the student has told us — preferences, goals, struggles, or habits."
                     )
                 )
-    except Exception as exc:
-        logger.debug("Hybrid memory supplement skipped: %s", exc)
+        except Exception as exc:
+            logger.debug("Hybrid memory supplement skipped: %s", exc)
 
     # RAG: Inject retrieved material chunks for source-grounded responses
     if rag_chunks:
