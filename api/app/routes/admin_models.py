@@ -44,6 +44,11 @@ async def list_providers(current_user: dict = Depends(require_admin)):
 
     try:
         pool = await get_pool()
+    except Exception as e:
+        logger.warning("DB pool not ready: %s", e)
+        return {"providers": [], "routing_mode": "auto", "error": "Database not ready."}
+
+    try:
         rows = await pool.fetch("""
             SELECT id, provider, model_name, is_enabled, priority,
                    rate_limit_rpm, rate_limit_tpd, last_health_check, last_error,
@@ -56,7 +61,18 @@ async def list_providers(current_user: dict = Depends(require_admin)):
         logger.warning("model_providers table not ready: %s", e)
         return {"providers": [], "routing_mode": "auto", "error": "Providers table not yet available. Retry after migration."}
 
-    health = model_router.get_health()
+    try:
+        health = model_router.get_health()
+    except Exception:
+        health = {}
+
+    # Check .env fallback for key status
+    env_key_map = {
+        "gemini": settings.GEMINI_API_KEY,
+        "openai": settings.OPENAI_API_KEY,
+        "anthropic": "",
+        "zai": settings.ZAI_API_KEY,
+    }
 
     # Get usage stats for each provider (last 24h)
     now = datetime.now(timezone.utc)
@@ -65,27 +81,23 @@ async def list_providers(current_user: dict = Depends(require_admin)):
     providers = []
     for row in rows:
         name = row["provider"]
-        usage = await pool.fetchrow("""
-            SELECT
-                COUNT(*) as total_requests,
-                COUNT(*) FILTER (WHERE success = true) as successful,
-                COUNT(*) FILTER (WHERE success = false) as failed,
-                COALESCE(AVG(latency_ms)::int, 0) as avg_latency,
-                COALESCE(PercentileCont(0.5) WITHIN GROUP (ORDER BY latency_ms)::int, 0) as p50_latency,
-                COALESCE(PercentileCont(0.95) WITHIN GROUP (ORDER BY latency_ms)::int, 0) as p95_latency
-            FROM summa_ai.model_usage_logs
-            WHERE provider = $1 AND created_at >= $2
-        """, name, day_ago)
+        usage = {"total_requests": 0, "successful": 0, "failed": 0, "avg_latency": 0, "p50_latency": 0, "p95_latency": 0}
+        try:
+            usage_row = await pool.fetchrow("""
+                SELECT
+                    COUNT(*) as total_requests,
+                    COUNT(*) FILTER (WHERE success = true) as successful,
+                    COUNT(*) FILTER (WHERE success = false) as failed,
+                    COALESCE(AVG(latency_ms)::int, 0) as avg_latency
+                FROM summa_ai.model_usage_logs
+                WHERE provider = $1 AND created_at >= $2
+            """, name, day_ago)
+            if usage_row:
+                usage = dict(usage_row)
+        except Exception as e:
+            logger.debug("Usage query failed for %s: %s", name, e)
 
         h = health.get(name, {})
-
-        # Check .env fallback for key status
-        env_key_map = {
-            "gemini": settings.GEMINI_API_KEY,
-            "openai": settings.OPENAI_API_KEY,
-            "anthropic": "",  # No env var set
-            "zai": settings.ZAI_API_KEY,
-        }
 
         providers.append({
             "id": str(row["id"]),
@@ -104,12 +116,12 @@ async def list_providers(current_user: dict = Depends(require_admin)):
                 "last_error": h.get("last_error"),
             },
             "usage": {
-                "total_requests": usage["total_requests"] if usage else 0,
-                "successful": usage["successful"] if usage else 0,
-                "failed": usage["failed"] if usage else 0,
-                "avg_latency_ms": usage["avg_latency"] if usage else 0,
-                "p50_latency_ms": usage["p50_latency"] if usage else 0,
-                "p95_latency_ms": usage["p95_latency"] if usage else 0,
+                "total_requests": usage.get("total_requests", 0),
+                "successful": usage.get("successful", 0),
+                "failed": usage.get("failed", 0),
+                "avg_latency_ms": usage.get("avg_latency", 0),
+                "p50_latency_ms": 0,
+                "p95_latency_ms": 0,
             },
             "last_health_check": row["last_health_check"].isoformat() if row["last_health_check"] else None,
             "last_error": row["last_error"],
