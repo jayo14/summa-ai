@@ -16,8 +16,20 @@ import {
   X,
   Brain,
   Lightbulb,
+  GripVertical,
+  Calendar,
 } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+import {
+  MatchingRenderer,
+  OrderingRenderer,
+  FillBlankRenderer,
+  ScenarioRenderer,
+  TrueFalseRenderer,
+  PastQuestionRenderer,
+  PredictedPracticeRenderer,
+  MilestoneRenderer,
+} from "./ExtraRenderers";
 
 /* ── Shared helpers (matching admin library) ── */
 
@@ -61,7 +73,15 @@ export type ComponentData = {
     | "hint-ladder"
     | "worked-example"
     | "short-answer"
-    | "recall-prompt";
+    | "recall-prompt"
+    | "matching"
+    | "ordering"
+    | "fill-blank"
+    | "scenario"
+    | "true-false"
+    | "past-question"
+    | "predicted-practice"
+    | "milestone";
   [key: string]: any;
 };
 
@@ -108,6 +128,31 @@ export function ChatComponentRenderer({
 
   if (data.type === "short-answer" || data.type === "recall-prompt") {
     return <ShortAnswerRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+
+  if (data.type === "matching") {
+    return <MatchingRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+  if (data.type === "ordering") {
+    return <OrderingRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+  if (data.type === "fill-blank") {
+    return <FillBlankRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+  if (data.type === "scenario") {
+    return <ScenarioRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+  if (data.type === "true-false") {
+    return <TrueFalseRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+  if (data.type === "past-question") {
+    return <PastQuestionRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+  if (data.type === "predicted-practice") {
+    return <PredictedPracticeRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
+  }
+  if (data.type === "milestone") {
+    return <MilestoneRenderer data={data} activityId={activity.id} onComplete={onInteractionComplete} />;
   }
 
   return (
