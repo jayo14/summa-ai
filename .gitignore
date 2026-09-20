@@ -58,3 +58,7 @@ server.log
 __pycache__/
 *.pyc
 *.pyoapi/.model_encryption_key
+ 
+
+# Video
+brag-output/
