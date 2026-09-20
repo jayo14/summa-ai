@@ -306,3 +306,76 @@ class MasteryEngine:
     async def decay_check(self, user_id: str, concept_id: str, decay_window_days: int = 14) -> bool:
         mastery = await self.compute_mastery(user_id, concept_id)
         return mastery.get("stale", False)
+
+    async def get_concept_mastery(
+        self, user_id: str, concept_id: str
+    ) -> Dict[str, Any]:
+        """Return mastery for a single concept with all dimensions."""
+        mastery = await self.compute_mastery(user_id, concept_id, save=False)
+        mastery["concept_id"] = concept_id
+        return mastery
+
+    async def get_course_mastery(
+        self, user_id: str, concept_ids: List[str]
+    ) -> Dict[str, Any]:
+        """Aggregate mastery across all concepts in a course/subject.
+
+        Returns average scores across all dimensions with a composite
+        mastery percentage.
+        """
+        all_mastery = []
+        for cid in concept_ids:
+            m = await self.get_concept_mastery(user_id, cid)
+            if m.get("depth") is not None:
+                all_mastery.append(m)
+
+        if not all_mastery:
+            return {
+                "depth": None,
+                "problem_solving": None,
+                "speed": None,
+                "consistency": None,
+                "confidence": None,
+                "creativity": None,
+                "composite_mastery": None,
+                "stale_count": 0,
+                "total_concepts": len(concept_ids),
+                "concepts_with_evidence": 0,
+            }
+
+        def avg(dim):
+            vals = [m[dim] for m in all_mastery if m.get(dim) is not None]
+            return round(sum(vals) / len(vals), 1) if vals else None
+
+        depth_avg = avg("depth")
+        ps_avg = avg("problem_solving")
+        conf_avg = avg("confidence")
+
+        # Composite: 0.4 depth + 0.35 PS + 0.15 accuracy + 0.15 confidence
+        composite_parts = []
+        if depth_avg is not None:
+            composite_parts.append(("depth", depth_avg, 0.40))
+        if ps_avg is not None:
+            composite_parts.append(("problem_solving", ps_avg, 0.35))
+        if conf_avg is not None:
+            composite_parts.append(("confidence", conf_avg, 0.15))
+        if composite_parts:
+            total_weight = sum(w for _, _, w in composite_parts)
+            composite = sum(v * w for _, v, w in composite_parts) / total_weight
+        else:
+            composite = None
+
+        stale_count = sum(1 for m in all_mastery if m.get("stale", False))
+
+        return {
+            "depth": depth_avg,
+            "problem_solving": ps_avg,
+            "speed": avg("speed"),
+            "consistency": avg("consistency"),
+            "confidence": conf_avg,
+            "creativity": avg("creativity"),
+            "composite_mastery": round(composite, 1) if composite is not None else None,
+            "stale_count": stale_count,
+            "total_concepts": len(concept_ids),
+            "concepts_with_evidence": len(all_mastery),
+        }
