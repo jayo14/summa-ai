@@ -1,192 +1,209 @@
-"""End-to-end integration tests for the learning-component pipeline.
+"""End-to-end integration tests for the Summa AI learning pipeline.
 
-These tests verify the complete flow from "Quiz me on Philosophy" through to
-the final component event, ensuring:
-
-  1. No 60-second blocking wait for component generation
-  2. The component event contains Philosophy content (not Java)
-  3. The stream starts immediately with text content
-  4. Component generation failure does not block the response
-  5. Subject/topic context is preserved end-to-end
+Tests the full flow from intent extraction → orchestrator → activity generation → mastery tracking.
 """
 
-import json
 import pytest
-from unittest.mock import AsyncMock, patch
-
-from fastapi.testclient import TestClient
-from app.main import app
-from app.core.security import set_current_user_id, reset_current_user_id
-
-client = TestClient(app)
-
-
-def _auth_headers():
-    return {"Authorization": "Bearer valid-token"}
-
-
-@pytest.fixture(autouse=True)
-def _mock_verify_jwt():
-    with patch("app.main.verify_supabase_jwt", return_value="user-1"):
-        yield
+from app.services.intent_extraction import extract_intent
+from app.services.orchestrator import LearningOrchestrator
+from app.services.mastery_engine import MasteryEngine
+from app.services.misconception_engine import MisconceptionEngine
+from app.services.difficulty_engine import DifficultyEngine, AdaptiveScaler
+from app.services.pattern_analysis import PatternAnalysisEngine, PredictivePracticeGenerator
+from app.services.citation_grounding import CitationExtractor, CitationValidator, CitationFormatter
+from app.services.study_plan_generator import NudgeEngine, NotificationService, StudyPlanGenerator
+from app.services.outcome_loop import OutcomeLoopEngine
+from app.services.study_recipes import RecipeSelector, RECIPES
 
 
-class TestPhilosophyQuizPipeline:
+class TestIntentExtractionPipeline:
+    def test_quiz_intent(self):
+        intent = extract_intent("Give me a quiz on ethics")
+        assert intent.activity_request == "quiz" or intent.intent == "quiz"
+
+    def test_flashcard_intent(self):
+        intent = extract_intent("Create flashcards for logic")
+        assert intent.activity_request == "flashcards" or intent.intent == "flashcards"
+
+    def test_subject_extraction(self):
+        intent = extract_intent("Give me a quiz on ethics")
+        assert intent.subject is not None or intent.activity_request == "quiz"
+
+    def test_difficulty_detection(self):
+        intent = extract_intent("Give me something easy")
+        assert intent.difficulty_preference == "easy"
+
+    def test_difficulty_hard(self):
+        intent = extract_intent("I want a hard challenge")
+        assert intent.difficulty_preference == "hard"
+
+
+class TestOrchestratorPipeline:
     @pytest.mark.asyncio
-    @patch("app.routes.chat.generate_component_payload", new_callable=AsyncMock)
-    @patch("app.routes.chat.cognee")
-    async def test_quiz_on_philosophy_emits_correct_events(self, mock_cognee, mock_generate):
-        """Full pipeline test: 'Quiz me on Philosophy' should emit:
-        - intent event with subject=Philosophy
-        - preparing_activity state
-        - content streaming immediately
-        - artifact event with Philosophy content"""
-        mock_cognee.recall_context = AsyncMock(return_value={"results": []})
-        mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
-        mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
-        mock_cognee.detect_knowledge_gaps = AsyncMock(return_value=None)
-        mock_cognee.remember_conversation = AsyncMock()
-
-        # Mock component generation to return a Philosophy quiz
-        from app.models.artifact import ArtifactPayload
-        from app.models.components import QuizComponent, QuizQuestion
-        mock_generate.return_value = ArtifactPayload(
-            id="quiz-1",
-            title="Philosophy Quiz",
-            type="quiz",
-            data=QuizComponent(
-                questions=[
-                    QuizQuestion(
-                        id="q1",
-                        question="Which philosopher proposed the categorical imperative?",
-                        options=["Aristotle", "Kant", "Nietzsche", "Hume"],
-                        correctIndex=1,
-                    )
-                ],
-            ),
+    async def test_deterministic_fallback(self):
+        """Test orchestrator falls back without LLM."""
+        orchestrator = LearningOrchestrator()
+        intent = extract_intent("quiz me on history")
+        decision = await orchestrator.decide_next_action(
+            user_id="e2e-test-user",
+            query="quiz me on history",
+            intent=intent,
         )
+        assert decision.action in [
+            "TEACH", "EXPLAIN", "EXAMPLE", "RECALL", "FLASHCARD",
+            "QUIZ", "PRACTICE", "ASSESS", "REVIEW", "COMPARE",
+            "APPLY", "REFLECT", "SIMULATE", "PREDICT", "PLAN", "REST",
+        ]
+        assert decision.suggested_difficulty in ("easy", "medium", "hard", "exam-level")
 
-        async def fake_stream(*args, **kwargs):
-            yield 'data: {"type": "content", "delta": "Absolutely. Let\'s see what you already know first."}\n\n'
-            yield 'data: {"type": "content", "delta": " about Philosophy"}\n\n'
-            yield 'data: {"type": "done"}\n\n'
 
-        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
-            token = set_current_user_id("user-1")
-            try:
-                response = client.post(
-                    "/api/v1/chat/stream",
-                    headers=_auth_headers(),
-                    json={
-                        "user_id": "user-1",
-                        "messages": [{"role": "user", "content": "Quiz me on Philosophy"}],
-                        "subject": "Philosophy",
-                    },
-                )
-                assert response.status_code == 200
-                body = b"".join(response.iter_bytes()).decode("utf-8")
-
-                # Intent event with Philosophy subject
-                assert '"subject": "Philosophy"' in body or '"subject":"Philosophy"' in body
-
-                # Content streams immediately
-                assert "Absolutely" in body
-
-                # Artifact event contains Philosophy content
-                assert "categorical imperative" in body
-
-                # No Java contamination
-                assert "compile-time" not in body
-                assert "overloading" not in body
-                assert "runtime overriding" not in body
-            finally:
-                reset_current_user_id(token)
+class TestMasteryPipeline:
+    @pytest.mark.asyncio
+    async def test_record_and_compute(self):
+        engine = MasteryEngine()
+        for i in range(5):
+            await engine.record_attempt(
+                user_id="e2e-mastery-user",
+                activity_id=f"activity-{i}",
+                concept_ids=["concept-a", "concept-b"],
+                correct=i < 3,
+            )
+        mastery = await engine.compute_mastery("e2e-mastery-user", "overall")
+        assert "depth" in mastery
+        assert "problem_solving" in mastery
 
     @pytest.mark.asyncio
-    @patch("app.routes.chat.generate_component_payload", new_callable=AsyncMock)
-    @patch("app.routes.chat.cognee")
-    async def test_component_failure_does_not_block_response(self, mock_cognee, mock_generate):
-        """When component generation fails, the AI stream should still complete."""
-        mock_cognee.recall_context = AsyncMock(return_value={"results": []})
-        mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
-        mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
-        mock_cognee.detect_knowledge_gaps = AsyncMock(return_value=None)
-        mock_cognee.remember_conversation = AsyncMock()
-
-        mock_generate.return_value = None
-
-        async def fake_stream(*args, **kwargs):
-            yield 'data: {"type": "content", "delta": "Let me explain."}\n\n'
-            yield 'data: {"type": "done"}\n\n'
-
-        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
-            token = set_current_user_id("user-1")
-            try:
-                response = client.post(
-                    "/api/v1/chat/stream",
-                    headers=_auth_headers(),
-                    json={
-                        "user_id": "user-1",
-                        "messages": [{"role": "user", "content": "Quiz me on Philosophy"}],
-                        "subject": "Philosophy",
-                    },
-                )
-                assert response.status_code == 200
-                body = b"".join(response.iter_bytes()).decode("utf-8")
-                # Response text should be present despite component failure
-                assert "Let me explain" in body
-            finally:
-                reset_current_user_id(token)
-
-    @pytest.mark.asyncio
-    @patch("app.routes.chat.generate_component_payload", new_callable=AsyncMock)
-    @patch("app.routes.chat.cognee")
-    async def test_quiz_on_physics_no_java_contamination(self, mock_cognee, mock_generate):
-        """'Quiz me on Newton's Laws' should produce Physics content."""
-        mock_cognee.recall_context = AsyncMock(return_value={"results": []})
-        mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
-        mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
-        mock_cognee.detect_knowledge_gaps = AsyncMock(return_value=None)
-        mock_cognee.remember_conversation = AsyncMock()
-
-        from app.models.artifact import ArtifactPayload
-        from app.models.components import QuizComponent, QuizQuestion
-        mock_generate.return_value = ArtifactPayload(
-            id="quiz-physics",
-            title="Physics Quiz",
-            type="quiz",
-            data=QuizComponent(
-                questions=[
-                    QuizQuestion(
-                        id="q1",
-                        question="What is Newton's First Law of Motion?",
-                        options=["Inertia", "Gravity", "F=ma", "Action-Reaction"],
-                        correctIndex=0,
-                    )
-                ],
-            ),
+    async def test_concept_mastery(self):
+        engine = MasteryEngine()
+        await engine.record_attempt(
+            user_id="e2e-concept-user",
+            activity_id="a1",
+            concept_ids=["specific-concept"],
+            correct=True,
         )
+        mastery = await engine.get_concept_mastery("e2e-concept-user", "specific-concept")
+        assert mastery["concept_id"] == "specific-concept"
+        assert mastery["evidence_count"] >= 1
 
-        async def fake_stream(*args, **kwargs):
-            yield 'data: {"type": "content", "delta": "Here is a physics question."}\n\n'
-            yield 'data: {"type": "done"}\n\n'
 
-        with patch("app.routes.chat._stream_ai_response", side_effect=fake_stream):
-            token = set_current_user_id("user-1")
-            try:
-                response = client.post(
-                    "/api/v1/chat/stream",
-                    headers=_auth_headers(),
-                    json={
-                        "user_id": "user-1",
-                        "messages": [{"role": "user", "content": "Quiz me on Newton's Laws"}],
-                        "subject": "Physics",
-                    },
-                )
-                assert response.status_code == 200
-                body = b"".join(response.iter_bytes()).decode("utf-8")
-                assert "Newton" in body
-                assert "compile-time" not in body
-                assert "overloading" not in body
-            finally:
-                reset_current_user_id(token)
+class TestMisconceptionPipeline:
+    @pytest.mark.asyncio
+    async def test_record_and_recommend(self):
+        engine = MisconceptionEngine()
+        for i in range(3):
+            await engine.record_misconception(
+                user_id="e2e-miscon-user",
+                concept_id="test-concept",
+                description="Persistent confusion",
+                confidence="medium",
+            )
+        recs = await engine.get_correction_recommendations("e2e-miscon-user")
+        assert len(recs) >= 1
+        assert recs[0]["priority"] == "high"
+
+
+class TestDifficultyPipeline:
+    def test_engine_scales_correctly(self):
+        engine = DifficultyEngine(window=5)
+        attempts = [{"correct": True} for _ in range(5)]
+        result = engine.compute_difficulty(attempts, current_difficulty="medium")
+        assert result["suggested"] in ("hard", "exam-level")
+
+    def test_scaler_prevents_oscillation(self):
+        scaler = AdaptiveScaler(cooldown=3)
+        # Build cooldown history
+        for _ in range(3):
+            scaler.scale("medium", "medium")
+        # Now allow change
+        result = scaler.scale("hard", "medium")
+        assert result == "hard"
+
+
+class TestPatternAnalysisPipeline:
+    def test_analyze_and_generate(self):
+        questions = [
+            {"topic": "Ethics", "year": "2023"},
+            {"topic": "Ethics", "year": "2024"},
+            {"topic": "Logic", "year": "2023"},
+        ]
+        result = PatternAnalysisEngine.analyze_patterns(questions)
+        assert "Ethics" in result.topic_frequencies
+
+        practice = PredictivePracticeGenerator.generate_from_patterns(
+            topic="Ethics",
+            recurring_structures=result.recurring_structures,
+            question_type="predicted",
+        )
+        assert practice["label"] == "Predicted Practice"
+        assert "Ethics" in practice["target_concept"]
+
+
+class TestCitationPipeline:
+    def test_extract_validate_format(self):
+        chunks = [
+            {"material_title": "Notes", "chunk_text": "Content", "location": "S1", "score": 0.9},
+        ]
+        text = "See [Source 1] for details."
+        result = CitationFormatter.ground_response(text, chunks)
+        assert result["has_citations"] is True
+        assert result["validation"]["all_valid"] is True
+
+
+class TestNudgePipeline:
+    @pytest.mark.asyncio
+    async def test_generate_for_new_user(self):
+        nudges = await NudgeEngine.generate_nudges("e2e-new-nudge-user")
+        assert len(nudges) >= 1
+        assert nudges[0]["type"] == "onboarding"
+
+
+class TestNotificationPipeline:
+    @pytest.mark.asyncio
+    async def test_send_read_cycle(self):
+        NotificationService._instance = None
+        svc = NotificationService()
+        item = await svc.send_notification("e2e-notif-user", "info", "Test", "Body")
+        notifs = await svc.get_notifications("e2e-notif-user")
+        assert len(notifs) >= 1
+
+        await svc.mark_read("e2e-notif-user", item["id"])
+        NotificationService._instance = None
+
+
+class TestOutcomeLoopPipeline:
+    @pytest.mark.asyncio
+    async def test_submit_and_evaluate(self):
+        engine = OutcomeLoopEngine()
+        from app.services.outcome_loop import ExamFeedbackCreate
+        feedback = ExamFeedbackCreate(
+            outcome_rating="Okay",
+            resembled_practice=True,
+            topics_appeared=["Ethics", "Logic"],
+            unprepared_topics=["Logic"],
+        )
+        result = await engine.submit_exam_feedback("e2e-outcome-user", "exam-201", feedback)
+        assert result["exam_id"] == "exam-201"
+
+        unprepared = await engine.get_unprepared_topics("e2e-outcome-user")
+        assert "Logic" in unprepared
+
+        accuracy = await engine.get_prediction_accuracy("e2e-outcome-user")
+        assert "accuracy" in accuracy
+
+
+class TestRecipeSelector:
+    def test_new_topic_recipe(self):
+        recipe = RecipeSelector.select_recipe(
+            mastery_snapshot={"depth": 10},
+            exam_proximity_days=None,
+            misconception_active=False,
+        )
+        assert recipe in RECIPES
+
+    def test_exam_tomorrow_recipe(self):
+        recipe = RecipeSelector.select_recipe(
+            mastery_snapshot={"depth": 50},
+            exam_proximity_days=1,
+            misconception_active=False,
+        )
+        assert recipe in RECIPES

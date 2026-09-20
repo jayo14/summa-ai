@@ -96,3 +96,62 @@ class OutcomeLoopEngine:
             if f["user_id"] == user_id and f["exam_id"] == exam_id:
                 return f
         return None
+
+    async def get_prediction_accuracy(self, user_id: str) -> Dict[str, Any]:
+        """Compute overall prediction accuracy across all exams."""
+        evals = [e for e in self._evals_store if e["user_id"] == user_id]
+        if not evals:
+            try:
+                pool = await get_pool()
+                if pool is not None:
+                    async with pool.acquire() as conn:
+                        rows = await conn.fetch(
+                            "SELECT * FROM summa_ai.exam_feedback WHERE user_id = $1",
+                            user_id,
+                        )
+                        evals = [dict(r) for r in rows] if rows else []
+            except Exception:
+                pass
+
+        if not evals:
+            return {"accuracy": 0, "total_predictions": 0, "correct_predictions": 0}
+
+        total = len(evals)
+        correct = sum(1 for e in evals if e.get("actually_appeared", False))
+        accuracy = round(correct / total, 2) if total > 0 else 0
+
+        return {
+            "accuracy": accuracy,
+            "total_predictions": total,
+            "correct_predictions": correct,
+        }
+
+    async def get_unprepared_topics(self, user_id: str) -> List[str]:
+        """Extract topics the student reported as unprepared for."""
+        feedbacks = [f for f in self._feedback_store if f["user_id"] == user_id]
+        topics = set()
+        for f in feedbacks:
+            topics.update(f.get("unprepared_topics", []))
+
+        if not topics:
+            try:
+                pool = await get_pool()
+                if pool is not None:
+                    async with pool.acquire() as conn:
+                        rows = await conn.fetch(
+                            "SELECT unprepared_topics FROM summa_ai.exam_feedback WHERE user_id = $1",
+                            user_id,
+                        )
+                        if rows:
+                            for r in rows:
+                                raw = r.get("unprepared_topics")
+                                if raw:
+                                    if isinstance(raw, str):
+                                        import json as _json
+                                        topics.update(_json.loads(raw))
+                                    elif isinstance(raw, list):
+                                        topics.update(raw)
+            except Exception:
+                pass
+
+        return sorted(topics)
