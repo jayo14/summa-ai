@@ -34,7 +34,7 @@ from app.routes.data_routes import (
     concepts_router,
     analytics_router,
 )
-from app.routes.study_routes import study_router, flashcards_router, exams_router
+from app.routes.study_routes import study_router, flashcards_router, exams_router, past_questions_router
 from app.routes.interactions import interactions_router
 
 if settings.SENTRY_DSN:
@@ -300,6 +300,7 @@ for r, tag in [
     (study_router, "study"),
     (flashcards_router, "flashcards"),
     (exams_router, "exams"),
+    (past_questions_router, "past-questions"),
     (interactions_router, "interactions"),
     (progress_router, "progress"),
     (resource_router, "resources"),

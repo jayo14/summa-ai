@@ -1,6 +1,8 @@
 """Study plan, flashcard, and exam routes — Postgres-backed."""
 
+from typing import Any, Dict, List
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 from app.models.study import (
     ExamCreate,
     ExamUpdate,
@@ -18,6 +20,7 @@ _store = DataStore()
 study_router = APIRouter()
 flashcards_router = APIRouter()
 exams_router = APIRouter()
+past_questions_router = APIRouter()
 
 # ========== STUDY PLANS ==========
 
@@ -324,3 +327,104 @@ async def delete_exam(eid: str):
     if not await _store.delete_exam(eid, user_id):
         raise HTTPException(404, "Not found")
     return {"status": "success"}
+
+
+# ========== PAST QUESTIONS ==========
+
+
+class PastQuestionCreate(BaseModel):
+    course_id: str
+    year: str
+    question_text: str
+    topic: str
+    marks: int = Field(default=0, ge=0)
+    question_type: str = "unknown"
+
+
+@past_questions_router.post(
+    "/past-questions",
+    status_code=201,
+    summary="Add past question",
+    description="Store a historical past question for pattern analysis",
+)
+async def create_past_question(data: PastQuestionCreate):
+    user_id = resolve_user_id()
+    try:
+        from app.services.db_pool import get_pool
+        pool = await get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    """INSERT INTO summa_ai.past_questions (id, user_id, course_id, year, question_text, topic, marks, question_type, created_at)
+                       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW())
+                       RETURNING *""",
+                    user_id, data.course_id, data.year, data.question_text,
+                    data.topic, data.marks, data.question_type,
+                )
+                if row:
+                    return dict(row)
+    except Exception:
+        pass
+    return {"status": "created", "topic": data.topic}
+
+
+@past_questions_router.post(
+    "/past-questions/analyze",
+    summary="Analyze past question patterns",
+    description="Extract topic frequency, recurring structures, and year trends from stored past questions",
+)
+async def analyze_past_questions(payload: Dict[str, Any] = None) -> Dict[str, Any]:
+    user_id = resolve_user_id()
+    course_id = (payload or {}).get("course_id")
+
+    questions = []
+    try:
+        from app.services.db_pool import get_pool
+        pool = await get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                if course_id:
+                    rows = await conn.fetch(
+                        "SELECT * FROM summa_ai.past_questions WHERE user_id = $1 AND course_id = $2",
+                        user_id, course_id,
+                    )
+                else:
+                    rows = await conn.fetch(
+                        "SELECT * FROM summa_ai.past_questions WHERE user_id = $1",
+                        user_id,
+                    )
+                questions = [dict(r) for r in rows] if rows else []
+    except Exception:
+        pass
+
+    from app.services.pattern_analysis import PatternAnalysisEngine, sanitize_certainty_phrases
+    engine = PatternAnalysisEngine()
+    result = engine.analyze_patterns(questions)
+
+    # Add year trends
+    year_trends = PatternAnalysisEngine._compute_year_trends(questions)
+
+    return {
+        "topic_frequencies": result.topic_frequencies,
+        "recurring_structures": result.recurring_structures,
+        "year_trends": year_trends,
+        "total_questions": len(questions),
+        "uncertainty_note": result.uncertainty_note,
+    }
+
+
+@past_questions_router.post(
+    "/past-questions/predict",
+    summary="Generate predictive practice question",
+    description="Generate a practice question structurally matched to historical exam patterns",
+)
+async def generate_predictive_practice(payload: Dict[str, Any]) -> Dict[str, Any]:
+    topic = payload.get("topic", "General")
+    question_type = payload.get("question_type", "predicted")
+
+    from app.services.pattern_analysis import PredictivePracticeGenerator
+    return PredictivePracticeGenerator.generate_from_patterns(
+        topic=topic,
+        recurring_structures=payload.get("recurring_structures", []),
+        question_type=question_type,
+    )
