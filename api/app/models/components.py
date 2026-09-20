@@ -10,9 +10,9 @@ other silently reopens the `Any`-typed crash path this replaces.
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class BaseComponent(BaseModel):
@@ -27,9 +27,6 @@ class HexagonDimension(BaseModel):
 class HexagonComponent(BaseComponent):
     type: Literal["hexagon"] = "hexagon"
     dimensions: List[HexagonDimension] = Field(min_length=1)
-
-
-from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class QuizQuestion(BaseModel):
@@ -64,12 +61,10 @@ class QuizQuestion(BaseModel):
                             values["correctIndex"] = val
                             break
                         elif isinstance(val, str):
-                            # Check if value matches option string or index
                             opts = values.get("options") or []
                             if val.isdigit():
                                 values["correctIndex"] = int(val)
                                 break
-                            # Match option text or dict
                             found = False
                             for i, opt in enumerate(opts):
                                 opt_text = opt.get("text") if isinstance(opt, dict) else str(opt)
@@ -213,6 +208,86 @@ class RecallPromptComponent(BaseComponent):
     answer: str
 
 
+class MatchingPair(BaseModel):
+    left: str
+    right: str
+
+
+class MatchingComponent(BaseComponent):
+    type: Literal["matching"] = "matching"
+    pairs: List[MatchingPair] = Field(min_length=2)
+    distractors: List[str] = Field(default_factory=list)
+
+
+class OrderingComponent(BaseComponent):
+    type: Literal["ordering"] = "ordering"
+    items: List[str] = Field(min_length=2)
+    correct_order: List[int] = Field(min_length=2)
+    description: Optional[str] = None
+
+
+class FillBlankSlot(BaseModel):
+    options: List[str] = Field(min_length=2)
+    correct_answer: Optional[str] = None
+
+
+class FillBlankComponent(BaseComponent):
+    type: Literal["fill-blank"] = "fill-blank"
+    template: str
+    blanks: List[FillBlankSlot] = Field(min_length=1)
+
+
+class ScenarioOption(BaseModel):
+    id: str
+    text: str
+    correct: bool = False
+    feedback: Optional[str] = None
+
+
+class ScenarioComponent(BaseComponent):
+    type: Literal["scenario"] = "scenario"
+    context: str
+    dilemma: str
+    options: List[ScenarioOption] = Field(min_length=2)
+
+
+class TrueFalseQuestion(BaseModel):
+    id: str
+    statement: str
+    correct_answer: bool
+    explanation: Optional[str] = None
+
+
+class TrueFalseComponent(BaseComponent):
+    type: Literal["true-false"] = "true-false"
+    questions: List[TrueFalseQuestion] = Field(min_length=1)
+
+
+class PastQuestionComponent(BaseComponent):
+    type: Literal["past-question"] = "past-question"
+    year: Optional[str] = None
+    question_text: str
+    marks: Optional[int] = None
+    recurring_pattern: str
+    suggested_approach: str
+
+
+class PredictedPracticeComponent(BaseComponent):
+    type: Literal["predicted-practice"] = "predicted-practice"
+    target_concept: str
+    structural_basis: str
+    practice_question: str
+    rubric: List[str] = Field(default_factory=list)
+
+
+class MilestoneComponent(BaseComponent):
+    type: Literal["milestone"] = "milestone"
+    milestone_title: str
+    achieved_evidence: str
+    mastery_level: float = Field(ge=0, le=100)
+    next_objective: str
+
+
 ComponentData = Union[
     HexagonComponent,
     QuizComponent,
@@ -226,6 +301,14 @@ ComponentData = Union[
     WorkedExampleComponent,
     ShortAnswerComponent,
     RecallPromptComponent,
+    MatchingComponent,
+    OrderingComponent,
+    FillBlankComponent,
+    ScenarioComponent,
+    TrueFalseComponent,
+    PastQuestionComponent,
+    PredictedPracticeComponent,
+    MilestoneComponent,
 ]
 
 COMPONENT_TYPE_MAP = {
@@ -241,6 +324,14 @@ COMPONENT_TYPE_MAP = {
     "worked-example": WorkedExampleComponent,
     "short-answer": ShortAnswerComponent,
     "recall-prompt": RecallPromptComponent,
+    "matching": MatchingComponent,
+    "ordering": OrderingComponent,
+    "fill-blank": FillBlankComponent,
+    "scenario": ScenarioComponent,
+    "true-false": TrueFalseComponent,
+    "past-question": PastQuestionComponent,
+    "predicted-practice": PredictedPracticeComponent,
+    "milestone": MilestoneComponent,
 }
 
 ACTION_TO_COMPONENT = {
@@ -253,6 +344,14 @@ ACTION_TO_COMPONENT = {
     "RECALL": "recall-prompt",
     "PRACTICE": "short-answer",
     "EXAMPLE": "worked-example",
+    "MATCH": "matching",
+    "ORDER": "ordering",
+    "FILL_BLANK": "fill-blank",
+    "SCENARIO": "scenario",
+    "TRUE_FALSE": "true-false",
+    "PAST_QUESTION": "past-question",
+    "PREDICTED_PRACTICE": "predicted-practice",
+    "MILESTONE": "milestone",
 }
 
 ComponentType = Literal[
@@ -268,4 +367,12 @@ ComponentType = Literal[
     "worked-example",
     "short-answer",
     "recall-prompt",
+    "matching",
+    "ordering",
+    "fill-blank",
+    "scenario",
+    "true-false",
+    "past-question",
+    "predicted-practice",
+    "milestone",
 ]

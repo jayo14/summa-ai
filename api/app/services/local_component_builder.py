@@ -27,6 +27,18 @@ from app.models.components import (
     RecallPromptComponent,
     WorkedExampleComponent,
     WorkedExampleStep,
+    MatchingPair,
+    MatchingComponent,
+    OrderingComponent,
+    FillBlankSlot,
+    FillBlankComponent,
+    ScenarioOption,
+    ScenarioComponent,
+    TrueFalseQuestion,
+    TrueFalseComponent,
+    PastQuestionComponent,
+    PredictedPracticeComponent,
+    MilestoneComponent,
 )
 from app.services.intent_extraction import UserIntent
 
@@ -353,6 +365,98 @@ def build_local_component(component_type: str, intent: UserIntent) -> ArtifactPa
                 WorkedExampleStep(step="Verify", explanation="Check your reasoning against expected outcomes."),
             ],
             takeaway=f"Mastering {intent.topic or intent.subject} requires practice with these core steps.",
+        )
+
+    elif component_type == "matching":
+        focus = intent.topic or intent.subject or "the topic"
+        data = MatchingComponent(
+            title=title,
+            pairs=[
+                MatchingPair(left=f"Key concept 1 in {focus}", right=f"Definition of concept 1"),
+                MatchingPair(left=f"Key concept 2 in {focus}", right=f"Definition of concept 2"),
+                MatchingPair(left=f"Key concept 3 in {focus}", right=f"Definition of concept 3"),
+            ],
+        )
+
+    elif component_type == "ordering":
+        focus = intent.topic or intent.subject or "this topic"
+        data = OrderingComponent(
+            title=title,
+            items=[
+                f"First step in {focus}",
+                f"Second step in {focus}",
+                f"Third step in {focus}",
+                f"Fourth step in {focus}",
+            ],
+            correct_order=[0, 1, 2, 3],
+            description=f"Put the steps of {focus} in the correct order.",
+        )
+
+    elif component_type == "fill-blank":
+        focus = intent.topic or intent.subject or "the topic"
+        data = FillBlankComponent(
+            title=title,
+            template=f"The core principle of {focus} is _____. It was first proposed by _____ and involves _____.",
+            blanks=[
+                FillBlankSlot(options=["concept A", "concept B", "concept C"], correct_answer="concept A"),
+                FillBlankSlot(options=["thinker X", "thinker Y", "thinker Z"], correct_answer="thinker X"),
+                FillBlankSlot(options=["aspect 1", "aspect 2", "aspect 3"], correct_answer="aspect 1"),
+            ],
+        )
+
+    elif component_type == "scenario":
+        focus = intent.topic or intent.subject or "this topic"
+        data = ScenarioComponent(
+            title=title,
+            context=f"You encounter a real-world situation involving {focus}.",
+            dilemma=f"How would you apply {focus} to solve this problem?",
+            options=[
+                ScenarioOption(id="opt1", text=f"Apply the core principle of {focus}", correct=True, feedback="Correct application."),
+                ScenarioOption(id="opt2", text="Ignore the context entirely", correct=False, feedback="This misses the point."),
+                ScenarioOption(id="opt3", text="Apply an unrelated concept", correct=False, feedback="Wrong concept."),
+            ],
+        )
+
+    elif component_type == "true-false":
+        focus = intent.topic or intent.subject or "the topic"
+        data = TrueFalseComponent(
+            title=title,
+            questions=[
+                TrueFalseQuestion(id="tf1", statement=f"{focus} is a fundamental concept in this course.", correct_answer=True, explanation="This is a core idea."),
+                TrueFalseQuestion(id="tf2", statement=f"{focus} has no practical applications.", correct_answer=False, explanation="It has many applications."),
+                TrueFalseQuestion(id="tf3", statement=f"Understanding {focus} requires practice.", correct_answer=True, explanation="Active practice builds mastery."),
+            ],
+        )
+
+    elif component_type == "past-question":
+        focus = intent.topic or intent.subject or "the topic"
+        data = PastQuestionComponent(
+            title=title,
+            year="2024",
+            question_text=f"Discuss the key principles of {focus} and provide two real-world examples.",
+            marks=20,
+            recurring_pattern=f"Definition -> Comparison -> Real-world Application",
+            suggested_approach=f"Start with a clear definition, compare with related concepts, then apply to a concrete example.",
+        )
+
+    elif component_type == "predicted-practice":
+        focus = intent.topic or intent.subject or "the topic"
+        data = PredictedPracticeComponent(
+            title=title,
+            target_concept=focus,
+            structural_basis=f"Based on historical exam patterns, {focus} questions follow the definition-application-evaluation structure.",
+            practice_question=f"Explain {focus} and evaluate its significance in modern contexts.",
+            rubric=["Clear definition", "Relevant examples", "Critical evaluation"],
+        )
+
+    elif component_type == "milestone":
+        focus = intent.topic or intent.subject or "the topic"
+        data = MilestoneComponent(
+            title=title,
+            milestone_title=f"Completed introduction to {focus}",
+            achieved_evidence=f"Successfully answered diagnostic questions about {focus}.",
+            mastery_level=45.0,
+            next_objective=f"Deep dive into advanced {focus} concepts",
         )
 
     else:
