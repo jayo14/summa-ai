@@ -193,10 +193,8 @@ def extract_intent(
             # because the whole subject is the scope; topic is the narrower sub-area.
             if potential_topic.lower() != subject.lower():
                 topic = potential_topic
-            # If topic matches the subject exactly, keep topic as the full subject
-            # so downstream components know the explicit scope
-            elif potential_topic.lower() == subject.lower():
-                topic = subject  # Explicit scope — use full subject as topic
+            else:
+                topic = None
 
         # Look for "give me flashcards for <topic>" patterns
         if not topic:

@@ -21,11 +21,18 @@ def _mock_verify_jwt():
 
 
 class TestWebSocketBroadcast:
+    @pytest.fixture(autouse=True)
+    def _override_admin(self):
+        from app.core.rbac import require_admin
+        app.dependency_overrides[require_admin] = lambda: {"id": "admin-1", "role": "admin"}
+        yield
+        app.dependency_overrides.pop(require_admin, None)
+
     def test_broadcast_disabled(self):
         with patch("app.main.verify_supabase_jwt", return_value="user-1"), patch(
             "app.config.settings.WEBSOCKET_ENABLED", False
         ):
-            response = client.post("/ws/broadcast", json={"message": "hello"})
+            response = client.post("/ws/broadcast", json={"message": "hello"}, headers=_auth_headers())
             assert response.status_code == 503
 
     def test_broadcast_enabled(self):
@@ -34,7 +41,7 @@ class TestWebSocketBroadcast:
         ):
             mock_manager.broadcast = AsyncMock()
             response = client.post(
-                "/ws/broadcast", json={"type": "announcement", "text": "hello"}
+                "/ws/broadcast", json={"type": "announcement", "text": "hello"}, headers=_auth_headers()
             )
             assert response.status_code == 200
             assert response.json()["status"] == "broadcasted"

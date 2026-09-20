@@ -88,7 +88,7 @@ class TestBuildOrchestratorPrompt:
             return_value={"exams": [{"title": "Math"}]}
         )
         mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
-        prompt = await build_orchestrator_prompt("user-1", "query", [])
+        prompt, _ = await build_orchestrator_prompt("user-1", "query", [])
         assert "RECALLED CONTEXT FROM MEMORY" in prompt
         assert "UPCOMING EXAMS" in prompt
 
@@ -99,8 +99,8 @@ class TestBuildOrchestratorPrompt:
         mock_cognee.recall_context = AsyncMock(return_value={"results": long_memory})
         mock_cognee.recall_exams = AsyncMock(return_value={"exams": []})
         mock_cognee.recall_learning_progress = AsyncMock(return_value={"progress": []})
-        prompt = await build_orchestrator_prompt("user-1", "query", [])
-        assert "...]"
+        prompt, _ = await build_orchestrator_prompt("user-1", "query", [])
+        assert "...]" in prompt
         assert len(prompt) < 5000
 
     @pytest.mark.asyncio
@@ -119,7 +119,7 @@ class TestBuildOrchestratorPrompt:
             }
         )
         mock_user_store.return_value = mock_store_instance
-        prompt = await build_orchestrator_prompt("user-1", "query", [])
+        prompt, _ = await build_orchestrator_prompt("user-1", "query", [])
         assert "STUDENT PROFILE" in prompt
         assert "Master NLP" in prompt
         assert "intermediate" in prompt
@@ -136,7 +136,7 @@ class TestBuildOrchestratorPrompt:
         mock_store_instance = AsyncMock()
         mock_store_instance.get_onboarding_data = AsyncMock(return_value=None)
         mock_user_store.return_value = mock_store_instance
-        prompt = await build_orchestrator_prompt("user-1", "query", [])
+        prompt, _ = await build_orchestrator_prompt("user-1", "query", [])
         assert "STUDENT PROFILE" not in prompt
 
     @pytest.mark.asyncio
@@ -152,7 +152,7 @@ class TestBuildOrchestratorPrompt:
         )
         with patch("app.routes.chat.settings") as mock_settings:
             mock_settings.HYBRID_MEMORY_ENABLED = True
-            prompt = await build_orchestrator_prompt("user-1", "query", [])
+            prompt, _ = await build_orchestrator_prompt("user-1", "query", [])
             assert "ATOMIC FACTS" in prompt
 
 
@@ -344,11 +344,12 @@ class TestChatStreamEndpoint:
                 assert response.status_code == 200
                 body = b"".join(response.iter_bytes()).decode("utf-8")
                 artifact_line = next(
-                    line for line in body.splitlines() if '"type": "artifact"' in line
+                    line for line in body.splitlines() if '"type": "activity"' in line or '"type": "artifact"' in line
                 )
                 event = json.loads(artifact_line[len("data: "):])
-                assert event["artifact"]["data"]["questions"][0]["id"] == "q1"
-                assert event["artifact"]["data"]["questions"][0]["correctIndex"] == 0
+                act = event.get("activity") or event.get("artifact")
+                assert act["data"]["questions"][0]["id"] == "q1"
+                assert act["data"]["questions"][0]["correctIndex"] == 0
             finally:
                 reset_current_user_id(token)
 

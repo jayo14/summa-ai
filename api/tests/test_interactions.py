@@ -31,6 +31,26 @@ def _mock_verify_jwt():
 _current_user = {"id": "unset"}
 
 
+@pytest.fixture(autouse=True)
+def _reset_cognee_singleton():
+    """Guard against cross-file singleton pollution.
+
+    test_cognee_service.py sets cognee._cognee = AsyncMock() on the
+    singleton, which makes _recall bypass the in-memory fallback for the
+    rest of the suite.  Reset it here so these tests exercise the real
+    in-memory store path.
+    """
+    from app.routes.chat import cognee as _cognee_instance
+    original_cognee = _cognee_instance._cognee
+    original_memory = _cognee_instance._memory.copy()
+    _cognee_instance._cognee = None
+    _cognee_instance._recall_cache._store.clear()
+    yield
+    _cognee_instance._cognee = original_cognee
+    _cognee_instance._recall_cache._store.clear()
+
+
+
 def _post_quiz_result(user_id: str, topic: str, score: float, answers: dict | None = None):
     _current_user["id"] = user_id
     set_current_user_id(user_id)
@@ -62,7 +82,7 @@ class TestQuizResultFeedbackLoop:
         assert gaps is not None
         assert any(g["topic"] == "Recursion" for g in gaps["gaps"])
 
-        prompt = await build_orchestrator_prompt(user_id, "help me with recursion", [])
+        prompt, _ = await build_orchestrator_prompt(user_id, "help me with recursion", [])
         assert "KNOWLEDGE GAPS DETECTED" in prompt
         assert "Recursion" in prompt
 

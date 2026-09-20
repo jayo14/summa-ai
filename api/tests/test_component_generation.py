@@ -161,9 +161,7 @@ class TestGenerateComponentPayloadFallback:
             call_count += 1
             raise ConnectionError("always fails")
 
-        with patch("app.services.google_ai.is_gemini_configured", return_value=True), patch(
-            "app.services.google_ai.generate_gemini_json", side_effect=flaky_gemini,
-        ):
+        with patch("app.services.model_router.model_router.generate_json", side_effect=flaky_gemini):
             payload = await generate_component_payload(
                 "quiz", "quiz me", "context",
                 intent=_intent(),
