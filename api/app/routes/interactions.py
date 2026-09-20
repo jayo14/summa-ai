@@ -232,3 +232,43 @@ async def complete_activity(activity_id: str, data: ActivityCompleteCreate) -> A
         total_score=data.total_score,
         timeline_event_id=str(event_id) if event_id else None,
     )
+
+
+# ========== MISCONCEPTION ROUTES ==========
+
+
+@interactions_router.get(
+    "/misconceptions",
+    summary="Get active misconceptions",
+    description="Retrieve all active misconceptions for the current user",
+)
+async def get_misconceptions():
+    user_id = resolve_user_id()
+    from app.services.misconception_engine import MisconceptionEngine
+    engine = MisconceptionEngine()
+    return await engine.get_active_misconceptions(user_id)
+
+
+@interactions_router.get(
+    "/misconceptions/recommendations",
+    summary="Get misconception correction recommendations",
+    description="Returns targeted practice recommendations for active misconceptions",
+)
+async def get_misconception_recommendations():
+    user_id = resolve_user_id()
+    from app.services.misconception_engine import MisconceptionEngine
+    engine = MisconceptionEngine()
+    return await engine.get_correction_recommendations(user_id)
+
+
+@interactions_router.post(
+    "/misconceptions/{misconception_id}/correct",
+    summary="Record correction attempt",
+    description="Record a correction attempt against a known misconception",
+)
+async def record_correction(misconception_id: str, payload: dict):
+    user_id = resolve_user_id()
+    correct = payload.get("correct", False)
+    from app.services.misconception_engine import MisconceptionEngine
+    engine = MisconceptionEngine()
+    return await engine.record_correction_attempt(user_id, misconception_id, correct)

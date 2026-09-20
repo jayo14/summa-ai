@@ -149,3 +149,63 @@ class MisconceptionEngine:
             pass
 
         return [v for v in self._local_misconceptions.values() if v["user_id"] == user_id]
+
+    async def get_correction_recommendations(self, user_id: str) -> List[Dict[str, Any]]:
+        """Return misconception-driven practice recommendations."""
+        misconceptions = await self.get_active_misconceptions(user_id)
+        if not misconceptions:
+            return []
+
+        recommendations = []
+        for m in misconceptions[:5]:
+            concept = m.get("concept_id", "general")
+            recommendations.append({
+                "misconception_id": m.get("id"),
+                "concept_id": concept,
+                "description": m.get("description", ""),
+                "occurrences": m.get("occurrences", 1),
+                "practice_type": "targeted_drill",
+                "recommended_action": f"Focus practice on {concept} — repeated confusion ({m.get('occurrences', 1)}x) indicates persistent misunderstanding.",
+                "priority": "high" if m.get("occurrences", 1) >= 3 else "medium",
+            })
+
+        return recommendations
+
+    async def record_correction_attempt(
+        self,
+        user_id: str,
+        misconception_id: str,
+        correct: bool,
+    ) -> Dict[str, Any]:
+        """Record a correction attempt against a known misconception."""
+        key = f"{user_id}:{misconception_id}"
+        record = {
+            "user_id": user_id,
+            "misconception_id": misconception_id,
+            "correct": correct,
+            "attempted_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+        if correct:
+            # Mark misconception as resolved if this is a correct correction attempt
+            for k, v in self._local_misconceptions.items():
+                if v.get("id") == misconception_id:
+                    v["resolved"] = True
+                    v["resolved_at"] = record["attempted_at"]
+                    break
+
+            try:
+                pool = await self._get_pool()
+                if pool is not None:
+                    async with pool.acquire() as conn:
+                        await conn.execute(
+                            """UPDATE summa_ai.misconceptions
+                               SET resolved = TRUE, resolved_at = NOW()
+                               WHERE id = $1 AND user_id = $2""",
+                            misconception_id,
+                            user_id,
+                        )
+            except Exception:
+                pass
+
+        return record
