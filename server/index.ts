@@ -50,6 +50,23 @@ app.use("/api", async (req, res) => {
       }
     });
 
+    const contentType = proxyResp.headers.get("content-type") || "";
+    if (contentType.includes("text/event-stream") && proxyResp.body) {
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      if (typeof (res as any).flushHeaders === "function") {
+        (res as any).flushHeaders();
+      }
+      const { Readable } = await import("stream");
+      const nodeStream = Readable.fromWeb(proxyResp.body as any);
+      nodeStream.pipe(res);
+      req.on("close", () => {
+        nodeStream.destroy();
+      });
+      return;
+    }
+
     const buffer = await proxyResp.arrayBuffer();
     res.send(Buffer.from(buffer));
   } catch (err) {
