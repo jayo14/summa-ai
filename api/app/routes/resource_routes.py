@@ -47,12 +47,30 @@ def _chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP)
 async def upload_material(file: UploadFile = File(...)):
     user_id = resolve_user_id()
     content = await file.read()
-    text = content.decode("utf-8", errors="ignore")
+    filename = file.filename or "document.txt"
+
+    # Parse document using format-aware parser
+    try:
+        from app.services.document_parser import DocumentParser
+
+        result = DocumentParser.extract_text(filename, content)
+        text = result.full_text
+        sections = result.sections
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "Document parsing failed, falling back to UTF-8: %s", exc
+        )
+        text = content.decode("utf-8", errors="ignore")
+        sections = []
 
     # Create material entry
     mat_data = {
-        "title": file.filename,
-        "type": file.filename.split(".")[-1].upper() if "." in file.filename else "Document",
+        "title": filename,
+        "type": filename.rsplit(".", 1)[-1].upper() if "." in filename else "Document",
         "source": "Student Upload",
         "size": len(content),
         "status": "processing",
@@ -60,14 +78,28 @@ async def upload_material(file: UploadFile = File(...)):
     }
     mat = await _store.create_material(user_id, mat_data)
 
-    # Chunk with overlap for better semantic continuity
-    chunks = _chunk_text(text) if text else [file.filename]
+    # Build location-aware chunks from sections when available
+    chunks: list[str] = []
+    chunk_locations: list[str] = []
+
+    if sections:
+        for section in sections:
+            section_chunks = _chunk_text(section.text)
+            for idx, ch in enumerate(section_chunks):
+                chunks.append(ch)
+                if len(section_chunks) > 1:
+                    chunk_locations.append(f"{section.location} (part {idx + 1})")
+                else:
+                    chunk_locations.append(section.location)
+    else:
+        chunks = _chunk_text(text) if text else [filename]
+        chunk_locations = [f"Chunk {i + 1}" for i in range(len(chunks))]
 
     # Generate embeddings for all chunks
     embeddings = await embed_batch(chunks)
     embedded_count = sum(1 for e in embeddings if e is not None)
 
-    # Store chunks with embeddings
+    # Store chunks with embeddings and location metadata
     chunk_ids = []
     try:
         pool = await get_pool()
@@ -81,16 +113,20 @@ async def upload_material(file: UploadFile = File(...)):
                         mat["id"],
                         user_id,
                         ch,
-                        f"Chunk {idx + 1}",
+                        chunk_locations[idx],
                         str(embeddings[idx]) if embeddings[idx] else None,
                     )
                     chunk_ids.append(str(chunk_id))
     except Exception as exc:
         import logging
-        logging.getLogger(__name__).warning("Chunk storage error: %s", exc, exc_info=True)
 
-    await _store.update_material(mat["id"], user_id, {"status": "ready"})
-    mat["status"] = "ready"
+        logging.getLogger(__name__).warning(
+            "Chunk storage error: %s", exc, exc_info=True
+        )
+
+    status = "ready" if text.strip() else "error"
+    await _store.update_material(mat["id"], user_id, {"status": status})
+    mat["status"] = status
     mat["chunk_count"] = len(chunks)
     mat["embedded_count"] = embedded_count
     return mat
