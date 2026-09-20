@@ -192,3 +192,48 @@ async def grant_permission(grant: PermissionGrant) -> Dict[str, Any]:
         pass
 
     return {"status": "success", "resource_id": grant.resource_id, "scope": grant.scope}
+
+
+class GroundingRequest(BaseModel):
+    text: str
+    query: str
+
+
+@resource_router.post(
+    "/resources/ground",
+    summary="Ground a response with citations",
+    description="Extract and validate citations from LLM output, linking back to source chunks",
+)
+async def ground_response(req: GroundingRequest) -> Dict[str, Any]:
+    user_id = resolve_user_id()
+
+    # Retrieve relevant chunks
+    rag_chunks = []
+    try:
+        from app.services.vector_search import VectorSearchService
+        vs = VectorSearchService()
+        rag_chunks = await vs.search(req.query, user_id, limit=5, min_score=0.3)
+    except Exception:
+        pass
+
+    if not rag_chunks:
+        try:
+            pool = await get_pool()
+            if pool is not None:
+                async with pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        """SELECT rc.*, m.title AS material_title
+                           FROM summa_ai.resource_chunks rc
+                           LEFT JOIN summa_ai.materials m ON m.id::text = rc.resource_id
+                           WHERE rc.user_id = $1 AND rc.chunk_text ILIKE $2
+                           LIMIT 5""",
+                        user_id,
+                        f"%{req.query}%",
+                    )
+                    if rows:
+                        rag_chunks = [dict(r) for r in rows]
+        except Exception:
+            pass
+
+    from app.services.citation_grounding import CitationFormatter
+    return CitationFormatter.ground_response(req.text, rag_chunks)
