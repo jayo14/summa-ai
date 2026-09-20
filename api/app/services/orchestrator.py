@@ -139,17 +139,20 @@ class LearningOrchestrator:
             except Exception:
                 misconceptions = []
 
-            # Determine adaptive difficulty from recent rolling attempts if not
-            # explicitly overridden by the user's query/intent
-            if difficulty == "medium":
-                recent_attempts = [a for a in mastery_engine._local_attempts if a["user_id"] == user_id][-5:]
-                consecutive_correct = sum(1 for a in reversed(recent_attempts) if a.get("correct"))
-                consecutive_incorrect = sum(1 for a in reversed(recent_attempts) if not a.get("correct"))
+            # Determine adaptive difficulty from recent rolling attempts
+            # Use the dedicated DifficultyEngine for smoother calibration
+            from app.services.difficulty_engine import DifficultyEngine, AdaptiveScaler
+            diff_engine = DifficultyEngine(window=8)
+            adaptive_scaler = AdaptiveScaler(cooldown=3)
 
-                if consecutive_correct >= 3:
-                    difficulty = "hard"
-                elif consecutive_incorrect >= 2:
-                    difficulty = "easy"
+            if difficulty == "medium":
+                recent_attempts = [a for a in mastery_engine._local_attempts if a["user_id"] == user_id][-8:]
+                diff_result = diff_engine.compute_difficulty(
+                    recent_attempts,
+                    current_difficulty=difficulty,
+                )
+                suggested = adaptive_scaler.scale(diff_result["suggested"], difficulty)
+                difficulty = suggested
 
             recipe_name = "NEW_TOPIC"
             try:

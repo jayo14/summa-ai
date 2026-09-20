@@ -272,3 +272,32 @@ async def record_correction(misconception_id: str, payload: dict):
     from app.services.misconception_engine import MisconceptionEngine
     engine = MisconceptionEngine()
     return await engine.record_correction_attempt(user_id, misconception_id, correct)
+
+
+# ========== DIFFICULTY RECOMMENDATION ==========
+
+
+@interactions_router.get(
+    "/difficulty/recommendation",
+    summary="Get adaptive difficulty recommendation",
+    description="Analyze recent performance and return suggested difficulty level",
+)
+async def get_difficulty_recommendation():
+    user_id = resolve_user_id()
+    from app.services.mastery_engine import MasteryEngine
+    from app.services.difficulty_engine import DifficultyEngine, AdaptiveScaler
+
+    engine = MasteryEngine()
+    diff_engine = DifficultyEngine(window=8)
+    scaler = AdaptiveScaler(cooldown=3)
+
+    recent = [a for a in engine._local_attempts if a["user_id"] == user_id][-8:]
+    result = diff_engine.compute_difficulty(recent, current_difficulty="medium")
+    suggested = scaler.scale(result["suggested"], "medium")
+
+    return {
+        "suggested_difficulty": suggested,
+        "reasoning": result["reasoning"],
+        "confidence": result["confidence"],
+        "metrics": result["metrics"],
+    }
