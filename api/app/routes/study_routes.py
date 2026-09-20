@@ -428,3 +428,45 @@ async def generate_predictive_practice(payload: Dict[str, Any]) -> Dict[str, Any
         recurring_structures=payload.get("recurring_structures", []),
         question_type=question_type,
     )
+
+
+# ========== NOTIFICATIONS ==========
+
+
+@study_router.get(
+    "/notifications",
+    summary="List notifications",
+    description="Get all notifications for the current user",
+)
+async def list_notifications():
+    user_id = resolve_user_id()
+    from app.services.study_plan_generator import NotificationService
+    return await NotificationService().get_notifications(user_id)
+
+
+@study_router.post(
+    "/notifications/{notification_id}/read",
+    summary="Mark notification as read",
+    description="Mark a specific notification as read",
+)
+async def mark_notification_read(notification_id: str):
+    user_id = resolve_user_id()
+    from app.services.study_plan_generator import NotificationService
+    success = await NotificationService().mark_read(user_id, notification_id)
+    if not success:
+        raise HTTPException(404, "Notification not found")
+    return {"status": "read", "notification_id": notification_id}
+
+
+# ========== NUDGES ==========
+
+
+@study_router.get(
+    "/nudges",
+    summary="Get proactive nudges",
+    description="Generate proactive learning nudges based on recent patterns",
+)
+async def get_nudges():
+    user_id = resolve_user_id()
+    from app.services.study_plan_generator import NudgeEngine
+    return await NudgeEngine.generate_nudges(user_id)
