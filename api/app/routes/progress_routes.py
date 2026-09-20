@@ -68,11 +68,28 @@ async def get_next_best_action() -> Dict[str, Any]:
     user_id = resolve_user_id()
     decision = await _orchestrator.decide_next_action(user_id, "What should I do now?")
     
-    target_concept = decision.target_concept_ids[0] if decision.target_concept_ids else "Dynamic Dispatch & Overriding"
+    target_concept = decision.target_concept_ids[0] if decision.target_concept_ids else None
+    
+    # Dynamically determine the weakest concept from user's attempts
+    if not target_concept:
+        attempts = [a for a in _mastery._local_attempts if a["user_id"] == user_id]
+        if attempts:
+            # Find concept with lowest recent score
+            concept_scores = {}
+            for a in attempts:
+                for cid in a.get("concept_ids", []):
+                    if cid not in concept_scores:
+                        concept_scores[cid] = []
+                    concept_scores[cid].append(a.get("score", 0))
+            if concept_scores:
+                target_concept = min(
+                    concept_scores,
+                    key=lambda c: sum(concept_scores[c]) / len(concept_scores[c]),
+                )
     
     return {
         "action": decision.action,
-        "target_concept": target_concept,
+        "target_concept": target_concept or "general review",
         "reason": decision.reasoning,
         "estimated_minutes": 12 if decision.suggested_difficulty == "medium" else 15,
         "suggested_difficulty": decision.suggested_difficulty,

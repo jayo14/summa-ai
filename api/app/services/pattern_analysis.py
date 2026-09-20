@@ -72,6 +72,26 @@ class ExamReadinessEngine:
         # Weighted readiness model
         readiness_score = round(0.4 * depth + 0.4 * ps + 0.2 * accuracy, 1)
 
+        # Dynamically determine strong/developing/weak topics from concept mastery
+        concept_scores = {}
+        for a in attempts:
+            for cid in a.get("concept_ids", []):
+                if cid not in concept_scores:
+                    concept_scores[cid] = []
+                concept_scores[cid].append(a.get("score", 0))
+
+        strong_topics = []
+        developing_topics = []
+        weak_topics = []
+        for concept, scores in concept_scores.items():
+            avg = sum(scores) / len(scores) if scores else 0
+            if avg >= 75:
+                strong_topics.append(concept)
+            elif avg >= 50:
+                developing_topics.append(concept)
+            else:
+                weak_topics.append(concept)
+
         return {
             "exam_id": exam_id,
             "readiness_score": readiness_score,
@@ -80,7 +100,8 @@ class ExamReadinessEngine:
                 "problem_solving": ps,
                 "exam_practice_accuracy": accuracy,
             },
-            "strong_topics": ["Polymorphism Foundations"] if readiness_score >= 70 else [],
-            "developing_topics": ["Dynamic Dispatch"] if readiness_score < 70 else [],
-            "uncertainty_note": "Readiness estimate is derived from recorded practice evidence.",
+            "strong_topics": strong_topics,
+            "developing_topics": developing_topics,
+            "weak_topics": weak_topics,
+            "uncertainty_note": "Readiness estimate is derived from recorded practice evidence, not a guaranteed grade.",
         }
