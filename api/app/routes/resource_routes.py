@@ -1,4 +1,4 @@
-"""Resource routes — ingestion pipeline, search, and consent management."""
+"""Resource routes — ingestion pipeline, search, consent management, and scope control."""
 
 import uuid
 from datetime import datetime, timezone
@@ -26,6 +26,16 @@ class PermissionGrant(BaseModel):
 class ResourceSearchRequest(BaseModel):
     query: str
     limit: int = 5
+
+
+class ConsentUpdate(BaseModel):
+    consent_status: str = Field(description="granted, denied, pending")
+    scope: Optional[str] = Field(default=None, description="session, subject, always")
+
+
+class ScopeUpdate(BaseModel):
+    resource_id: str
+    scope: str = Field(description="session, subject, always")
 
 
 def _chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> List[str]:
@@ -237,3 +247,171 @@ async def ground_response(req: GroundingRequest) -> Dict[str, Any]:
 
     from app.services.citation_grounding import CitationFormatter
     return CitationFormatter.ground_response(req.text, rag_chunks)
+
+
+# ========== MATERIALS MANAGEMENT ==========
+
+
+@resource_router.get("/materials", summary="List all materials", description="Get all uploaded materials for the user")
+async def list_materials():
+    user_id = resolve_user_id()
+    try:
+        pool = await get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                rows = await conn.fetch(
+                    "SELECT * FROM summa_ai.materials WHERE user_id = $1 ORDER BY created_at DESC",
+                    user_id,
+                )
+                if rows:
+                    return [dict(r) for r in rows]
+    except Exception:
+        pass
+    return await _store.list_materials(user_id)
+
+
+@resource_router.get("/materials/{material_id}", summary="Get material details")
+async def get_material(material_id: str):
+    user_id = resolve_user_id()
+    mat = await _store.get_material(material_id, user_id)
+    if mat is None:
+        raise HTTPException(404, "Material not found")
+    return mat
+
+
+@resource_router.delete("/materials/{material_id}", summary="Delete material", description="Remove a material and its chunks")
+async def delete_material(material_id: str):
+    user_id = resolve_user_id()
+    try:
+        pool = await get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    "DELETE FROM summa_ai.resource_chunks WHERE resource_id = $1 AND user_id = $2",
+                    material_id,
+                    user_id,
+                )
+                await conn.execute(
+                    "DELETE FROM summa_ai.materials WHERE id = $1 AND user_id = $2",
+                    material_id,
+                    user_id,
+                )
+    except Exception:
+        pass
+    if not await _store.delete_material(material_id, user_id):
+        raise HTTPException(404, "Material not found")
+    return {"status": "deleted", "material_id": material_id}
+
+
+# ========== CONSENT MANAGEMENT ==========
+
+
+@resource_router.get("/materials/{material_id}/consent", summary="Get material consent status")
+async def get_consent(material_id: str):
+    user_id = resolve_user_id()
+    try:
+        pool = await get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    """SELECT consent_status, scope, consent_updated_at
+                       FROM summa_ai.materials WHERE id = $1 AND user_id = $2""",
+                    material_id,
+                    user_id,
+                )
+                if row:
+                    return dict(row)
+    except Exception:
+        pass
+    return {"consent_status": "pending", "scope": "session"}
+
+
+@resource_router.post("/materials/{material_id}/consent", summary="Update material consent")
+async def update_consent(material_id: str, data: ConsentUpdate):
+    user_id = resolve_user_id()
+    now = datetime.now(timezone.utc)
+    try:
+        pool = await get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                if data.scope:
+                    await conn.execute(
+                        """UPDATE summa_ai.materials
+                           SET consent_status = $1, scope = $2, consent_updated_at = $3
+                           WHERE id = $4 AND user_id = $5""",
+                        data.consent_status, data.scope, now, material_id, user_id,
+                    )
+                else:
+                    await conn.execute(
+                        """UPDATE summa_ai.materials
+                           SET consent_status = $1, consent_updated_at = $2
+                           WHERE id = $3 AND user_id = $4""",
+                        data.consent_status, now, material_id, user_id,
+                    )
+    except Exception:
+        pass
+
+    await _store.update_material(material_id, user_id, {"consent_status": data.consent_status})
+    return {"status": "updated", "material_id": material_id, "consent_status": data.consent_status}
+
+
+# ========== PERMISSIONS MANAGEMENT ==========
+
+
+@resource_router.get("/resources/permissions", summary="List all permissions", description="Get all resource permissions for the user")
+async def list_permissions():
+    user_id = resolve_user_id()
+    try:
+        pool = await get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                rows = await conn.fetch(
+                    """SELECT rp.*, m.title AS material_title
+                       FROM summa_ai.resource_permissions rp
+                       LEFT JOIN summa_ai.materials m ON m.id::text = rp.resource_id
+                       WHERE rp.user_id = $1
+                       ORDER BY rp.granted_at DESC""",
+                    user_id,
+                )
+                if rows:
+                    return [dict(r) for r in rows]
+    except Exception:
+        pass
+    return []
+
+
+@resource_router.delete("/resources/permissions/{resource_id}", summary="Revoke resource permission")
+async def revoke_permission(resource_id: str):
+    user_id = resolve_user_id()
+    try:
+        pool = await get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                result = await conn.execute(
+                    "DELETE FROM summa_ai.resource_permissions WHERE user_id = $1 AND resource_id = $2",
+                    user_id,
+                    resource_id,
+                )
+                return {"status": "revoked", "resource_id": resource_id}
+    except Exception:
+        pass
+    return {"status": "revoked", "resource_id": resource_id}
+
+
+@resource_router.post("/resources/scope", summary="Update resource scope", description="Change the access scope for a resource")
+async def update_scope(data: ScopeUpdate):
+    user_id = resolve_user_id()
+    now = datetime.now(timezone.utc)
+    try:
+        pool = await get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """UPDATE summa_ai.resource_permissions
+                       SET scope = $1
+                       WHERE user_id = $2 AND resource_id = $3""",
+                    data.scope, user_id, data.resource_id,
+                )
+    except Exception:
+        pass
+    return {"status": "updated", "resource_id": data.resource_id, "scope": data.scope}
