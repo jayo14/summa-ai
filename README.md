@@ -188,9 +188,3 @@ pytest
 
 - **Frontend**: Automatically deployed to **Vercel** via GitHub integration. Configuration is handled in [`vercel.json`](file:///home/codegallantx/moi/summa-ai/vercel.json).
 - **Backend API**: Configured for **Render** via [`render.yaml`](file:///home/codegallantx/moi/summa-ai/render.yaml), exposing health checks at `/health` with automatic migration triggers.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
