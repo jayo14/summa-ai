@@ -57,8 +57,24 @@ server.log
 # Python
 __pycache__/
 *.pyc
-*.pyoapi/.model_encryption_key
- 
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+api/.model_encryption_key
+.model_encryption_key
+
+# Agents and Kilo AI
+.agents/
+.kilo/
+api/.agents/
+skills-lock.json
+
+# Manus & Debug logs
+.manus-logs/
+__manus__/
 
 # Video
 brag-output/

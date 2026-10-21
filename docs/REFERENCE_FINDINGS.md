@@ -1,6 +1,6 @@
 # Summa AI — Reference Pattern Findings
 
-The reference list is retained verbatim in `docs/REFERENCE_LIST_SOURCE.md`. The visual references are input to pattern study only; none are copied.
+The visual references are input to pattern study only; none are copied.
 
 ## Reviewed Patterns
 

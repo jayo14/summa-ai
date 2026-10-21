@@ -1366,7 +1366,7 @@ function ContextRail({ mastery, events, onJumpToSources }: { mastery: number; ev
       </section>
       <section className="source-lens">
         <div className="source-lens-copy"><span className="eyebrow">SUMMASTUDY</span><h3>{learnerContext?.sources_count || 3} sources are in scope</h3><p>Selected materials anchor this session.</p></div>
-        <img src="/manus-storage/summa-learning-atlas_404e3bf5.jpg" alt="An editorial arrangement of course materials and concept cards." />
+        <img src="/assets/my-learning-desk-cards.jpg" alt="An editorial arrangement of course materials and concept cards." />
         <button type="button" onClick={onJumpToSources}>Review sources <ChevronRight size={14} /></button>
       </section>
       <section className="event-ledger">

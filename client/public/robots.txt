@@ -29,7 +29,6 @@ Disallow: /callback
 
 # Block dev/internal
 Disallow: /api/
-Disallow: /__manus__/
 
 # Sitemap
 Sitemap: https://summa-ai.app/sitemap.xml
